@@ -133,4 +133,9 @@ void picker_free(zui_node *n) {
 	if (app->n_pickers > 0) app->n_pickers--;
 }
 
-const struct zui_class zui_picker_class = { .name = "picker", .size = sizeof(struct picker), .destroy = picker_free };
+static float picker_layout(zui_node *n, float x, float y, float w) { (void)x; (void)y; (void)w; return layout_picker(n); }
+static void picker_draw(zui_app *app, zui_node *n, const struct zg_xf *xf, uint32_t now) { (void)xf; draw_picker(app, n, now); }
+static bool picker_interactive(const zui_node *n) { (void)n; return true; }
+static void picker_activate(zui_app *app, zui_node *n) { picker_tapped(app, n); }
+const struct zui_class zui_picker_class = { .name = "picker", .size = sizeof(struct picker), .destroy = picker_free,
+	.layout = picker_layout, .draw = picker_draw, .interactive = picker_interactive, .activate = picker_activate };

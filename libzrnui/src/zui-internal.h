@@ -155,6 +155,11 @@ struct zui_class {
 	size_t size;				/* of the node's struct: at least sizeof(struct zui_node) */
 	void (*destroy)(zui_node *n);		/* frees what the subtype holds (not the node itself) */
 	bool scrolls;				/* a scroll container or one of its heirs: its struct is a zui_scroll */
+	/* what the core asks of a kind, when it is not one of the core's own (all optional) */
+	float (*layout)(zui_node *n, float x, float y, float w);	/* its height; it sets what is its own */
+	void (*draw)(zui_app *app, zui_node *n, const struct zg_xf *xf, uint32_t now);
+	bool (*interactive)(const zui_node *n);	/* a finger can press it */
+	void (*activate)(zui_app *app, zui_node *n);	/* the lift of a tap on it */
 };
 const struct zui_class *zui_class_of(int kind);
 

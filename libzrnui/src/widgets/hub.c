@@ -397,4 +397,12 @@ void hub_free(zui_node *n) {
 	if (n->parent && zui_pg(n->parent)->hub == n) zui_pg(n->parent)->hub = NULL;
 }
 
-const struct zui_class zui_hub_class = { .name = "hub", .size = sizeof(struct hub), .destroy = hub_free };
+static float hub_layout(zui_node *n, float x, float y, float w) { (void)x; (void)y; (void)w; return layout_hub(n); }
+static void hub_draw(zui_app *app, zui_node *n, const struct zg_xf *xf, uint32_t now) { draw_hub(app, n, xf, now); }
+const struct zui_class zui_hub_class = { .name = "hub", .size = sizeof(struct hub), .destroy = hub_free,
+	.layout = hub_layout, .draw = hub_draw };
+
+/* a section is a scroll container (an heir of it) whose place the hub gives it */
+static float hubsec_layout(zui_node *n, float x, float y, float w) { (void)x; (void)y; (void)w; return n->h; }
+const struct zui_class zui_hubsec_class = { .name = "hub section", .size = sizeof(struct zui_scroll), .scrolls = true,
+	.layout = hubsec_layout };

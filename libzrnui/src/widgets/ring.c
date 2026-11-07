@@ -33,3 +33,11 @@ bool has_ring(zui_node *n) {
 	}
 	return false;
 }
+
+static float ring_layout(zui_node *n, float x, float y, float w) { (void)n; (void)x; (void)y; (void)w; return 40; }
+static void ring_draw(zui_app *app, zui_node *n, const struct zg_xf *xf, uint32_t now) {
+	(void)xf;
+	draw_ring(app, n, now);
+}
+const struct zui_class zui_ring_class = { .name = "ring", .size = sizeof(struct zui_node), .layout = ring_layout,
+	.draw = ring_draw };

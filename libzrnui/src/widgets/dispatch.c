@@ -53,66 +53,23 @@ void zui_widgets_step(zui_app *app, uint32_t now) {
 }
 
 float zui_widget_layout(zui_node *n, float x, float y, float w) {
-	zui_app *app = n->app;
-	(void)x; (void)y; (void)w;
-	switch (n->kind) {
-	case ZK_CHECK: case ZK_RADIO: return M.item_h;
-	case ZK_RING: return 40;
-	case ZK_PICKER: return layout_picker(n);
-	case ZK_TILES: return layout_tiles(n, x, y, w);
-	case ZK_TILE: return n->h;
-	case ZK_HUB: return layout_hub(n);
-	case ZK_HUBSEC: return n->h;
-	default: return -1;
-	}
+	return n->cls->layout ? n->cls->layout(n, x, y, w) : -1;
 }
 
 bool zui_widget_draw(zui_app *app, zui_node *n, const struct zg_xf *xf, uint32_t now) {
-	switch (n->kind) {
-	case ZK_CHECK: case ZK_RADIO: draw_check(app, n, now); return true;
-	case ZK_RING: draw_ring(app, n, now); return true;
-	case ZK_PICKER: draw_picker(app, n, now); return true;
-	case ZK_TILES:
-		for (zui_node *c = n->first; c; c = c->next) if (c->visible) zui_draw_node(app, c, xf, now);
-		return true;
-	case ZK_TILE: draw_tile(app, n, xf, now); return true;
-	case ZK_HUB: draw_hub(app, n, xf, now); return true;
-	default: return false;
-	}
+	if (!n->cls->draw) return false;
+	n->cls->draw(app, n, xf, now);
+	return true;
 }
 
 bool zui_widget_interactive(const zui_node *n) {
-	switch (n->kind) {
-	case ZK_CHECK: case ZK_RADIO: case ZK_PICKER: return true;
-	case ZK_TILE: return n->cb != NULL || n->hold_cb != NULL;
-	default: return false;
-	}
+	return n->cls->interactive && n->cls->interactive(n);
 }
 
 bool zui_widget_activate(zui_app *app, zui_node *n) {
-	switch (n->kind) {
-	case ZK_CHECK:
-		zui_set_checked(n, !n->on);
-		zui_haptic("click");
-		zui_fire(n, ZUI_EVENT_CHANGE);
-		return true;
-	case ZK_RADIO:
-		if (!n->on) {
-			zui_set_checked(n, true);
-			radio_chosen(n);
-			zui_haptic("click");
-			zui_fire(n, ZUI_EVENT_CHANGE);
-		}
-		return true;
-	case ZK_PICKER:
-		picker_tapped(app, n);
-		return true;
-	case ZK_TILE:
-		zui_haptic("tap");
-		zui_fire(n, ZUI_EVENT_CLICK);
-		return true;
-	default: return false;
-	}
+	if (!n->cls->activate) return false;
+	n->cls->activate(app, n);
+	return true;
 }
 
 void zui_widget_free(zui_node *n) {

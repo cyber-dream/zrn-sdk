@@ -128,4 +128,20 @@ void tile_free(zui_node *n) {
 	free(t->back);
 }
 
-const struct zui_class zui_tile_class = { .name = "tile", .size = sizeof(struct tile), .destroy = tile_free };
+static float tile_layout(zui_node *n, float x, float y, float w) { (void)x; (void)y; (void)w; return n->h; }
+static bool tile_interactive(const zui_node *n) { return n->cb != NULL || n->hold_cb != NULL; }
+static void tile_activate(zui_app *app, zui_node *n) {
+	(void)app;
+	zui_haptic("tap");
+	zui_fire(n, ZUI_EVENT_CLICK);
+}
+static void tile_draw(zui_app *app, zui_node *n, const struct zg_xf *xf, uint32_t now) { draw_tile(app, n, xf, now); }
+const struct zui_class zui_tile_class = { .name = "tile", .size = sizeof(struct tile), .destroy = tile_free,
+	.layout = tile_layout, .draw = tile_draw, .interactive = tile_interactive, .activate = tile_activate };
+
+static float tiles_layout(zui_node *n, float x, float y, float w) { return layout_tiles(n, x, y, w); }
+static void tiles_draw(zui_app *app, zui_node *n, const struct zg_xf *xf, uint32_t now) {
+	for (zui_node *c = n->first; c; c = c->next) if (c->visible) zui_draw_node(app, c, xf, now);
+}
+const struct zui_class zui_tiles_class = { .name = "tiles", .size = sizeof(struct zui_node), .layout = tiles_layout,
+	.draw = tiles_draw };

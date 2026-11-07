@@ -66,3 +66,32 @@ void radio_chosen(zui_node *n) {
 			zui_fire(s, ZUI_EVENT_CHANGE);
 		}
 }
+
+static float check_layout(zui_node *n, float x, float y, float w) {
+	zui_app *app = n->app;
+	(void)x; (void)y; (void)w;
+	return M.item_h;
+}
+static void check_draw(zui_app *app, zui_node *n, const struct zg_xf *xf, uint32_t now) {
+	(void)xf;
+	draw_check(app, n, now);
+}
+static bool check_interactive(const zui_node *n) { (void)n; return true; }
+static void check_activate(zui_app *app, zui_node *n) {
+	(void)app;
+	zui_set_checked(n, !n->on);
+	zui_haptic("click");
+	zui_fire(n, ZUI_EVENT_CHANGE);
+}
+static void radio_activate(zui_app *app, zui_node *n) {
+	(void)app;
+	if (n->on) return;
+	zui_set_checked(n, true);
+	radio_chosen(n);
+	zui_haptic("click");
+	zui_fire(n, ZUI_EVENT_CHANGE);
+}
+const struct zui_class zui_check_class = { .name = "check", .size = sizeof(struct zui_node), .layout = check_layout,
+	.draw = check_draw, .interactive = check_interactive, .activate = check_activate };
+const struct zui_class zui_radio_class = { .name = "radio", .size = sizeof(struct zui_node), .layout = check_layout,
+	.draw = check_draw, .interactive = check_interactive, .activate = radio_activate };

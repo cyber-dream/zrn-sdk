@@ -118,7 +118,8 @@ void pick_commit(zui_app *app, struct ov *o);
 void pick_fit_days(struct ov *o);
 void draw_pick(zui_app *app, struct ov *o, float a, uint32_t now);
 /* freeing what a node keeps in ext, and forgetting it */
-extern const struct zui_class zui_picker_class, zui_tile_class, zui_hub_class;
+extern const struct zui_class zui_picker_class, zui_tile_class, zui_tiles_class, zui_hub_class, zui_hubsec_class,
+	zui_check_class, zui_radio_class, zui_ring_class;
 void picker_free(zui_node *n);
 void tile_free(zui_node *n);
 void hub_free(zui_node *n);
