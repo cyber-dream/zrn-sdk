@@ -181,8 +181,8 @@ class Cli(unittest.TestCase):
 class Binding(unittest.TestCase):
     def test_python_callbacks(self):
         import zrnui
-        app = zrnui.App("zrn-test-py", "Test", style="metro")
-        page = app.page("Test")
+        app = zrnui.App(style="metro")
+        page = app.page()
         seen = []
         b = page.button("Tap", lambda: seen.append("tap"))
         sw = page.section("S").switch("Wi-Fi", False, on_change=lambda on: seen.append(on))

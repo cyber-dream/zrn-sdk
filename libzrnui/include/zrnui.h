@@ -12,8 +12,8 @@
  *		zui_set_text(label, "Hello again");
  *	}
  *	int main(void) {
- *		zui_app *app = zui_app_new("zrn-hello", "Hello");
- *		zui_node *page = zui_page(app, "Hello");
+ *		zui_app *app = zui_app_new();
+ *		zui_node *page = zui_page(app);
  *		label = zui_text(page, "Hello from ztOS");
  *		zui_button(page, "Tap me", tapped, NULL);
  *		return zui_run(app, page);
@@ -66,8 +66,10 @@ enum zui_variant {
 
 /* ---- the app ---- */
 const char *zui_version(void);
-/* app_id: the manifest's id, also the Wayland app_id the shell matches */
-zui_app *zui_app_new(const char *app_id, const char *title);
+/* The app has no id or title to give: its Wayland app_id is ZRN_APP_ID if the environment
+ * has it (zrn-exec and `zrn run` set it from the manifest), else the program's name. (Compatibility:
+ * zui_app_new used to take an id and a title.) */
+zui_app *zui_app_new(void);
 /* Show `first_page` and run until the app quits or the window is closed.
  * Returns the exit status (0). */
 int zui_run(zui_app *app, zui_node *first_page);
@@ -77,27 +79,68 @@ void zui_app_free(zui_app *app);
  * else Metro. ZUI_STYLE overrides it for looking at renders. An app cannot pick
  * one: this only exists for tests, and only while nothing else has decided. */
 void zui_app_set_style(zui_app *app, const char *style);
-const char *zui_app_style(zui_app *app);
+const char *zui_app_style(const zui_app *app);
 /* Does nothing: both styles are black. Kept for the ABI. */
 void zui_app_set_theme(zui_app *app, const char *theme);
 /* 0xRRGGBB; by default the system's accent (~/.config/ztmetro/config).
  * DotMatrix keeps its palette whatever is set here. */
 void zui_app_set_accent(zui_app *app, uint32_t rgb);
-uint32_t zui_app_accent(zui_app *app);
+uint32_t zui_app_accent(const zui_app *app);
 /* The loading dots across the top, while something loads. */
 void zui_busy(zui_app *app, bool busy);
 /* A short message at the bottom for a couple of seconds ("Saved"). */
 void zui_toast(zui_app *app, const char *text);
 
 /* ---- pages ---- */
-zui_node *zui_page(zui_app *app, const char *title);
+/* An app's window is the whole screen: the status bar is drawn over it, and keeping clear
+ * of it is the app's business. A page is a root node with nothing in it but what the app
+ * puts there; it has no name. Three ways to make one, all explicit:
+ *   zui_page        the Windows Phone template: a root with a TitlePanel and a ContentPanel
+ *                   in it (zui_title_panel and zui_content_panel return those two); the
+ *                   TitlePanel starts its first line 32 (the status bar) + 24 down
+ *   zui_page_blank  an empty root from the top of the window, edge to edge; add what you
+ *                   want (a pivot or a hub goes in one of these, with a TitlePanel)
+ *   zui_page_fullscreen  an empty root over the whole window above the footer, not
+ *                   scrolling: a photo viewer (see zui_set_image_fit)
+ * (Compatibility: zui_page used to take a title; zui_page_set_fullscreen is gone.) */
+zui_node *zui_page(zui_app *app);
+zui_node *zui_page_blank(zui_app *app);
+zui_node *zui_page_fullscreen(zui_app *app);
+/* The app's one root, as Windows Phone's frame: the pages are in it, one at a time in front.
+ * What the app puts in it (zui_button(zui_root(app), ...)) is over every page, edge to edge from
+ * the top of the window, one under another, and does not scroll: a bar that stays. zui_clear
+ * on it removes those and not the pages; zui_destroy(root) is not for the app. */
+zui_node *zui_root(zui_app *app);
+/* The page's TitlePanel, as on Windows Phone: the titles on top of a page, put in it as widgets
+ * (zui_title, zui_header). One per page, and a hub or a pivot is a page too: its titles go in
+ * the TitlePanel of zui_title_panel(hub). zui_page makes one, and after zui_destroy it can be
+ * made again here. */
+zui_node *zui_title_panel(zui_node *page);
+/* The two titles, one widget in two styles, as on Windows Phone (a TextBlock with a style): the
+ * small one (the application's, a pivot's, a hub section's) and the large one (a page's, a
+ * hub's), as written, in the case they are written. Put them in a TitlePanel, or in a hub
+ * section (the small one, first in it). */
+zui_node *zui_title(zui_node *parent, const char *text);
+zui_node *zui_header(zui_node *parent, const char *text);
+/* The page's root has no margin: what is put in it goes edge to edge, one under another
+ * (an image, a map, a list). A ContentPanel is a column with the margin on both sides and
+ * the gaps between things, as in the Windows Phone template: put the usual things in it.
+ * A page has one (zui_page makes it); anywhere else this makes a new one.
+ * Compatibility: things put straight into a page used to get the margin. */
+zui_node *zui_content_panel(zui_node *parent);
+/* A scroll viewer, as Windows Phone's ScrollViewer: a column edge to edge that reaches to the bottom of
+ * the window, with what is put in it going on beyond. A finger moves it, with inertia and a bounce at its
+ * ends; the rest of the page stays. A page does not scroll by itself, as on Windows Phone: what is to
+ * scroll goes in one of these (under the titles, or inside a ContentPanel to have the margin). Tabs and
+ * a hub's sections are scroll viewers of their own. */
+zui_node *zui_scroll(zui_node *parent);
 /* Go to a page: it slides (or turns) in over the one in front. */
 void zui_push(zui_node *page);
 /* Up a page; on the first page this closes the app. */
 void zui_back(zui_app *app);
 /* The page in front becomes the first one: back closes the app (a splash that was replaced). */
 void zui_page_set_root(zui_node *page);
-zui_node *zui_current_page(zui_app *app);
+zui_node *zui_current_page(const zui_app *app);
 
 /* ---- layout: things go in the order they are added ---- */
 zui_node *zui_column(zui_node *parent);
@@ -135,6 +178,46 @@ void zui_pixmap_free(zui_pixmap *pix);	/* nodes keep their own reference */
 void zui_pixmap_size(const zui_pixmap *pix, int *w, int *h);
 /* w 0: the width there is; h 0: from the picture's shape */
 zui_node *zui_image(zui_node *parent, zui_pixmap *pix, double w, double h);
+
+/* ---- brushes ----
+ * What fills an area, as XAML's Brush: one kind of thing for a background, whatever it is filled
+ * with. Make one, give it to any node with zui_set_background (a page, a ContentPanel, a hub
+ * section, a card, the root of the app: behind everything). The node keeps its own reference, so
+ * a brush can be freed after, or shared by many. Colours are 0xRRGGBB. */
+typedef struct zui_brush zui_brush;
+enum {		/* how a picture is placed in the area (XAML's Stretch) */
+	ZUI_STRETCH_NONE = 0,		/* its own size, cut at the edge if it is larger */
+	ZUI_STRETCH_FILL,		/* all of the area, whatever it does to the proportions (the default) */
+	ZUI_STRETCH_UNIFORM,		/* all of it, inside the area */
+	ZUI_STRETCH_UNIFORM_TO_FILL,	/* over all of the area, the rest cut off */
+};
+zui_brush *zui_brush_solid(uint32_t rgb);
+/* a gradient along the line from (x0, y0) to (x1, y1), in 0..1 of the area it paints */
+zui_brush *zui_brush_linear(double x0, double y0, double x1, double y1);
+/* a gradient from the centre out to the radii, in 0..1 of the area it paints (the area's shape is the ellipse's) */
+zui_brush *zui_brush_radial(double cx, double cy, double rx, double ry);
+/* a colour of a gradient at a place along it, 0..1; the colour before the first stop and after the last stay */
+void zui_brush_stop(zui_brush *brush, double offset, uint32_t rgb, double alpha);
+zui_brush *zui_brush_image(zui_pixmap *pix);
+/* A brush that paints with an OpenGL ES 1.00 fragment shader. The source defines
+ *     vec4 zui_shade(vec2 uv)
+ * (uv is 0..1 over the area, y down; the colour is straight, not premultiplied) and may read
+ *     uniform float u_time;  seconds since the first frame it was painted
+ *     uniform vec2  u_res;   the area's size in points
+ * and uniforms of its own (declared as float, vec2, vec3 or vec4 and given by zui_brush_set_uniform; unused
+ * components are 0). The area's rounded corners, alpha and opacity are done for it, and in DotMatrix the
+ * colour's brightness is what the dots show. It paints on every frame unless told it need not. If it does
+ * not compile nothing is painted and zui_brush_error says why (line numbers are those of the source). */
+zui_brush *zui_brush_shader(const char *source);
+void zui_brush_set_uniform(zui_brush *brush, const char *name, double x, double y, double z, double w);
+void zui_brush_shader_set_animated(zui_brush *brush, bool animated);
+const char *zui_brush_error(const zui_brush *brush);
+void zui_brush_set_stretch(zui_brush *brush, int stretch);
+void zui_brush_set_align(zui_brush *brush, double x, double y);	/* 0..1, where a picture that does not fill sits */
+void zui_brush_set_opacity(zui_brush *brush, double opacity);		/* 0..1, as XAML's Brush.Opacity */
+void zui_brush_ref(zui_brush *brush);
+void zui_brush_free(zui_brush *brush);
+void zui_set_background(zui_node *node, zui_brush *brush);	/* NULL: none */
 /* on an image, or on an item as its avatar */
 void zui_set_image(zui_node *node, zui_pixmap *pix);
 /* no smoothing, on whole pixels: a QR code */
@@ -157,9 +240,6 @@ void zui_set_gap(zui_node *row, double gap);
 /* Text in the system's quiet colour (the grey of the titles that are not in front) and a
  * light weight, whatever its size: a timeline's day headings. */
 void zui_set_quiet(zui_node *text, bool quiet);
-/* A page without its title and tab titles, its content over the whole window (above the
- * footer): a photo viewer. The page does not scroll. */
-void zui_page_set_fullscreen(zui_node *page, bool on);
 /* An image that fills the room there is, whole and centred (the larger side touches the
  * edges): on a fullscreen page the window above the footer. */
 void zui_set_image_fit(zui_node *image, bool fit);
@@ -185,12 +265,18 @@ void zui_page_scroll_end(zui_node *page, bool glide);
 bool zui_page_at_end(zui_node *page, double within);
 
 /* ---- tabs and the bottom bar ---- */
-/* Tabs under the page's title; they swipe. A tab is a column with its own scroll
- * place. The handler of the tabs gets ZUI_EVENT_CHANGE when the tab changes. */
-zui_node *zui_tabs(zui_node *page);
-zui_node *zui_tab(zui_node *tabs, const char *title);
-void zui_tabs_select(zui_node *tabs, int index);
-int zui_tabs_current(zui_node *tabs);
+/* A pivot: a root of its own, made from the app, with tabs under its Title; they swipe. A tab
+ * is a column with its own scroll place. The handler of the tabs gets ZUI_EVENT_CHANGE when the
+ * tab changes. What takes a page (zui_run, zui_push, zui_footer, zui_layout, scrolling) takes
+ * the tabs, or anything in them, for the page they are in. */
+zui_node *zui_pivot(zui_app *app);
+/* An item is a column: put anything in it. Its title is set with zui_pivot_item_header (PivotItem.Header). */
+zui_node *zui_pivot_item(zui_node *pivot);
+/* The pivot's own small title above the item titles (Pivot.Title); calling it again changes the text. */
+void zui_pivot_title(zui_node *pivot, const char *text);
+zui_node *zui_pivot_item_header(zui_node *item, const char *text);
+void zui_pivot_select(zui_node *pivot, int index);
+int zui_pivot_current(const zui_node *pivot);
 /* A row fixed at the bottom of a page, over its list; a field in it asks the
  * shell to lift the window with the keyboard. */
 zui_node *zui_footer(zui_node *page);
@@ -210,17 +296,17 @@ void zui_swivel(zui_node *node, bool in, int delay_ms);
  * bind function reads. It may be held again by the same thread. */
 void zui_list_lock(zui_app *app, bool lock);
 /* the window is in front of the others */
-bool zui_app_active(zui_app *app);
+bool zui_app_active(const zui_app *app);
 
 /* ---- changing things ---- */
 void zui_set_text(zui_node *node, const char *text);	/* label, title, field text */
-const char *zui_get_text(zui_node *node);
+const char *zui_get_text(const zui_node *node);
 void zui_set_detail(zui_node *node, const char *text);	/* an item's value on the right; a switch's line */
 void zui_set_subtitle(zui_node *node, const char *text);
 void zui_set_value(zui_node *node, double value);	/* slider, progress: 0..1 */
-double zui_get_value(zui_node *node);
+double zui_get_value(const zui_node *node);
 void zui_set_on(zui_node *node, bool on);
-bool zui_get_on(zui_node *node);
+bool zui_get_on(const zui_node *node);
 void zui_set_enabled(zui_node *node, bool enabled);
 void zui_set_visible(zui_node *node, bool visible);
 void zui_set_variant(zui_node *node, int variant);	/* enum zui_variant */
@@ -234,12 +320,12 @@ void zui_set_tint(zui_node *node, uint32_t rgb);
 /* What the node calls; free_data(data) runs when the node goes away. */
 void zui_set_handler(zui_node *node, zui_cb cb, void *data, zui_free_fn free_data);
 /* Why the handler is running (enum zui_event). */
-int zui_event(zui_node *node);
+int zui_event(const zui_node *node);
 void zui_clear(zui_node *node);		/* remove everything in it */
 void zui_destroy(zui_node *node);	/* remove it (and all in it) */
-zui_app *zui_node_app(zui_node *node);
+zui_app *zui_node_app(const zui_node *node);
 /* Where the last layout put it, in page points (for tests). */
-void zui_node_frame(zui_node *node, double *x, double *y, double *w, double *h);
+void zui_node_frame(const zui_node *node, double *x, double *y, double *w, double *h);
 
 /* ---- the main loop ---- */
 /* ready(fd, data) when fd is readable; ready NULL stops watching it */
@@ -290,7 +376,7 @@ zui_node *zui_ring(zui_node *parent);
  * accent. The handler gets ZUI_EVENT_CHANGE. */
 zui_node *zui_picker(zui_node *parent, const char *caption, const char *const *options, int count,
 		int selected, zui_cb on_change, void *data);
-int zui_picker_selected(zui_node *picker);
+int zui_picker_selected(const zui_node *picker);
 void zui_picker_select(zui_node *picker, int index);
 
 /* DatePicker and TimePicker: a row with the value in the accent; tapped, the
@@ -299,11 +385,11 @@ void zui_picker_select(zui_node *picker, int index);
  * The handler gets ZUI_EVENT_CHANGE when the tick is tapped. */
 zui_node *zui_date_picker(zui_node *parent, const char *title, int year, int month, int day,
 		zui_cb on_change, void *data);
-void zui_date_picker_get(zui_node *picker, int *year, int *month, int *day);
+void zui_date_picker_get(const zui_node *picker, int *year, int *month, int *day);
 void zui_date_picker_set(zui_node *picker, int year, int month, int day);
 zui_node *zui_time_picker(zui_node *parent, const char *title, int hour, int minute,
 		zui_cb on_change, void *data);
-void zui_time_picker_get(zui_node *picker, int *hour, int *minute);
+void zui_time_picker_get(const zui_node *picker, int *hour, int *minute);
 void zui_time_picker_set(zui_node *picker, int hour, int minute);
 
 /* Tiles: a grid of squares (two to a row, a wide one a row of its own) in the
@@ -317,14 +403,20 @@ zui_node *zui_tile(zui_node *tiles, const char *title, const char *icon, bool wi
 void zui_tile_set_live(zui_node *tile, const char *back, int period_ms);
 
 /* Hub (Panorama): sections side by side, wider than the screen, the next one
- * showing at the edge. A swipe slides to the next; the page's title moves more
- * slowly than the sections and a picture behind them slower still. A page
- * has either tabs or a hub, not both. A section is a column: put anything in it. */
-zui_node *zui_hub(zui_node *page);
-zui_node *zui_hub_section(zui_node *hub, const char *title);
+ * showing at the edge. A swipe slides to the next; the hub's header moves more
+ * slowly than the sections and a picture behind them slower still. A hub is a root of its
+ * own, made from the app: pass it to zui_run or zui_push as it is. A section is a column:
+ * put anything in it. */
+zui_node *zui_hub(zui_app *app);
+/* A section is a column: put anything in it; a zui_title put first in it is its header. */
+zui_node *zui_hub_section(zui_node *hub);
 void zui_hub_set_background(zui_node *hub, zui_pixmap *pix);
+/* The hub's own large title (Hub.Header): not a widget the app makes, the hub has one; this sets its text.
+ * It is the hub's: it goes by more slowly than the sections, and round with them. A hub is the whole
+ * screen, its title the top of it. */
+void zui_hub_title(zui_node *hub, const char *text);
 void zui_hub_show(zui_node *hub, int section);
-int zui_hub_current(zui_node *hub);
+int zui_hub_current(const zui_node *hub);
 
 /* Press and hold: the handler of zui_set_hold gets ZUI_EVENT_HOLD when the
  * finger has stayed on the node for half a second without moving; the tap
@@ -350,7 +442,7 @@ void zui_dialog(zui_app *app, const char *title, const char *message, const char
  * live). A tap on a live tile gives its index. */
 void zui_jump_list(zui_app *app, const char *const *labels, const bool *live, int count,
 		zui_choice_fn on_choose, void *data);
-bool zui_overlay_open(zui_app *app);
+bool zui_overlay_open(const zui_app *app);
 void zui_overlay_close(zui_app *app);
 
 #ifdef __cplusplus

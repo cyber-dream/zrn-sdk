@@ -11,13 +11,14 @@ LDLIBS = $(shell pkg-config --libs $(PKGS)) -lm -lpthread -ldl
 VERSION = 0.1.0
 SONAME = libzrnui.so.0
 B = build
-SRC = src/core.c src/gfx.c src/text.c src/icons.c src/style-metro.c src/wl.c \
-	src/extras.c src/widgets.c src/offscreen.c protocol/xdg-shell-protocol.c
+SRC = src/core.c src/brush.c src/gfx.c src/text.c src/icons.c src/style-metro.c src/wl.c \
+	src/extras.c src/offscreen.c protocol/xdg-shell-protocol.c
+SRC += $(wildcard src/widgets/*.c)
 OBJ = $(SRC:%.c=$(B)/%.o)
 
 all: $(B)/libzrnui.so
 
-$(B)/%.o: %.c src/zui-internal.h include/zrnui.h
+$(B)/%.o: %.c src/zui-internal.h src/widgets/widgets.h include/zrnui.h
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
@@ -42,7 +43,12 @@ install: all $(B)/zrnui.pc
 	install -Dm644 $(B)/zrnui.pc $(DESTDIR)$(LIBDIR)/pkgconfig/zrnui.pc
 	install -Dm644 -t $(DESTDIR)$(PREFIX)/share/zrnui/fonts fonts/*.ttf fonts/*.txt
 
+# for the IDE, which has this directory as its Makefile project: the examples
+# run from the repository's Makefile (make run STYLE=metro|dotmatrix WINDOW=WxH)
+run run-helloworld run-hello:
+	$(MAKE) -C .. $@
+
 clean:
 	rm -rf $(B)
 
-.PHONY: all install clean
+.PHONY: all install clean run run-helloworld run-hello

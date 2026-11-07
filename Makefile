@@ -2,7 +2,7 @@
 # each example), make renders (docs/renders). At most -j4 on the laptop.
 ZRN = tools/zrn
 TESTBIN = build/tests
-EXAMPLES = hello-c settings-c hello-cpp hello-py hello-rust
+EXAMPLES = hello-c helloworld-c settings-c hello-cpp hello-py hello-rust
 
 all:
 	$(MAKE) -C libzrnui -j4
@@ -23,11 +23,24 @@ check: $(TESTBIN)/test_core
 # virtual machine, no nested compositor). make run [STYLE=metro|dotmatrix]
 # It is also what CLion's "run" configuration for this Makefile target does.
 ARCH = $(shell uname -m)
+# the window the run targets open, in points: WxH (make run WINDOW=360x740 for the phone)
+WINDOW = 480x800
 DEMO = examples/settings-c
 run: all
 	$(ZRN) -C $(DEMO) build
-	$(if $(STYLE),ZUI_STYLE=$(STYLE) )LD_LIBRARY_PATH=$(CURDIR)/libzrnui/build \
+	ZUI_WINDOW=$(WINDOW) $(if $(STYLE),ZUI_STYLE=$(STYLE) )LD_LIBRARY_PATH=$(CURDIR)/libzrnui/build \
 		$(DEMO)/build/$(ARCH)/bin/zrn-example-settings
+
+# run-helloworld, run-hello: the other C examples, the same way.
+run-helloworld: all
+	$(ZRN) -C examples/helloworld-c build
+	ZUI_WINDOW=$(WINDOW) $(if $(STYLE),ZUI_STYLE=$(STYLE) )LD_LIBRARY_PATH=$(CURDIR)/libzrnui/build \
+		examples/helloworld-c/build/$(ARCH)/bin/zrn-example-helloworld
+
+run-hello: all
+	$(ZRN) -C examples/hello-c build
+	ZUI_WINDOW=$(WINDOW) $(if $(STYLE),ZUI_STYLE=$(STYLE) )LD_LIBRARY_PATH=$(CURDIR)/libzrnui/build \
+		examples/hello-c/build/$(ARCH)/bin/zrn-example-hello
 
 examples: all
 	for e in $(EXAMPLES); do $(ZRN) -C examples/$$e pack || exit 1; done
@@ -36,9 +49,9 @@ R = docs/renders
 renders: all
 	@mkdir -p $(R)
 	$(ZRN) -C examples/settings-c render --scale 4 --style dotmatrix $(R)/dotmatrix-settings.png
-	$(ZRN) -C examples/settings-c render --scale 4 --style dotmatrix --page Wi-Fi $(R)/dotmatrix-wifi.png
+	$(ZRN) -C examples/settings-c render --scale 4 --style dotmatrix --page 0 $(R)/dotmatrix-wifi.png
 	$(ZRN) -C examples/settings-c render --scale 4 --style metro $(R)/metro-settings.png
-	$(ZRN) -C examples/settings-c render --scale 4 --style metro --page Wi-Fi $(R)/metro-wifi.png
+	$(ZRN) -C examples/settings-c render --scale 4 --style metro --page 0 $(R)/metro-wifi.png
 	$(ZRN) -C examples/hello-c render --scale 2 $(R)/hello-c.png
 	$(ZRN) -C examples/hello-cpp render --scale 2 $(R)/hello-cpp.png
 	$(ZRN) -C examples/hello-py render --scale 2 $(R)/hello-py.png
@@ -62,4 +75,4 @@ clean:
 	$(MAKE) -C libzrnui clean
 	rm -rf build
 
-.PHONY: all check examples renders clean install run
+.PHONY: all check examples renders clean install run run-helloworld run-hello

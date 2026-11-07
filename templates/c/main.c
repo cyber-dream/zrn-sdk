@@ -9,11 +9,15 @@ static void tapped(zui_node *button, void *data) {
 }
 
 int main(void) {
-	zui_app *app = zui_app_new("{{ID}}", "{{NAME}}");
-	zui_node *page = zui_page(app, "{{NAME}}");
-	zui_text(page, "A new ztOS app. Edit main.c, then run `zrn build && zrn render out.png`.");
-	zui_node *card = zui_section(page, "Status");
+	zui_app *app = zui_app_new();
+	zui_node *page = zui_page(app);
+	zui_node *title = zui_title_panel(page);
+	zui_title(title, "{{NAME}}");
+	zui_header(title, "home");
+	zui_node *content = zui_content_panel(page);
+	zui_text(content, "A new ztOS app. Edit main.c, then run `zrn build && zrn render out.png`.");
+	zui_node *card = zui_section(content, "Status");
 	status = zui_heading(card, "Not tapped yet");
-	zui_button(page, "Tap me", tapped, NULL);
+	zui_button(content, "Tap me", tapped, NULL);
 	return zui_run(app, page);
 }

@@ -1,0 +1,66 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+/* Check boxes and radio buttons.
+ * Nothing here knows which style is in use: it draws with the palette and the metrics. */
+#define _GNU_SOURCE
+#include <ctype.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "widgets/widgets.h"
+
+ZUI_EXPORT zui_node *zui_check(zui_node *parent, const char *title, bool on, zui_cb cb, void *data) {
+	zui_node *n = zui_node_new_kind(parent, ZK_CHECK);
+	zui_set_text(n, title);
+	n->on = on;
+	zanim_set(&n->knob, on ? 1 : 0);
+	n->cb = cb;
+	n->data = data;
+	return n;
+}
+
+ZUI_EXPORT zui_node *zui_radio(zui_node *parent, const char *title, bool on, zui_cb cb, void *data) {
+	zui_node *n = zui_check(parent, title, on, cb, data);
+	n->kind = ZK_RADIO;
+	return n;
+}
+
+void zui_set_checked(zui_node *n, bool on) {
+	if (n->on == on) return;
+	n->on = on;
+	zanim_go(&n->knob, on ? 1 : 0, 120, zui_now());
+	n->app->dirty = true;
+}
+
+void draw_check(zui_app *app, zui_node *n, uint32_t now) {
+	struct zui_palette pal = zui_pal(app);
+	float k = zanim_value(&n->knob, now, NULL);
+	float x = n->x, h = n->h, y = n->y + (h - 26) / 2;
+	uint32_t ink = n->enabled ? pal.text : pal.text2;
+	bool radio = n->kind == ZK_RADIO;
+	if (radio) {
+		/* WP's radio: a ring, a disc in it when chosen */
+		zg_ring(x + 13, y + 13, 13, 2, ink);
+		if (k > 0.01f) zg_circle(x + 13, y + 13, 6.5f * k, ink);
+	} else {
+		zg_border(x, y, 26, 26, 0, 2, ink);
+		if (k > 0.01f) {
+			if (dotted(app)) zui_icon("check", x + 2, y + 2, 22, 2, zc_alpha(ink, k));
+			else {
+				zg_rect(x + 4, y + 4, 18, 18, 0, zc_alpha(ink, k));
+				zui_icon("check", x + 1, y + 1, 24, 2.2f, zc_alpha(pal.bg, k));
+			}
+		}
+	}
+	text_at(&n->t[0], n->text, ZT_LIGHT, 20, x + 26 + 14, n->y + (h - zt_line_height(20)) / 2, ink,
+		n->w - 26 - 14);
+}
+
+/* radios that share a parent are one group */
+void radio_chosen(zui_node *n) {
+	for (zui_node *s = n->parent ? n->parent->first : NULL; s; s = s->next)
+		if (s != n && s->kind == ZK_RADIO && s->on) {
+			zui_set_checked(s, false);
+			zui_fire(s, ZUI_EVENT_CHANGE);
+		}
+}

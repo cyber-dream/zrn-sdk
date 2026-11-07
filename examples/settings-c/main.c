@@ -13,6 +13,15 @@ static zui_node *wifi_page, *wifi_row, *join_field, *networks, *update_row;
 static zui_node *controls_page, *tiles_page, *hub_page, *people_page;
 static zui_node *date_row, *time_row, *lang_picker, *tile_last;
 
+/* a page's TitlePanel, as on Windows Phone: the app's name small, the page's name large */
+static zui_node *titled(const char *title) {
+	zui_node *page = zui_page(app);
+	zui_node *panel = zui_title_panel(page);
+	zui_title(panel, "SETTINGS");
+	zui_header(panel, title);
+	return page;
+}
+
 static void open_wifi(zui_node *row, void *data) { zui_push(wifi_page); }
 
 static void wifi_switched(zui_node *sw, void *data) {
@@ -58,12 +67,13 @@ static void network(zui_node *card, const char *name, const char *how, bool secu
 }
 
 static void build_wifi_page(void) {
-	wifi_page = zui_page(app, "Wi-Fi");
-	zui_node *top = zui_card(wifi_page);
+	wifi_page = titled("wi-fi");
+	zui_node *content = zui_content_panel(wifi_page);
+	zui_node *top = zui_card(content);
 	zui_node *sw = zui_switch(top, "Wi-Fi", true, wifi_switched, NULL);
 	zui_set_subtitle(sw, "Connected to Home-5G");
 	zui_set_icon(sw, "wifi");
-	networks = zui_column(wifi_page);
+	networks = zui_column(content);
 	zui_node *list = zui_section(networks, "Networks nearby");
 	network(list, "Home-5G", "Connected, 5 GHz", true);
 	network(list, "Zerone Lab", "Secured, 2.4 GHz", true);
@@ -166,8 +176,9 @@ static void build_people_page(void) {
 	static const char *const names[] = { "Ada Lovelace", "Alan Turing", "Barbara Liskov", "Bjarne Stroustrup",
 		"Dennis Ritchie", "Donald Knuth", "Edsger Dijkstra", "Grace Hopper", "Guido van Rossum",
 		"Ken Thompson", "Linus Torvalds", "Margaret Hamilton", "Tim Berners-Lee" };
-	people_page = zui_page(app, "People");
-	zui_node *b = zui_button(people_page, "Jump to a letter", open_jump, NULL);
+	people_page = titled("people");
+	zui_node *content = zui_content_panel(people_page);
+	zui_node *b = zui_button(content, "Jump to a letter", open_jump, NULL);
 	zui_set_variant(b, ZUI_LINK);
 	char last = 0;
 	zui_node *group = NULL;
@@ -175,7 +186,7 @@ static void build_people_page(void) {
 		char c = (char)(names[i][0] | 0x20);
 		if (c != last) {
 			char head[2] = { (char)(c - 32), 0 };
-			group = zui_section(people_page, head);
+			group = zui_section(content, head);
 			letter_sections[c - 'a' + 1] = group;
 			letter_live[c - 'a' + 1] = true;
 			last = c;
@@ -184,14 +195,15 @@ static void build_people_page(void) {
 		zui_set_monogram(it, (char[]){ names[i][0], 0 });
 		zui_set_hold(it, menu_for, NULL, NULL);
 	}
-	zui_space(people_page, 80);
+	zui_space(content, 80);
 }
 
 static void tile_tapped(zui_node *t, void *data) { say("Opened", t); }
 
 static void build_tiles_page(void) {
-	tiles_page = zui_page(app, "Tiles");
-	zui_node *g = zui_tiles(tiles_page);
+	tiles_page = titled("tiles");
+	zui_node *content = zui_content_panel(tiles_page);
+	zui_node *g = zui_tiles(content);
 	zui_node *t = zui_tile(g, "Phone", "info", false, tile_tapped, NULL);
 	zui_set_badge(t, "3");
 	zui_set_hold(t, menu_for, NULL, NULL);
@@ -213,7 +225,7 @@ static void build_tiles_page(void) {
 	t = zui_tile(g, "Settings", "settings", false, tile_tapped, NULL);
 	zui_set_tint(t, 0xe51400);
 	tile_last = t;
-	zui_caption(tiles_page, "Hold a tile for its menu. The live ones turn over now and then.");
+	zui_caption(content, "Hold a tile for its menu. The live ones turn over now and then.");
 }
 
 static zui_pixmap *panorama(void) {
@@ -233,13 +245,15 @@ static zui_pixmap *panorama(void) {
 }
 
 static void build_hub_page(void) {
-	hub_page = zui_page(app, "Hub");
-	zui_node *hub = zui_hub(hub_page);
+	zui_node *hub = zui_hub(app);
+	hub_page = hub;
+	zui_hub_title(hub, "hub");
 	zui_pixmap *bg = panorama();
 	zui_hub_set_background(hub, bg);
 	zui_pixmap_free(bg);
 
-	zui_node *s = zui_hub_section(hub, "featured");
+	zui_node *s = zui_hub_section(hub);
+	zui_title(s, "featured");
 	zui_node *g = zui_tiles(s);
 	zui_node *t = zui_tile(g, "Photos", "info", false, tile_tapped, NULL);
 	zui_set_tint(t, 0xe3a21a);
@@ -249,14 +263,16 @@ static void build_hub_page(void) {
 	t = zui_tile(g, "Store", "plus", true, tile_tapped, NULL);
 	zui_set_tint(t, 0xd80073);
 
-	s = zui_hub_section(hub, "recent");
+	s = zui_hub_section(hub);
+	zui_title(s, "recent");
 	zui_node *card = zui_card(s);
 	zui_item(card, "Holiday album", "12 pictures", NULL, NULL);
 	zui_item(card, "Receipts", "3 documents", NULL, NULL);
 	zui_item(card, "Voice note", "yesterday", NULL, NULL);
 	zui_item(card, "Backup", "completed", NULL, NULL);
 
-	s = zui_hub_section(hub, "about");
+	s = zui_hub_section(hub);
+	zui_title(s, "about");
 	zui_text(s, "A hub is one wide page made of sections. Swipe sideways: the next section is always showing at the edge.");
 	zui_space(s, 8);
 	zui_caption(s, "The title and the picture behind move more slowly than the sections.");
@@ -265,16 +281,17 @@ static void build_hub_page(void) {
 }
 
 static void build_controls_page(void) {
-	controls_page = zui_page(app, "Controls");
+	controls_page = titled("controls");
+	zui_node *content = zui_content_panel(controls_page);
 
-	zui_node *c = zui_section(controls_page, "Check and choose");
+	zui_node *c = zui_section(content, "Check and choose");
 	zui_check(c, "Remember me", true, box_ticked, NULL);
 	zui_check(c, "Send crash reports", false, box_ticked, NULL);
 	zui_radio(c, "Small", false, radio_changed, NULL);
 	zui_radio(c, "Medium", true, radio_changed, NULL);
 	zui_radio(c, "Large", false, radio_changed, NULL);
 
-	c = zui_section(controls_page, "Text");
+	c = zui_section(content, "Text");
 	zui_node *pw = zui_field(c, "Password", NULL, NULL);
 	zui_field_set_password(pw, true);
 	zui_set_text(pw, "hunter22");
@@ -284,13 +301,13 @@ static void build_controls_page(void) {
 	zui_node *l = zui_button(c, "Forgot your password?", NULL, NULL);
 	zui_set_variant(l, ZUI_LINK);
 
-	c = zui_section(controls_page, "Pickers");
+	c = zui_section(content, "Pickers");
 	static const char *const langs[] = { "English", "Deutsch", "Français", "Русский" };
 	lang_picker = zui_picker(c, "Language", langs, 4, 0, lang_changed, NULL);
 	date_row = zui_date_picker(c, "Birthday", 1990, 11, 5, date_changed, NULL);
 	time_row = zui_time_picker(c, "Alarm", 7, 30, time_changed, NULL);
 
-	c = zui_section(controls_page, "Over the page");
+	c = zui_section(content, "Over the page");
 	zui_node *row = zui_row(c);
 	zui_node *b = zui_button(row, "Dialog", ask_dialog, NULL);
 	zui_set_flex(b, 1);
@@ -301,22 +318,23 @@ static void build_controls_page(void) {
 	zui_node *hold = zui_item(c, "Hold me", "press and hold for a menu", NULL, NULL);
 	zui_set_hold(hold, menu_for, NULL, NULL);
 
-	c = zui_section(controls_page, "Working");
+	c = zui_section(content, "Working");
 	zui_node *ring = zui_ring(c);
 	(void)ring;
-	zui_space(controls_page, 40);
+	zui_space(content, 40);
 }
 
 int main(void) {
-	app = zui_app_new("zrn-example-settings", "Settings");
+	app = zui_app_new();
 	build_wifi_page();
 	build_controls_page();
 	build_tiles_page();
 	build_hub_page();
 	build_people_page();
-	zui_node *page = zui_page(app, "Settings");
+	zui_node *page = titled("settings");
+	zui_node *content = zui_content_panel(page);
 
-	zui_node *conn = zui_section(page, "Connections");
+	zui_node *conn = zui_section(content, "Connections");
 	wifi_row = zui_item(conn, "Wi-Fi", NULL, open_wifi, NULL);
 	zui_set_icon(wifi_row, "wifi");
 	zui_set_detail(wifi_row, "Home-5G");
@@ -328,20 +346,20 @@ int main(void) {
 	zui_set_icon(dnd, "moon");
 	zui_set_tint(dnd, 0x8b5cf6);
 
-	zui_node *more = zui_section(page, "Widgets");
+	zui_node *more = zui_section(content, "Widgets");
 	zui_item(more, "Controls", "check boxes, pickers, dialogs", open_controls, NULL);
 	zui_item(more, "Tiles", "live tiles you can hold", open_tiles, NULL);
 	zui_item(more, "Hub", "sections side by side", open_hub, NULL);
 	zui_item(more, "People", "a list with a jump list", open_people, NULL);
 
-	zui_node *disp = zui_section(page, "Display and sound");
+	zui_node *disp = zui_section(content, "Display and sound");
 	zui_slider(disp, "Brightness", 0.62, brightness, NULL);
 	zui_slider(disp, "Volume", 0.35, NULL, NULL);
 	zui_node *dark = zui_switch(disp, "Dark theme", true, dark_theme, NULL);
 	zui_set_icon(dark, "sun");
 	zui_set_tint(dark, 0xf59e0b);
 
-	zui_node *about = zui_section(page, "This phone");
+	zui_node *about = zui_section(content, "This phone");
 	update_row = zui_item(about, "Software", "ztOS BETA-1", NULL, NULL);
 	zui_set_icon(update_row, "info");
 	zui_set_tint(update_row, 0x64748b);
@@ -354,7 +372,7 @@ int main(void) {
 	zui_caption(storage, "Storage: 41.2 GB of 64 GB used");
 	zui_progress(storage, 0.64);
 
-	zui_node *b = zui_button(page, "Check for updates", check_updates, NULL);
+	zui_node *b = zui_button(content, "Check for updates", check_updates, NULL);
 	zui_set_variant(b, ZUI_TONAL);
 	return zui_run(app, page);
 }

@@ -588,6 +588,98 @@ void zg_image(unsigned tex, float x, float y, float w, float h, float r, float c
 	flush();	/* the next picture rebinds; keep one draw for each */
 }
 
+/* ---- an app's own fragment shader ----
+ * A brush can paint with one: the same vertex stage as everything else, and at each pixel the colour the
+ * app's `vec4 zui_shade(vec2 uv)` gives (uv 0..1 over the area, y down; straight, not premultiplied
+ * alpha). It may read u_time (seconds), u_res (the area's size in points) and any uniform of its own.
+ * The area's rounded corners, the alpha and DotMatrix (the colour's brightness as dots) are done here. */
+static const char USER_FS_HEAD[] =
+	"#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\n"
+	"varying vec2 v_local; varying vec2 v_half; varying vec4 v_p; varying vec4 v_color;"
+	"uniform float u_px; uniform float u_dots; uniform float u_dorg; uniform vec3 u_main;"
+	"uniform float u_time; uniform vec2 u_res;\n";
+static const char USER_FS_TAIL[] =
+	"\nfloat zui_box(vec2 p, vec2 b, float r){ vec2 q=abs(p)-b+r;"
+	" return min(max(q.x,q.y),0.0)+length(max(q,0.0))-r; }"
+	"void main(){"
+	" if(u_dots>0.0){ vec2 fc=vec2(gl_FragCoord.x,-gl_FragCoord.y)*u_px; fc.y-=u_dorg;"
+	"  vec2 cell=(floor(fc/u_dots)+0.5)*u_dots; vec2 off=cell-fc;"
+	"  float lit=clamp(0.5+(u_dots*0.36-length(off))/u_px,0.0,1.0);"
+	"  vec2 lc=v_local+off; float e=zui_box(lc,v_half,v_p.x);"
+	"  vec4 c=zui_shade(0.5+0.5*lc/v_half); float lum=0.12+0.88*dot(c.rgb,vec3(0.3,0.59,0.11));"
+	"  gl_FragColor=vec4(u_main*lum,1.0)*c.a*v_color.a*lit*step(e,0.0); return; }"
+	" float e=zui_box(v_local,v_half,v_p.x);"
+	" vec4 c=zui_shade(0.5+0.5*v_local/v_half);"
+	" gl_FragColor=vec4(c.rgb*c.a,c.a)*v_color.a*clamp(0.5-e/u_px,0.0,1.0); }";
+
+unsigned zg_shader_compile(const char *user, char *err, size_t errn) {
+	if (err && errn) err[0] = 0;
+	/* #line 1: an error says the line of the app's own source */
+	const char *parts[4] = { USER_FS_HEAD, "#line 1\n", user, USER_FS_TAIL };
+	GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fs, 4, parts, NULL);
+	glCompileShader(fs);
+	GLint ok = 0;
+	glGetShaderiv(fs, GL_COMPILE_STATUS, &ok);
+	if (!ok) {
+		if (err && errn) glGetShaderInfoLog(fs, (GLsizei)errn, NULL, err);
+		glDeleteShader(fs);
+		return 0;
+	}
+	GLuint vs = shader(GL_VERTEX_SHADER, VS);
+	GLuint prog = glCreateProgram();
+	glAttachShader(prog, vs);
+	glAttachShader(prog, fs);
+	glBindAttribLocation(prog, 0, "a_pos");
+	glBindAttribLocation(prog, 1, "a_local");
+	glBindAttribLocation(prog, 2, "a_half");
+	glBindAttribLocation(prog, 3, "a_p");
+	glBindAttribLocation(prog, 4, "a_color");
+	glLinkProgram(prog);
+	glDeleteShader(vs);
+	glDeleteShader(fs);
+	glGetProgramiv(prog, GL_LINK_STATUS, &ok);
+	if (!ok) {
+		if (err && errn) glGetProgramInfoLog(prog, (GLsizei)errn, NULL, err);
+		glDeleteProgram(prog);
+		return 0;
+	}
+	return prog;
+}
+
+void zg_shader_free(unsigned prog) {
+	if (prog) glDeleteProgram(prog);
+}
+
+/* the area, painted by the program; `uniforms` are the app's own, name and four floats each */
+void zg_shader_rect(unsigned prog, float x, float y, float w, float h, float r, float time,
+		int nuniforms, const char *const *names, const float (*values)[4]) {
+	if (w <= 0 || h <= 0 || !prog) return;
+	flush();	/* what is queued is for the main program */
+	glUseProgram(prog);
+	glUniform2f(glGetUniformLocation(prog, "u_size"), G.w, G.h);
+	glUniform1f(glGetUniformLocation(prog, "u_eye"), (G.h / 2) / tanf(17.0f * (float)M_PI / 180.0f));
+	glUniform1f(glGetUniformLocation(prog, "u_px"), 1.0f / G.scale);
+	glUniform1f(glGetUniformLocation(prog, "u_dots"), G.dots);
+	glUniform1f(glGetUniformLocation(prog, "u_dorg"), G.dorg);
+	glUniform3f(glGetUniformLocation(prog, "u_main"), ((G.dmain >> 16) & 255) / 255.0f,
+		((G.dmain >> 8) & 255) / 255.0f, (G.dmain & 255) / 255.0f);
+	glUniform1f(glGetUniformLocation(prog, "u_time"), time);
+	glUniform2f(glGetUniformLocation(prog, "u_res"), w, h);
+	for (int i = 0; i < nuniforms; i++) {
+		GLint at = glGetUniformLocation(prog, names[i]);
+		if (at >= 0) glUniform4f(at, values[i][0], values[i][1], values[i][2], values[i][3]);
+	}
+	float hx = w / 2, hy = h / 2;
+	if (r > hx) r = hx;
+	if (r > hy) r = hy;
+	const float pos[4][2] = { { x, y }, { x + w, y }, { x, y + h }, { x + w, y + h } };
+	const float local[4][2] = { { -hx, -hy }, { hx, -hy }, { -hx, hy }, { hx, hy } };
+	emit(pos, local, hx, hy, r, 0, 0, M_FILL, 0xffffffff);
+	flush();	/* drawn by this program, now */
+	glUseProgram(G.program);
+}
+
 /* ---- glyphs ---- */
 bool zg_atlas_alloc(int w, int h, int *x, int *y) {
 	if (w > ZG_ATLAS || h > ZG_ATLAS) return false;

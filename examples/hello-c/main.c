@@ -13,13 +13,17 @@ static void tapped(zui_node *button, void *data) {
 }
 
 int main(void) {
-	zui_app *app = zui_app_new("zrn-example-hello", "Hello");
-	zui_node *page = zui_page(app, "Hello");
-	zui_text(page, "This is a ztOS app written in C with libzrnui. "
+	zui_app *app = zui_app_new();
+	zui_node *page = zui_page(app);
+	zui_node *title = zui_title_panel(page);
+	zui_title(title, "HELLO");
+	zui_header(title, "hello");
+	zui_node *content = zui_content_panel(page);
+	zui_text(content, "This is a ztOS app written in C with libzrnui. "
 		"Everything on this page is drawn by the GPU.");
-	zui_node *card = zui_card(page);
+	zui_node *card = zui_card(content);
 	count_label = zui_heading(card, "Not tapped yet");
 	zui_caption(card, "The button below changes this line.");
-	zui_button(page, "Tap me", tapped, NULL);
+	zui_button(content, "Tap me", tapped, NULL);
 	return zui_run(app, page);
 }

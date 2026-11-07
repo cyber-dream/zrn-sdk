@@ -4,8 +4,8 @@
 //! closures for callbacks and lifetimes that keep nodes from outliving their app.
 //!
 //! ```no_run
-//! let app = zrnui::App::new("zrn-hello-rust", "Hello");
-//! let page = app.page("Hello");
+//! let app = zrnui::App::new();
+//! let page = app.page();
 //! let label = page.text("Not tapped yet");
 //! let mut taps = 0;
 //! page.button("Tap me").on_click(move || {
@@ -111,16 +111,23 @@ unsafe extern "C" fn fire_timer(data: *mut c_void) {
 }
 
 impl App {
-    /// `id` is the manifest's id, also the Wayland app_id the shell matches.
-    pub fn new(id: &str, title: &str) -> App {
-        let (i, t) = (cs(id), cs(title));
-        let raw = unsafe { sys::zui_app_new(i.as_ptr(), t.as_ptr()) };
+    /// The app has no id or title to give: see `zui_app_new`.
+    pub fn new() -> App {
+        let raw = unsafe { sys::zui_app_new() };
         App { raw, timers: Box::new(RefCell::new(HashMap::new())), alive: Arc::new(Mutex::new(raw as usize)) }
     }
 
-    pub fn page(&self, title: &str) -> Node<'_> {
-        let t = cs(title);
-        Node::wrap(unsafe { sys::zui_page(self.raw, t.as_ptr()) })
+    /// The template: a root with a TitlePanel and a ContentPanel.
+    pub fn page(&self) -> Node<'_> {
+        Node::wrap(unsafe { sys::zui_page(self.raw) })
+    }
+    /// An empty root, from the top of the window.
+    pub fn page_blank(&self) -> Node<'_> {
+        Node::wrap(unsafe { sys::zui_page_blank(self.raw) })
+    }
+    /// An empty root over the whole window above the footer; it does not scroll.
+    pub fn page_fullscreen(&self) -> Node<'_> {
+        Node::wrap(unsafe { sys::zui_page_fullscreen(self.raw) })
     }
 
     /// Shows `first` and runs until the app quits; returns the exit status.
@@ -350,6 +357,28 @@ impl<'a> Node<'a> {
         self
     }
 
+    // ---- a page's TitlePanel: the application's title (small), the page's title (large) ----
+    pub fn title_panel(&self) -> Node<'a> {
+        Node::wrap(unsafe { sys::zui_title_panel(self.raw) })
+    }
+    /// A scroll viewer: what is put in it scrolls, the rest of the page stays.
+    pub fn scroll(&self) -> Node<'a> {
+        Node::wrap(unsafe { sys::zui_scroll(self.raw) })
+    }
+    pub fn content_panel(&self) -> Node<'a> {
+        Node::wrap(unsafe { sys::zui_content_panel(self.raw) })
+    }
+    /// The small title (the application's, a hub section's), in a TitlePanel or a section.
+    pub fn title(&self, s: &str) -> Node<'a> {
+        let t = cs(s);
+        Node::wrap(unsafe { sys::zui_title(self.raw, t.as_ptr()) })
+    }
+    /// The large title (a page's, a hub's), in a TitlePanel.
+    pub fn header(&self, s: &str) -> Node<'a> {
+        let t = cs(s);
+        Node::wrap(unsafe { sys::zui_header(self.raw, t.as_ptr()) })
+    }
+
     // ---- changing it (each returns the node, so they chain) ----
     pub fn set_text(self, s: &str) -> Self {
         let t = cs(s);
@@ -438,8 +467,8 @@ mod tests {
     #[test]
     fn tap_runs_the_closure() {
         let _turn = ONE_AT_A_TIME.lock().unwrap_or_else(|e| e.into_inner());
-        let app = App::new("zrn-test-rust", "Test");
-        let page = app.page("Test");
+        let app = App::new();
+        let page = app.page();
         let hits = Rc::new(Cell::new(0));
         let h = hits.clone();
         let b = page.button("Tap").on_click(move || h.set(h.get() + 1));
@@ -453,8 +482,8 @@ mod tests {
     #[test]
     fn switch_reports_its_state() {
         let _turn = ONE_AT_A_TIME.lock().unwrap_or_else(|e| e.into_inner());
-        let app = App::new("zrn-test-rust", "Test");
-        let page = app.page("Test");
+        let app = App::new();
+        let page = app.page();
         let seen = Rc::new(Cell::new(false));
         let s2 = seen.clone();
         let sw = page.card().switch("Wi-Fi", false).on_change(move |on| s2.set(on));

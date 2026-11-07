@@ -33,18 +33,6 @@ static struct zui_palette metro_palette(const zui_app *app) {
 #define PRESS_SINK 0.045f
 
 
-static char *lower(const char *s) {
-	char *o = strdup(s ? s : "");
-	for (char *p = o; *p; p++) if ((unsigned char)*p < 0x80) *p = (char)tolower((unsigned char)*p);
-	return o;
-}
-
-static char *upper(const char *s) {
-	char *o = strdup(s ? s : "");
-	for (char *p = o; *p; p++) if ((unsigned char)*p < 0x80) *p = (char)toupper((unsigned char)*p);
-	return o;
-}
-
 static float page_top(zui_app *app, zui_node *page, float y, bool draw) {
 	(void)app; (void)page; (void)draw;
 	return y;
@@ -53,28 +41,17 @@ static float page_top(zui_app *app, zui_node *page, float y, bool draw) {
 static void header(zui_app *app, zui_node *page, uint32_t now) {
 	(void)now;
 	struct zui_palette pal = app->style->palette(app);
-	zg_rect(0, 0, app->width, page->compact ? 62 : M.bar_h, 0, pal.bg);
+	if (!page->bg) zg_rect(0, 0, app->width, page->title_panel.h, 0, pal.bg);	/* what is under the titles, if the page has no background */
 	if (page->compact) {
 		/* a person: their picture, their name large, how they are under it */
-		zui_draw_leading(app, page, M.margin, 8, 46, 0, 0xffffffff);
+		zui_draw_leading(app, page, M.margin, M.top - 4, 46, 0, 0xffffffff);
 		float x = M.margin + 46 + 10, room = app->width - x - M.margin;
-		zt_draw(zt_slot_get(&page->title_slot[0], page->text, ZT_LIGHT, 24, room, 1), x, 4, pal.text);
+		zt_draw(zt_slot_get(&page->title_slot[0], zui_panel_text(page, ZK_HEADER), ZT_LIGHT, 24, room, 1), x, M.top - 8, pal.text);
 		if (page->subtitle && *page->subtitle)
-			zt_draw(zt_slot_get(&page->t[1], page->subtitle, ZT_REGULAR, 13, room, 1), x, 36, pal.text2);
+			zt_draw(zt_slot_get(&page->t[1], page->subtitle, ZT_REGULAR, 13, room, 1), x, M.top + 24, pal.text2);
 		return;
 	}
-	char *caps = upper(app->title), *title = lower(page->text);
-	struct zt_layout *C = zt_slot_get(&page->title_slot[1], caps, ZT_STRONG, 11.5f, app->width - 2 * M.margin, 1);
-	/* a hub's title goes by more slowly than its sections: a panorama */
-	float shift = 0;
-	if (page->hub) zui_hub_title_shift(app, page, &shift);
-	zt_draw(C, M.margin + shift, 12, pal.text);
-	if (!page->tabs) {
-		struct zt_layout *T = zt_slot_get(&page->title_slot[0], title, ZT_LIGHT, M.title, 0, 0);
-		zt_draw(T, M.margin - 3 + shift, 20, pal.text);
-	}
-	free(caps);
-	free(title);
+	/* the TitlePanel's titles are widgets, drawn over this by the page */
 }
 
 static void card(zui_app *app, zui_node *n) { (void)app; (void)n; }
@@ -137,24 +114,27 @@ static void tabs(zui_app *app, zui_node *n, float pos) {
 	struct zui_palette pal = app->style->palette(app);
 	int count = zui_tab_count(n), cur = n->tab_cur;
 	float frac = pos - (float)cur;
-	zg_rect(0, 24, app->width, M.bar_h - 24, 0, pal.bg);
+	if (!(app->page && app->page->bg)) zg_rect(0, 24, app->width, M.title_h - 24, 0, pal.bg);
 	struct zt_layout *L[8];
 	for (int k = 0; k < count; k++) {
 		zui_node *t = zui_tab_at(n, k);
-		L[k] = zt_slot_get(&t->title_slot[0], t->text, ZT_LIGHT, M.title, 0, 0);
+		L[k] = zt_slot_get(&t->title_slot[0], zui_tab_title(t), ZT_LIGHT, M.title, 0, 0);
 	}
+	/* the pivot's own small title takes the top line, the item titles go under it */
+	const char *small = zui_panel_text(zui_page_of(n), ZK_TITLE);
+	float top = small && *small ? M.top + 8 : M.top;	/* as a page's TitlePanel: 32 of status bar and 24 down */
 	float at = M.margin - 3;
 	if (frac > 0) at -= frac * (L[cur]->w + 16);
 	else if (frac < 0) at += -frac * (L[(cur + count - 1) % count]->w + 16);
 	/* one behind, off to the left, when going back */
 	if (frac < 0) {
 		int p = (cur + count - 1) % count;
-		zt_draw(L[p], at - L[p]->w - 16, 20, pal.text3);
+		zt_draw(L[p], at - L[p]->w - 16, top, pal.text3);
 	}
 	for (int k = 0; k < 8 && at < app->width; k++) {
 		int i = (cur + k) % count;
 		float near = k == 0 ? 1 - fabsf(frac) : (k == 1 && frac > 0 ? frac : 0);
-		zt_draw(L[i], at, 20, zc_mix(pal.text3, pal.text, near));
+		zt_draw(L[i], at, top, zc_mix(pal.text3, pal.text, near));
 		at += L[i]->w + 16;
 	}
 }
@@ -482,13 +462,13 @@ const struct zui_style zui_style_metro = {
 	.turn_in_ms = 330,
 	.palette = metro_palette,
 	.m = {
-		.margin = 16, .gap = 12, .card_r = 0, .card_pad = 0, .section_gap = 10,
+		.margin = 24, .top = 56, .gap = 12, .card_r = 0, .card_pad = 0, .section_gap = 10,
 		.text = 16, .heading = 25.5f, .caption = 13, .label = 13, .title = 48, .bar_title = 0,
 		.item_h = 52, .item_h2 = 66, .item_title = 21, .item_sub = 13, .icon_tile = 0,
 		.button_h = 40, .button_r = 0, .button_text = 14.5f,
 		.field_h = 44, .field_r = 0,
 		.bar_slot = 57, .bar_button = 44,
-		.bar_h = 108, .large_title_h = 0,
+		.title_h = 152, .title_compact_h = 106, .large_title_h = 0,
 	},
 	.header = header,
 	.page_top = page_top,
@@ -540,12 +520,12 @@ const struct zui_style zui_style_dotmatrix = {
 	.transition_ms = 720,
 	.palette = dot_palette,
 	.m = {
-		.margin = 16, .gap = 12, .card_r = 0, .card_pad = 0, .section_gap = 10,
+		.margin = 24, .top = 56, .gap = 12, .card_r = 0, .card_pad = 0, .section_gap = 10,
 		.text = 16, .heading = 25.5f, .caption = 13, .label = 13, .title = 48, .bar_title = 0,
 		.item_h = 52, .item_h2 = 66, .item_title = 21, .item_sub = 13, .icon_tile = 0,
 		.button_h = 40, .button_r = 0, .button_text = 14.5f,
 		.field_h = 44, .field_r = 0,
-		.bar_h = 108, .large_title_h = 0,
+		.title_h = 152, .title_compact_h = 106, .large_title_h = 0,
 	},
 	.header = header,
 	.page_top = page_top,

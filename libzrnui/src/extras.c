@@ -162,11 +162,6 @@ ZUI_EXPORT void zui_set_monogram(zui_node *n, const char *t) {
 	n->app->laid_out = false;
 	n->app->dirty = true;
 }
-ZUI_EXPORT void zui_page_set_fullscreen(zui_node *n, bool on) {
-	n->fullscreen = on;
-	n->app->laid_out = false;
-	n->app->dirty = true;
-}
 ZUI_EXPORT void zui_set_image_fit(zui_node *n, bool fit) {
 	n->fit = fit;
 	n->app->laid_out = false;
@@ -266,32 +261,29 @@ void zui_list_free(zui_node *n) {
 	n->list = NULL;
 }
 
-/* where the page's scroll, for this list, is now */
-static float list_scroll(zui_node *n, zui_node **page_out) {
-	zui_node *p = n, *tab = NULL;
-	while (p->parent) {
-		if (p->parent->kind == ZK_TABS) tab = p;
-		p = p->parent;
+/* what scrolls the list: the tab it is in, the hub section it is in, or its page (see zui_scroller) */
+zui_node *zui_list_owner(zui_node *n) {
+	for (zui_node *p = n->parent; p; p = p->parent) {
+		if (p->kind == ZK_SCROLL) return p;
+		if (p->parent && (p->parent->kind == ZK_TABS || p->parent->kind == ZK_HUB)) return p;
 	}
-	if (page_out) *page_out = p;
-	if (tab && tab->parent->tab_cur != zui_child_index(tab)) return tab->scroll;
-	return p->scroll;
+	return zui_page_of(n);
 }
 
 static void changed_height(zui_node *n, int row, float delta) {
 	struct zui_list_state *L = n->list;
 	if (fabsf(delta) < 0.01f) return;
 	for (int i = row + 1; i <= L->count; i++) L->y[i] += delta;
-	zui_node *page;
-	float scroll = list_scroll(n, &page);
+	zui_node *owner = zui_list_owner(n), *page = zui_page_of(n);
+	float scroll = owner->scroll;
 	n->h += delta;
 	for (int i = 0; i < ZUI_LIST_SLOTS; i++)
 		if (L->slot[i] && L->slot_row[i] > row) L->slot[i]->y += delta, zui_move_children(L->slot[i], delta);
-	page->content_h += delta;
+	owner->content_h += delta;
 	/* what is on the screen stays where it is, when a row above it turned out
 	 * another height than guessed */
-	if (n->y + L->y[row] < scroll + page->header_h && !page->stick_end) {
-		page->scroll += delta;
+	if (owner->kind != ZK_PAGE && n->y + L->y[row] < scroll + page->title_panel.h && !owner->stick_end) {
+		owner->scroll += delta;
 		n->app->down_scroll += delta;	/* or the next move of the finger undoes it */
 	}
 }
@@ -426,8 +418,7 @@ void zui_bind_row(zui_node *n, int row) { bind_row(n, row); }
 void zui_list_ensure(zui_node *n, uint32_t now) {
 	struct zui_list_state *L = n->list;
 	if (!L->count) return;
-	zui_node *page;
-	float scroll = list_scroll(n, &page), H = n->app->height;
+	float scroll = zui_list_owner(n)->scroll, H = n->app->height;
 	float top = scroll - n->y, bot = top + H;
 	int lo = 0, hi = L->count;
 	while (lo < hi) {
@@ -595,9 +586,7 @@ ZUI_EXPORT void zui_list_prepend(zui_node *n, int k) {
 	L->arrive_from = 0;
 	for (int i = 0; i < ZUI_LIST_SLOTS; i++)
 		if (L->slot[i]) L->slot_row[i] += k;
-	zui_node *page;
-	list_scroll(n, &page);
-	page->scroll += at;
+	if (zui_list_owner(n)->kind != ZK_PAGE) zui_list_owner(n)->scroll += at;
 	n->app->down_scroll += at;
 	n->app->laid_out = false;
 	n->app->dirty = true;
@@ -616,25 +605,46 @@ ZUI_EXPORT void zui_list_allow_more(zui_node *n) { n->list->asked = false; }
 
 /* ---- the end of a page ---- */
 ZUI_EXPORT void zui_page_scroll_end(zui_node *page, bool glide) {
-	page->stick_end = true;
-	page->glide = glide;
-	if (glide) page->glide_at = zui_now();
-	page->app->dirty = true;
+	zui_node *sv = zui_scroller(zui_page_of(page));
+	sv->stick_end = true;
+	sv->glide = glide;
+	if (glide) sv->glide_at = zui_now();
+	sv->app->dirty = true;
 }
 ZUI_EXPORT bool zui_page_at_end(zui_node *page, double within) {
-	return page->stick_end || page->content_h - page->app->height - page->scroll <= within;
+	zui_node *sv = zui_scroller(zui_page_of(page));
+	if (sv->kind == ZK_PAGE) return true;	/* it does not scroll: it is all at its end */
+	return sv->stick_end || sv->content_h - sv->app->height - sv->scroll <= within;
 }
 
 /* ---- tabs ---- */
-ZUI_EXPORT zui_node *zui_tabs(zui_node *page) {
+ZUI_EXPORT zui_node *zui_pivot(zui_app *app) {
+	zui_node *page = zui_page_blank(app);
 	zui_node *n = zui_node_new_kind(page, ZK_TABS);
 	page->tabs = n;
 	return n;
 }
-ZUI_EXPORT zui_node *zui_tab(zui_node *tabs, const char *title) {
-	zui_node *c = zui_column(tabs);
-	c->text = strdup(title ? title : "");
-	return c;
+ZUI_EXPORT void zui_pivot_title(zui_node *pivot, const char *text) {
+	zui_node *panel = zui_title_panel(pivot);
+	for (zui_node *c = panel->first; c; c = c->next)
+		if (c->kind == ZK_TITLE) { zui_set_text(c, text ? text : ""); return; }
+	zui_title(panel, text ? text : "");
+}
+ZUI_EXPORT zui_node *zui_pivot_item(zui_node *pivot) { return zui_column(pivot); }
+/* the item's title (PivotItem.Header): a header the pivot draws in its title row, the column skips it;
+ * called again, it changes the text */
+ZUI_EXPORT zui_node *zui_pivot_item_header(zui_node *item, const char *text) {
+	for (zui_node *c = item->first; c; c = c->next)
+		if (c->kind == ZK_HEADER) { zui_set_text(c, text ? text : ""); return c; }
+	zui_node *n = zui_header(item, text ? text : "");
+	n->visible = false;
+	return n;
+}
+/* an item's title: its first zui_header (hidden from the column, the pivot draws it) */
+const char *zui_tab_title(const zui_node *item) {
+	for (zui_node *c = item->first; c; c = c->next)
+		if (c->kind == ZK_HEADER) return c->text ? c->text : "";
+	return "";
 }
 int zui_child_index(const zui_node *c) {
 	int i = 0;
@@ -651,22 +661,19 @@ int zui_tab_count(const zui_node *tabs) {
 	for (zui_node *c = tabs->first; c; c = c->next) k++;
 	return k;
 }
-ZUI_EXPORT int zui_tabs_current(zui_node *tabs) { return tabs->tab_cur; }
+ZUI_EXPORT int zui_pivot_current(const zui_node *tabs) { return tabs->tab_cur; }
 /* one tab along, going round; the slide carries on from where it is */
 void zui_tabs_step(zui_node *tabs, int dir) {
 	int k = zui_tab_count(tabs), cur = tabs->tab_cur;
 	zui_app *app = tabs->app;
-	zui_node *page = tabs->parent;
 	uint32_t now = zui_now();
 	float off = zanim_value(&tabs->knob, now, NULL);
 	if (dir) {
 		int i = ((cur + dir) % k + k) % k;
-		zui_node *old = zui_tab_at(tabs, cur), *nw = zui_tab_at(tabs, i);
-		old->scroll = page->scroll;
+		zui_node *old = zui_tab_at(tabs, cur);
 		tabs->tab_cur = i;
 		tabs->tab_prev = cur;
-		page->scroll = nw->scroll;
-		page->vel = 0;
+		old->vel = 0;
 		app->fling = false;
 		app->laid_out = false;
 		off -= (float)dir;
@@ -680,20 +687,17 @@ void zui_tabs_step(zui_node *tabs, int dir) {
 	app->dirty = true;
 }
 
-ZUI_EXPORT void zui_tabs_select(zui_node *tabs, int i) {
+ZUI_EXPORT void zui_pivot_select(zui_node *tabs, int i) {
 	int count = zui_tab_count(tabs);
 	if (i < 0 || i >= count) i = tabs->tab_cur;
 	zui_app *app = tabs->app;
-	zui_node *page = tabs->parent;
 	uint32_t now = zui_now();
 	/* the slide carries on from where the finger left it */
 	float from = (float)tabs->tab_cur + zanim_value(&tabs->knob, now, NULL);
 	if (i != tabs->tab_cur) {
-		zui_node *old = zui_tab_at(tabs, tabs->tab_cur), *nw = zui_tab_at(tabs, i);
-		old->scroll = page->scroll;
+		zui_node *old = zui_tab_at(tabs, tabs->tab_cur);
 		tabs->tab_cur = i;
-		page->scroll = nw->scroll;
-		page->vel = 0;
+		old->vel = 0;
 		app->fling = false;
 		tabs->tab_prev = zui_child_index(old);
 		app->laid_out = false;

@@ -22,7 +22,7 @@ pub const ZUI_EVENT_SUBMIT: c_int = 3;
 
 extern "C" {
     pub fn zui_version() -> *const c_char;
-    pub fn zui_app_new(app_id: *const c_char, title: *const c_char) -> *mut zui_app;
+    pub fn zui_app_new() -> *mut zui_app;
     pub fn zui_run(app: *mut zui_app, first: *mut zui_node) -> c_int;
     pub fn zui_quit(app: *mut zui_app);
     pub fn zui_app_free(app: *mut zui_app);
@@ -32,7 +32,9 @@ extern "C" {
     pub fn zui_app_set_accent(app: *mut zui_app, rgb: u32);
     pub fn zui_busy(app: *mut zui_app, busy: bool);
     pub fn zui_toast(app: *mut zui_app, text: *const c_char);
-    pub fn zui_page(app: *mut zui_app, title: *const c_char) -> *mut zui_node;
+    pub fn zui_page(app: *mut zui_app) -> *mut zui_node;
+    pub fn zui_page_blank(app: *mut zui_app) -> *mut zui_node;
+    pub fn zui_page_fullscreen(app: *mut zui_app) -> *mut zui_node;
     pub fn zui_push(page: *mut zui_node);
     pub fn zui_back(app: *mut zui_app);
     pub fn zui_column(parent: *mut zui_node) -> *mut zui_node;
@@ -52,6 +54,11 @@ extern "C" {
     pub fn zui_progress(parent: *mut zui_node, value: c_double) -> *mut zui_node;
     pub fn zui_field(parent: *mut zui_node, placeholder: *const c_char, cb: zui_cb, data: *mut c_void) -> *mut zui_node;
     pub fn zui_set_text(node: *mut zui_node, text: *const c_char);
+    pub fn zui_title_panel(page: *mut zui_node) -> *mut zui_node;
+    pub fn zui_content_panel(parent: *mut zui_node) -> *mut zui_node;
+    pub fn zui_scroll(parent: *mut zui_node) -> *mut zui_node;
+    pub fn zui_title(parent: *mut zui_node, text: *const c_char) -> *mut zui_node;
+    pub fn zui_header(parent: *mut zui_node, text: *const c_char) -> *mut zui_node;
     pub fn zui_get_text(node: *mut zui_node) -> *const c_char;
     pub fn zui_set_detail(node: *mut zui_node, text: *const c_char);
     pub fn zui_set_subtitle(node: *mut zui_node, text: *const c_char);

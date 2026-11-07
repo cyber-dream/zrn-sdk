@@ -152,12 +152,13 @@ The C API is `libzrnui/include/zrnui.h`; the same names exist in C++
 
 ```c
 zui_app *app = zui_app_new("io.github.you.notes", "Notes");
-zui_node *page = zui_page(app, "Notes");
-zui_node *list = zui_section(page, "Recent");            /* a heading and a card */
+zui_node *page = zui_page(app);
+zui_node *content = zui_content_panel(page);   /* the margin and the gaps; the page itself has none */
+zui_node *list = zui_section(content, "Recent");            /* a heading and a card */
 zui_node *row = zui_item(list, "Shopping", "3 items", open_note, note);
 zui_set_icon(row, "check");
-zui_switch(zui_section(page, "Sync"), "Back up notes", true, sync_changed, NULL);
-zui_button(page, "New note", new_note, NULL);
+zui_switch(zui_section(content, "Sync"), "Back up notes", true, sync_changed, NULL);
+zui_button(content, "New note", new_note, NULL);
 return zui_run(app, page);
 ```
 
@@ -260,7 +261,7 @@ present, else a pure-Python Ed25519).
 |---|---|
 | `zrn new NAME --lang c\|cpp\|python\|rust [--id ID]` | a project from `templates/`, with `AGENTS.md` |
 | `zrn build` | C/C++ with the system's or the SDK's libzrnui (builds it if needed); Rust with cargo; Python is syntax-checked |
-| `zrn render [--page N\|TITLE] [--style] [--theme] [--scroll Y] [--size WxH] [--scale S] out.png` | the real GPU path, offscreen; for people and agents to look at a screen |
+| `zrn render [--page N] [--style] [--theme] [--scroll Y] [--size WxH] [--scale S] out.png` | the real GPU path, offscreen; for people and agents to look at a screen |
 | `zrn run [--headless] [--script ...]` | in the session's Wayland display, else a nested compositor (weston or kwin_wayland; `--headless`: a virtual one) |
 | `zrn pack [--bundle-zrnui] [--key K] [--no-sign]` | `dist/<id>-<version>-<arch>.zexec` + `.minisig` (makes a dev key on first use and trusts it for this user) |
 | `zrn verify FILE` | exit 0 good, 1 broken, 2 not trusted |

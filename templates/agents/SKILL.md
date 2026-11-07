@@ -25,9 +25,12 @@ dist/              what `zrn pack` makes: <id>-<version>-<arch>.zexec + .minisig
 | C (`#include <zrnui.h>`) | C++ (`zrnui.hpp`) | Rust (`zrnui`) | Python (`import zrnui`) |
 |---|---|---|---|
 | `zui_app_new(id, title)` | `zrn::ui::App app(id, title)` | `App::new(id, title)` | `zrnui.App(id, title)` |
-| `zui_page(app, "Title")` | `app.page("Title")` | `app.page("Title")` | `app.page("Title")` |
+| `zui_page(app)` | `app.page()` | `app.page()` | `app.page()` |
+| `zui_title_panel(page)`, `zui_app_title(p, "APP")`, `zui_page_title(p, "page")` | `page.title_panel().app_title("APP").page_title("page")` | same | same |
 | `zui_run(app, page)` | `app.run(page)` | `app.run(page)` | `app.run(page)` |
-| `zui_section(page, "Heading")` returns a card | `page.section(...)` | `page.section(...)` | `page.section(...)` |
+| `zui_page_blank(app)`, `zui_page_fullscreen(app)`: an empty root (from the top of the window, edge to edge) | `app.page_blank()`, `app.page_fullscreen()` | same | same |
+| `zui_content_panel(page)`: the margin and the gaps; the page itself is edge to edge | `page.content_panel()` | same | same |
+| `zui_section(content, "Heading")` returns a card | `content.section(...)` | `content.section(...)` | `content.section(...)` |
 | `zui_card`, `zui_column`, `zui_row`, `zui_space` | `card()`, `column()`, `row()`, `space(pt)` | same | same |
 | `zui_text`, `zui_heading`, `zui_caption` | `text()`, `heading()`, `caption()` | same | same |
 | `zui_button(p, "Label", cb, data)` | `p.button("Label", []{...})` | `p.button("Label").on_click(move \|\| ...)` | `p.button("Label", fn)` |
@@ -61,7 +64,7 @@ plus, check, close, more, back, chevron, music, person, gear, phone.
   on the right is `set_detail`.
 - One **primary** button per page at most; others `TONAL` or `PLAIN`;
   destructive actions `DANGER`.
-- Page titles are short nouns ("Wi-Fi", "Settings"). Sentence case everywhere.
+- Page titles (`zui_page_title`) are short nouns ("wi-fi", "settings"), written in the case they are shown in: the application title in capitals, the page title in lower case, as on Windows Phone.
 - Icons in rows sit in a tinted tile; use `set_tint` to tell kinds apart,
   sparingly. Do not set the accent; the system does.
 - Do not fake layout with `space()`; use sections and cards.
@@ -72,13 +75,12 @@ plus, check, close, more, back, chevron, music, person, gear, phone.
 
 ```
 zrn build && zrn render --page 0 /tmp/p0.png          # the first page the app creates
-zrn render --page "Wi-Fi" --scroll 300 /tmp/wifi.png  # by title, scrolled
+zrn render --page 1 --scroll 300 /tmp/p1.png         # the second page, scrolled
 zrn render --style dotmatrix /tmp/m.png
 zrn run --headless --script "wait 400; tap 180 170; wait 600; snap /tmp/after.png; quit"
 ```
 
-`--page N` counts pages in the order the app *creates* them; a title also
-works. The PNG is 360x740 points at scale 2 by default (`--size`, `--scale`).
+`--page N` counts pages in the order the app *creates* them (pages have no names). The PNG is 360x740 points at scale 2 by default (`--size`, `--scale`).
 Read the PNG and check: nothing cut off, text readable, one primary action,
 sections make sense. `zrn render --json` reports the path and size.
 

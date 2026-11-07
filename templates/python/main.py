@@ -1,9 +1,13 @@
 import zrnui
 
-app = zrnui.App("{{ID}}", "{{NAME}}")
-page = app.page("{{NAME}}")
-page.text("A new ztOS app. Edit main.py, then run `zrn render out.png`.")
-status = page.section("Status").heading("Not tapped yet")
+app = zrnui.App()
+page = app.page()
+tp = page.title_panel()
+tp.title("{{NAME}}")
+tp.header("home")
+content = page.content_panel()
+content.text("A new ztOS app. Edit main.py, then run `zrn render out.png`.")
+status = content.section("Status").heading("Not tapped yet")
 
 
 def tapped():
@@ -11,5 +15,5 @@ def tapped():
     app.toast("Hello from {{NAME}}")
 
 
-page.button("Tap me", tapped)
+content.button("Tap me", tapped)
 app.run(page)

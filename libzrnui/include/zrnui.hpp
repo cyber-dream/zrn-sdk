@@ -6,7 +6,7 @@
  *	#include <zrnui.hpp>
  *	int main() {
  *		zrn::ui::App app("zrn-hello-cpp", "Hello");
- *		auto page = app.page("Hello");
+ *		auto page = app.page();
  *		auto label = page.text("Not tapped yet");
  *		int taps = 0;
  *		page.button("Tap me", [=]() mutable {
@@ -154,8 +154,7 @@ public:
 		return t;
 	}
 	Node &set_live(const std::string &back, int period_ms) { zui_tile_set_live(n_, back.c_str(), period_ms); return *this; }
-	Node hub() { return Node(zui_hub(n_)); }
-	Node hub_section(const std::string &title) { return Node(zui_hub_section(n_, title.c_str())); }
+	Node hub_section() { return Node(zui_hub_section(n_)); }
 	Node &set_background(zui_pixmap *pix) { zui_hub_set_background(n_, pix); return *this; }
 	Node &show_section(int i) { zui_hub_show(n_, i); return *this; }
 	/* a press and hold */
@@ -166,8 +165,9 @@ public:
 	Node &scroll_to(double y, bool glide = true) { zui_page_scroll_to(n_, y, glide); return *this; }
 
 	Node footer() { return Node(zui_footer(n_)); }
-	Node tabs() { return Node(zui_tabs(n_)); }
-	Node tab(const std::string &title) { return Node(zui_tab(n_, title.c_str())); }
+	Node item() { return Node(zui_pivot_item(n_)); }
+	Node item_header(const std::string &t) { return Node(zui_pivot_item_header(n_, t.c_str())); }
+	void pivot_title(const std::string &t) { zui_pivot_title(n_, t.c_str()); }
 	Node bubble(bool mine) { return Node(zui_bubble(n_, mine)); }
 	Node image(zui_pixmap *pix, double w = 0, double h = 0) { return Node(zui_image(n_, pix, w, h)); }
 	/* height(row) is a guess; bind(row, node) fills a row. Live as long as the list. */
@@ -187,6 +187,15 @@ public:
 	Node &set_multiline(bool m) { zui_field_set_multiline(n_, m); return *this; }
 	Node &set_bar(bool b) { zui_set_bar(n_, b); return *this; }
 	Node &set_compact(bool c) { zui_page_set_compact(n_, c); return *this; }
+	/* a page's TitlePanel: its application title (small) and page title (large), as written */
+	Node title_panel() { return Node(zui_title_panel(n_)); }
+	/* a column with the margin and the gaps; the page's root itself has none */
+	Node content_panel() { return Node(zui_content_panel(n_)); }
+	/* a scroll viewer: what is put in it scrolls, the rest of the page stays */
+	Node scroll() { return Node(zui_scroll(n_)); }
+	/* the two titles: small and large, in a TitlePanel or a hub section */
+	Node title(const std::string &s) { return Node(zui_title(n_, s.c_str())); }
+	Node header(const std::string &s) { return Node(zui_header(n_, s.c_str())); }
 	/* changing it; each returns the node, so they chain */
 	Node &set_text(const std::string &s) { zui_set_text(n_, s.c_str()); return *this; }
 	Node &set_detail(const std::string &s) { zui_set_detail(n_, s.c_str()); return *this; }
@@ -221,7 +230,7 @@ private:
 
 class App {
 public:
-	App(const std::string &id, const std::string &title) : app_(zui_app_new(id.c_str(), title.c_str())) {}
+	App() : app_(zui_app_new()) {}
 	~App() {
 		zui_app_free(app_);
 		for (auto &t : timers_) delete t.second;
@@ -230,7 +239,13 @@ public:
 	App &operator=(const App &) = delete;
 
 	zui_app *get() const { return app_; }
-	Node page(const std::string &title) { return Node(zui_page(app_, title.c_str())); }
+	/* the template (a TitlePanel and a ContentPanel), an empty root, an empty root over the whole window */
+	Node page() { return Node(zui_page(app_)); }
+	Node page_blank() { return Node(zui_page_blank(app_)); }
+	/* a hub and a pivot are roots of their own: run or push them as they are */
+	Node hub() { return Node(zui_hub(app_)); }
+	Node pivot() { return Node(zui_pivot(app_)); }
+	Node page_fullscreen() { return Node(zui_page_fullscreen(app_)); }
 	int run(Node first) { return zui_run(app_, first.get()); }
 	void push(Node page) { zui_push(page.get()); }
 	void back() { zui_back(app_); }

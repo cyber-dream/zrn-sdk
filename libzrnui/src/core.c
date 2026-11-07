@@ -230,12 +230,18 @@ static void apply_style(zui_app *app) {
 
 struct zui_post { zui_fn fn; void *data; struct zui_post *next; };
 
-ZUI_EXPORT zui_app *zui_app_new(const char *app_id, const char *title) {
+static zui_node *node_new(zui_app *app, zui_node *parent, int kind);
+
+ZUI_EXPORT zui_app *zui_app_new(void) {
 	zui_app *app = calloc(1, sizeof(*app));
-	app->app_id = strdup(app_id ? app_id : "zrn-app");
-	app->title = strdup(title ? title : app->app_id);
+	/* the id the shell knows the app by: what runs it says (zrn-exec and `zrn run`: the manifest's id),
+	 * else the program's name, as GTK and Qt do; the window's title is the same */
+	const char *id = getenv("ZRN_APP_ID");
+	app->app_id = strdup(id && *id ? id : program_invocation_short_name);
+	app->title = strdup(app->app_id);
 	app->accent = system_accent();
 	app->style = pick_style();
+	app->root = node_new(app, NULL, ZK_FRAME);
 	app->width = 360;
 	app->height = 740;
 	app->scale = 1;
@@ -255,7 +261,7 @@ ZUI_EXPORT void zui_app_set_style(zui_app *app, const char *style) {
 	apply_style(app);
 }
 
-ZUI_EXPORT const char *zui_app_style(zui_app *app) { return app->style->name; }
+ZUI_EXPORT const char *zui_app_style(const zui_app *app) { return app->style->name; }
 
 ZUI_EXPORT void zui_app_set_theme(zui_app *app, const char *theme) {
 	(void)app; (void)theme;
@@ -267,7 +273,7 @@ ZUI_EXPORT void zui_app_set_accent(zui_app *app, uint32_t rgb) {
 	app->dirty = true;
 }
 
-ZUI_EXPORT uint32_t zui_app_accent(zui_app *app) { return app->accent; }
+ZUI_EXPORT uint32_t zui_app_accent(const zui_app *app) { return app->accent; }
 
 struct zui_palette zui_pal(const zui_app *app) { return app->style->palette(app); }
 
@@ -318,6 +324,7 @@ static void node_free(zui_node *n) {
 	free(n->badge);
 	free(n->monogram);
 	zui_pixmap_free(n->pix);
+	zui_brush_free(n->bg);
 	if (n->row_tex) zg_tex_free(n->row_tex);
 	zui_list_free(n);
 	free(n);
@@ -345,6 +352,11 @@ static void unlink_node(zui_node *n) {
 	else p->first = n->next;
 	if (n->next) n->next->prev = n->prev;
 	else p->last = n->prev;
+	/* a page that loses its TitlePanel, footer or tabs does not keep pointing at them */
+	if (p->title_node == n) p->title_node = NULL;
+	if (p->footer == n) p->footer = NULL;
+	if (p->tabs == n) p->tabs = NULL;
+	if (p->content_node == n) p->content_node = NULL;
 	n->parent = n->prev = n->next = NULL;
 }
 
@@ -354,9 +366,8 @@ static void set_str(char **slot, const char *s) {
 	*slot = s ? strdup(s) : NULL;
 }
 
-ZUI_EXPORT zui_node *zui_page(zui_app *app, const char *title) {
-	zui_node *n = node_new(app, NULL, ZK_PAGE);
-	set_str(&n->text, title);
+static zui_node *page_new(zui_app *app) {
+	zui_node *n = node_new(app, app->root, ZK_PAGE);
 	if (app->n_pages == app->cap_pages) {
 		app->cap_pages = app->cap_pages ? app->cap_pages * 2 : 8;
 		app->pages = realloc(app->pages, sizeof(*app->pages) * app->cap_pages);
@@ -365,6 +376,50 @@ ZUI_EXPORT zui_node *zui_page(zui_app *app, const char *title) {
 	return n;
 }
 
+/* a node that belongs to nothing in the tree: what a widget keeps for itself and draws itself (a hub's title) */
+zui_node *zui_node_new_detached(zui_app *app, int kind) { return node_new(app, NULL, kind); }
+void zui_node_free_detached(zui_node *n) { node_free(n); }
+
+ZUI_EXPORT zui_node *zui_root(zui_app *app) { return app->root; }
+
+ZUI_EXPORT zui_node *zui_page_blank(zui_app *app) { return page_new(app); }
+ZUI_EXPORT zui_node *zui_page_fullscreen(zui_app *app) {
+	zui_node *n = page_new(app);
+	n->fullscreen = true;
+	return n;
+}
+ZUI_EXPORT zui_node *zui_page(zui_app *app) {
+	zui_node *n = page_new(app);
+	zui_title_panel(n);
+	zui_content_panel(n);
+	return n;
+}
+
+/* the root a node belongs to: every page-level call takes the page or anything in it, so a hub
+ * or a pivot made straight from the app is a root that can be run, pushed, scrolled */
+zui_node *zui_page_of(zui_node *n) {
+	while (n && n->parent && n->kind != ZK_PAGE) n = n->parent;
+	return n;
+}
+
+ZUI_EXPORT zui_node *zui_title_panel(zui_node *page) {
+	page = zui_page_of(page);
+	if (page->title_node) return page->title_node;
+	zui_node *n = node_new(page->app, page, ZK_TITLE_PANEL);
+	n->visible = false;	/* not laid out in the column, not drawn or hit as content */
+	page->title_node = n;
+	page->app->dirty = true;
+	return n;
+}
+
+ZUI_EXPORT zui_node *zui_scroll(zui_node *parent) { return node_new(parent->app, parent, ZK_SCROLL); }
+
+ZUI_EXPORT zui_node *zui_content_panel(zui_node *parent) {
+	if (parent->kind == ZK_PAGE && parent->content_node) return parent->content_node;
+	zui_node *n = node_new(parent->app, parent, ZK_CONTENT_PANEL);
+	if (parent->kind == ZK_PAGE) parent->content_node = n;
+	return n;
+}
 ZUI_EXPORT zui_node *zui_column(zui_node *parent) { return node_new(parent->app, parent, ZK_COLUMN); }
 ZUI_EXPORT zui_node *zui_row(zui_node *parent) { return node_new(parent->app, parent, ZK_ROW); }
 ZUI_EXPORT zui_node *zui_card(zui_node *parent) { return node_new(parent->app, parent, ZK_CARD); }
@@ -378,6 +433,7 @@ ZUI_EXPORT zui_node *zui_section(zui_node *parent, const char *title) {
 }
 
 ZUI_EXPORT zui_node *zui_footer(zui_node *page) {
+	page = zui_page_of(page);
 	zui_node *n = node_new(page->app, page, ZK_FOOTER);
 	page->footer = n;
 	return n;
@@ -389,10 +445,10 @@ ZUI_EXPORT zui_node *zui_bubble(zui_node *parent, bool mine) {
 	return n;
 }
 
-ZUI_EXPORT bool zui_app_active(zui_app *app) { return app->active; }
+ZUI_EXPORT bool zui_app_active(const zui_app *app) { return app->active; }
 ZUI_EXPORT void zui_field_set_multiline(zui_node *n, bool m) { n->multiline = m; changed(n, true); }
 ZUI_EXPORT void zui_set_bar(zui_node *n, bool b) { n->bar = b; changed(n, false); }
-ZUI_EXPORT void zui_page_set_compact(zui_node *page, bool c) { page->compact = c; page->app->dirty = true; }
+ZUI_EXPORT void zui_page_set_compact(zui_node *page, bool c) { page = zui_page_of(page); page->compact = c; page->app->dirty = true; }
 
 ZUI_EXPORT zui_node *zui_space(zui_node *parent, double points) {
 	zui_node *n = node_new(parent->app, parent, ZK_SPACE);
@@ -407,6 +463,8 @@ static zui_node *text_node(zui_node *parent, int kind, const char *text) {
 }
 
 ZUI_EXPORT zui_node *zui_text(zui_node *p, const char *t) { return text_node(p, ZK_TEXT, t); }
+ZUI_EXPORT zui_node *zui_title(zui_node *p, const char *t) { return text_node(p, ZK_TITLE, t); }
+ZUI_EXPORT zui_node *zui_header(zui_node *p, const char *t) { return text_node(p, ZK_HEADER, t); }
 ZUI_EXPORT zui_node *zui_heading(zui_node *p, const char *t) { return text_node(p, ZK_HEADING, t); }
 ZUI_EXPORT zui_node *zui_caption(zui_node *p, const char *t) { return text_node(p, ZK_CAPTION, t); }
 
@@ -465,7 +523,7 @@ static void changed(zui_node *n, bool layout) {
 }
 
 ZUI_EXPORT void zui_set_text(zui_node *n, const char *t) { set_str(&n->text, t ? t : ""); n->caret = -1; n->sel_a = n->sel_b = 0; changed(n, true); }
-ZUI_EXPORT const char *zui_get_text(zui_node *n) { return n->text ? n->text : ""; }
+ZUI_EXPORT const char *zui_get_text(const zui_node *n) { return n->text ? n->text : ""; }
 ZUI_EXPORT void zui_set_detail(zui_node *n, const char *t) { set_str(&n->detail, t); changed(n, true); }
 ZUI_EXPORT void zui_set_subtitle(zui_node *n, const char *t) { set_str(&n->subtitle, t); changed(n, true); }
 
@@ -476,7 +534,7 @@ ZUI_EXPORT void zui_set_value(zui_node *n, double v) {
 	changed(n, false);
 }
 
-ZUI_EXPORT double zui_get_value(zui_node *n) { return n->kind == ZK_SWITCH ? (n->on ? 1 : 0) : n->value; }
+ZUI_EXPORT double zui_get_value(const zui_node *n) { return n->kind == ZK_SWITCH ? (n->on ? 1 : 0) : n->value; }
 
 ZUI_EXPORT void zui_set_on(zui_node *n, bool on) {
 	if (n->on == on) return;
@@ -485,7 +543,7 @@ ZUI_EXPORT void zui_set_on(zui_node *n, bool on) {
 	changed(n, false);
 }
 
-ZUI_EXPORT bool zui_get_on(zui_node *n) { return n->on; }
+ZUI_EXPORT bool zui_get_on(const zui_node *n) { return n->on; }
 ZUI_EXPORT void zui_set_enabled(zui_node *n, bool e) { n->enabled = e; changed(n, false); }
 ZUI_EXPORT void zui_set_visible(zui_node *n, bool v) { n->visible = v; changed(n, true); }
 ZUI_EXPORT void zui_set_variant(zui_node *n, int v) { n->variant = v; changed(n, false); }
@@ -501,10 +559,10 @@ ZUI_EXPORT void zui_set_handler(zui_node *n, zui_cb cb, void *data, zui_free_fn 
 	changed(n, false);
 }
 
-ZUI_EXPORT int zui_event(zui_node *n) { return n->event; }
-ZUI_EXPORT zui_app *zui_node_app(zui_node *n) { return n->app; }
+ZUI_EXPORT int zui_event(const zui_node *n) { return n->event; }
+ZUI_EXPORT zui_app *zui_node_app(const zui_node *n) { return n->app; }
 
-ZUI_EXPORT void zui_node_frame(zui_node *n, double *x, double *y, double *w, double *h) {
+ZUI_EXPORT void zui_node_frame(const zui_node *n, double *x, double *y, double *w, double *h) {
 	if (x) *x = n->x;
 	if (y) *y = n->y;
 	if (w) *w = n->w;
@@ -512,6 +570,15 @@ ZUI_EXPORT void zui_node_frame(zui_node *n, double *x, double *y, double *w, dou
 }
 
 ZUI_EXPORT void zui_clear(zui_node *n) {
+	if (n->kind == ZK_FRAME) {
+		/* the pages are not what the app keeps in the frame: zui_destroy takes those */
+		for (zui_node *c = n->first, *next; c; c = next) {
+			next = c->next;
+			if (c->kind != ZK_PAGE) bury(c);
+		}
+		changed(n, true);
+		return;
+	}
 	while (n->first) {
 		bury(n->first);
 	}
@@ -529,6 +596,7 @@ ZUI_EXPORT void zui_destroy(zui_node *n) {
 				i--;
 			}
 		}
+		unlink_node(n);
 		node_free(n);
 		return;
 	}
@@ -572,7 +640,7 @@ ZUI_EXPORT void zui_toast(zui_app *app, const char *text) {
 }
 
 /* ---- pages ---- */
-ZUI_EXPORT zui_node *zui_current_page(zui_app *app) { return app->page; }
+ZUI_EXPORT zui_node *zui_current_page(const zui_app *app) { return app->page; }
 
 static void transition_finish(zui_app *app) {
 	if (!app->trans_to) return;
@@ -582,6 +650,7 @@ static void transition_finish(zui_app *app) {
 }
 
 ZUI_EXPORT void zui_push(zui_node *page) {
+	page = zui_page_of(page);
 	zui_app *app = page->app;
 	if (page->kind != ZK_PAGE || page == app->page) return;
 	transition_finish(app);
@@ -608,6 +677,7 @@ ZUI_EXPORT void zui_push(zui_node *page) {
 }
 
 ZUI_EXPORT void zui_page_set_root(zui_node *page) {
+	page = zui_page_of(page);
 	page->back_to = NULL;
 	page->depth = 0;
 }
@@ -647,7 +717,7 @@ ZUI_EXPORT void zui_quit(zui_app *app) {
 ZUI_EXPORT void zui_app_free(zui_app *app) {
 	if (!app) return;
 	zui_hold_cancel(app);
-	for (int i = 0; i < app->n_pages; i++) node_free(app->pages[i]);
+	node_free(app->root);	/* the pages go with it */
 	zui_widgets_free(app);
 	free(app->pages);
 	free(app->app_id);
@@ -677,7 +747,8 @@ static bool card_row_kind(int kind) {
 
 static float text_size(const zui_app *app, int kind) {
 	const struct zui_metrics *m = &app->style->m;
-	return kind == ZK_HEADING ? m->heading : kind == ZK_CAPTION ? m->caption : m->text;
+	return kind == ZK_HEADING ? m->heading : kind == ZK_CAPTION ? m->caption : kind == ZK_TITLE ? 11.5f
+		: kind == ZK_HEADER ? m->title : m->text;
 }
 
 /* type in a bubble is Messaging's, smaller than a page's */
@@ -689,7 +760,7 @@ static float node_text_size(const zui_node *n) {
 
 static int node_font(const zui_node *n);
 static int text_font(int kind) {
-	return kind == ZK_HEADING ? ZT_STRONG : ZT_REGULAR;
+	return kind == ZK_HEADING || kind == ZK_TITLE ? ZT_STRONG : kind == ZK_HEADER ? ZT_LIGHT : ZT_REGULAR;
 }
 
 static int node_font(const zui_node *n) {
@@ -704,7 +775,7 @@ static float intrinsic_w(zui_node *n) {
 		float w = zt_width(n->text, ZT_MEDIUM, m->button_text) + m->button_h * 0.9f;
 		return w < m->button_h * 1.6f ? m->button_h * 1.6f : w;
 	}
-	case ZK_TEXT: case ZK_HEADING: case ZK_CAPTION:
+	case ZK_TEXT: case ZK_HEADING: case ZK_CAPTION: case ZK_TITLE: case ZK_HEADER:
 		return zt_width(n->text, text_font(n->kind), text_size(n->app, n->kind));
 	case ZK_SPACE:
 		return (float)n->space;
@@ -799,6 +870,19 @@ static float layout_node(zui_node *n, float x, float y, float w) {
 	case ZK_COLUMN:
 		h = layout_children_column(n, x + pad, y, w - 2 * pad, n->has_gap ? n->row_gap : m->gap);
 		break;
+	case ZK_SCROLL: {
+		/* edge to edge, one under another; it reaches to the bottom of the window, and what does not fit
+		 * under it is what a finger moves */
+		float inner = layout_children_column(n, x, y, w, 0);
+		n->content_h = y + inner;
+		h = app->height - y > 0 ? app->height - y : 0;
+		break;
+	}
+	case ZK_CONTENT_PANEL:
+		/* the margin on both sides, and room under the last thing */
+		h = layout_children_column(n, x + m->margin, y, w - 2 * m->margin, n->has_gap ? n->row_gap : m->gap);
+		if (h > 0) h += m->margin * 2;
+		break;
 	case ZK_CARD:
 		h = layout_card(n, x, y, w, m->gap * 0.75f);
 		if (n->first && m->card_r > 0) {
@@ -863,10 +947,14 @@ static float layout_node(zui_node *n, float x, float y, float w) {
 	case ZK_TABS: {
 		int i = 0;
 		for (zui_node *c = n->first; c; c = c->next, i++) {
-			if (i == n->tab_cur) h = layout_node(c, x, y, w);
+			/* a tab is a ContentPanel: the margin is its own */
+			if (i == n->tab_cur) { h = layout_node(c, x + m->margin, y, w - 2 * m->margin); c->content_h = c->y + h; }
 			else {
 				int k = zui_tab_count(n);
-				if (i == n->tab_prev || i == (n->tab_cur + 1) % k || i == (n->tab_cur + k - 1) % k) layout_node(c, x, y, w);
+				if (i == n->tab_prev || i == (n->tab_cur + 1) % k || i == (n->tab_cur + k - 1) % k) {
+					float hh = layout_node(c, x + m->margin, y, w - 2 * m->margin);
+					c->content_h = c->y + hh;
+				}
 			}
 		}
 		break;
@@ -896,7 +984,7 @@ static float layout_node(zui_node *n, float x, float y, float w) {
 	case ZK_SPACE:
 		h = (float)n->space;
 		break;
-	case ZK_TEXT: case ZK_HEADING: case ZK_CAPTION: {
+	case ZK_TEXT: case ZK_HEADING: case ZK_CAPTION: case ZK_TITLE: case ZK_HEADER: {
 		struct zt_layout *L = zt_slot_get(&n->t[0], n->text, node_font(n),
 			node_text_size(n), w - 2 * pad, 0);
 		h = L->h + (pad > 0 ? 0 : 0);
@@ -942,14 +1030,50 @@ static float layout_node(zui_node *n, float x, float y, float w) {
 	return h;
 }
 
+const char *zui_panel_text(const zui_node *page, int kind) {
+	zui_node *tp = page ? page->title_node : NULL;
+	for (zui_node *c = tp ? tp->first : NULL; c; c = c->next)
+		if (c->kind == kind) return c->text ? c->text : "";
+	return "";
+}
+
+/* the TitlePanel's titles: from the status bar and 24 down, a small one's line hardly more than 8 */
+static void layout_title_panel(zui_app *app, zui_node *page) {
+	zui_node *tp = page->title_node;
+	if (!tp) return;
+	const struct zui_metrics *m = &app->style->m;
+	tp->x = 0;
+	tp->y = 0;
+	tp->w = app->width;
+	tp->h = page->title_panel.h;
+	float at = m->top;
+	for (zui_node *c = tp->first; c; c = c->next) {
+		if (!c->visible) continue;
+		float h = layout_node(c, c->kind == ZK_HEADER ? m->margin - 3 : m->margin, at, app->width - 2 * m->margin);
+		at += c->kind == ZK_TITLE ? 8 : h;
+	}
+}
+
+/* what the app keeps in the frame: edge to edge from the top of the window, one under another,
+ * over the pages (the pages themselves are laid out one by one) */
+static void layout_frame(zui_app *app) {
+	float at = 0;
+	for (zui_node *c = app->root->first; c; c = c->next) {
+		if (c->kind == ZK_PAGE || !c->visible) continue;
+		at += layout_node(c, 0, at, app->width);
+	}
+}
+
 void zui_do_layout(zui_app *app, zui_node *page) {
 	zui_lock();
+	layout_frame(app);
 	const struct zui_metrics *m = &app->style->m;
 	page->x = 0;
 	page->y = 0;
 	page->w = app->width;
 	if (page->fullscreen) {
-		page->header_h = 0;
+		page->title_panel = (struct zui_rect){ 0, 0, app->width, 0 };
+		page->content_panel = (struct zui_rect){ 0, 0, app->width, app->height };
 		float foot = 0;
 		if (page->footer && page->footer->visible) {
 			foot = layout_node(page->footer, m->margin, 0, app->width - 2 * m->margin) + 16;
@@ -966,33 +1090,66 @@ void zui_do_layout(zui_app *app, zui_node *page) {
 		zui_unlock();
 		return;
 	}
-	page->header_h = page->compact ? 62 : m->bar_h + (page->tabs ? app->style->tabs_h : 0);
-	float y = page->header_h;
+	float title_h = page->compact ? m->title_compact_h : page->tabs ? m->title_h + app->style->tabs_h
+		: page->title_node ? m->title_h : 0;	/* no TitlePanel: the root starts at the top of the window */
+	page->title_panel = (struct zui_rect){ 0, 0, app->width, title_h };
+	page->content_panel = (struct zui_rect){ 0, title_h, app->width, app->height - title_h };
+	layout_title_panel(app, page);
+	float y = page->content_panel.y;
 	y = page->tabs ? y + 10 : page->footer ? y + 8 : app->style->page_top(app, page, y, false);
 	float foot = 0;
 	if (page->footer && page->footer->visible) {
 		page->footer->visible = false;	/* laid out by itself, in window points */
-		y += layout_children_column(page, m->margin, y, app->width - 2 * m->margin, m->gap);
+		y += layout_children_column(page, 0, y, app->width, 0);
 		page->footer->visible = true;
 		foot = layout_node(page->footer, m->margin, 0, app->width - 2 * m->margin) + 16;
 		layout_node(page->footer, m->margin, app->height - foot + 8, app->width - 2 * m->margin);
 	} else {
-		y += layout_children_column(page, m->margin, y, app->width - 2 * m->margin, m->gap);
+		y += layout_children_column(page, 0, y, app->width, 0);	/* the root: edge to edge */
 	}
-	page->content_h = y + (foot > 0 ? foot + 8 : m->margin * 2);
+	page->content_h = y + (foot > 0 ? foot + 8 : 0);
 	page->h = page->content_h;
 	zui_unlock();
 }
 
 ZUI_EXPORT void zui_layout(zui_app *app, zui_node *page, int width, int height) {
+	page = zui_page_of(page);
 	app->width = (float)width;
 	app->height = (float)height;
 	if (!app->page) app->page = page;
 	zui_do_layout(app, page);
 }
 
-static float scroll_max(zui_app *app, zui_node *page) {
-	float max = page->content_h - app->height;
+/* the first scroll viewer on a page (not in tabs or a hub, which scroll by themselves) */
+static zui_node *find_scroll(zui_node *n) {
+	for (zui_node *c = n->first; c; c = c->next) {
+		if (!c->visible || c->kind == ZK_FOOTER || c->kind == ZK_TABS || c->kind == ZK_HUB) continue;
+		if (c->kind == ZK_SCROLL) return c;
+		zui_node *deeper = find_scroll(c);
+		if (deeper) return deeper;
+	}
+	return NULL;
+}
+
+/* What scrolls on a page is a node of its own, not the page: the section in front of a hub, the tab in front
+ * of a pivot, the page itself when it has neither. Its scroll, vel and content_h are what a finger moves. */
+zui_node *zui_scroller(zui_node *page) {
+	if (page->hub) {
+		zui_node *front = zui_hub_front(page->hub);
+		if (front) return front;
+	}
+	if (page->tabs) {
+		zui_node *tab = zui_tab_at(page->tabs, page->tabs->tab_cur);
+		if (tab) return tab;
+	}
+	zui_node *widget = find_scroll(page);
+	return widget ? widget : page;
+}
+
+/* a page does not scroll by itself, as on Windows Phone: only a viewer, a tab or a hub's section does */
+static float scroll_max(zui_app *app, zui_node *sv) {
+	if (sv->kind == ZK_PAGE) return 0;
+	float max = sv->content_h - app->height;
 	return max > 0 ? max : 0;
 }
 
@@ -1008,12 +1165,27 @@ static bool interactive(const zui_node *n) {
 }
 
 static zui_node *hit_in(zui_node *n, float x, float y) {
-	if (n->kind == ZK_HUB) x += zui_hub_offset(n);	/* its sections have slid */
 	for (zui_node *c = n->first; c; c = c->next) {
 		if (!c->visible || c->kind == ZK_FOOTER) continue;
 		if (n->kind == ZK_TABS && c != zui_tab_at(n, n->tab_cur)) continue;
-		if (x < c->x || x >= c->x + c->w || y < c->y || y >= c->y + c->h) continue;
-		zui_node *deeper = hit_in(c, x, y);
+		/* a hub's sections have slid, each by its own (they go round) */
+		if (n->kind == ZK_HUB) {
+			/* a section may show in two places: each is tried */
+			float dx[3];
+			int copies = zui_hub_copies(n, c, dx);
+			for (int k = 0; k < copies; k++) {
+				float cx = x + dx[k], cy = y + c->scroll;
+				if (y < n->y + zui_hub_content_top(n)) continue;	/* the hub's title is over the sections' top */
+				if (cx < c->x || cx >= c->x + c->w || cy < c->y || cy >= c->y + c->h) continue;
+				zui_node *deeper = hit_in(c, cx, cy);
+				if (deeper) return deeper;
+			}
+			continue;
+		}
+		/* a tab scrolls by itself: what is on the screen is `scroll` further down in it */
+		float cy = n->kind == ZK_TABS ? y + c->scroll : n->kind == ZK_SCROLL ? y + n->scroll : y;
+		if (x < c->x || x >= c->x + c->w || cy < c->y || cy >= c->y + c->h) continue;
+		zui_node *deeper = hit_in(c, x, cy);
 		if (deeper) return deeper;
 		if (interactive(c)) return c;
 	}
@@ -1038,7 +1210,7 @@ static void focus(zui_app *app, zui_node *field) {
 
 static void slider_to(zui_app *app, zui_node *s, float x) {
 	float pad = in_card(s) ? app->style->m.card_pad : 0;
-	x += zui_node_hub_shift(s);
+	x += zui_node_hub_shift(s, x);
 	float x0 = s->x + pad, w = s->w - 2 * pad;
 	double v = w > 0 ? (x - x0) / w : 0;
 	v = v < 0 ? 0 : v > 1 ? 1 : v;
@@ -1053,7 +1225,7 @@ static void field_tapped(zui_app *app, zui_node *f, bool twice) {
 	size_t len = strlen(t);
 	f->sel_a = f->sel_b = 0;
 	if (!f->multiline || !len || len > 1500) { f->caret = (int)len; return; }
-	float tx = app->last_x + zui_node_hub_shift(f) - f->x - 10, ty = app->last_y - f->y - 9;
+	float tx = app->last_x + zui_node_hub_shift(f, app->last_x) - f->x - 10, ty = app->last_y - f->y - 9;
 	if (f->parent) {}
 	int best = (int)len;
 	float bd = 1e9f;
@@ -1099,10 +1271,23 @@ static void activate(zui_app *app, zui_node *n) {
 	}
 }
 
+/* what of the frame's own is under the finger (window points: it does not scroll) */
+static zui_node *frame_hit(zui_app *app, float x, float y) {
+	for (zui_node *c = app->root->first; c; c = c->next) {
+		if (c->kind == ZK_PAGE || !c->visible) continue;
+		if (x < c->x || x >= c->x + c->w || y < c->y || y >= c->y + c->h) continue;
+		zui_node *deeper = hit_in(c, x, y);
+		if (deeper) return deeper;
+		if (interactive(c)) return c;
+	}
+	return NULL;
+}
+
 /* phase 0 down, 1 move, 2 up, 3 cancel; x, y in window points */
 void zui_touch(zui_app *app, int phase, float x, float y, uint32_t time) {
 	zui_node *page = app->page;
 	if (!page) return;
+	zui_node *sv = zui_scroller(page);
 	uint32_t now = zui_now();
 	if (!app->laid_out) {
 		zui_do_layout(app, page);
@@ -1131,15 +1316,29 @@ void zui_touch(zui_app *app, int phase, float x, float y, uint32_t time) {
 		app->down_x = app->last_x = x;
 		app->down_y = app->last_y = y;
 		app->last_t = time;
-		app->down_scroll = page->scroll;
+		app->down_scroll = sv->scroll;
 		app->fling = false;
-		page->vel = 0;
+		sv->vel = 0;
 		app->pressed = NULL;
 		app->drag_slider = NULL;
-		if (y < page->header_h) {
+		zui_lock();
+		zui_node *fh = frame_hit(app, x, y);
+		if (fh) {
+			/* what the app keeps in the frame is over the page and gets the touch first */
+			app->in_footer = true;
+			app->press_fx = app->press_fy = 0;
+			app->pressed = fh;
+			zanim_go(&app->press, 1, 90, now);
+			zui_hold_start(app, fh, time);
+			app->dirty = true;
+			zui_unlock();
+			return;
+		}
+		zui_unlock();
+		if (y < page->title_panel.h) {
 			return;	/* the header: a tap there is handled on the lift */
 		}
-		page->stick_end = false;
+		sv->stick_end = false;
 		zui_lock();
 		zui_node *hit = NULL;
 		if (page->footer && page->footer->visible && y >= page->footer->y - 8) {
@@ -1172,10 +1371,10 @@ void zui_touch(zui_app *app, int phase, float x, float y, uint32_t time) {
 			return;
 		}
 		if (hit) {
-			float sx = x + zui_node_hub_shift(hit);
+			float sx = x + zui_node_hub_shift(hit, x);
 			app->pressed = hit;
 			app->press_fx = hit->w > 0 ? (sx - hit->x) / hit->w * 2 - 1 : 0;
-			app->press_fy = hit->h > 0 ? (y + page->scroll - hit->y) / hit->h * 2 - 1 : 0;
+			app->press_fy = hit->h > 0 ? (y + sv->scroll - hit->y) / hit->h * 2 - 1 : 0;
 			zanim_go(&app->press, 1, 90, now);
 			zui_hold_start(app, hit, time);
 		}
@@ -1193,7 +1392,7 @@ void zui_touch(zui_app *app, int phase, float x, float y, uint32_t time) {
 		if (page->hub && !app->dragging && !app->hub_drag && !app->swiping && fabsf(dx) > SLOP && fabsf(dx) > fabsf(dy) * 1.2f) {
 			/* the hub's sections follow the finger sideways */
 			app->hub_drag = true;
-			app->hub_from = zui_hub_offset(page->hub);
+			app->hub_from = zui_hub_begin_drag(page->hub);
 			app->swipe_v = 0;
 			zui_hold_cancel(app);
 			if (app->pressed) zanim_go(&app->press, 0, 160, now);
@@ -1231,17 +1430,19 @@ void zui_touch(zui_app *app, int phase, float x, float y, uint32_t time) {
 			zui_hold_cancel(app);
 			if (app->pressed) zanim_go(&app->press, 0, 160, now);
 		}
-		if (app->dragging) {
-			float raw = app->down_scroll - dy, max = scroll_max(app, page);
+		if (app->dragging && sv->kind == ZK_PAGE) {
+			app->dirty = true;	/* nothing here scrolls: the finger only takes the press off what it was on */
+		} else if (app->dragging) {
+			float raw = app->down_scroll - dy, max = scroll_max(app, sv);
 			/* past either end the page follows the finger less and less */
 			if (raw < 0) raw *= 0.4f;
 			else if (raw > max) raw = max + (raw - max) * 0.4f;
 			float dt = (float)(time - app->last_t);
 			if (dt > 0) {
 				float v = -(y - app->last_y) / dt;	/* points per ms */
-				page->vel = page->vel * 0.3f + v * 0.7f;
+				sv->vel = sv->vel * 0.3f + v * 0.7f;
 			}
-			page->scroll = raw;
+			sv->scroll = raw;
 			app->dirty = true;
 		}
 		app->last_x = x;
@@ -1283,7 +1484,7 @@ void zui_touch(zui_app *app, int phase, float x, float y, uint32_t time) {
 			app->fling = true;
 			app->fling_t = now;
 		} else {
-			page->vel = 0;
+			sv->vel = 0;
 		}
 		app->dirty = true;
 		return;
@@ -1298,7 +1499,7 @@ void zui_touch(zui_app *app, int phase, float x, float y, uint32_t time) {
 		return;
 	}
 	/* a tap */
-	if (app->down_y < page->header_h && y < page->header_h) {
+	if (!app->in_footer && app->down_y < page->title_panel.h && y < page->title_panel.h) {
 		if (page->tabs) {
 			/* the next title: slide to it, and they go round */
 			zui_haptic("tick");
@@ -1327,20 +1528,24 @@ void zui_touch(zui_app *app, int phase, float x, float y, uint32_t time) {
 }
 
 ZUI_EXPORT void zui_page_scroll_to(zui_node *page, double y, bool glide) {
+	page = zui_page_of(page);
+	zui_node *sv = zui_scroller(page);
 	zui_app *app = page->app;
 	if (!app->laid_out) zui_do_layout(app, page);
-	float max = scroll_max(app, page);
-	float to = (float)y - page->header_h;
+	sv = zui_scroller(page);
+	if (sv->kind == ZK_PAGE) return;
+	float max = scroll_max(app, sv);
+	float to = (float)y - (sv->kind == ZK_SCROLL ? sv->y : page->title_panel.h);
 	to = to < 0 ? 0 : to > max ? max : to;
-	page->stick_end = false;
-	page->vel = 0;
+	sv->stick_end = false;
+	sv->vel = 0;
 	app->fling = false;
 	if (glide && app->wl) {
-		page->scroll_goal = to;
-		page->scroll_goal_on = true;
+		sv->scroll_goal = to;
+		sv->scroll_goal_on = true;
 	} else {
-		page->scroll = to;
-		page->scroll_goal_on = false;
+		sv->scroll = to;
+		sv->scroll_goal_on = false;
 	}
 	app->dirty = true;
 }
@@ -1358,8 +1563,9 @@ ZUI_EXPORT void zui_inject_text(zui_app *app, const char *utf8) {
 void zui_scroll_by(zui_app *app, float dy) {
 	zui_node *page = app->page;
 	if (!page) return;
-	float s = page->scroll + dy, max = scroll_max(app, page);
-	page->scroll = s < 0 ? 0 : s > max ? max : s;
+	zui_node *sv = zui_scroller(page);
+	float s = sv->scroll + dy, max = scroll_max(app, sv);
+	sv->scroll = s < 0 ? 0 : s > max ? max : s;
 	app->dirty = true;
 }
 
@@ -1406,7 +1612,7 @@ void zui_osk(zui_app *app, bool show) {
 	if (show && app->focus && app->page) {
 		bool foot = false;
 		for (zui_node *p = app->focus; p; p = p->parent) foot = foot || p->kind == ZK_FOOTER;
-		int bottom = foot ? (int)lroundf(app->height) : (int)lroundf(app->focus->y + app->focus->h - app->page->scroll);
+		int bottom = foot ? (int)lroundf(app->height) : (int)lroundf(app->focus->y + app->focus->h - zui_scroller(app->page)->scroll);
 		snprintf(line, sizeof(line), "osk show %d\n", bottom);
 	} else {
 		snprintf(line, sizeof(line), show ? "osk show\n" : "osk hide\n");
@@ -1452,9 +1658,10 @@ void zui_step(zui_app *app, uint32_t now) {
 		transition_finish(app);
 	zui_widgets_step(app, now);
 	if (!page) return;
-	if (page->scroll_goal_on && !app->touching) {
-		page->scroll += (page->scroll_goal - page->scroll) * (1 - expf(-dt / 90));
-		if (fabsf(page->scroll_goal - page->scroll) < 0.5f) { page->scroll = page->scroll_goal; page->scroll_goal_on = false; }
+	zui_node *sv = zui_scroller(page);
+	if (sv->scroll_goal_on && !app->touching) {
+		sv->scroll += (sv->scroll_goal - sv->scroll) * (1 - expf(-dt / 90));
+		if (fabsf(sv->scroll_goal - sv->scroll) < 0.5f) { sv->scroll = sv->scroll_goal; sv->scroll_goal_on = false; }
 		app->dirty = true;
 	}
 	if (page->tabs && !app->swiping) {
@@ -1463,39 +1670,39 @@ void zui_step(zui_app *app, uint32_t now) {
 		if (running) app->dirty = true;
 	}
 	if (app->touching) return;
-	float max = scroll_max(app, page);
-	if (page->stick_end) {
-		if (page->glide && (int32_t)(now - page->glide_at) < 600) {
-			page->scroll += (max - page->scroll) * (1 - expf(-dt / 45));
-			if (fabsf(max - page->scroll) < 0.5f) { page->scroll = max; page->glide = false; }
+	float max = scroll_max(app, sv);
+	if (sv->stick_end) {
+		if (sv->glide && (int32_t)(now - sv->glide_at) < 600) {
+			sv->scroll += (max - sv->scroll) * (1 - expf(-dt / 45));
+			if (fabsf(max - sv->scroll) < 0.5f) { sv->scroll = max; sv->glide = false; }
 			app->dirty = true;
 		} else {
-			page->scroll = max;
+			sv->scroll = max;
 		}
 	}
 	if (app->fling) {
-		page->scroll += page->vel * dt;
-		float bound = page->scroll < 0 ? 0 : page->scroll > max ? max : page->scroll;
-		if (bound != page->scroll) {
-			page->vel *= expf(-dt / 35);
-			page->scroll += (bound - page->scroll) * (1 - expf(-dt / 110));
-			if (fabsf(page->vel) < 0.05f && fabsf(bound - page->scroll) < 0.5f) {
-				page->scroll = bound;
+		sv->scroll += sv->vel * dt;
+		float bound = sv->scroll < 0 ? 0 : sv->scroll > max ? max : sv->scroll;
+		if (bound != sv->scroll) {
+			sv->vel *= expf(-dt / 35);
+			sv->scroll += (bound - sv->scroll) * (1 - expf(-dt / 110));
+			if (fabsf(sv->vel) < 0.05f && fabsf(bound - sv->scroll) < 0.5f) {
+				sv->scroll = bound;
 				app->fling = false;
 			}
 		} else {
-			page->vel *= expf(-dt / 350);
-			if (fabsf(page->vel) < 0.02f) {
+			sv->vel *= expf(-dt / 350);
+			if (fabsf(sv->vel) < 0.02f) {
 				app->fling = false;
-				page->vel = 0;
+				sv->vel = 0;
 			}
 		}
 		app->dirty = true;
 	}
-	if (!app->fling && (page->scroll < 0 || page->scroll > max)) {
-		float target = page->scroll < 0 ? 0 : max;
-		page->scroll += (target - page->scroll) * (1 - expf(-dt / 110));
-		if (fabsf(target - page->scroll) < 0.3f) page->scroll = target;
+	if (!app->fling && (sv->scroll < 0 || sv->scroll > max)) {
+		float target = sv->scroll < 0 ? 0 : max;
+		sv->scroll += (target - sv->scroll) * (1 - expf(-dt / 110));
+		if (fabsf(target - sv->scroll) < 0.3f) sv->scroll = target;
 		app->dirty = true;
 	}
 }
@@ -1512,14 +1719,15 @@ static bool has_indeterminate(zui_node *n) {
 bool zui_animating(zui_app *app) {
 	uint32_t now = zui_now();
 	zui_node *page = app->page;
+	zui_node *sv = page ? zui_scroller(page) : NULL;
 	if (app->trans_to || app->fling || app->busy) return true;
-	if (page && page->glide && page->stick_end) return true;
+	if (sv && sv->glide && sv->stick_end) return true;
 	if (page && page->tabs && page->tabs->knob.ms && (int32_t)(now - page->tabs->knob.start) < (int32_t)page->tabs->knob.ms) return true;
 	if ((int32_t)(anim_until - now) > 0) return true;
 	if (app->toast && (int32_t)(now - app->toast_at) < 2600) return true;
-	if (page && !app->touching && (page->scroll < 0 || page->scroll > scroll_max(app, page))) return true;
+	if (sv && !app->touching && (sv->scroll < 0 || sv->scroll > scroll_max(app, sv))) return true;
 	if (page && has_indeterminate(page)) return true;
-	if (page && page->scroll_goal_on) return true;
+	if (sv && sv->scroll_goal_on) return true;
 	if (zui_widgets_animating(app, now)) return true;
 	if (page && zui_widgets_page_moving(app, page, now)) return true;
 	return false;
@@ -1599,9 +1807,20 @@ static void draw_node(zui_app *app, zui_node *n, const struct zg_xf *base, uint3
 	}
 	zg_set_xf(&xf);
 	if (!n->enabled) zg_set_alpha(zg_get_alpha() * 0.4f);
+	if (n->bg) zui_brush_paint(app, n->bg, n->x, n->y, n->w, n->h, 0);	/* behind it */
 	float pad = in_card(n) && !card_row_kind(n->kind) ? st->m.card_pad : 0;
 	switch (n->kind) {
-	case ZK_COLUMN: case ZK_ROW:
+	case ZK_SCROLL: {
+		/* its things are drawn where its scroll has moved them, inside its own box */
+		zui_node *pg = zui_page_of(n);
+		zg_clip(0, n->y, app->width, n->h);
+		struct zg_xf in = xf;
+		zg_xf_translate(&in, 0, -roundf(n->scroll * zui_gfx_scale()) / zui_gfx_scale(), 0);
+		draw_children(app, n, &in, now);
+		zg_clip(0, pg->title_panel.h, app->width, app->height - pg->title_panel.h);
+		break;
+	}
+	case ZK_COLUMN: case ZK_ROW: case ZK_CONTENT_PANEL:
 		if (n->bar) zg_rect(0, n->y - 4, app->width, app->height - n->y + 4, 0, pal.surface2);
 		if (n->bar && !n->no_dots && app->style->m.bar_button > 0)	/* WP's three dots: open it for the words */
 			for (int d = 0; d < 3; d++) zg_circle(app->width - 26 + d * 7, n->y + 6, 1.5f, pal.text);
@@ -1612,9 +1831,7 @@ static void draw_node(zui_app *app, zui_node *n, const struct zg_xf *base, uint3
 		draw_children(app, n, &xf, now);
 		break;
 	case ZK_LIST: {
-		float sc = app->page ? app->page->scroll : 0;
-		for (zui_node *p = n; p->parent; p = p->parent)
-			if (p->parent->kind == ZK_TABS && zui_tab_at(p->parent, p->parent->tab_cur) != p) sc = p->scroll;
+		float sc = zui_list_owner(n)->scroll;
 		zui_list_draw(app, n, &xf, now, turn_role, turn_t, turn_dir, sc);
 		break;
 	}
@@ -1625,15 +1842,14 @@ static void draw_node(zui_app *app, zui_node *n, const struct zg_xf *base, uint3
 		zui_node *front = zui_tab_at(n, cur);
 		float W = app->width;
 		struct zg_xf a = xf;
-		zg_xf_translate(&a, -off * W, 0, 0);
+		zg_xf_translate(&a, -off * W, front ? -front->scroll : 0, 0);
 		if (fabsf(off) > 0.001f) {
 			int k = zui_tab_count(n);
 			int other = ((cur + (off > 0 ? 1 : -1)) % k + k) % k;
 			zui_node *o = zui_tab_at(n, other);
 			if (o) {
 				struct zg_xf b = xf;
-				float s = app->page ? app->page->scroll : 0;
-				zg_xf_translate(&b, -off * W + (off > 0 ? W : -W), s - o->scroll, 0);
+				zg_xf_translate(&b, -off * W + (off > 0 ? W : -W), -o->scroll, 0);
 				draw_node(app, o, &b, now);
 			}
 		}
@@ -1661,7 +1877,7 @@ static void draw_node(zui_app *app, zui_node *n, const struct zg_xf *base, uint3
 	case ZK_SECTION_LABEL:
 		st->section_label(app, n);
 		break;
-	case ZK_TEXT: case ZK_HEADING: case ZK_CAPTION: {
+	case ZK_TEXT: case ZK_HEADING: case ZK_CAPTION: case ZK_TITLE: case ZK_HEADER: {
 		struct zt_layout *L = zt_slot_get(&n->t[0], n->text, node_font(n),
 			node_text_size(n), n->w - 2 * pad, 0);
 		float tx = n->x + pad;
@@ -1710,9 +1926,19 @@ static void draw_page(zui_app *app, zui_node *page, uint32_t now, int role, floa
 	turn_role = role;
 	turn_t = t;
 	turn_dir = dir;
-	turn_scroll = page->scroll;
+	zui_node *sv = zui_scroller(page);
+	turn_scroll = sv->scroll;
 	/* DotMatrix's lattice moves with what is on it, or dots would crawl */
-	zg_set_dot_origin(role ? 0 : -scroll);
+	if (page->bg) {
+		/* the page's own, over the whole window: behind the titles and what scrolls, and itself still */
+		struct zg_xf still;
+		zg_xf_identity(&still);
+		zg_set_xf(&still);
+		zg_set_alpha(1);
+		zg_set_dot_origin(0);
+		zui_brush_paint(app, page->bg, 0, 0, app->width, app->height, 0);
+	}
+	zg_set_dot_origin(role ? 0 : -roundf(sv->scroll * zui_gfx_scale()) / zui_gfx_scale());
 	int rows = 0;
 	bool flat = st->flat_cards;
 	for (zui_node *c = page->first; c; c = c->next) {
@@ -1723,11 +1949,14 @@ static void draw_page(zui_app *app, zui_node *page, uint32_t now, int role, floa
 			rows++;
 		}
 	}
-	zg_clip(0, page->header_h, app->width, app->height - page->header_h);
+	zg_clip(0, page->title_panel.h, app->width, app->height - page->title_panel.h);
 	struct zg_xf base;
-	if (page->stick_end && !role) {
-		float mx = scroll_max(app, page);
-		if (!page->glide) { page->scroll = mx; scroll = roundf(mx * zui_gfx_scale()) / zui_gfx_scale(); }
+	if (sv->stick_end && !role) {
+		float mx = scroll_max(app, sv);
+		if (!sv->glide) {
+			sv->scroll = mx;
+			if (sv == page) scroll = roundf(mx * zui_gfx_scale()) / zui_gfx_scale();
+		}
 	}
 	float alpha = 1;
 	/* the large title, if the style has one, scrolls as the first row */
@@ -1736,7 +1965,7 @@ static void draw_page(zui_app *app, zui_node *page, uint32_t now, int role, floa
 	if (role) st->page_xf(app, t, dir, role == 1, 0, rows + 1, &base, &alpha);
 	zg_set_xf(&base);
 	zg_set_alpha(alpha);
-	if (!page->tabs && !page->footer) st->page_top(app, page, page->header_h, true);
+	if (!page->tabs && !page->footer) st->page_top(app, page, page->title_panel.h, true);
 	int row = 1;
 	for (zui_node *c = page->first; c; c = c->next) {
 		if (!c->visible || c->kind == ZK_FOOTER) continue;
@@ -1774,6 +2003,12 @@ static void draw_page(zui_app *app, zui_node *page, uint32_t now, int role, floa
 		float off = zanim_value(&page->tabs->knob, now, NULL);
 		st->tabs(app, page->tabs, (float)page->tabs->tab_cur + off);
 	}
+	/* the TitlePanel's titles, as widgets like the rest, over the header: a hub's go by slowly */
+	if (page->title_node && !page->fullscreen && !page->compact) {
+		struct zg_xf tx = base;
+		for (zui_node *c = page->title_node->first; c; c = c->next)
+			if (c->visible) draw_node(app, c, &tx, now);
+	}
 	zg_set_xf(NULL);
 	zg_set_alpha(1);
 }
@@ -1797,6 +2032,16 @@ void zui_draw(zui_app *app, uint32_t now) {
 		zui_do_layout(app, page);
 		app->laid_out = true;
 	}
+	if (app->root->bg) {
+		/* the app's, behind every page */
+		struct zg_xf still;
+		zg_xf_identity(&still);
+		zg_set_xf(&still);
+		zg_set_alpha(1);
+		zg_set_dot_origin(0);
+		zui_brush_paint(app, app->root->bg, 0, 0, app->width, app->height, 0);
+		zg_set_xf(NULL);
+	}
 	if (!app->open_at) app->open_at = getenv("ZUI_NO_OPEN") ? now - 100000 : (now ? now : 1);
 	float opened = (float)(int32_t)(now - app->open_at);
 	if (!app->trans_to && st->turn_in_ms > 0 && opened < st->transition_ms - st->turn_in_ms) {
@@ -1816,6 +2061,16 @@ void zui_draw(zui_app *app, uint32_t now) {
 		}
 	} else {
 		draw_page(app, page, now, 0, 0, 0);
+	}
+	/* what the app keeps in the frame, over the pages, under the menus and dialogs */
+	{
+		struct zg_xf id;
+		zg_xf_identity(&id);
+		zg_set_xf(&id);
+		zg_set_alpha(1);
+		for (zui_node *c = app->root->first; c; c = c->next)
+			if (c->kind != ZK_PAGE && c->visible) draw_node(app, c, &id, now);
+		zg_set_xf(NULL);
 	}
 	zui_widgets_draw_over(app, now);
 	if (app->busy) st->busy(app, now);
@@ -1861,10 +2116,12 @@ void zui_run_posts(zui_app *app) {
 }
 
 ZUI_EXPORT int zui_render_png(zui_app *app, zui_node *page, const char *path, int width, int height, int scale) {
+	page = zui_page_of(page);
 	return zui_offscreen_png(app, page, path, width, height, scale);
 }
 
 ZUI_EXPORT int zui_run(zui_app *app, zui_node *first) {
+	first = zui_page_of(first);
 	if (first && !app->page) {
 		first->depth = 0;
 		first->back_to = NULL;
@@ -1876,22 +2133,17 @@ ZUI_EXPORT int zui_run(zui_app *app, zui_node *first) {
 		const char *size = getenv("ZUI_RENDER_SIZE");
 		int w = 360, h = 740, s = 2;
 		if (size) sscanf(size, "%dx%d@%d", &w, &h, &s);
-		/* ZUI_RENDER_PAGE: another page than the first, by its title or its
-		 * number in the order the app made its pages (0 is the first made) */
+		/* ZUI_RENDER_PAGE: another page than the first, by its number in the order the
+		 * app made its pages (0 is the first made); pages have no names */
 		zui_node *page = app->page;
 		const char *which = getenv("ZUI_RENDER_PAGE");
 		if (which && *which) {
 			char *end;
 			long k = strtol(which, &end, 10);
 			zui_node *found = NULL;
-			for (int i = 0; i < app->n_pages && !found; i++)
-				if (app->pages[i]->text && strcmp(app->pages[i]->text, which) == 0) found = app->pages[i];
-			if (!found && !*end && k >= 0 && k < app->n_pages) found = app->pages[k];
+			if (!*end && k >= 0 && k < app->n_pages) found = app->pages[k];
 			if (!found) {
-				fprintf(stderr, "zrnui: no page \"%s\" (the app has %d pages:", which, app->n_pages);
-				for (int i = 0; i < app->n_pages; i++)
-					fprintf(stderr, " %d=\"%s\"", i, app->pages[i]->text ? app->pages[i]->text : "");
-				fprintf(stderr, ")\n");
+				fprintf(stderr, "zrnui: no page \"%s\" (the app has %d pages, numbered from 0)\n", which, app->n_pages);
 				return 2;
 			}
 			if (found != page) {

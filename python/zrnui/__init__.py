@@ -3,8 +3,8 @@
 
     import zrnui
 
-    app = zrnui.App("zrn-hello-py", "Hello")
-    page = app.page("Hello")
+    app = zrnui.App()
+    page = app.page()
     label = page.text("Not tapped yet")
     page.button("Tap me", lambda: label.set_text("Tapped"))
     app.run(page)
@@ -70,7 +70,7 @@ _i = ctypes.c_int
 _u32 = ctypes.c_uint32
 
 _version = _sig("zui_version", _s)
-_app_new = _sig("zui_app_new", _p, _s, _s)
+_app_new = _sig("zui_app_new", _p)
 _run = _sig("zui_run", _i, _p, _p)
 _quit = _sig("zui_quit", None, _p)
 _app_free = _sig("zui_app_free", None, _p)
@@ -80,7 +80,14 @@ _set_theme = _sig("zui_app_set_theme", None, _p, _s)
 _set_accent = _sig("zui_app_set_accent", None, _p, _u32)
 _busy = _sig("zui_busy", None, _p, _b)
 _toast = _sig("zui_toast", None, _p, _s)
-_page = _sig("zui_page", _p, _p, _s)
+_page = _sig("zui_page", _p, _p)
+_page_blank = _sig("zui_page_blank", _p, _p)
+_page_fullscreen = _sig("zui_page_fullscreen", _p, _p)
+_title_panel = _sig("zui_title_panel", _p, _p)
+_content_panel = _sig("zui_content_panel", _p, _p)
+_scroll = _sig("zui_scroll", _p, _p)
+_title = _sig("zui_title", _p, _p, _s)
+_header = _sig("zui_header", _p, _p, _s)
 _push = _sig("zui_push", None, _p)
 _back = _sig("zui_back", None, _p)
 _column = _sig("zui_column", _p, _p)
@@ -310,6 +317,25 @@ class Node:
             f._on(handle)
         return f
 
+    # ---- a page's TitlePanel: the application's title (small), the page's title (large) ----
+    def title_panel(self):
+        return Node(self.app, _title_panel(self._n))
+
+    def scroll(self):
+        """A scroll viewer: what is put in it scrolls, the rest of the page stays."""
+        return Node(self.app, _scroll(self._n))
+
+    def content_panel(self):
+        return Node(self.app, _content_panel(self._n))
+
+    def title(self, s):
+        """The small title (the application's, a hub section's), in a TitlePanel or a section."""
+        return self._wrap(_title(self._n, _enc(s)))
+
+    def header(self, s):
+        """The large title (a page's, a hub's), in a TitlePanel."""
+        return self._wrap(_header(self._n, _enc(s)))
+
     # ---- what it is ----
     def set_text(self, s):
         _set_text(self._n, _enc(s))
@@ -350,8 +376,8 @@ class Node:
 
 
 class App:
-    def __init__(self, app_id, title, style=None, theme=None, accent=None):
-        self._a = _app_new(_enc(app_id), _enc(title))
+    def __init__(self, style=None, theme=None, accent=None):
+        self._a = _app_new()
         if style:
             _set_style(self._a, _enc(style))
         if theme:
@@ -363,8 +389,17 @@ class App:
     def style(self):
         return _style(self._a).decode()
 
-    def page(self, title):
-        return Node(self, _page(self._a, _enc(title)))
+    def page(self):
+        """The template: a root with a TitlePanel and a ContentPanel."""
+        return Node(self, _page(self._a))
+
+    def page_blank(self):
+        """An empty root, from the top of the window."""
+        return Node(self, _page_blank(self._a))
+
+    def page_fullscreen(self):
+        """An empty root over the whole window above the footer; it does not scroll."""
+        return Node(self, _page_fullscreen(self._a))
 
     def run(self, first_page):
         return _run(self._a, first_page._n)

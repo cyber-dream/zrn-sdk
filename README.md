@@ -34,16 +34,20 @@ static void open_wifi(zui_node *row, void *data) { zui_push(data); }
 
 int main(void) {
 	zui_app *app = zui_app_new("io.github.you.settings", "Settings");
-	zui_node *wifi = zui_page(app, "Wi-Fi");
-	zui_switch(zui_card(wifi), "Wi-Fi", true, NULL, NULL);
+	zui_node *wifi = zui_page(app);
+	zui_switch(zui_card(zui_content_panel(wifi)), "Wi-Fi", true, NULL, NULL);
 
-	zui_node *page = zui_page(app, "Settings");
-	zui_node *conn = zui_section(page, "Connections");     /* a heading and a card */
+	zui_node *page = zui_page(app);
+	zui_node *title = zui_title_panel(page);              /* the page's TitlePanel, as on Windows Phone */
+	zui_app_title(title, "SETTINGS");                     /* small, as written */
+	zui_page_title(title, "settings");                    /* large, as written */
+	zui_node *content = zui_content_panel(page);          /* the margin and the gaps; the page itself has none */
+	zui_node *conn = zui_section(content, "Connections");     /* a heading and a card */
 	zui_node *row = zui_item(conn, "Wi-Fi", NULL, open_wifi, wifi);
 	zui_set_icon(row, "wifi");
 	zui_set_detail(row, "Home-5G");
-	zui_slider(zui_section(page, "Display"), "Brightness", 0.6, NULL, NULL);
-	zui_button(page, "Check for updates", NULL, NULL);
+	zui_slider(zui_section(content, "Display"), "Brightness", 0.6, NULL, NULL);
+	zui_button(content, "Check for updates", NULL, NULL);
 	return zui_run(app, page);
 }
 ```
@@ -54,7 +58,7 @@ languages:
 
 ```cpp
 zrn::ui::App app("io.github.you.hello", "Hello");            // C++ (zrnui.hpp)
-auto page = app.page("Hello");
+auto page = app.page();
 auto label = page.text("Not tapped yet");
 page.button("Tap me", [&] { label.set_text("Tapped"); });
 return app.run(page);
@@ -62,7 +66,7 @@ return app.run(page);
 
 ```rust
 let app = zrnui::App::new("io.github.you.hello", "Hello");   // Rust (crate zrnui)
-let page = app.page("Hello");
+let page = app.page();
 let label = page.text("Not tapped yet");
 page.button("Tap me").on_click(move || { label.set_text("Tapped"); });
 std::process::exit(app.run(page));
@@ -71,7 +75,7 @@ std::process::exit(app.run(page));
 ```python
 import zrnui                                                  # Python (no Qt)
 app = zrnui.App("io.github.you.hello", "Hello")
-page = app.page("Hello")
+page = app.page()
 label = page.text("Not tapped yet")
 page.button("Tap me", lambda: label.set_text("Tapped"))
 app.run(page)
@@ -101,7 +105,7 @@ window on a Wayland desktop, with no virtual machine: `make run STYLE=dotmatrix`
 
 ```
 zrn render out.png                          # first page, 360x740 points at scale 2
-zrn render --page "Wi-Fi" --scroll 300 out.png
+zrn render --page 0 --scroll 300 out.png
 zrn render --style dotmatrix out.png
 zrn render --scale 4 out.png                # the S9's real 1440x2960
 zrn run --headless --script "wait 500; tap 180 170; wait 600; snap after.png; quit"

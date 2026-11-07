@@ -36,6 +36,10 @@ float zg_get_alpha(void);
 unsigned zg_tex_new(int w, int h, const uint8_t *rgba, bool nearest);
 void zg_tex_free(unsigned tex);
 /* a texture over a rounded box; crop 0..1 of the picture's width and height, centred */
+unsigned zg_shader_compile(const char *fragment_source, char *error, size_t error_size);	/* 0: did not compile */
+void zg_shader_free(unsigned program);
+void zg_shader_rect(unsigned program, float x, float y, float w, float h, float r, float time,
+	int nuniforms, const char *const *names, const float (*values)[4]);
 void zg_image(unsigned tex, float x, float y, float w, float h, float r, float crop_x, float crop_y);
 /* DotMatrix: everything filled comes out as dots `pitch` points apart on one
  * lattice (0: off); a picture as dots of that colour at its brightness */
@@ -119,6 +123,12 @@ enum zui_kind {
 	ZK_TEXT, ZK_HEADING, ZK_CAPTION, ZK_BUTTON, ZK_ITEM, ZK_SWITCH,
 	ZK_SLIDER, ZK_PROGRESS, ZK_FIELD, ZK_IMAGE, ZK_LIST, ZK_TABS, ZK_FOOTER, ZK_BUBBLE,
 	ZK_CHECK, ZK_RADIO, ZK_PICKER, ZK_RING, ZK_TILES, ZK_TILE, ZK_HUB, ZK_HUBSEC,
+	ZK_SCROLL,	/* a scroll viewer: its things go on under it, as far as it reaches, and a finger moves them */
+	ZK_TITLE,	/* the small title: the application's, a pivot's, a hub section's */
+	ZK_HEADER,	/* the large title: a page's, a hub's */
+	ZK_FRAME,	/* the app's one root: the pages are its children, whatever else is in it is over them all */
+	ZK_CONTENT_PANEL,	/* a page's ContentPanel: a column with the margin and the gaps; the root has none */
+	ZK_TITLE_PANEL,	/* a page's TitlePanel: only holds the two titles, the style draws them */
 };
 
 struct zui_pixmap { int w, h, refs; uint8_t *rgba; unsigned tex, gen; };
@@ -141,6 +151,10 @@ float zanim_value(const struct zanim *a, uint32_t now, bool *running);
 void zanim_go(struct zanim *a, float to, uint32_t ms, uint32_t now);
 void zanim_set(struct zanim *a, float value);
 
+struct zui_rect { float x, y, w, h; };
+struct zui_node;
+struct zui_node *zui_page_of(struct zui_node *n);	/* the page a node is in (or is): what a hub or a pivot made from the app stands for */
+
 struct zui_node {
 	zui_app *app;
 	int kind;
@@ -157,15 +171,19 @@ struct zui_node {
 	/* the last layout, in page points */
 	float x, y, w, h;
 	struct zt_slot t[5];
+	struct zui_brush *bg;	/* what fills the node's area, behind it (zui_set_background) */
 	struct zanim knob;	/* a switch's knob, 0 off .. 1 on */
 	struct zanim focus_anim;
 	/* a page */
-	float scroll, content_h, header_h, vel;
+	float scroll, content_h, vel;
+	/* a page is two panels, as on Windows Phone: the TitlePanel (the top margin, the
+	 * app's name, the page's title) stays; the ContentPanel under it scrolls */
+	struct zui_rect title_panel, content_panel;
 	int depth;		/* 0 for the first page */
 	zui_node *back_to;	/* the page under this one */
 	struct zt_slot title_slot[2];
 	/* a page */
-	zui_node *tabs, *footer;
+	zui_node *tabs, *footer, *title_node, *content_node;
 	bool stick_end, glide;
 	uint32_t glide_at;
 	float down_fix;
@@ -191,7 +209,7 @@ struct zui_node {
 	/* a field */
 	int caret, sel_a, sel_b;	/* bytes; caret -1: the end */
 	uint32_t last_tap;
-	/* widgets.c: pickers, tiles, hubs, suggestions; hold */
+	/* widgets/: pickers, tiles, hubs, suggestions; hold */
 	void *ext;
 	zui_node *hub;		/* a page's hub */
 	float scroll_goal;
@@ -235,6 +253,7 @@ struct zui_app {
 	float paint_scale;
 	int firing;		/* inside a handler: what it destroys is freed after it */
 	zui_node *grave;
+	zui_node *root;	/* the frame: the pages in it, and what the app keeps over all of them */
 	bool in_footer;
 	float down_x, down_y, last_x, last_y, down_scroll;
 	uint32_t last_t;
@@ -257,7 +276,7 @@ struct zui_app {
 	struct zui_post *posts;
 	void *post_lock;
 	struct zui_wl *wl;	/* the window, when there is one */
-	/* widgets.c */
+	/* widgets/ */
 	void *ov;		/* the menu, dialog or picker over the page */
 	zui_node *open_picker;	/* the list picker that is open */
 	int hold_timer;
@@ -282,7 +301,7 @@ void zui_step(zui_app *app, uint32_t now);	/* flings and springs */
 const char *zui_data_dir(void);
 void zui_osk(zui_app *app, bool show);
 
-/* widgets.c: what core.c asks of it */
+/* widgets/: what core.c asks of it */
 float zui_widget_layout(zui_node *n, float x, float y, float w);	/* < 0: not a widget of its */
 bool zui_widget_draw(zui_app *app, zui_node *n, const struct zg_xf *xf, uint32_t now);
 bool zui_widget_interactive(const zui_node *n);
@@ -295,14 +314,26 @@ bool zui_widgets_back(zui_app *app);	/* true: it closed something */
 bool zui_widgets_animating(zui_app *app, uint32_t now);
 void zui_widgets_step(zui_app *app, uint32_t now);
 float zui_hub_offset(const zui_node *hub);
+void zui_brush_paint(zui_app *app, struct zui_brush *b, float x, float y, float w, float h, float r);
+void zui_brush_free(struct zui_brush *b);
+zui_node *zui_scroller(zui_node *page);	/* what scrolls on a page: the tab or hub section in front, else the page */
+zui_node *zui_list_owner(zui_node *list);	/* what scrolls a list */
+zui_node *zui_hub_front(const zui_node *hub);	/* the section nearest the screen's left edge */
+int zui_hub_copies(const zui_node *hub, const zui_node *section, float dx[3]);
+float zui_hub_pick_shift(const zui_node *hub, const zui_node *section, float screen_x);
+float zui_hub_begin_drag(zui_node *hub);
+bool zui_hub_title_moving(zui_node *hub, uint32_t now);
 void zui_hub_drag(zui_app *app, zui_node *hub, float dx);	/* the finger moved dx from where it went down */
 void zui_hub_release(zui_app *app, zui_node *hub, float velocity);	/* points per ms, + to the right */
-void zui_hub_title_shift(zui_app *app, zui_node *page, float *shift);	/* how far the title has gone */
+const char *zui_panel_text(const zui_node *page, int kind);	/* the text of a TitlePanel's first ZK_TITLE or ZK_HEADER */
+float zui_hub_content_top(const zui_node *hub);	/* where a hub's sections start: under its title */
+zui_node *zui_node_new_detached(zui_app *app, int kind);
+void zui_node_free_detached(zui_node *n);
 void zui_hold_start(zui_app *app, zui_node *n, uint32_t time);
 void zui_hold_cancel(zui_app *app);
 bool zui_hold_on_lift(zui_app *app, uint32_t time, uint32_t down_time);
 void zui_pickers_close_except(zui_app *app, zui_node *keep);
-float zui_node_hub_shift(const zui_node *n);
+float zui_node_hub_shift(const zui_node *n, float screen_x);
 bool zui_widgets_page_moving(zui_app *app, zui_node *page, uint32_t now);
 void zui_cb_end(zui_app *app);
 void zui_set_checked(zui_node *n, bool on);
@@ -323,6 +354,7 @@ void zui_tabs_step(zui_node *tabs, int dir);
 float zui_list_layout(zui_node *n, float x, float y, float w);
 void zui_list_free(zui_node *n);
 int zui_child_index(const zui_node *c);
+const char *zui_tab_title(const zui_node *item);
 zui_node *zui_tab_at(zui_node *tabs, int i);
 int zui_tab_count(const zui_node *tabs);
 void zui_frame_begin(void);
@@ -344,12 +376,13 @@ struct zui_palette {
 };
 struct zui_metrics {
 	float margin, gap, card_r, card_pad, section_gap;
+	float top;	/* where the TitlePanel's first line starts: 32 for the status bar and 24 under it */
 	float text, heading, caption, label, title, bar_title;
 	float item_h, item_h2, item_title, item_sub, icon_tile;
 	float button_h, button_r, button_text;
 	float field_h, field_r;
 	float bar_slot, bar_button;	/* an action bar's round button: its width and height; 0: with its word always */
-	float bar_h;	/* zrnCoolStyle: the bar along the top; Metro: the fixed header */
+	float title_h, title_compact_h;	/* the TitlePanel's height: from the top of the screen, with the status bar's room */
 	float large_title_h;
 };
 struct zui_style {

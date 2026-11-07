@@ -404,7 +404,7 @@ def cmd_render(args, out):
                        capture_output=True, text=True, timeout=60)
     if p.returncode == 2:
         raise ZrnError("no-page", (p.stderr.strip().splitlines() or ["no such page"])[-1],
-                       "pass --page with a number or a title from that list")
+                       "pass --page with a number from 0 to the number of pages minus one")
     if p.returncode != 0 or not path.exists():
         tail = "\n".join([l for l in p.stderr.splitlines() if "pci id" not in l][-15:])
         raise ZrnError("render-failed", f"the app did not draw {path} (exit {p.returncode})\n{tail}",
@@ -440,7 +440,7 @@ def cmd_run(args, out):
     proj = find_project(args.project)
     built = build_project(proj, None, out)
     w, h = (int(v) for v in args.size.lower().split("x"))
-    env = {"ZUI_WINDOW": f"{w}x{h}"}
+    env = {"ZUI_WINDOW": f"{w}x{h}", "ZRN_APP_ID": proj.id}
     if args.style:
         env["ZUI_STYLE"] = args.style
     if args.scale:
@@ -900,7 +900,7 @@ def parser():
 
     p = sub.add_parser("render", parents=[common], help="draw a page into a PNG (no display needed)")
     p.add_argument("output")
-    p.add_argument("--page", help="number (in the order the app makes pages) or title")
+    p.add_argument("--page", help="number, in the order the app makes pages (0 is the first)")
     p.add_argument("--style", choices=("metro", "dotmatrix"))
     p.add_argument("--size", default="360x740", help="points, WxH (the S9 is 360x740)")
     p.add_argument("--scale", type=int, default=2, help="pixels per point (the S9 is 4)")
