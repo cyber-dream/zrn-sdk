@@ -112,10 +112,11 @@ static void toggle(zui_app *app, zui_node *n, float x, float y, float k) {
  * the titles move by a whole title as the tab under them moves by a screen */
 static void tabs(zui_app *app, zui_node *n, float pos) {
 	struct zui_palette pal = app->style->palette(app);
-	int count = zui_tab_count(n), cur = n->tab_cur;
+	int count = zui_tab_count(n), cur = zui_pivot_of(n)->cur;
 	float frac = pos - (float)cur;
 	if (!(app->page && app->page->bg)) zg_rect(0, 24, app->width, M.title_h - 24, 0, pal.bg);
-	struct zt_layout *L[8];
+	if (count <= 0) return;	/* a pivot with no items yet: nothing to name */
+	struct zt_layout *L[count];
 	for (int k = 0; k < count; k++) {
 		zui_node *t = zui_tab_at(n, k);
 		L[k] = zt_slot_get(&t->title_slot[0], zui_tab_title(t), ZT_LIGHT, M.title, 0, 0);

@@ -9,8 +9,8 @@
 #include <string.h>
 #include "widgets/widgets.h"
 
-ZUI_EXPORT zui_node *zui_check(zui_node *parent, const char *title, bool on, zui_cb cb, void *data) {
-	zui_node *n = zui_node_new_kind(parent, ZK_CHECK);
+static zui_node *check_new(zui_node *parent, int kind, const char *title, bool on, zui_cb cb, void *data) {
+	zui_node *n = zui_node_new_kind(parent, kind);
 	zui_set_text(n, title);
 	n->on = on;
 	zanim_set(&n->knob, on ? 1 : 0);
@@ -19,10 +19,12 @@ ZUI_EXPORT zui_node *zui_check(zui_node *parent, const char *title, bool on, zui
 	return n;
 }
 
+ZUI_EXPORT zui_node *zui_check(zui_node *parent, const char *title, bool on, zui_cb cb, void *data) {
+	return check_new(parent, ZK_CHECK, title, on, cb, data);
+}
+
 ZUI_EXPORT zui_node *zui_radio(zui_node *parent, const char *title, bool on, zui_cb cb, void *data) {
-	zui_node *n = zui_check(parent, title, on, cb, data);
-	n->kind = ZK_RADIO;
-	return n;
+	return check_new(parent, ZK_RADIO, title, on, cb, data);
 }
 
 void zui_set_checked(zui_node *n, bool on) {

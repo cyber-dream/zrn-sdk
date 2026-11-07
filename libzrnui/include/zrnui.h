@@ -407,9 +407,10 @@ void zui_tile_set_live(zui_node *tile, const char *back, int period_ms);
  * slowly than the sections and a picture behind them slower still. A hub is a root of its
  * own, made from the app: pass it to zui_run or zui_push as it is. A section is a column:
  * put anything in it. */
-zui_node *zui_hub(zui_app *app);
-/* A section is a column: put anything in it; a zui_title put first in it is its header. */
-zui_node *zui_hub_section(zui_node *hub);
+zui_node *zui_hub(zui_app *app, const char *title);	/* title: Hub.Header, NULL for none */
+/* A section is a column: put anything in it. `title` is its header (HubSection.Header, the small
+ * title, first in the section); NULL for none. */
+zui_node *zui_hub_section(zui_node *hub, const char *title);
 void zui_hub_set_background(zui_node *hub, zui_pixmap *pix);
 /* The hub's own large title (Hub.Header): not a widget the app makes, the hub has one; this sets its text.
  * It is the hub's: it goes by more slowly than the sections, and round with them. A hub is the whole

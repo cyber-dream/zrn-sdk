@@ -265,7 +265,7 @@ void zui_list_free(zui_node *n) {
 zui_node *zui_list_owner(zui_node *n) {
 	for (zui_node *p = n->parent; p; p = p->parent) {
 		if (p->kind == ZK_SCROLL) return p;
-		if (p->parent && (p->parent->kind == ZK_TABS || p->parent->kind == ZK_HUB)) return p;
+		if (p->parent && (p->parent->kind == ZK_PIVOT || p->parent->kind == ZK_HUB)) return p;
 	}
 	return zui_page_of(n);
 }
@@ -480,7 +480,7 @@ void zui_list_draw(zui_app *app, zui_node *n, const struct zg_xf *base, uint32_t
 	 * into view by the perspective */
 	zui_node *tabs = NULL;
 	for (zui_node *p = n; p && p->parent; p = p->parent)
-		if (p->parent->kind == ZK_TABS && zui_tab_at(p->parent, p->parent->tab_cur) == p) tabs = p->parent;
+		if (p->parent->kind == ZK_PIVOT && zui_tab_at(p->parent, zui_pivot_of(p->parent)->cur) == p) tabs = p->parent;
 	int k = 0;
 	for (int row = L->want0; row <= L->want1 && row < L->count; row++) {
 		zui_node *c = slot_of(L, row);
@@ -620,7 +620,7 @@ ZUI_EXPORT bool zui_page_at_end(zui_node *page, double within) {
 /* ---- tabs ---- */
 ZUI_EXPORT zui_node *zui_pivot(zui_app *app) {
 	zui_node *page = zui_page_blank(app);
-	zui_node *n = zui_node_new_kind(page, ZK_TABS);
+	zui_node *n = zui_node_new_kind(page, ZK_PIVOT);
 	page->tabs = n;
 	return n;
 }
@@ -661,52 +661,52 @@ int zui_tab_count(const zui_node *tabs) {
 	for (zui_node *c = tabs->first; c; c = c->next) k++;
 	return k;
 }
-ZUI_EXPORT int zui_pivot_current(const zui_node *tabs) { return tabs->tab_cur; }
+ZUI_EXPORT int zui_pivot_current(const zui_node *tabs) { return zui_pivot_of(tabs)->cur; }
 /* one tab along, going round; the slide carries on from where it is */
 void zui_tabs_step(zui_node *tabs, int dir) {
-	int k = zui_tab_count(tabs), cur = tabs->tab_cur;
+	int k = zui_tab_count(tabs), cur = zui_pivot_of(tabs)->cur;
 	zui_app *app = tabs->app;
 	uint32_t now = zui_now();
-	float off = zanim_value(&tabs->knob, now, NULL);
+	float off = zanim_value(&zui_pivot_of(tabs)->pos, now, NULL);
 	if (dir) {
 		int i = ((cur + dir) % k + k) % k;
 		zui_node *old = zui_tab_at(tabs, cur);
-		tabs->tab_cur = i;
-		tabs->tab_prev = cur;
+		zui_pivot_of(tabs)->cur = i;
+		zui_pivot_of(tabs)->prev = cur;
 		old->vel = 0;
 		app->fling = false;
 		app->laid_out = false;
 		off -= (float)dir;
 		zui_fire(tabs, ZUI_EVENT_CHANGE);
 	}
-	tabs->knob.from = off;
-	tabs->knob.to = 0;
-	tabs->knob.start = now;
-	tabs->knob.ms = 260;
+	zui_pivot_of(tabs)->pos.from = off;
+	zui_pivot_of(tabs)->pos.to = 0;
+	zui_pivot_of(tabs)->pos.start = now;
+	zui_pivot_of(tabs)->pos.ms = 260;
 	zanim_go(&tabs->focus_anim, 0, 260, now);
 	app->dirty = true;
 }
 
 ZUI_EXPORT void zui_pivot_select(zui_node *tabs, int i) {
 	int count = zui_tab_count(tabs);
-	if (i < 0 || i >= count) i = tabs->tab_cur;
+	if (i < 0 || i >= count) i = zui_pivot_of(tabs)->cur;
 	zui_app *app = tabs->app;
 	uint32_t now = zui_now();
 	/* the slide carries on from where the finger left it */
-	float from = (float)tabs->tab_cur + zanim_value(&tabs->knob, now, NULL);
-	if (i != tabs->tab_cur) {
-		zui_node *old = zui_tab_at(tabs, tabs->tab_cur);
-		tabs->tab_cur = i;
+	float from = (float)zui_pivot_of(tabs)->cur + zanim_value(&zui_pivot_of(tabs)->pos, now, NULL);
+	if (i != zui_pivot_of(tabs)->cur) {
+		zui_node *old = zui_tab_at(tabs, zui_pivot_of(tabs)->cur);
+		zui_pivot_of(tabs)->cur = i;
 		old->vel = 0;
 		app->fling = false;
-		tabs->tab_prev = zui_child_index(old);
+		zui_pivot_of(tabs)->prev = zui_child_index(old);
 		app->laid_out = false;
 		zui_fire(tabs, ZUI_EVENT_CHANGE);
 	}
-	tabs->knob.from = from - (float)i;
-	tabs->knob.to = 0;
-	tabs->knob.start = now;
-	tabs->knob.ms = 240;
+	zui_pivot_of(tabs)->pos.from = from - (float)i;
+	zui_pivot_of(tabs)->pos.to = 0;
+	zui_pivot_of(tabs)->pos.start = now;
+	zui_pivot_of(tabs)->pos.ms = 240;
 	zanim_go(&tabs->focus_anim, 0, 240, now);	/* (keeps frames coming) */
 	app->dirty = true;
 }

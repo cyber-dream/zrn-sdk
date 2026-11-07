@@ -11,7 +11,7 @@ LDLIBS = $(shell pkg-config --libs $(PKGS)) -lm -lpthread -ldl
 VERSION = 0.1.0
 SONAME = libzrnui.so.0
 B = build
-SRC = src/core.c src/brush.c src/gfx.c src/text.c src/icons.c src/style-metro.c src/wl.c \
+SRC = src/core.c src/class.c src/brush.c src/gfx.c src/text.c src/icons.c src/style-metro.c src/wl.c \
 	src/extras.c src/offscreen.c protocol/xdg-shell-protocol.c
 SRC += $(wildcard src/widgets/*.c)
 OBJ = $(SRC:%.c=$(B)/%.o)

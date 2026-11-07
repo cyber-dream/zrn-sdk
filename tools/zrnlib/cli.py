@@ -392,7 +392,8 @@ def cmd_render(args, out):
     if path.exists():
         path.unlink()
     w, h = (int(v) for v in args.size.lower().split("x"))
-    env = {"ZUI_RENDER_PNG": str(path), "ZUI_RENDER_SIZE": f"{w}x{h}@{args.scale}",
+    # ZUI_NO_OPEN: the page as it is once opened, not the first frame of the opening turn (nothing is there yet)
+    env = {"ZUI_RENDER_PNG": str(path), "ZUI_RENDER_SIZE": f"{w}x{h}@{args.scale}", "ZUI_NO_OPEN": "1",
            "EGL_LOG_LEVEL": "fatal", "MESA_LOG_LEVEL": "error"}
     if args.page is not None:
         env["ZUI_RENDER_PAGE"] = str(args.page)

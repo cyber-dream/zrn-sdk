@@ -4,6 +4,7 @@
 #define ZUI_INTERNAL_H
 
 #include <stdbool.h>
+#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 #include "zrnui.h"
@@ -121,7 +122,7 @@ void zt_slot_free(struct zt_slot *slot);
 enum zui_kind {
 	ZK_PAGE, ZK_COLUMN, ZK_ROW, ZK_CARD, ZK_SECTION_LABEL, ZK_SPACE,
 	ZK_TEXT, ZK_HEADING, ZK_CAPTION, ZK_BUTTON, ZK_ITEM, ZK_SWITCH,
-	ZK_SLIDER, ZK_PROGRESS, ZK_FIELD, ZK_IMAGE, ZK_LIST, ZK_TABS, ZK_FOOTER, ZK_BUBBLE,
+	ZK_SLIDER, ZK_PROGRESS, ZK_FIELD, ZK_IMAGE, ZK_LIST, ZK_PIVOT, ZK_FOOTER, ZK_BUBBLE,
 	ZK_CHECK, ZK_RADIO, ZK_PICKER, ZK_RING, ZK_TILES, ZK_TILE, ZK_HUB, ZK_HUBSEC,
 	ZK_SCROLL,	/* a scroll viewer: its things go on under it, as far as it reaches, and a finger moves them */
 	ZK_TITLE,	/* the small title: the application's, a pivot's, a hub section's */
@@ -155,9 +156,20 @@ struct zui_rect { float x, y, w, h; };
 struct zui_node;
 struct zui_node *zui_page_of(struct zui_node *n);	/* the page a node is in (or is): what a hub or a pivot made from the app stands for */
 
+/* What a kind of node is: the size of its struct (zui_node is the first member of every
+ * subtype, as the base in front of what is its own) and what it does that the base cannot. One
+ * per kind, in class.c: a new kind of node is a struct, a class and nothing in the core. */
+struct zui_class {
+	const char *name;
+	size_t size;				/* of the node's struct: at least sizeof(struct zui_node) */
+	void (*destroy)(zui_node *n);		/* frees what the subtype holds (not the node itself) */
+};
+const struct zui_class *zui_class_of(int kind);
+
 struct zui_node {
 	zui_app *app;
 	int kind;
+	const struct zui_class *cls;
 	zui_node *parent, *first, *last, *next, *prev;
 	char *text, *subtitle, *detail, *icon;
 	double value, flex, space;
@@ -187,8 +199,6 @@ struct zui_node {
 	bool stick_end, glide;
 	uint32_t glide_at;
 	float down_fix;
-	/* tabs */
-	int tab_cur, tab_prev;
 	/* pictures, lists, the rest */
 	zui_pixmap *pix;
 	bool group, applist, has_gap, fullscreen, fit, no_dots, quiet, sharp, emphasis, mine, compact, inline_hint;
@@ -219,6 +229,17 @@ struct zui_node {
 	zui_free_fn hold_free;
 	bool password;
 };
+
+/* A pivot: its items are its children, one in front. */
+struct zui_pivot {
+	struct zui_node base;
+	int cur, prev;		/* the item in front, and the one that was */
+	struct zanim pos;	/* the highlight, from cur: 0 at rest, the way left to a neighbour while moving */
+};
+static inline struct zui_pivot *zui_pivot_of(const zui_node *n) {
+	assert(n && n->kind == ZK_PIVOT);
+	return (struct zui_pivot *)n;
+}
 
 #define ZUI_MAX_FDS 32
 #define ZUI_MAX_TIMERS 64

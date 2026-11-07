@@ -1,5 +1,17 @@
 # Changes that break compatibility
 
+## The hub's and its sections' titles are arguments again (Header is a property in WP)
+
+`Hub.Header` and `HubSection.Header` are properties on Windows Phone, so they are arguments here,
+as `zui_pivot_item_header` is for a pivot item.
+
+**What broke**
+
+- `zui_hub(app)` is now `zui_hub(app, "HEADER")` (NULL for none; `zui_hub_title` still changes it).
+- `zui_hub_section(hub)` is now `zui_hub_section(hub, "title")` (NULL for none); it puts the small
+  `zui_title` first in the section, so `zui_title(section, ...)` is not needed. C++: `app.hub("H")`,
+  `hub.hub_section("title")`.
+
 ## Pages have no text name; a page's titles are a TitlePanel
 
 As on Windows Phone, a page is a TitlePanel and a ContentPanel under it. The TitlePanel

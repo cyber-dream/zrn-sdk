@@ -2,6 +2,7 @@
   <configuration default="false" name="helloworld" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="ztOS-libUI" TARGET_NAME="helloworld" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="ztOS-libUI" RUN_TARGET_NAME="helloworld">
     <envs>
       <env name="ZUI_WINDOW" value="480x800" />
+      <env name="ZUI_SCALE" value="1" />
     </envs>
     <method v="2">
       <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />

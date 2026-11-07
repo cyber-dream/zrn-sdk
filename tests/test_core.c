@@ -149,9 +149,8 @@ static void test_root(const char *style) {
 	zui_node_frame(still, NULL, &y, NULL, NULL);
 	CHECK(y > 0, "%s: and the page still lays out", style);
 	/* a hub and a pivot sit in a blank root and carry their own title: no TitlePanel */
-	zui_node *hub = zui_hub(app);
-	zui_hub_title(hub, "hub");
-	zui_node *hub_sec = zui_hub_section(hub);
+	zui_node *hub = zui_hub(app, "hub");
+	zui_node *hub_sec = zui_hub_section(hub, NULL);
 	zui_layout(app, hub, 360, 740);
 	zui_node_frame(hub, NULL, &y, NULL, &h);
 	CHECK(y == 0 && h >= 740, "%s: a hub is the whole screen (y %.0f, h %.0f)", style, y, h);
@@ -312,9 +311,8 @@ static void test_brushes(const char *dir) {
 
 	/* a hub is a root: its background is the whole screen's, the titles' room too */
 	app = zui_app_new();
-	zui_node *hub_root = zui_hub(app);
-	zui_hub_title(hub_root, "Hub");
-	zui_hub_section(hub_root);
+	zui_node *hub_root = zui_hub(app, "Hub");
+	zui_hub_section(hub_root, "One");
 	zui_brush *yellow = zui_brush_solid(0xffff00);
 	zui_set_background(hub_root, yellow);
 	zui_brush_free(yellow);
@@ -632,11 +630,11 @@ static void test_tiles_hub(const char *dir) {
 	tap(app, a);
 	CHECK(clicks == 1, "a tile can be tapped");
 
-	zui_node *hub = zui_hub(app);
+	zui_node *hub = zui_hub(app, NULL);
 	zui_node *hp = hub;
-	zui_node *s1 = zui_hub_section(hub);
-	zui_hub_section(hub);
-	zui_node *s3 = zui_hub_section(hub);
+	zui_node *s1 = zui_hub_section(hub, NULL);
+	zui_hub_section(hub, NULL);
+	zui_node *s3 = zui_hub_section(hub, NULL);
 	zui_node *btn = zui_button(s3, "Deep", on_any, NULL);
 	zui_text(s1, "hello");
 	zui_layout(app, hp, 360, 740);
@@ -646,11 +644,11 @@ static void test_tiles_hub(const char *dir) {
 	CHECK(bx0 > 360, "the third section is off to the right (%.0f)", bx0);
 	zui_app_free(app);
 	app = zui_app_new();
-	hub = zui_hub(app);
+	hub = zui_hub(app, NULL);
 	hp = hub;
-	zui_hub_section(hub);
-	zui_hub_section(hub);
-	s3 = zui_hub_section(hub);
+	zui_hub_section(hub, NULL);
+	zui_hub_section(hub, NULL);
+	s3 = zui_hub_section(hub, NULL);
 	btn = zui_button(s3, "Deep", on_any, NULL);
 	zui_layout(app, hp, 360, 740);
 	if (!getenv("ZUI_TEST_NO_GPU")) {
@@ -691,10 +689,10 @@ static void test_tiles_hub(const char *dir) {
 
 	/* two sections: the one not in front shows at the side, whichever it is: a sliver is always there */
 	app = zui_app_new();
-	hub = zui_hub(app);
-	zui_node *sa = zui_hub_section(hub);
+	hub = zui_hub(app, NULL);
+	zui_node *sa = zui_hub_section(hub, NULL);
 	zui_node *a_btn = zui_button(sa, "First's", on_any, NULL);
-	zui_node *sb = zui_hub_section(hub);
+	zui_node *sb = zui_hub_section(hub, NULL);
 	zui_text(sb, "Second");
 	zui_layout(app, hub, 360, 740);
 	zui_hub_show(hub, 1);
@@ -709,11 +707,11 @@ static void test_tiles_hub(const char *dir) {
 
 	/* only the section in front scrolls: the others keep the place they were left at */
 	app = zui_app_new();
-	hub = zui_hub(app);
-	zui_node *tall = zui_hub_section(hub);
+	hub = zui_hub(app, NULL);
+	zui_node *tall = zui_hub_section(hub, NULL);
 	zui_space(tall, 1200);
 	zui_node *low = zui_button(tall, "Low", on_any, NULL);
-	zui_node *other = zui_hub_section(hub);
+	zui_node *other = zui_hub_section(hub, NULL);
 	zui_node *top = zui_button(other, "Top", on_any, NULL);
 	zui_layout(app, hub, 360, 740);
 	double ex, ey, ew, eh, tx, ty, tw, th;

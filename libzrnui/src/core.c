@@ -281,9 +281,11 @@ struct zui_palette zui_pal(const zui_app *app) { return app->style->palette(app)
 static void changed(zui_node *n, bool layout);
 
 static zui_node *node_new(zui_app *app, zui_node *parent, int kind) {
-	zui_node *n = calloc(1, sizeof(*n));
+	const struct zui_class *cls = zui_class_of(kind);
+	zui_node *n = calloc(1, cls->size);
 	n->app = app;
 	n->kind = kind;
+	n->cls = cls;
 	n->enabled = n->visible = true;
 	n->parent = parent;
 	if (parent) {
@@ -314,6 +316,7 @@ static void node_free(zui_node *n) {
 		zui_osk(app, false);
 	}
 	if (n->free_data) n->free_data(n->data);
+	if (n->cls->destroy) n->cls->destroy(n);
 	zui_widget_free(n);
 	for (int i = 0; i < 5; i++) zt_slot_free(&n->t[i]);
 	for (int i = 0; i < 2; i++) zt_slot_free(&n->title_slot[i]);
@@ -944,14 +947,14 @@ static float layout_node(zui_node *n, float x, float y, float w) {
 	case ZK_LIST:
 		h = zui_list_layout(n, x, y, w);
 		break;
-	case ZK_TABS: {
+	case ZK_PIVOT: {
 		int i = 0;
 		for (zui_node *c = n->first; c; c = c->next, i++) {
 			/* a tab is a ContentPanel: the margin is its own */
-			if (i == n->tab_cur) { h = layout_node(c, x + m->margin, y, w - 2 * m->margin); c->content_h = c->y + h; }
+			if (i == zui_pivot_of(n)->cur) { h = layout_node(c, x + m->margin, y, w - 2 * m->margin); c->content_h = c->y + h; }
 			else {
 				int k = zui_tab_count(n);
-				if (i == n->tab_prev || i == (n->tab_cur + 1) % k || i == (n->tab_cur + k - 1) % k) {
+				if (i == zui_pivot_of(n)->prev || i == (zui_pivot_of(n)->cur + 1) % k || i == (zui_pivot_of(n)->cur + k - 1) % k) {
 					float hh = layout_node(c, x + m->margin, y, w - 2 * m->margin);
 					c->content_h = c->y + hh;
 				}
@@ -1123,7 +1126,7 @@ ZUI_EXPORT void zui_layout(zui_app *app, zui_node *page, int width, int height) 
 /* the first scroll viewer on a page (not in tabs or a hub, which scroll by themselves) */
 static zui_node *find_scroll(zui_node *n) {
 	for (zui_node *c = n->first; c; c = c->next) {
-		if (!c->visible || c->kind == ZK_FOOTER || c->kind == ZK_TABS || c->kind == ZK_HUB) continue;
+		if (!c->visible || c->kind == ZK_FOOTER || c->kind == ZK_PIVOT || c->kind == ZK_HUB) continue;
 		if (c->kind == ZK_SCROLL) return c;
 		zui_node *deeper = find_scroll(c);
 		if (deeper) return deeper;
@@ -1139,7 +1142,7 @@ zui_node *zui_scroller(zui_node *page) {
 		if (front) return front;
 	}
 	if (page->tabs) {
-		zui_node *tab = zui_tab_at(page->tabs, page->tabs->tab_cur);
+		zui_node *tab = zui_tab_at(page->tabs, zui_pivot_of(page->tabs)->cur);
 		if (tab) return tab;
 	}
 	zui_node *widget = find_scroll(page);
@@ -1167,7 +1170,7 @@ static bool interactive(const zui_node *n) {
 static zui_node *hit_in(zui_node *n, float x, float y) {
 	for (zui_node *c = n->first; c; c = c->next) {
 		if (!c->visible || c->kind == ZK_FOOTER) continue;
-		if (n->kind == ZK_TABS && c != zui_tab_at(n, n->tab_cur)) continue;
+		if (n->kind == ZK_PIVOT && c != zui_tab_at(n, zui_pivot_of(n)->cur)) continue;
 		/* a hub's sections have slid, each by its own (they go round) */
 		if (n->kind == ZK_HUB) {
 			/* a section may show in two places: each is tried */
@@ -1183,7 +1186,7 @@ static zui_node *hit_in(zui_node *n, float x, float y) {
 			continue;
 		}
 		/* a tab scrolls by itself: what is on the screen is `scroll` further down in it */
-		float cy = n->kind == ZK_TABS ? y + c->scroll : n->kind == ZK_SCROLL ? y + n->scroll : y;
+		float cy = n->kind == ZK_PIVOT ? y + c->scroll : n->kind == ZK_SCROLL ? y + n->scroll : y;
 		if (x < c->x || x >= c->x + c->w || cy < c->y || cy >= c->y + c->h) continue;
 		zui_node *deeper = hit_in(c, x, cy);
 		if (deeper) return deeper;
@@ -1419,8 +1422,8 @@ void zui_touch(zui_app *app, int phase, float x, float y, uint32_t time) {
 			float dt = (float)(int32_t)(time - app->last_t);
 			if (dt > 0) app->swipe_v = app->swipe_v * 0.3f + (-(x - app->last_x) / app->width / dt) * 0.7f;
 			app->last_t = time;
-			zanim_set(&T->knob, pos);
-			T->tab_prev = ((T->tab_cur + (pos > 0 ? 1 : -1)) % k + k) % k;
+			zanim_set(&zui_pivot_of(T)->pos, pos);
+			zui_pivot_of(T)->prev = ((zui_pivot_of(T)->cur + (pos > 0 ? 1 : -1)) % k + k) % k;
 			app->last_x = x;
 			app->dirty = true;
 			return;
@@ -1463,12 +1466,12 @@ void zui_touch(zui_app *app, int phase, float x, float y, uint32_t time) {
 	if (app->swiping) {
 		app->swiping = false;
 		zui_node *T = page->tabs;
-		float pos = T->knob.to, v = app->swipe_v, sw = 50.0f / app->width, fl = 0.3f / app->width;
+		float pos = zui_pivot_of(T)->pos.to, v = app->swipe_v, sw = 50.0f / app->width, fl = 0.3f / app->width;
 		/* as ZrnMetroCore's pivots: 50 points, or 0.3 points a ms, turn to the next */
 		zui_tabs_step(T, v > fl || (pos > sw && v >= -fl) ? 1 : v < -fl || (pos < -sw && v <= fl) ? -1 : 0);
-		T->knob.v0 = v;
-		T->knob.w = 0.018f;
-		T->knob.ms = 420;
+		zui_pivot_of(T)->pos.v0 = v;
+		zui_pivot_of(T)->pos.w = 0.018f;
+		zui_pivot_of(T)->pos.ms = 420;
 		app->swipe_v = 0;
 		return;
 	}
@@ -1666,7 +1669,7 @@ void zui_step(zui_app *app, uint32_t now) {
 	}
 	if (page->tabs && !app->swiping) {
 		bool running = false;
-		zanim_value(&page->tabs->knob, now, &running);
+		zanim_value(&zui_pivot_of(page->tabs)->pos, now, &running);
 		if (running) app->dirty = true;
 	}
 	if (app->touching) return;
@@ -1722,7 +1725,7 @@ bool zui_animating(zui_app *app) {
 	zui_node *sv = page ? zui_scroller(page) : NULL;
 	if (app->trans_to || app->fling || app->busy) return true;
 	if (sv && sv->glide && sv->stick_end) return true;
-	if (page && page->tabs && page->tabs->knob.ms && (int32_t)(now - page->tabs->knob.start) < (int32_t)page->tabs->knob.ms) return true;
+	if (page && page->tabs && zui_pivot_of(page->tabs)->pos.ms && (int32_t)(now - zui_pivot_of(page->tabs)->pos.start) < (int32_t)zui_pivot_of(page->tabs)->pos.ms) return true;
 	if ((int32_t)(anim_until - now) > 0) return true;
 	if (app->toast && (int32_t)(now - app->toast_at) < 2600) return true;
 	if (sv && !app->touching && (sv->scroll < 0 || sv->scroll > scroll_max(app, sv))) return true;
@@ -1744,11 +1747,11 @@ static void ensure_lists(zui_node *n, uint32_t now) {
 	for (zui_node *c = n->first; c; c = c->next) {
 		if (!c->visible) continue;
 		if (c->kind == ZK_LIST) { zui_list_ensure(c, now); continue; }
-		if (n->kind == ZK_TABS) {
+		if (n->kind == ZK_PIVOT) {
 			int i = zui_child_index(c), k = zui_tab_count(n);
-			float off = zanim_value(&n->knob, now, NULL);
-			int other = ((n->tab_cur + (off > 0 ? 1 : -1)) % k + k) % k;
-			if (i != n->tab_cur && !(fabsf(off) > 0.001f && i == other)) continue;
+			float off = zanim_value(&zui_pivot_of(n)->pos, now, NULL);
+			int other = ((zui_pivot_of(n)->cur + (off > 0 ? 1 : -1)) % k + k) % k;
+			if (i != zui_pivot_of(n)->cur && !(fabsf(off) > 0.001f && i == other)) continue;
 		}
 		ensure_lists(c, now);
 	}
@@ -1835,10 +1838,10 @@ static void draw_node(zui_app *app, zui_node *n, const struct zg_xf *base, uint3
 		zui_list_draw(app, n, &xf, now, turn_role, turn_t, turn_dir, sc);
 		break;
 	}
-	case ZK_TABS: {
+	case ZK_PIVOT: {
 		bool running = false;
-		float off = zanim_value(&n->knob, now, &running);
-		int cur = n->tab_cur;
+		float off = zanim_value(&zui_pivot_of(n)->pos, now, &running);
+		int cur = zui_pivot_of(n)->cur;
 		zui_node *front = zui_tab_at(n, cur);
 		float W = app->width;
 		struct zg_xf a = xf;
@@ -1975,7 +1978,7 @@ static void draw_page(zui_app *app, zui_node *page, uint32_t now, int role, floa
 		for (; k; k = split ? k->next : NULL) {
 			if (!k->visible) continue;
 			int r = row++;
-			if (k->kind != ZK_TABS && (k->y - scroll > app->height || k->y + k->h - scroll < 0)) continue;
+			if (k->kind != ZK_PIVOT && (k->y - scroll > app->height || k->y + k->h - scroll < 0)) continue;
 			zg_xf_identity(&base);
 			zg_xf_translate(&base, 0, -scroll, 0);
 			alpha = 1;
@@ -2000,8 +2003,8 @@ static void draw_page(zui_app *app, zui_node *page, uint32_t now, int role, floa
 	zg_set_xf(&base);
 	if (!page->fullscreen) st->header(app, page, now);
 	if (page->tabs && !page->fullscreen) {
-		float off = zanim_value(&page->tabs->knob, now, NULL);
-		st->tabs(app, page->tabs, (float)page->tabs->tab_cur + off);
+		float off = zanim_value(&zui_pivot_of(page->tabs)->pos, now, NULL);
+		st->tabs(app, page->tabs, (float)zui_pivot_of(page->tabs)->cur + off);
 	}
 	/* the TitlePanel's titles, as widgets like the rest, over the header: a hub's go by slowly */
 	if (page->title_node && !page->fullscreen && !page->compact) {

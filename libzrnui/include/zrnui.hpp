@@ -154,7 +154,7 @@ public:
 		return t;
 	}
 	Node &set_live(const std::string &back, int period_ms) { zui_tile_set_live(n_, back.c_str(), period_ms); return *this; }
-	Node hub_section() { return Node(zui_hub_section(n_)); }
+	Node hub_section(const std::string &title = "") { return Node(zui_hub_section(n_, title.empty() ? nullptr : title.c_str())); }
 	Node &set_background(zui_pixmap *pix) { zui_hub_set_background(n_, pix); return *this; }
 	Node &show_section(int i) { zui_hub_show(n_, i); return *this; }
 	/* a press and hold */
@@ -243,7 +243,7 @@ public:
 	Node page() { return Node(zui_page(app_)); }
 	Node page_blank() { return Node(zui_page_blank(app_)); }
 	/* a hub and a pivot are roots of their own: run or push them as they are */
-	Node hub() { return Node(zui_hub(app_)); }
+	Node hub(const std::string &title = "") { return Node(zui_hub(app_, title.empty() ? nullptr : title.c_str())); }
 	Node pivot() { return Node(zui_pivot(app_)); }
 	Node page_fullscreen() { return Node(zui_page_fullscreen(app_)); }
 	int run(Node first) { return zui_run(app_, first.get()); }

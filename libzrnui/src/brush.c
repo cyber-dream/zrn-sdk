@@ -255,7 +255,7 @@ void zui_brush_paint(zui_app *app, zui_brush *b, float x, float y, float w, floa
  * is what the screen shows, titles and all (zui_page_of, as everywhere a page is meant). A hub is the
  * whole screen itself. */
 ZUI_EXPORT void zui_set_background(zui_node *n, zui_brush *brush) {
-	if (n->kind == ZK_TABS) n = zui_page_of(n);
+	if (n->kind == ZK_PIVOT) n = zui_page_of(n);
 	if (brush) brush->refs++;
 	zui_brush_free(n->bg);
 	n->bg = brush;

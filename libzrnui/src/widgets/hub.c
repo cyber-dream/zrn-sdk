@@ -146,7 +146,7 @@ float zui_hub_content_top(const zui_node *hub) {
 	return h ? h->top : 0;
 }
 
-ZUI_EXPORT zui_node *zui_hub(zui_app *app) {
+ZUI_EXPORT zui_node *zui_hub(zui_app *app, const char *title) {
 	zui_node *page = zui_page_blank(app);
 	zui_node *n = zui_node_new_kind(page, ZK_HUB);
 	struct hub *h = calloc(1, sizeof(struct hub));
@@ -154,11 +154,13 @@ ZUI_EXPORT zui_node *zui_hub(zui_app *app) {
 	h->title = zui_node_new_detached(app, ZK_HEADER);
 	zui_set_text(h->title, "");
 	page->hub = n;
+	if (title) zui_hub_title(n, title);
 	return n;
 }
 
-ZUI_EXPORT zui_node *zui_hub_section(zui_node *hub) {
+ZUI_EXPORT zui_node *zui_hub_section(zui_node *hub, const char *title) {
 	zui_node *s = zui_node_new_kind(hub, ZK_HUBSEC);
+	if (title) zui_title(s, title);	/* HubSection.Header: the small title, first in the section */
 	return s;
 }
 
