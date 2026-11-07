@@ -22,7 +22,7 @@ ZUI_EXPORT void zui_jump_list(zui_app *app, const char *const *labels, const boo
 
 static void board_geometry(zui_app *app, struct ov *o, float *x0, float *top, float *side) {
 	float W = app->width;
-	float header = app->page ? app->page->title_panel.h : 0;
+	float header = app->page ? zui_pg(app->page)->title_panel.h : 0;
 	float s = (W - 2 * M.margin - (BOARD_COLS - 1) * BOARD_GAP) / BOARD_COLS;
 	int rows = (o->count + BOARD_COLS - 1) / BOARD_COLS;
 	float avail = app->height - header - 2 * BOARD_GAP;

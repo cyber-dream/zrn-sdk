@@ -178,20 +178,14 @@ struct zui_node {
 	struct zanim focus_anim;
 	/* a page */
 	float scroll, content_h, vel;
-	/* a page is two panels, as on Windows Phone: the TitlePanel (the top margin, the
-	 * app's name, the page's title) stays; the ContentPanel under it scrolls */
-	struct zui_rect title_panel, content_panel;
-	int depth;		/* 0 for the first page */
-	zui_node *back_to;	/* the page under this one */
 	struct zt_slot title_slot[2];
 	/* a page */
-	zui_node *tabs, *footer, *title_node, *content_node;
 	bool stick_end, glide;
 	uint32_t glide_at;
 	float down_fix;
 	/* pictures, lists, the rest */
 	zui_pixmap *pix;
-	bool group, applist, has_gap, fullscreen, fit, no_dots, quiet, sharp, emphasis, mine, compact, inline_hint;
+	bool group, applist, has_gap, fit, no_dots, quiet, sharp, emphasis, mine, inline_hint;
 	float radius;
 	int align;
 	bool bar;
@@ -207,13 +201,29 @@ struct zui_node {
 	uint32_t swivel_at;
 	/* widgets/: pickers, tiles, hubs, suggestions; hold */
 	void *ext;
-	zui_node *hub;		/* a page's hub */
 	float scroll_goal;
 	bool scroll_goal_on;
 	zui_cb hold_cb;
 	void *hold_data;
 	zui_free_fn hold_free;
 };
+
+/* A page: the root of what is on the screen. It is two panels, as on Windows Phone: the TitlePanel
+ * (the top margin, the app's name, the page's title) stays, the ContentPanel under it holds the content.
+ * A hub or a pivot made from the app is one in the page it makes for itself. */
+struct zui_page {
+	struct zui_node base;
+	struct zui_rect title_panel, content_panel;
+	int depth;		/* 0 for the first page */
+	zui_node *back_to;	/* the page under this one */
+	zui_node *tabs, *hub;	/* its pivot, its hub */
+	zui_node *footer, *title_node, *content_node;
+	bool fullscreen, compact;
+};
+static inline struct zui_page *zui_pg(const zui_node *n) {
+	assert(n && n->kind == ZK_PAGE);
+	return (struct zui_page *)n;
+}
 
 /* A pivot: its items are its children, one in front. */
 struct zui_pivot {

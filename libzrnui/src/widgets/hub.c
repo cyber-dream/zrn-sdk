@@ -159,7 +159,7 @@ ZUI_EXPORT zui_node *zui_hub(zui_app *app, const char *title) {
 	struct hub *h = hub_of(n);
 	h->title = zui_node_new_detached(app, ZK_HEADER);
 	zui_set_text(h->title, "");
-	page->hub = n;
+	zui_pg(page)->hub = n;
 	if (title) zui_hub_title(n, title);
 	return n;
 }
@@ -385,7 +385,7 @@ void draw_hub(zui_app *app, zui_node *hub, const struct zg_xf *base, uint32_t no
 				if (c->visible) zui_draw_node(app, c, &xf, now);
 		}
 	}
-	if (hub->parent) zg_clip(0, hub->parent->title_panel.h, W, app->height - hub->parent->title_panel.h);
+	if (hub->parent) zg_clip(0, zui_pg(hub->parent)->title_panel.h, W, app->height - zui_pg(hub->parent)->title_panel.h);
 }
 
 void hub_free(zui_node *n) {
@@ -394,7 +394,7 @@ void hub_free(zui_node *n) {
 		if (h->title) zui_node_free_detached(h->title);
 		zui_pixmap_free(h->bg);
 	}
-	if (n->parent && n->parent->hub == n) n->parent->hub = NULL;
+	if (n->parent && zui_pg(n->parent)->hub == n) zui_pg(n->parent)->hub = NULL;
 }
 
 const struct zui_class zui_hub_class = { .name = "hub", .size = sizeof(struct hub), .destroy = hub_free };

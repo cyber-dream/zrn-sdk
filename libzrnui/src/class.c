@@ -8,10 +8,12 @@ static const struct zui_class plain = { .name = "node", .size = sizeof(struct zu
 
 static void field_destroy(zui_node *n) { suggest_free(n); }
 static const struct zui_class field = { .name = "field", .size = sizeof(struct zui_field), .destroy = field_destroy };
+static const struct zui_class page = { .name = "page", .size = sizeof(struct zui_page) };
 static const struct zui_class pivot = { .name = "pivot", .size = sizeof(struct zui_pivot) };
 
 const struct zui_class *zui_class_of(int kind) {
 	switch (kind) {
+	case ZK_PAGE: return &page;
 	case ZK_PIVOT: return &pivot;
 	case ZK_FIELD: return &field;
 	case ZK_LIST: return &zui_list_class;

@@ -281,7 +281,7 @@ static void changed_height(zui_node *n, int row, float delta) {
 	owner->content_h += delta;
 	/* what is on the screen stays where it is, when a row above it turned out
 	 * another height than guessed */
-	if (owner->kind != ZK_PAGE && n->y + L->y[row] < scroll + page->title_panel.h && !owner->stick_end) {
+	if (owner->kind != ZK_PAGE && n->y + L->y[row] < scroll + zui_pg(page)->title_panel.h && !owner->stick_end) {
 		owner->scroll += delta;
 		n->app->down_scroll += delta;	/* or the next move of the finger undoes it */
 	}
@@ -620,7 +620,7 @@ ZUI_EXPORT bool zui_page_at_end(zui_node *page, double within) {
 ZUI_EXPORT zui_node *zui_pivot(zui_app *app) {
 	zui_node *page = zui_page_blank(app);
 	zui_node *n = zui_node_new_kind(page, ZK_PIVOT);
-	page->tabs = n;
+	zui_pg(page)->tabs = n;
 	return n;
 }
 ZUI_EXPORT void zui_pivot_title(zui_node *pivot, const char *text) {

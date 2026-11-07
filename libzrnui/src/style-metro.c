@@ -41,8 +41,8 @@ static float page_top(zui_app *app, zui_node *page, float y, bool draw) {
 static void header(zui_app *app, zui_node *page, uint32_t now) {
 	(void)now;
 	struct zui_palette pal = app->style->palette(app);
-	if (!page->bg) zg_rect(0, 0, app->width, page->title_panel.h, 0, pal.bg);	/* what is under the titles, if the page has no background */
-	if (page->compact) {
+	if (!page->bg) zg_rect(0, 0, app->width, zui_pg(page)->title_panel.h, 0, pal.bg);	/* what is under the titles, if the page has no background */
+	if (zui_pg(page)->compact) {
 		/* a person: their picture, their name large, how they are under it */
 		zui_draw_leading(app, page, M.margin, M.top - 4, 46, 0, 0xffffffff);
 		float x = M.margin + 46 + 10, room = app->width - x - M.margin;
