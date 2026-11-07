@@ -7,9 +7,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "widgets/widgets.h"
 
-struct tile { bool wide; char *back; int timer, period; };
+struct tile { struct zui_node base; bool wide; char *back; int timer, period; };
+static inline struct tile *tile_of(const zui_node *n) {
+	assert(n && n->kind == ZK_TILE);
+	return (struct tile *)n;
+}
 
 #define TILE_GAP 6
 
@@ -19,9 +24,7 @@ ZUI_EXPORT zui_node *zui_tile(zui_node *tiles, const char *title, const char *ic
 	zui_node *n = zui_node_new_kind(tiles, ZK_TILE);
 	zui_set_text(n, title);
 	zui_set_icon(n, icon);
-	struct tile *t = calloc(1, sizeof(*t));
-	t->wide = wide;
-	n->ext = t;
+	tile_of(n)->wide = wide;
 	n->cb = cb;
 	n->data = data;
 	return n;
@@ -29,15 +32,15 @@ ZUI_EXPORT zui_node *zui_tile(zui_node *tiles, const char *title, const char *ic
 
 static void tile_flip(void *data) {
 	zui_node *n = data;
-	struct tile *t = n->ext;
-	if (!t || !t->back) return;
+	struct tile *t = tile_of(n);
+	if (!t->back) return;
 	n->on = !n->on;
 	zanim_go(&n->knob, n->on ? 1 : 0, 700, zui_now());
 	n->app->dirty = true;
 }
 
 ZUI_EXPORT void zui_tile_set_live(zui_node *n, const char *back, int period_ms) {
-	struct tile *t = n->kind == ZK_TILE ? n->ext : NULL;
+	struct tile *t = n->kind == ZK_TILE ? tile_of(n) : NULL;
 	if (!t) return;
 	if (t->timer) zui_timer_cancel(n->app, t->timer);
 	t->timer = 0;
@@ -60,7 +63,7 @@ float layout_tiles(zui_node *g, float x, float y, float w) {
 	float side = (w - TILE_GAP) / 2, cx = 0, cy = 0;
 	for (zui_node *c = g->first; c; c = c->next) {
 		if (!c->visible) continue;
-		struct tile *t = c->ext;
+		struct tile *t = c->kind == ZK_TILE ? tile_of(c) : NULL;
 		bool wide = t && t->wide;
 		/* a wide one has a row to itself; a square goes where there is room */
 		if (cx > 0 && (wide || cx + side > w + 0.5f)) { cy += side + TILE_GAP; cx = 0; }
@@ -76,7 +79,7 @@ float layout_tiles(zui_node *g, float x, float y, float w) {
 
 void draw_tile(zui_app *app, zui_node *n, const struct zg_xf *base, uint32_t now) {
 	struct zui_palette pal = zui_pal(app);
-	struct tile *t = n->ext;
+	struct tile *t = tile_of(n);
 	float k = zanim_value(&n->knob, now, NULL);
 	struct zg_xf xf = *base;
 	bool back = k > 0.5f;
@@ -120,10 +123,9 @@ bool has_flip(zui_node *n, uint32_t now) {
 }
 
 void tile_free(zui_node *n) {
-	struct tile *t = n->ext;
-	if (t) {
-		if (t->timer) zui_timer_cancel(n->app, t->timer);
-		free(t->back);
-		free(t);
-	}
+	struct tile *t = tile_of(n);
+	if (t->timer) zui_timer_cancel(n->app, t->timer);
+	free(t->back);
 }
+
+const struct zui_class zui_tile_class = { .name = "tile", .size = sizeof(struct tile), .destroy = tile_free };

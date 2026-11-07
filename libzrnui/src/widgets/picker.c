@@ -7,20 +7,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "widgets/widgets.h"
 
-struct picker { char **opt; int count, sel; };
+struct picker { struct zui_node base; char **opt; int count, sel; };
+static inline struct picker *picker_of(const zui_node *n) {
+	assert(n && n->kind == ZK_PICKER);
+	return (struct picker *)n;
+}
 
 ZUI_EXPORT zui_node *zui_picker(zui_node *parent, const char *caption, const char *const *options, int count,
 		int selected, zui_cb cb, void *data) {
 	zui_node *n = zui_node_new_kind(parent, ZK_PICKER);
 	zui_set_text(n, caption);
-	struct picker *p = calloc(1, sizeof(*p));
+	struct picker *p = picker_of(n);
 	p->count = count < 0 ? 0 : count;
 	p->opt = calloc((size_t)(p->count ? p->count : 1), sizeof(char *));
 	for (int i = 0; i < p->count; i++) p->opt[i] = dupstr(options[i]);
 	p->sel = selected < 0 || selected >= p->count ? 0 : selected;
-	n->ext = p;
 	n->cb = cb;
 	n->data = data;
 	n->app->n_pickers++;
@@ -28,11 +32,11 @@ ZUI_EXPORT zui_node *zui_picker(zui_node *parent, const char *caption, const cha
 }
 
 ZUI_EXPORT int zui_picker_selected(const zui_node *n) {
-	return n->kind == ZK_PICKER && n->ext ? ((struct picker *)n->ext)->sel : -1;
+	return n->kind == ZK_PICKER ? picker_of(n)->sel : -1;
 }
 
 ZUI_EXPORT void zui_picker_select(zui_node *n, int index) {
-	struct picker *p = n->kind == ZK_PICKER ? n->ext : NULL;
+	struct picker *p = n->kind == ZK_PICKER ? picker_of(n) : NULL;
 	if (!p || index < 0 || index >= p->count) return;
 	p->sel = index;
 	n->app->dirty = true;
@@ -41,7 +45,7 @@ ZUI_EXPORT void zui_picker_select(zui_node *n, int index) {
 static float picker_open(const zui_node *n, uint32_t now) { return clamp01(zanim_value(&n->knob, now, NULL)); }
 
 float layout_picker(zui_node *n) {
-	struct picker *p = n->ext;
+	struct picker *p = picker_of(n);
 	/* (a file render has no motion: the end state) */
 	float o = n->app->wl ? picker_open(n, zui_now()) : (n->on ? 1 : 0);
 	return 24 + PICK_ROW + ((p->count - 1) * PICK_ROW + 8) * o + 18;
@@ -59,7 +63,7 @@ static void picker_set_open(zui_node *n, bool open) {
 
 void draw_picker(zui_app *app, zui_node *n, uint32_t now) {
 	struct zui_palette pal = zui_pal(app);
-	struct picker *p = n->ext;
+	struct picker *p = picker_of(n);
 	float o = app->wl ? picker_open(n, now) : (n->on ? 1 : 0);
 	float x = n->x, w = n->w, y = n->y + 24, h = PICK_ROW + ((p->count - 1) * PICK_ROW + 8) * o;
 	bool dots = dotted(app);
@@ -84,7 +88,7 @@ void draw_picker(zui_app *app, zui_node *n, uint32_t now) {
 }
 
 void picker_tapped(zui_app *app, zui_node *n) {
-	struct picker *p = n->ext;
+	struct picker *p = picker_of(n);
 	if (!n->on) {
 		picker_set_open(n, true);
 		return;
@@ -123,11 +127,10 @@ bool pickers_moving(zui_node *n, uint32_t now) {
 
 void picker_free(zui_node *n) {
 	zui_app *app = n->app;
-	struct picker *p = n->ext;
-	if (p) {
-		for (int i = 0; i < p->count; i++) free(p->opt[i]);
-		free(p->opt);
-		free(p);
-	}
+	struct picker *p = picker_of(n);
+	for (int i = 0; i < p->count; i++) free(p->opt[i]);
+	free(p->opt);
 	if (app->n_pickers > 0) app->n_pickers--;
 }
+
+const struct zui_class zui_picker_class = { .name = "picker", .size = sizeof(struct picker), .destroy = picker_free };

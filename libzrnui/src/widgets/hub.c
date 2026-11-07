@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "widgets/widgets.h"
 
 float zui_node_hub_shift(const zui_node *n, float screen_x) {
@@ -26,6 +27,7 @@ float zui_node_hub_shift(const zui_node *n, float screen_x) {
 #define HUB_TITLE_CATCH_MS 220	/* the title catching up with a finger that took it mid-way */
 
 struct hub {
+	struct zui_node base;
 	zui_pixmap *bg;
 	/* the title going round: let go past the last section (or the first), it goes off one edge and comes
 	 * in from the other, to where it belongs, while the sections settle */
@@ -37,6 +39,11 @@ struct hub {
 	float top;			/* where its sections start, under it */
 	int title_dir;			/* +1 the way forward (off the left edge), -1 back (off the right) */
 };
+
+static inline struct hub *hub_of(const zui_node *n) {
+	assert(n && n->kind == ZK_HUB);
+	return (struct hub *)n;
+}
 
 static float hub_stride(const zui_node *hub) {
 	zui_app *app = hub->app;
@@ -121,7 +128,7 @@ float zui_hub_begin_drag(zui_node *hub) {
 		if (off < 0) off += len;
 	}
 	zanim_set(&hub->knob, off);
-	struct hub *h = hub->ext;
+	struct hub *h = hub_of(hub);
 	if (h) {
 		/* a finger has the title again: it does not jump to the finger's, it is let go of where it is
 		 * and catches up with it */
@@ -136,21 +143,20 @@ float zui_hub_begin_drag(zui_node *hub) {
 /* The hub's own large title (Hub.Header): not a widget the app makes, the hub has it; this sets its text. It
  * is the hub's, so it goes by more slowly than the sections and round with them. */
 ZUI_EXPORT void zui_hub_title(zui_node *hub, const char *text) {
-	struct hub *h = hub->ext;
+	struct hub *h = hub_of(hub);
 	if (h && h->title) zui_set_text(h->title, text ? text : "");
 	hub->app->laid_out = false;
 }
 
 float zui_hub_content_top(const zui_node *hub) {
-	struct hub *h = hub->ext;
+	struct hub *h = hub_of(hub);
 	return h ? h->top : 0;
 }
 
 ZUI_EXPORT zui_node *zui_hub(zui_app *app, const char *title) {
 	zui_node *page = zui_page_blank(app);
 	zui_node *n = zui_node_new_kind(page, ZK_HUB);
-	struct hub *h = calloc(1, sizeof(struct hub));
-	n->ext = h;
+	struct hub *h = hub_of(n);
 	h->title = zui_node_new_detached(app, ZK_HEADER);
 	zui_set_text(h->title, "");
 	page->hub = n;
@@ -165,7 +171,7 @@ ZUI_EXPORT zui_node *zui_hub_section(zui_node *hub, const char *title) {
 }
 
 ZUI_EXPORT void zui_hub_set_background(zui_node *hub, zui_pixmap *pix) {
-	struct hub *h = hub->ext;
+	struct hub *h = hub_of(hub);
 	if (!h) return;
 	zui_pixmap_free(h->bg);
 	h->bg = pix;
@@ -235,7 +241,7 @@ void zui_hub_release(zui_app *app, zui_node *hub, float v) {
  * speed took it off the screen from the third section on.) */
 static float hub_title_travel(const zui_node *hub) {
 	zui_app *app = hub->app;
-	struct hub *h = hub->ext;
+	struct hub *h = hub_of(hub);
 	const char *text = h && h->title ? h->title->text : NULL;
 	return text && *text ? zt_width(text, ZT_LIGHT, M.title) * 0.5f : 0;
 }
@@ -248,7 +254,7 @@ static float hub_title_travel(const zui_node *hub) {
  * what it is going to, and runs down to 0 from there. */
 static float hub_title_now(zui_node *hub, bool dragging) {
 	zui_app *app = hub->app;
-	struct hub *h = hub->ext;
+	struct hub *h = hub_of(hub);
 	uint32_t now = zui_now();
 	bool running = false;
 	float apart = h ? zanim_value(&h->title_in, now, &running) : 0;
@@ -277,7 +283,7 @@ static float hub_title_now(zui_node *hub, bool dragging) {
  * it started (0 .. count-1) and `d` how many it goes by; outside the circle it goes round. `dragging`:
  * a finger just let go, so the title is where it followed it. */
 static void hub_title_go_round(zui_node *hub, int idx, int d, bool dragging) {
-	struct hub *h = hub->ext;
+	struct hub *h = hub_of(hub);
 	int c = hub_count(hub), to = idx + d;
 	if (!h || c < 2 || (to >= 0 && to < c)) return;
 	float len = hub_circle(hub), travel = hub_title_travel(hub);
@@ -291,7 +297,7 @@ static void hub_title_go_round(zui_node *hub, int idx, int d, bool dragging) {
 
 /* the title is on its way: frames until it is there */
 bool zui_hub_title_moving(zui_node *hub, uint32_t now) {
-	struct hub *h = hub->ext;
+	struct hub *h = hub_of(hub);
 	bool running = false;
 	if (h) zanim_value(&h->title_in, now, &running);
 	return h && (h->title_phase != 0 || running);
@@ -299,7 +305,7 @@ bool zui_hub_title_moving(zui_node *hub, uint32_t now) {
 
 float layout_hub(zui_node *hub) {
 	zui_app *app = hub->app;
-	struct hub *hb = hub->ext;
+	struct hub *hb = hub_of(hub);
 	float stride = hub_stride(hub), sw = stride - HUB_GAP, h = 0;
 	hub->x = 0;
 	hub->w = app->width;
@@ -335,7 +341,7 @@ float layout_hub(zui_node *hub) {
 
 void draw_hub(zui_app *app, zui_node *hub, const struct zg_xf *base, uint32_t now) {
 	struct zui_palette pal = zui_pal(app);
-	struct hub *hb = hub->ext;
+	struct hub *hb = hub_of(hub);
 	float off = zanim_value(&hub->knob, now, NULL), W = app->width;
 	if (hb && hb->bg) {
 		/* the picture moves a quarter as fast as the sections, and is dimmed to read over */
@@ -383,11 +389,12 @@ void draw_hub(zui_app *app, zui_node *hub, const struct zg_xf *base, uint32_t no
 }
 
 void hub_free(zui_node *n) {
-	struct hub *h = n->ext;
+	struct hub *h = hub_of(n);
 	if (h) {
 		if (h->title) zui_node_free_detached(h->title);
 		zui_pixmap_free(h->bg);
-		free(h);
 	}
 	if (n->parent && n->parent->hub == n) n->parent->hub = NULL;
 }
+
+const struct zui_class zui_hub_class = { .name = "hub", .size = sizeof(struct hub), .destroy = hub_free };

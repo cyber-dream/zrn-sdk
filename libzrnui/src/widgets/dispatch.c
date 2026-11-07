@@ -123,9 +123,6 @@ void zui_widget_free(zui_node *n) {
 	if (n->hold_free) n->hold_free(n->hold_data);
 	n->hold_free = NULL;
 	switch (n->kind) {
-	case ZK_PICKER: picker_free(n); break;
-	case ZK_TILE: tile_free(n); break;
-	case ZK_HUB: hub_free(n); break;
 	case ZK_ITEM: stamp_free(n); break;
 	default: break;
 	}

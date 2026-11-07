@@ -13,6 +13,9 @@ const struct zui_class *zui_class_of(int kind) {
 	switch (kind) {
 	case ZK_PIVOT: return &pivot;
 	case ZK_FIELD: return &field;
+	case ZK_HUB: return &zui_hub_class;
+	case ZK_TILE: return &zui_tile_class;
+	case ZK_PICKER: return &zui_picker_class;
 	default: return &plain;
 	}
 }
