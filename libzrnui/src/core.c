@@ -449,7 +449,7 @@ ZUI_EXPORT zui_node *zui_bubble(zui_node *parent, bool mine) {
 }
 
 ZUI_EXPORT bool zui_app_active(const zui_app *app) { return app->active; }
-ZUI_EXPORT void zui_field_set_multiline(zui_node *n, bool m) { n->multiline = m; changed(n, true); }
+ZUI_EXPORT void zui_field_set_multiline(zui_node *n, bool m) { if (n->kind != ZK_FIELD) return; zui_field_of(n)->multiline = m; changed(n, true); }
 ZUI_EXPORT void zui_set_bar(zui_node *n, bool b) { n->bar = b; changed(n, false); }
 ZUI_EXPORT void zui_page_set_compact(zui_node *page, bool c) { page = zui_page_of(page); page->compact = c; page->app->dirty = true; }
 
@@ -514,7 +514,7 @@ ZUI_EXPORT zui_node *zui_field(zui_node *parent, const char *placeholder, zui_cb
 	for (zui_node *p = parent; p; p = p->parent) if (p->kind == ZK_FOOTER) n->inline_hint = true;
 	set_str(&n->subtitle, placeholder);
 	set_str(&n->text, "");
-	n->caret = -1;
+	zui_field_of(n)->caret = -1;
 	n->cb = cb;
 	n->data = data;
 	return n;
@@ -525,7 +525,15 @@ static void changed(zui_node *n, bool layout) {
 	n->app->dirty = true;
 }
 
-ZUI_EXPORT void zui_set_text(zui_node *n, const char *t) { set_str(&n->text, t ? t : ""); n->caret = -1; n->sel_a = n->sel_b = 0; changed(n, true); }
+ZUI_EXPORT void zui_set_text(zui_node *n, const char *t) {
+	set_str(&n->text, t ? t : "");
+	if (n->kind == ZK_FIELD) {	/* a new text: the caret at its end, nothing selected */
+		struct zui_field *f = zui_field_of(n);
+		f->caret = -1;
+		f->sel_a = f->sel_b = 0;
+	}
+	changed(n, true);
+}
 ZUI_EXPORT const char *zui_get_text(const zui_node *n) { return n->text ? n->text : ""; }
 ZUI_EXPORT void zui_set_detail(zui_node *n, const char *t) { set_str(&n->detail, t); changed(n, true); }
 ZUI_EXPORT void zui_set_subtitle(zui_node *n, const char *t) { set_str(&n->subtitle, t); changed(n, true); }
@@ -1011,7 +1019,7 @@ static float layout_node(zui_node *n, float x, float y, float w) {
 		break;
 	case ZK_FIELD:
 		h = m->field_h + (n->inline_hint ? 0 : 22);
-		if (n->multiline && n->text && *n->text) {
+		if (zui_field_of(n)->multiline && n->text && *n->text) {
 			char *t = NULL;
 			if (asprintf(&t, "%s|", n->text) > 0) {
 				struct zt_layout *L = zt_layout_make(t, ZT_REGULAR, 16, w - 20, 0);
@@ -1226,8 +1234,8 @@ static void slider_to(zui_app *app, zui_node *s, float x) {
 static void field_tapped(zui_app *app, zui_node *f, bool twice) {
 	const char *t = f->text ? f->text : "";
 	size_t len = strlen(t);
-	f->sel_a = f->sel_b = 0;
-	if (!f->multiline || !len || len > 1500) { f->caret = (int)len; return; }
+	zui_field_of(f)->sel_a = zui_field_of(f)->sel_b = 0;
+	if (!zui_field_of(f)->multiline || !len || len > 1500) { zui_field_of(f)->caret = (int)len; return; }
 	float tx = app->last_x + zui_node_hub_shift(f, app->last_x) - f->x - 10, ty = app->last_y - f->y - 9;
 	if (f->parent) {}
 	int best = (int)len;
@@ -1239,14 +1247,14 @@ static void field_tapped(zui_app *app, zui_node *f, bool twice) {
 		float dy = ty - (y + lh / 2), dx = tx - x, d = dx * dx + dy * dy * 6;
 		if (d < bd) { bd = d; best = (int)i; }
 	}
-	f->caret = best;
+	zui_field_of(f)->caret = best;
 	if (twice) {
 		int a = best, b = best;
 		while (a > 0 && t[a - 1] != ' ' && t[a - 1] != '\n') a--;
 		while (t[b] && t[b] != ' ' && t[b] != '\n') b++;
-		f->sel_a = a;
-		f->sel_b = b;
-		f->caret = b;
+		zui_field_of(f)->sel_a = a;
+		zui_field_of(f)->sel_b = b;
+		zui_field_of(f)->caret = b;
 	}
 	app->dirty = true;
 }
@@ -1261,8 +1269,8 @@ static void activate(zui_app *app, zui_node *n) {
 		break;
 	case ZK_FIELD: {
 		uint32_t t = zui_now();
-		bool twice = app->focus == n && t - n->last_tap < 350;
-		n->last_tap = t;
+		bool twice = app->focus == n && t - zui_field_of(n)->last_tap < 350;
+		zui_field_of(n)->last_tap = t;
 		focus(app, n);
 		field_tapped(app, n, twice);
 		break;
@@ -1575,17 +1583,17 @@ void zui_scroll_by(zui_app *app, float dy) {
 void zui_key_text(zui_app *app, const char *utf8) {
 	zui_node *f = app->focus;
 	if (!f) return;
-	if (strcmp(utf8, "\n") == 0 && !f->multiline) {
+	if (strcmp(utf8, "\n") == 0 && !zui_field_of(f)->multiline) {
 		zui_fire(f, ZUI_EVENT_SUBMIT);
 		return;
 	}
-	if (f->multiline) app->laid_out = false;
+	if (zui_field_of(f)->multiline) app->laid_out = false;
 	size_t len = f->text ? strlen(f->text) : 0;
-	size_t at = f->caret < 0 || (size_t)f->caret > len ? len : (size_t)f->caret, cut_a = at, cut_b = at;
+	size_t at = zui_field_of(f)->caret < 0 || (size_t)zui_field_of(f)->caret > len ? len : (size_t)zui_field_of(f)->caret, cut_a = at, cut_b = at;
 	bool back = strcmp(utf8, "\b") == 0;
-	if (f->sel_b > f->sel_a && (size_t)f->sel_b <= len) {
-		cut_a = (size_t)f->sel_a;
-		cut_b = (size_t)f->sel_b;
+	if (zui_field_of(f)->sel_b > zui_field_of(f)->sel_a && (size_t)zui_field_of(f)->sel_b <= len) {
+		cut_a = (size_t)zui_field_of(f)->sel_a;
+		cut_b = (size_t)zui_field_of(f)->sel_b;
 	} else if (back) {
 		if (!at) return;
 		cut_a = at - 1;
@@ -1599,8 +1607,8 @@ void zui_key_text(zui_app *app, const char *utf8) {
 	strcpy(t + cut_a + il, f->text ? f->text + cut_b : "");
 	free(f->text);
 	f->text = t;
-	f->caret = (int)(cut_a + il);
-	f->sel_a = f->sel_b = 0;
+	zui_field_of(f)->caret = (int)(cut_a + il);
+	zui_field_of(f)->sel_a = zui_field_of(f)->sel_b = 0;
 	app->dirty = true;
 	zui_fire(f, ZUI_EVENT_CHANGE);
 }

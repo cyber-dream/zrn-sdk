@@ -327,7 +327,7 @@ static void field(zui_app *app, zui_node *n, uint32_t now) {
 		struct zt_layout *P = zt_slot_get(&n->t[1], n->subtitle ? n->subtitle : "", ZT_REGULAR, 16, w - 20, 1);
 		zt_draw(P, x + 10, by + (h - P->line_h) / 2, dotted ? pal.text2 : 0x595959ff);
 	}
-	if (n->multiline) {
+	if (zui_field_of(n)->multiline) {
 		h = n->h;
 		zg_rect(x, by, w, h, 0, n->focused ? 0xffffffff : 0xcfcfcfff);
 		if (dotted) { zg_rect(x, by, w, h, 0, 0x000000ff); zg_border(x, by, w, h, 0, 1.2f, pal.text); }
@@ -337,18 +337,18 @@ static void field(zui_app *app, zui_node *n, uint32_t now) {
 		char *t = NULL;
 		const char *txt = n->text ? n->text : "";
 		if (n->focused) {
-			size_t tl = strlen(txt), at = n->caret < 0 || (size_t)n->caret > tl ? tl : (size_t)n->caret;
+			size_t tl = strlen(txt), at = zui_field_of(n)->caret < 0 || (size_t)zui_field_of(n)->caret > tl ? tl : (size_t)zui_field_of(n)->caret;
 			if (asprintf(&t, "%.*s|%s", (int)at, txt, txt + at) > 0) txt = t;
 		}
 		if (*txt) {
 			struct zt_layout *T = zt_slot_get(&n->t[0], txt, ZT_REGULAR, 16, w - 20, 0);
 			float over = T->h + 18 - h;
 			if (over > 0) zg_clip(x, by + 2, w, h - 4);
-			if (n->sel_b > n->sel_a && n->text) {
+			if (zui_field_of(n)->sel_b > zui_field_of(n)->sel_a && n->text) {
 				/* what is selected, under the text */
 				float sx, sy, ex, ey, lh;
-				zt_caret_at(n->text, n->sel_a, w - 20, &sx, &sy, &lh);
-				zt_caret_at(n->text, n->sel_b, w - 20, &ex, &ey, &lh);
+				zt_caret_at(n->text, zui_field_of(n)->sel_a, w - 20, &sx, &sy, &lh);
+				zt_caret_at(n->text, zui_field_of(n)->sel_b, w - 20, &ex, &ey, &lh);
 				float off = over > 0 ? over : 0;
 				if (sy == ey) zg_rect(x + 10 + sx, by + 9 + sy - off, ex - sx, lh, 0, zc_alpha(zc_rgb(app->accent), 0.45f));
 				else {
@@ -369,7 +369,7 @@ static void field(zui_app *app, zui_node *n, uint32_t now) {
 	float avail = w - 16, end = 0;
 	char *dots_text = NULL;
 	const char *shown = n->text;
-	if (n->password && n->text && *n->text) {
+	if (zui_field_of(n)->password && n->text && *n->text) {
 		/* one bullet for each character, not each byte */
 		size_t chars = 0;
 		for (const char *c = n->text; *c; c++) chars += ((unsigned char)*c & 0xc0) != 0x80;

@@ -204,7 +204,7 @@ struct zui_node {
 	bool group, applist, has_gap, fullscreen, fit, no_dots, quiet, sharp, emphasis, mine, compact, inline_hint;
 	float radius;
 	int align;
-	bool multiline, bar;
+	bool bar;
 	struct zanim arrive;	/* a new row rising in */
 	char *badge, *monogram;
 	float row_gap;
@@ -216,9 +216,6 @@ struct zui_node {
 	struct zanim swivel;
 	bool swivel_out;
 	uint32_t swivel_at;
-	/* a field */
-	int caret, sel_a, sel_b;	/* bytes; caret -1: the end */
-	uint32_t last_tap;
 	/* widgets/: pickers, tiles, hubs, suggestions; hold */
 	void *ext;
 	zui_node *hub;		/* a page's hub */
@@ -227,7 +224,6 @@ struct zui_node {
 	zui_cb hold_cb;
 	void *hold_data;
 	zui_free_fn hold_free;
-	bool password;
 };
 
 /* A pivot: its items are its children, one in front. */
@@ -236,6 +232,18 @@ struct zui_pivot {
 	int cur, prev;		/* the item in front, and the one that was */
 	struct zanim pos;	/* the highlight, from cur: 0 at rest, the way left to a neighbour while moving */
 };
+/* A text field: the caret and the selection are in bytes (caret -1: the end). */
+struct zui_field {
+	struct zui_node base;
+	int caret, sel_a, sel_b;
+	uint32_t last_tap;	/* for the second tap: a word */
+	bool password, multiline;
+	void *suggest;		/* the matches under it (widgets/field.c) */
+};
+static inline struct zui_field *zui_field_of(const zui_node *n) {
+	assert(n && n->kind == ZK_FIELD);
+	return (struct zui_field *)n;
+}
 static inline struct zui_pivot *zui_pivot_of(const zui_node *n) {
 	assert(n && n->kind == ZK_PIVOT);
 	return (struct zui_pivot *)n;

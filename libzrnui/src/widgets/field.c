@@ -12,24 +12,26 @@
 struct suggest { char **item; int n; };
 
 ZUI_EXPORT void zui_field_set_password(zui_node *f, bool on) {
-	f->password = on;
+	if (f->kind != ZK_FIELD) return;
+	zui_field_of(f)->password = on;
 	f->app->dirty = true;
 }
 
 ZUI_EXPORT void zui_field_set_suggestions(zui_node *f, const char *const *items, int count) {
-	struct suggest *s = f->ext;
+	if (f->kind != ZK_FIELD) return;
+	struct suggest *s = zui_field_of(f)->suggest;
 	if (s) {
 		for (int i = 0; i < s->n; i++) free(s->item[i]);
 		free(s->item);
 		free(s);
 	}
-	f->ext = NULL;
+	zui_field_of(f)->suggest = NULL;
 	if (!items || count <= 0) return;
 	s = calloc(1, sizeof(*s));
 	s->item = calloc((size_t)count, sizeof(char *));
 	s->n = count;
 	for (int i = 0; i < count; i++) s->item[i] = dupstr(items[i]);
-	f->ext = s;
+	zui_field_of(f)->suggest = s;
 }
 
 static bool contains_nocase(const char *hay, const char *needle) {
@@ -50,8 +52,8 @@ static bool contains_nocase(const char *hay, const char *needle) {
 /* what hangs under the field with the keyboard: the matches, and where */
 static int suggestions_for(zui_app *app, int out[SUGGEST_MAX], float *x, float *y, float *w) {
 	zui_node *f = app->focus;
-	if (!f || f->kind != ZK_FIELD || !f->ext || !f->text || !*f->text) return 0;
-	struct suggest *s = f->ext;
+	if (!f || f->kind != ZK_FIELD || !zui_field_of(f)->suggest || !f->text || !*f->text) return 0;
+	struct suggest *s = zui_field_of(f)->suggest;
 	int c = 0;
 	for (int i = 0; i < s->n && c < SUGGEST_MAX; i++)
 		if (contains_nocase(s->item[i], f->text) && strcasecmp(s->item[i], f->text) != 0) out[c++] = i;
@@ -70,7 +72,7 @@ void draw_suggestions(zui_app *app) {
 	float x, y, w;
 	int c = suggestions_for(app, idx, &x, &y, &w);
 	if (!c) return;
-	struct suggest *s = app->focus->ext;
+	struct suggest *s = zui_field_of(app->focus)->suggest;
 	struct zui_palette pal = zui_pal(app);
 	bool dots = dotted(app);
 	zg_set_xf(NULL);
@@ -87,7 +89,7 @@ bool zui_suggest_touch(zui_app *app, float x, float y, float scroll) {
 	int c = suggestions_for(app, idx, &fx, &fy, &fw);
 	if (!c || x < fx || x >= fx + fw || y < fy || y >= fy + c * SUGGEST_ROW) return false;
 	zui_node *f = app->focus;
-	struct suggest *s = f->ext;
+	struct suggest *s = zui_field_of(f)->suggest;
 	int i = (int)((y - fy) / SUGGEST_ROW);
 	zui_set_text(f, s->item[idx[i]]);
 	zui_haptic("tap");
@@ -96,7 +98,7 @@ bool zui_suggest_touch(zui_app *app, float x, float y, float scroll) {
 }
 
 void suggest_free(zui_node *n) {
-	struct suggest *s = n->ext;
+	struct suggest *s = zui_field_of(n)->suggest;
 	if (s) {
 		for (int i = 0; i < s->n; i++) free(s->item[i]);
 		free(s->item);

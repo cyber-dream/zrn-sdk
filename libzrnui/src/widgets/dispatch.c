@@ -127,7 +127,6 @@ void zui_widget_free(zui_node *n) {
 	case ZK_TILE: tile_free(n); break;
 	case ZK_HUB: hub_free(n); break;
 	case ZK_ITEM: stamp_free(n); break;
-	case ZK_FIELD: suggest_free(n); break;
 	default: break;
 	}
 	n->ext = NULL;
