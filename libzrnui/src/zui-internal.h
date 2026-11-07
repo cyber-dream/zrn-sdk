@@ -364,8 +364,6 @@ const char *zui_data_dir(void);
 void zui_osk(zui_app *app, bool show);
 
 /* widgets/: what core.c asks of it */
-bool zui_widget_interactive(const zui_node *n);
-bool zui_widget_activate(zui_app *app, zui_node *n);	/* true: it was one */
 void zui_widget_free(zui_node *n);
 void zui_widgets_free(zui_app *app);
 void zui_widgets_draw_over(zui_app *app, uint32_t now);	/* overlays and suggestions, after the page */

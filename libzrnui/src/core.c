@@ -1187,13 +1187,7 @@ static float scroll_max(zui_app *app, const struct zui_scroll *sv) {
 
 /* ---- the finger ---- */
 static bool interactive(const zui_node *n) {
-	if (!n->enabled) return false;
-	switch (n->kind) {
-	case ZK_BUTTON: case ZK_SWITCH: case ZK_SLIDER: case ZK_FIELD: return true;
-	case ZK_ITEM: return n->cb != NULL || n->hold_cb != NULL;
-	case ZK_BUBBLE: case ZK_IMAGE: return n->cb != NULL || n->hold_cb != NULL;
-	default: return zui_widget_interactive(n);
-	}
+	return n->enabled && n->cls->interactive && n->cls->interactive(n);
 }
 
 static zui_node *hit_in(zui_node *n, float x, float y) {
@@ -1280,27 +1274,32 @@ static void field_tapped(zui_app *app, zui_node *f, bool twice) {
 	app->dirty = true;
 }
 
+/* what a tap does: the class's own, else a click */
 static void activate(zui_app *app, zui_node *n) {
-	if (zui_widget_activate(app, n)) return;
-	switch (n->kind) {
-	case ZK_SWITCH:
-		zui_set_on(n, !n->on);
-		zui_haptic("click");
-		zui_fire(n, ZUI_EVENT_CHANGE);
-		break;
-	case ZK_FIELD: {
-		uint32_t t = zui_now();
-		bool twice = app->focus == n && t - zui_field_of(n)->last_tap < 350;
-		zui_field_of(n)->last_tap = t;
-		focus(app, n);
-		field_tapped(app, n, twice);
-		break;
+	if (n->cls->activate) {
+		n->cls->activate(app, n);
+		return;
 	}
-	default:
-		zui_haptic("tap");
-		zui_fire(n, ZUI_EVENT_CLICK);
-		break;
-	}
+	zui_haptic("tap");
+	zui_fire(n, ZUI_EVENT_CLICK);
+}
+
+static bool int_always(const zui_node *n) { (void)n; return true; }
+static bool int_with_handler(const zui_node *n) { return n->cb != NULL || n->hold_cb != NULL; }
+
+static void act_switch(zui_app *app, zui_node *n) {
+	(void)app;
+	zui_set_on(n, !n->on);
+	zui_haptic("click");
+	zui_fire(n, ZUI_EVENT_CHANGE);
+}
+
+static void act_field(zui_app *app, zui_node *n) {
+	uint32_t t = zui_now();
+	bool twice = app->focus == n && t - zui_field_of(n)->last_tap < 350;
+	zui_field_of(n)->last_tap = t;
+	focus(app, n);
+	field_tapped(app, n, twice);
 }
 
 /* what of the frame's own is under the finger (window points: it does not scroll) */
@@ -2200,21 +2199,23 @@ CORE_CLASS(k_row, "row", struct zui_node, .layout = lay_row, .draw = drw_column)
 CORE_CLASS(k_content, "content panel", struct zui_node, .layout = lay_content_panel, .draw = drw_column);
 CORE_CLASS(k_card, "card", struct zui_node, .layout = lay_card, .draw = drw_card);
 CORE_CLASS(k_footer, "footer", struct zui_node, .layout = lay_footer, .draw = drw_footer);
-CORE_CLASS(k_bubble, "bubble", struct zui_node, .layout = lay_bubble, .draw = drw_bubble);
+CORE_CLASS(k_bubble, "bubble", struct zui_node, .layout = lay_bubble, .draw = drw_bubble, .interactive = int_with_handler);
 CORE_CLASS(k_label, "section label", struct zui_node, .layout = lay_section_label, .draw = drw_section_label);
 CORE_CLASS(k_space, "space", struct zui_node, .layout = lay_space);
 CORE_CLASS(k_text, "text", struct zui_node, .layout = lay_text, .draw = drw_text);
-CORE_CLASS(k_button, "button", struct zui_node, .layout = lay_button, .draw = drw_button);
-CORE_CLASS(k_item, "item", struct zui_node, .layout = lay_item, .draw = drw_item);
-CORE_CLASS(k_switch, "switch", struct zui_node, .layout = lay_switch, .draw = drw_item);
-CORE_CLASS(k_slider, "slider", struct zui_node, .layout = lay_slider, .draw = drw_slider);
+CORE_CLASS(k_button, "button", struct zui_node, .layout = lay_button, .draw = drw_button, .interactive = int_always);
+CORE_CLASS(k_item, "item", struct zui_node, .layout = lay_item, .draw = drw_item, .interactive = int_with_handler);
+CORE_CLASS(k_switch, "switch", struct zui_node, .layout = lay_switch, .draw = drw_item, .interactive = int_always,
+	.activate = act_switch);
+CORE_CLASS(k_slider, "slider", struct zui_node, .layout = lay_slider, .draw = drw_slider, .interactive = int_always);
 CORE_CLASS(k_progress, "progress", struct zui_node, .layout = lay_progress, .draw = drw_progress);
-CORE_CLASS(k_image, "image", struct zui_node, .layout = lay_image, .draw = drw_image);
+CORE_CLASS(k_image, "image", struct zui_node, .layout = lay_image, .draw = drw_image, .interactive = int_with_handler);
 CORE_CLASS(k_scroll, "scroll", struct zui_scroll, .scrolls = true, .layout = lay_scroll, .draw = drw_scroll);
 CORE_CLASS(k_pivot_item, "pivot item", struct zui_scroll, .scrolls = true, .layout = lay_column, .draw = drw_column);
 CORE_CLASS(k_pivot, "pivot", struct zui_pivot, .layout = lay_pivot, .draw = drw_pivot);
 CORE_CLASS(k_list_ops, "list", struct zui_list, .layout = lay_list, .draw = drw_list, .destroy = zui_list_destroy);
-CORE_CLASS(k_field_ops, "field", struct zui_field, .layout = lay_field, .draw = drw_field, .destroy = suggest_free);
+CORE_CLASS(k_field_ops, "field", struct zui_field, .layout = lay_field, .draw = drw_field, .destroy = suggest_free,
+	.interactive = int_always, .activate = act_field);
 
 /* the class of a kind the core lays out and draws itself; NULL for a kind with another home */
 const struct zui_class *zui_core_class(int kind) {

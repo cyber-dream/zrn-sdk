@@ -52,16 +52,6 @@ void zui_widgets_step(zui_app *app, uint32_t now) {
 	}
 }
 
-bool zui_widget_interactive(const zui_node *n) {
-	return n->cls->interactive && n->cls->interactive(n);
-}
-
-bool zui_widget_activate(zui_app *app, zui_node *n) {
-	if (!n->cls->activate) return false;
-	n->cls->activate(app, n);
-	return true;
-}
-
 void zui_widget_free(zui_node *n) {
 	zui_app *app = n->app;
 	zui_overlay_forget(app, n);
