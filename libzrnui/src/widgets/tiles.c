@@ -10,7 +10,7 @@
 #include <assert.h>
 #include "widgets/widgets.h"
 
-struct tile { struct zui_node base; bool wide; char *back; int timer, period; };
+struct tile { struct zui_node base; bool wide; char *back; char *badge; int timer, period; };
 static inline struct tile *tile_of(const zui_node *n) {
 	assert(n && n->kind == ZK_TILE);
 	return (struct tile *)n;
@@ -45,6 +45,7 @@ ZUI_EXPORT void zui_tile_set_live(zui_node *n, const char *back, int period_ms) 
 	if (t->timer) zui_timer_cancel(n->app, t->timer);
 	t->timer = 0;
 	free(t->back);
+	free(t->badge);
 	t->back = back && *back ? strdup(back) : NULL;
 	t->period = period_ms;
 	if (n->on) {
@@ -103,9 +104,9 @@ void draw_tile(zui_app *app, zui_node *n, const struct zg_xf *base, uint32_t now
 		return;
 	}
 	if (n->icon) zui_icon(n->icon, x + (w - 44) / 2, y + (h - 44) / 2 - 8, 44, 2.2f, ink);
-	text_at(&n->t[0], n->text, ZT_REGULAR, 14.5f, x + 9, y + h - 9 - zt_line_height(14.5f), ink, w - 18 - (n->badge ? 30 : 0));
-	if (n->badge) {
-		struct zt_layout *B = zt_slot_get(&n->t[4], n->badge, ZT_LIGHT, 22, 0, 0);
+	text_at(&n->t[0], n->text, ZT_REGULAR, 14.5f, x + 9, y + h - 9 - zt_line_height(14.5f), ink, w - 18 - (t->badge ? 30 : 0));
+	if (t->badge) {
+		struct zt_layout *B = zt_slot_get(&n->t[4], t->badge, ZT_LIGHT, 22, 0, 0);
 		zt_draw(B, x + w - 9 - B->w, y + h - 6 - B->line_h, ink);
 	}
 }
@@ -145,3 +146,11 @@ static void tiles_draw(zui_app *app, zui_node *n, const struct zg_xf *xf, uint32
 }
 const struct zui_class zui_tiles_class = { .name = "tiles", .size = sizeof(struct zui_node), .layout = tiles_layout,
 	.draw = tiles_draw };
+
+/* a count on the corner of a tile */
+void tile_set_badge(zui_node *n, const char *text) {
+	struct tile *t = tile_of(n);
+	free(t->badge);
+	t->badge = text && *text ? strdup(text) : NULL;
+	n->app->dirty = true;
+}

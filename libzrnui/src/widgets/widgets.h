@@ -122,6 +122,7 @@ extern const struct zui_class zui_picker_class, zui_tile_class, zui_tiles_class,
 	zui_check_class, zui_radio_class, zui_ring_class;
 void picker_free(zui_node *n);
 void tile_free(zui_node *n);
+void tile_set_badge(zui_node *n, const char *text);
 void hub_free(zui_node *n);
 void stamp_free(zui_node *n);
 void suggest_free(zui_node *n);

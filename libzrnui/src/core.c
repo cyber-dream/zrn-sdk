@@ -324,9 +324,6 @@ static void node_free(zui_node *n) {
 	free(n->subtitle);
 	free(n->detail);
 	free(n->icon);
-	free(n->badge);
-	free(n->monogram);
-	zui_pixmap_free(n->pix);
 	zui_brush_free(n->bg);
 	if (n->row_tex) zg_tex_free(n->row_tex);
 	free(n);
@@ -950,12 +947,13 @@ static float lay_row(zui_node *n, float x, float y, float w) {
 static float lay_image(zui_node *n, float x, float y, float w) {
 	zui_app *app = n->app;
 	float pad = node_pad(n);
-	if (n->fit) {
+	struct zui_image *im = zui_image_get(n);
+	if (im->fit) {
 		n->w = w;
 		return app->fit_h > 0 ? app->fit_h : app->height;
 	}
 	float iw = n->space > 0 ? (float)n->space : w - 2 * pad;
-	float h = n->value > 0 ? (float)n->value : n->pix ? iw * n->pix->h / n->pix->w : iw;
+	float h = n->value > 0 ? (float)n->value : im->pix ? iw * im->pix->h / im->pix->w : iw;
 	if (n->space > 0) n->x = x + (w - iw) / 2;
 	n->w = iw;
 	return h;
@@ -1027,8 +1025,9 @@ static float lay_button(zui_node *n, float x, float y, float w) {
 static float lay_item(zui_node *n, float x, float y, float w) {
 	const struct zui_metrics *m = &n->app->style->m;
 	(void)x; (void)y; (void)w;
+	struct zui_item *it = zui_item_get(n);
 	float h = (n->subtitle && *n->subtitle) || n->detail ? m->item_h2 : m->item_h;
-	if (n->pix || n->monogram || n->applist) h = n->group || n->applist ? 55 : 76;
+	if (it && (it->leading.pix || it->leading.monogram || it->applist)) h = it->group || it->applist ? 55 : 76;
 	return h;
 }
 
@@ -1874,15 +1873,16 @@ static void drw_bubble(zui_app *app, zui_node *n, const struct zg_xf *xf, uint32
 
 static void drw_image(zui_app *app, zui_node *n, const struct zg_xf *xf, uint32_t now) {
 	struct zui_palette pal = app->style->palette(app);
+	struct zui_image *im = zui_image_get(n);
 	(void)xf; (void)now;
-	if (n->fit) {  /* whole, centred, the larger side touching the edges */
-		if (n->pix) {
-			float k = fminf(n->w / n->pix->w, n->h / n->pix->h), w = n->pix->w * k, h = n->pix->h * k;
-			zui_draw_pixmap(app, n->pix, n->x + (n->w - w) / 2, n->y + (n->h - h) / 2, w, h, 0, n->sharp, 0);
+	if (im->fit) {  /* whole, centred, the larger side touching the edges */
+		if (im->pix) {
+			float k = fminf(n->w / im->pix->w, n->h / im->pix->h), w = im->pix->w * k, h = im->pix->h * k;
+			zui_draw_pixmap(app, im->pix, n->x + (n->w - w) / 2, n->y + (n->h - h) / 2, w, h, 0, im->sharp, 0);
 		}
 		return;
 	}
-	zui_draw_pixmap(app, n->pix, n->x, n->y, n->w, n->h, n->radius, n->sharp, pal.surface2);
+	zui_draw_pixmap(app, im->pix, n->x, n->y, n->w, n->h, im->radius, im->sharp, pal.surface2);
 }
 
 static void drw_card(zui_app *app, zui_node *n, const struct zg_xf *xf, uint32_t now) {
@@ -2217,6 +2217,13 @@ ZUI_EXPORT int zui_run(zui_app *app, zui_node *first) {
 }
 
 /* ---- the classes of the core's own kinds: what each is in layout and drawing ---- */
+static void item_destroy(zui_node *n) {
+	struct zui_item *it = zui_item_get(n);
+	zui_leading_free(&it->leading);
+	free(it->badge);
+}
+static void image_destroy(zui_node *n) { zui_pixmap_free(zui_image_get(n)->pix); }
+
 #define CORE_CLASS(var, nm, st, ...) static const struct zui_class var = { .name = nm, .size = sizeof(st), __VA_ARGS__ }
 CORE_CLASS(k_column, "column", struct zui_node, .layout = lay_column, .draw = drw_column);
 CORE_CLASS(k_row, "row", struct zui_node, .layout = lay_row, .draw = drw_column);
@@ -2228,15 +2235,15 @@ CORE_CLASS(k_label, "section label", struct zui_node, .layout = lay_section_labe
 CORE_CLASS(k_space, "space", struct zui_node, .layout = lay_space);
 CORE_CLASS(k_text, "text", struct zui_node, .layout = lay_text, .draw = drw_text);
 CORE_CLASS(k_button, "button", struct zui_node, .layout = lay_button, .draw = drw_button, .interactive = int_always);
-CORE_CLASS(k_item, "item", struct zui_node, .layout = lay_item, .draw = drw_item, .interactive = int_with_handler);
+CORE_CLASS(k_item, "item", struct zui_item, .destroy = item_destroy, .layout = lay_item, .draw = drw_item, .interactive = int_with_handler);
 CORE_CLASS(k_switch, "switch", struct zui_node, .layout = lay_switch, .draw = drw_item, .interactive = int_always,
 	.activate = act_switch);
 CORE_CLASS(k_slider, "slider", struct zui_node, .layout = lay_slider, .draw = drw_slider, .interactive = int_always);
 CORE_CLASS(k_progress, "progress", struct zui_node, .layout = lay_progress, .draw = drw_progress);
-CORE_CLASS(k_image, "image", struct zui_node, .layout = lay_image, .draw = drw_image, .interactive = int_with_handler);
+CORE_CLASS(k_image, "image", struct zui_image, .destroy = image_destroy, .layout = lay_image, .draw = drw_image, .interactive = int_with_handler);
 CORE_CLASS(k_scroll, "scroll", struct zui_scroll, .scrolls = true, .layout = lay_scroll, .draw = drw_scroll);
 CORE_CLASS(k_pivot_item, "pivot item", struct zui_scroll, .scrolls = true, .layout = lay_column, .draw = drw_column);
-CORE_CLASS(k_pivot, "pivot", struct zui_pivot, .is_page = true, .layout = lay_pivot, .draw = drw_pivot);
+CORE_CLASS(k_pivot, "pivot", struct zui_pivot, .is_page = true, .destroy = zui_page_destroy, .layout = lay_pivot, .draw = drw_pivot);
 CORE_CLASS(k_list_ops, "list", struct zui_list, .layout = lay_list, .draw = drw_list, .destroy = zui_list_destroy);
 CORE_CLASS(k_field_ops, "field", struct zui_field, .layout = lay_field, .draw = drw_field, .destroy = suggest_free,
 	.interactive = int_always, .activate = act_field);

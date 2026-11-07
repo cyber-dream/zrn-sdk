@@ -182,7 +182,8 @@ static void applist_row(zui_app *app, zui_node *n) {
 	const float s = 45;
 	float x = n->x, y = n->y, left = x + s + 13, right = x + n->w;
 	zui_draw_leading(app, n, x, y, s, 0, 0xffffffff);
-	if (n->icon && !n->pix && !n->monogram) zui_icon(n->icon, x + (s - 26) / 2, y + (s - 26) / 2, 26, 2, 0xffffffff);
+	struct zui_item *it = zui_item_get(n);
+	if (n->icon && !it->leading.pix && !it->leading.monogram) zui_icon(n->icon, x + (s - 26) / 2, y + (s - 26) / 2, 26, 2, 0xffffffff);
 	bool sub = n->subtitle && *n->subtitle;
 	struct zt_layout *T = zt_slot_get(&n->t[0], n->text, ZT_LIGHT, 22, right - left, 1);
 	zt_draw(T, left, sub ? y - 3 : y + (s - T->line_h) / 2, pal.text);
@@ -194,6 +195,7 @@ static void applist_row(zui_app *app, zui_node *n) {
 
 static void thread_row(zui_app *app, zui_node *n) {
 	struct zui_palette pal = app->style->palette(app);
+	struct zui_item *it = zui_item_get(n);
 	float x = n->x, y = n->y, w = n->w, left = x + 56 + 12, right = x + w;
 	zui_draw_leading(app, n, x, y, 56, 0, 0xffffffff);
 	float when = 0;
@@ -202,11 +204,11 @@ static void thread_row(zui_app *app, zui_node *n) {
 		when = D->w;
 		zt_draw(D, right - when, y + 8, pal.text2);
 	}
-	struct zt_layout *T = zt_slot_get(&n->t[0], n->text, n->emphasis ? ZT_STRONG : ZT_LIGHT, 24, right - left - when - 10, 1);
-	zt_draw(T, left, y - 3, n->emphasis ? pal.accent_text : pal.text);
+	struct zt_layout *T = zt_slot_get(&n->t[0], n->text, it->emphasis ? ZT_STRONG : ZT_LIGHT, 24, right - left - when - 10, 1);
+	zt_draw(T, left, y - 3, it->emphasis ? pal.accent_text : pal.text);
 	float line_right = right;
-	if (n->badge) {
-		struct zt_layout *B = zt_slot_get(&n->t[4], n->badge, ZT_STRONG, 13, 0, 0);
+	if (it->badge) {
+		struct zt_layout *B = zt_slot_get(&n->t[4], it->badge, ZT_STRONG, 13, 0, 0);
 		float bw = B->w + 10 < 22 ? 22 : B->w + 10;
 		zg_rect(right - bw, y + 31, bw, 20, 0, zc_rgb(app->accent));
 		zt_draw(B, right - bw + (bw - B->w) / 2, y + 31 + (20 - B->line_h) / 2, 0xffffffff);
@@ -214,7 +216,7 @@ static void thread_row(zui_app *app, zui_node *n) {
 	}
 	if (n->subtitle && *n->subtitle) {
 		struct zt_layout *S = zt_slot_get(&n->t[1], n->subtitle, ZT_REGULAR, 14, line_right - left, 1);
-		zt_draw(S, left, y + 30, n->emphasis ? pal.text : pal.text2);
+		zt_draw(S, left, y + 30, it->emphasis ? pal.text : pal.text2);
 	}
 }
 
@@ -222,22 +224,23 @@ static void item(zui_app *app, zui_node *n, float press) {
 	(void)press;
 	struct zui_palette pal = app->style->palette(app);
 	float x = n->x, y = n->y, w = n->w, h = n->h, right = x + w;
-	if (n->group && n->monogram) {  /* the app list's letter: 45 pt outline, as ztmetro draws it */
+	struct zui_item *it = zui_item_get(n);	/* (a switch has none of the row's extras) */
+	if (it && it->group && it->leading.monogram) {  /* the app list's letter: 45 pt outline, as ztmetro draws it */
 		const float s = 45, t = 1.5f;
 		uint32_t c = zc_rgb(app->accent);
 		zg_rect(x, y, s, t, 0, c);
 		zg_rect(x, y + s - t, s, t, 0, c);
 		zg_rect(x, y, t, s, 0, c);
 		zg_rect(x + s - t, y, t, s, 0, c);
-		struct zt_layout *G = zt_slot_get(&n->t[2], n->monogram, ZT_LIGHT, 27, 0, 0);
+		struct zt_layout *G = zt_slot_get(&n->t[2], it->leading.monogram, ZT_LIGHT, 27, 0, 0);
 		zt_draw(G, x + 4, y + 7 - (G->line_h - 27) / 2, c);
 		return;
 	}
-	if (n->applist && (n->pix || n->monogram || n->icon)) {
+	if (it && it->applist && (it->leading.pix || it->leading.monogram || n->icon)) {
 		applist_row(app, n);
 		return;
 	}
-	if (n->pix || n->monogram) {
+	if (it && (it->leading.pix || it->leading.monogram)) {
 		thread_row(app, n);
 		return;
 	}

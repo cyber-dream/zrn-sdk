@@ -31,6 +31,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include "zui-internal.h"
+#include "widgets/widgets.h"
 
 /* ---- pictures ---- */
 static zui_pixmap *pix_new(int w, int h, uint8_t *owned) {
@@ -140,30 +141,71 @@ ZUI_EXPORT zui_node *zui_image(zui_node *parent, zui_pixmap *pix, double w, doub
 	return n;
 }
 
+/* the picture of a node that has one: an image, a row, a page */
+static zui_pixmap **pix_slot(zui_node *n) {
+	if (n->kind == ZK_IMAGE) return &zui_image_get(n)->pix;
+	struct zui_leading *l = zui_leading_of(n);
+	return l ? &l->pix : NULL;
+}
+
+void zui_leading_free(struct zui_leading *l) {
+	zui_pixmap_free(l->pix);
+	free(l->monogram);
+	l->pix = NULL;
+	l->monogram = NULL;
+}
+
+void zui_page_destroy(zui_node *page) { zui_leading_free(&zui_pg(page)->leading); }
+
 ZUI_EXPORT void zui_set_image(zui_node *n, zui_pixmap *pix) {
+	zui_pixmap **slot = pix_slot(n);
+	if (!slot) {
+		fprintf(stderr, "zrnui: zui_set_image is for an image, a row or a page, not a %s\n", n->cls->name);
+		return;
+	}
 	if (pix) pix->refs++;
-	zui_pixmap_free(n->pix);
-	n->pix = pix;
+	zui_pixmap_free(*slot);
+	*slot = pix;
 	n->app->laid_out = false;
 	n->app->dirty = true;
 }
 
-ZUI_EXPORT void zui_set_image_sharp(zui_node *n, bool sharp) { n->sharp = sharp; n->app->dirty = true; }
-ZUI_EXPORT void zui_set_radius(zui_node *n, double r) { n->radius = (float)r; n->app->dirty = true; }
+ZUI_EXPORT void zui_set_image_sharp(zui_node *n, bool sharp) {
+	ZUI_NEED_KIND(n, ZK_IMAGE, "zui_set_image_sharp");
+	zui_image_get(n)->sharp = sharp;
+	n->app->dirty = true;
+}
+ZUI_EXPORT void zui_set_radius(zui_node *n, double r) {
+	ZUI_NEED_KIND(n, ZK_IMAGE, "zui_set_radius");
+	zui_image_get(n)->radius = (float)r;
+	n->app->dirty = true;
+}
 ZUI_EXPORT void zui_set_align(zui_node *n, int a) { n->align = a; n->app->dirty = true; }
 ZUI_EXPORT void zui_set_badge(zui_node *n, const char *t) {
-	free(n->badge);
-	n->badge = t && *t ? strdup(t) : NULL;
+	if (n->kind == ZK_TILE) {
+		tile_set_badge(n, t);
+		return;
+	}
+	ZUI_NEED_KIND(n, ZK_ITEM, "zui_set_badge");
+	struct zui_item *it = zui_item_get(n);
+	free(it->badge);
+	it->badge = t && *t ? strdup(t) : NULL;
 	n->app->dirty = true;
 }
 ZUI_EXPORT void zui_set_monogram(zui_node *n, const char *t) {
-	free(n->monogram);
-	n->monogram = t && *t ? strdup(t) : NULL;
+	struct zui_leading *l = zui_leading_of(n);
+	if (!l) {
+		fprintf(stderr, "zrnui: zui_set_monogram is for a row or a page, not a %s\n", n->cls->name);
+		return;
+	}
+	free(l->monogram);
+	l->monogram = t && *t ? strdup(t) : NULL;
 	n->app->laid_out = false;
 	n->app->dirty = true;
 }
 ZUI_EXPORT void zui_set_image_fit(zui_node *n, bool fit) {
-	n->fit = fit;
+	ZUI_NEED_KIND(n, ZK_IMAGE, "zui_set_image_fit");
+	zui_image_get(n)->fit = fit;
 	n->app->laid_out = false;
 	n->app->dirty = true;
 }
@@ -183,15 +225,21 @@ ZUI_EXPORT void zui_set_gap(zui_node *n, double gap) {
 	n->app->dirty = true;
 }
 ZUI_EXPORT void zui_set_applist_row(zui_node *n, bool on) {
-	n->applist = on;
+	ZUI_NEED_KIND(n, ZK_ITEM, "zui_set_applist_row");
+	zui_item_get(n)->applist = on;
 	n->app->laid_out = false;
 	n->app->dirty = true;
 }
 ZUI_EXPORT void zui_set_group_letter(zui_node *n, const char *t) {
-	n->group = t && *t;
+	ZUI_NEED_KIND(n, ZK_ITEM, "zui_set_group_letter");
+	zui_item_get(n)->group = t && *t;
 	zui_set_monogram(n, t);
 }
-ZUI_EXPORT void zui_set_emphasis(zui_node *n, bool on) { n->emphasis = on; n->app->dirty = true; }
+ZUI_EXPORT void zui_set_emphasis(zui_node *n, bool on) {
+	ZUI_NEED_KIND(n, ZK_ITEM, "zui_set_emphasis");
+	zui_item_get(n)->emphasis = on;
+	n->app->dirty = true;
+}
 
 /* a picture filling (x,y,w,h), cropped to keep its shape */
 void zui_draw_pixmap(zui_app *app, zui_pixmap *p, float x, float y, float w, float h, float r, bool sharp, uint32_t back) {
@@ -207,13 +255,15 @@ void zui_draw_pixmap(zui_app *app, zui_pixmap *p, float x, float y, float w, flo
 
 /* an avatar: the person's picture, or their initial on the accent */
 void zui_draw_leading(zui_app *app, zui_node *n, float x, float y, float size, float r, uint32_t fg) {
-	if (n->pix) {
-		zui_draw_pixmap(app, n->pix, x, y, size, size, r, false, zc_rgb(app->accent));
+	struct zui_leading *lead = zui_leading_of(n);
+	if (!lead) return;
+	if (lead->pix) {
+		zui_draw_pixmap(app, lead->pix, x, y, size, size, r, false, zc_rgb(app->accent));
 		return;
 	}
 	zg_rect(x, y, size, size, r, n->tint ? zc_rgb(n->tint & 0xffffff) : zc_rgb(app->accent));
-	if (n->monogram) {
-		struct zt_layout *L = zt_slot_get(&n->t[2], n->monogram, ZT_MEDIUM, size * 0.42f, 0, 0);
+	if (lead->monogram) {
+		struct zt_layout *L = zt_slot_get(&n->t[2], lead->monogram, ZT_MEDIUM, size * 0.42f, 0, 0);
 		zt_draw(L, x + (size - L->w) / 2, y + (size - L->line_h) / 2, fg);
 	}
 }

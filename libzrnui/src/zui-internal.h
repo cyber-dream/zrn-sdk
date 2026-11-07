@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include <assert.h>
+#include <stdio.h>
 #include <stddef.h>
 #include <stdint.h>
 #include "zrnui.h"
@@ -191,13 +192,10 @@ struct zui_node {
 	struct zanim focus_anim;
 	struct zt_slot title_slot[2];
 	/* pictures, lists, the rest */
-	zui_pixmap *pix;
-	bool group, applist, has_gap, fit, no_dots, quiet, sharp, emphasis, mine, inline_hint;
-	float radius;
+	bool has_gap, no_dots, quiet, mine, inline_hint;
 	int align;
 	bool bar;
 	struct zanim arrive;	/* a new row rising in */
-	char *badge, *monogram;
 	float row_gap;
 	/* a row of a list: painted once, then only moved */
 	unsigned row_tex;
@@ -229,6 +227,30 @@ static inline struct zui_scroll *zui_sv(const zui_node *n) {
 	return n && n->cls->scrolls ? (struct zui_scroll *)n : NULL;
 }
 
+/* What stands in front of a person's row or page: their picture, or their initial on the accent. */
+struct zui_leading {
+	zui_pixmap *pix;
+	char *monogram;
+};
+
+/* A row of a list (ZK_ITEM): a title, a line under it, a value, an arrow; as a person's, a thread's or an
+ * app's row it has a leading picture or initial too. */
+struct zui_item {
+	struct zui_node base;
+	struct zui_leading leading;
+	char *badge;			/* a count on a thread's row */
+	bool group, applist, emphasis;	/* the app list's letter; the app list's row; an unread thread's title */
+};
+/* A picture (ZK_IMAGE) */
+struct zui_image {
+	struct zui_node base;
+	zui_pixmap *pix;
+	float radius;
+	bool sharp, fit;
+};
+static inline struct zui_item *zui_item_get(const zui_node *n) { return n && n->kind == ZK_ITEM ? (struct zui_item *)n : NULL; }
+static inline struct zui_image *zui_image_get(const zui_node *n) { return n && n->kind == ZK_IMAGE ? (struct zui_image *)n : NULL; }
+
 /* A page: the root of what is on the screen. It is two panels, as on Windows Phone: the TitlePanel
  * (the top margin, the app's name, the page's title) stays, the ContentPanel under it holds the content.
  * A hub or a pivot made from the app is one in the page it makes for itself. */
@@ -240,6 +262,7 @@ struct zui_page {
 	zui_node *footer, *title_node, *content_node;
 	float content_h;	/* how far down it goes: its layout, a page itself never scrolls */
 	bool fullscreen, compact;
+	struct zui_leading leading;	/* a person's header (compact) */
 };
 static inline bool zui_is_page(const zui_node *n) { return n && n->cls->is_page; }
 static inline struct zui_page *zui_pg(const zui_node *n) {
@@ -283,6 +306,16 @@ static inline struct zui_list *zui_list_get(const zui_node *n) {	/* NULL for wha
 /* the page's pivot or hub, which is the page itself (NULL if it is neither) */
 static inline zui_node *zui_page_pivot(const zui_node *n) { return n && n->kind == ZK_PIVOT ? (zui_node *)n : NULL; }
 static inline zui_node *zui_page_hub(const zui_node *n) { return n && n->kind == ZK_HUB ? (zui_node *)n : NULL; }
+/* the leading picture of what has one (a row, a page), NULL for the rest */
+static inline struct zui_leading *zui_leading_of(const zui_node *n) {
+	if (n && n->kind == ZK_ITEM) return &((struct zui_item *)n)->leading;
+	if (zui_is_page(n)) return &zui_pg(n)->leading;
+	return NULL;
+}
+void zui_leading_free(struct zui_leading *l);
+void zui_page_destroy(zui_node *page);
+/* a public setter that is for one kind of node says so and does nothing on another */
+#define ZUI_NEED_KIND(n, want, fn) do { if (!(n) || (n)->kind != (want)) { fprintf(stderr, "zrnui: %s is not for this kind of node (%s)\n", fn, (n) ? (n)->cls->name : "NULL"); return; } } while (0)
 static inline struct zui_pivot *zui_pivot_of(const zui_node *n) {
 	assert(n && n->kind == ZK_PIVOT);
 	return (struct zui_pivot *)n;

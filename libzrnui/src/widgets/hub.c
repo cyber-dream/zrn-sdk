@@ -387,6 +387,7 @@ void draw_hub(zui_app *app, zui_node *hub, const struct zg_xf *base, uint32_t no
 }
 
 void hub_free(zui_node *n) {
+	zui_page_destroy(n);
 	struct hub *h = hub_of(n);
 	if (h) {
 		if (h->title) zui_node_free_detached(h->title);
