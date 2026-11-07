@@ -331,7 +331,7 @@ float layout_hub(zui_node *hub) {
 		s->y = y0;
 		s->w = sw;
 		s->h = at - y0;
-		s->content_h = y0 + (s->h > app->height - y0 ? s->h : app->height - y0);
+		zui_sv(s)->content_h = y0 + (s->h > app->height - y0 ? s->h : app->height - y0);
 		if (s->h > h) h = s->h;
 	}
 	/* it fills the screen under the title, so the picture behind has somewhere to be */
@@ -379,7 +379,7 @@ void draw_hub(zui_app *app, zui_node *hub, const struct zg_xf *base, uint32_t no
 			float shift = -dx[k], sx = s->x + shift;
 			if (sx > W || sx + s->w < 0) continue;
 			struct zg_xf xf = *base;
-			zg_xf_translate(&xf, shift, -s->scroll, 0);
+			zg_xf_translate(&xf, shift, -zui_sv(s)->scroll, 0);
 			zg_set_xf(&xf);
 			for (zui_node *c = s->first; c; c = c->next)
 				if (c->visible) zui_draw_node(app, c, &xf, now);

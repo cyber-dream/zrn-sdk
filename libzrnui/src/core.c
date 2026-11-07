@@ -674,8 +674,6 @@ ZUI_EXPORT void zui_push(zui_node *page) {
 	}
 	zui_pg(page)->back_to = app->page;
 	zui_pg(page)->depth = app->page ? zui_pg(app->page)->depth + 1 : 0;
-	page->scroll = 0;
-	page->vel = 0;
 	app->fling = false;
 	if (app->page && app->wl) {
 		app->trans_from = app->page;
@@ -880,14 +878,14 @@ static float layout_node(zui_node *n, float x, float y, float w) {
 	n->y = y;
 	n->w = w;
 	switch (n->kind) {
-	case ZK_COLUMN:
+	case ZK_COLUMN: case ZK_PIVOT_ITEM:
 		h = layout_children_column(n, x + pad, y, w - 2 * pad, n->has_gap ? n->row_gap : m->gap);
 		break;
 	case ZK_SCROLL: {
 		/* edge to edge, one under another; it reaches to the bottom of the window, and what does not fit
 		 * under it is what a finger moves */
 		float inner = layout_children_column(n, x, y, w, 0);
-		n->content_h = y + inner;
+		zui_sv(n)->content_h = y + inner;
 		h = app->height - y > 0 ? app->height - y : 0;
 		break;
 	}
@@ -961,12 +959,12 @@ static float layout_node(zui_node *n, float x, float y, float w) {
 		int i = 0;
 		for (zui_node *c = n->first; c; c = c->next, i++) {
 			/* a tab is a ContentPanel: the margin is its own */
-			if (i == zui_pivot_of(n)->cur) { h = layout_node(c, x + m->margin, y, w - 2 * m->margin); c->content_h = c->y + h; }
+			if (i == zui_pivot_of(n)->cur) { h = layout_node(c, x + m->margin, y, w - 2 * m->margin); zui_sv(c)->content_h = c->y + h; }
 			else {
 				int k = zui_tab_count(n);
 				if (i == zui_pivot_of(n)->prev || i == (zui_pivot_of(n)->cur + 1) % k || i == (zui_pivot_of(n)->cur + k - 1) % k) {
 					float hh = layout_node(c, x + m->margin, y, w - 2 * m->margin);
-					c->content_h = c->y + hh;
+					zui_sv(c)->content_h = c->y + hh;
 				}
 			}
 		}
@@ -1098,8 +1096,8 @@ void zui_do_layout(zui_app *app, zui_node *page) {
 			zui_pg(page)->footer->visible = true;
 			layout_node(zui_pg(page)->footer, m->margin, app->height - foot + 8, app->width - 2 * m->margin);
 		}
-		page->content_h = app->height;
-		page->h = page->content_h;
+		zui_pg(page)->content_h = app->height;
+		page->h = zui_pg(page)->content_h;
 		zui_unlock();
 		return;
 	}
@@ -1120,8 +1118,8 @@ void zui_do_layout(zui_app *app, zui_node *page) {
 	} else {
 		y += layout_children_column(page, 0, y, app->width, 0);	/* the root: edge to edge */
 	}
-	page->content_h = y + (foot > 0 ? foot + 8 : 0);
-	page->h = page->content_h;
+	zui_pg(page)->content_h = y + (foot > 0 ? foot + 8 : 0);
+	page->h = zui_pg(page)->content_h;
 	zui_unlock();
 }
 
@@ -1144,24 +1142,24 @@ static zui_node *find_scroll(zui_node *n) {
 	return NULL;
 }
 
-/* What scrolls on a page is a node of its own, not the page: the section in front of a hub, the tab in front
- * of a pivot, the page itself when it has neither. Its scroll, vel and content_h are what a finger moves. */
-zui_node *zui_scroller(zui_node *page) {
+/* What scrolls on a page is a scroll container (or an heir of it: the section in front of a hub, the item in
+ * front of a pivot), never the page; NULL when the page has none. Its scroll, vel and content_h are what a
+ * finger moves. */
+struct zui_scroll *zui_scroller(zui_node *page) {
 	if (zui_pg(page)->hub) {
 		zui_node *front = zui_hub_front(zui_pg(page)->hub);
-		if (front) return front;
+		if (front) return zui_sv(front);
 	}
 	if (zui_pg(page)->tabs) {
 		zui_node *tab = zui_tab_at(zui_pg(page)->tabs, zui_pivot_of(zui_pg(page)->tabs)->cur);
-		if (tab) return tab;
+		if (tab) return zui_sv(tab);
 	}
-	zui_node *widget = find_scroll(page);
-	return widget ? widget : page;
+	return zui_sv(find_scroll(page));
 }
 
-/* a page does not scroll by itself, as on Windows Phone: only a viewer, a tab or a hub's section does */
-static float scroll_max(zui_app *app, zui_node *sv) {
-	if (sv->kind == ZK_PAGE) return 0;
+/* a page does not scroll by itself, as on Windows Phone: only a scroll container does */
+static float scroll_max(zui_app *app, const struct zui_scroll *sv) {
+	if (!sv) return 0;
 	float max = sv->content_h - app->height;
 	return max > 0 ? max : 0;
 }
@@ -1187,7 +1185,7 @@ static zui_node *hit_in(zui_node *n, float x, float y) {
 			float dx[3];
 			int copies = zui_hub_copies(n, c, dx);
 			for (int k = 0; k < copies; k++) {
-				float cx = x + dx[k], cy = y + c->scroll;
+				float cx = x + dx[k], cy = y + zui_sv(c)->scroll;
 				if (y < n->y + zui_hub_content_top(n)) continue;	/* the hub's title is over the sections' top */
 				if (cx < c->x || cx >= c->x + c->w || cy < c->y || cy >= c->y + c->h) continue;
 				zui_node *deeper = hit_in(c, cx, cy);
@@ -1196,7 +1194,7 @@ static zui_node *hit_in(zui_node *n, float x, float y) {
 			continue;
 		}
 		/* a tab scrolls by itself: what is on the screen is `scroll` further down in it */
-		float cy = n->kind == ZK_PIVOT ? y + c->scroll : n->kind == ZK_SCROLL ? y + n->scroll : y;
+		float cy = n->kind == ZK_PIVOT ? y + zui_sv(c)->scroll : n->kind == ZK_SCROLL ? y + zui_sv(n)->scroll : y;
 		if (x < c->x || x >= c->x + c->w || cy < c->y || cy >= c->y + c->h) continue;
 		zui_node *deeper = hit_in(c, x, cy);
 		if (deeper) return deeper;
@@ -1300,7 +1298,7 @@ static zui_node *frame_hit(zui_app *app, float x, float y) {
 void zui_touch(zui_app *app, int phase, float x, float y, uint32_t time) {
 	zui_node *page = app->page;
 	if (!page) return;
-	zui_node *sv = zui_scroller(page);
+	struct zui_scroll *sv = zui_scroller(page);
 	uint32_t now = zui_now();
 	if (!app->laid_out) {
 		zui_do_layout(app, page);
@@ -1329,9 +1327,9 @@ void zui_touch(zui_app *app, int phase, float x, float y, uint32_t time) {
 		app->down_x = app->last_x = x;
 		app->down_y = app->last_y = y;
 		app->last_t = time;
-		app->down_scroll = sv->scroll;
+		app->down_scroll = sv ? sv->scroll : 0;
 		app->fling = false;
-		sv->vel = 0;
+		if (sv) sv->vel = 0;
 		app->pressed = NULL;
 		app->drag_slider = NULL;
 		zui_lock();
@@ -1351,7 +1349,7 @@ void zui_touch(zui_app *app, int phase, float x, float y, uint32_t time) {
 		if (y < zui_pg(page)->title_panel.h) {
 			return;	/* the header: a tap there is handled on the lift */
 		}
-		sv->stick_end = false;
+		if (sv) sv->stick_end = false;
 		zui_lock();
 		zui_node *hit = NULL;
 		if (zui_pg(page)->footer && zui_pg(page)->footer->visible && y >= zui_pg(page)->footer->y - 8) {
@@ -1375,7 +1373,7 @@ void zui_touch(zui_app *app, int phase, float x, float y, uint32_t time) {
 			return;
 		}
 		app->in_footer = false;
-		hit = hit_in(page, x, y + page->scroll);
+		hit = hit_in(page, x, y);
 		zui_unlock();
 		if (hit && hit->kind == ZK_SLIDER) {
 			app->drag_slider = hit;
@@ -1387,7 +1385,7 @@ void zui_touch(zui_app *app, int phase, float x, float y, uint32_t time) {
 			float sx = x + zui_node_hub_shift(hit, x);
 			app->pressed = hit;
 			app->press_fx = hit->w > 0 ? (sx - hit->x) / hit->w * 2 - 1 : 0;
-			app->press_fy = hit->h > 0 ? (y + sv->scroll - hit->y) / hit->h * 2 - 1 : 0;
+			app->press_fy = hit->h > 0 ? (y + (sv ? sv->scroll : 0) - hit->y) / hit->h * 2 - 1 : 0;
 			zanim_go(&app->press, 1, 90, now);
 			zui_hold_start(app, hit, time);
 		}
@@ -1443,7 +1441,7 @@ void zui_touch(zui_app *app, int phase, float x, float y, uint32_t time) {
 			zui_hold_cancel(app);
 			if (app->pressed) zanim_go(&app->press, 0, 160, now);
 		}
-		if (app->dragging && sv->kind == ZK_PAGE) {
+		if (app->dragging && !sv) {
 			app->dirty = true;	/* nothing here scrolls: the finger only takes the press off what it was on */
 		} else if (app->dragging) {
 			float raw = app->down_scroll - dy, max = scroll_max(app, sv);
@@ -1496,7 +1494,7 @@ void zui_touch(zui_app *app, int phase, float x, float y, uint32_t time) {
 		if (phase == 2 && (int32_t)(time - app->last_t) < 80) {
 			app->fling = true;
 			app->fling_t = now;
-		} else {
+		} else if (sv) {
 			sv->vel = 0;
 		}
 		app->dirty = true;
@@ -1542,23 +1540,23 @@ void zui_touch(zui_app *app, int phase, float x, float y, uint32_t time) {
 
 ZUI_EXPORT void zui_page_scroll_to(zui_node *page, double y, bool glide) {
 	page = zui_page_of(page);
-	zui_node *sv = zui_scroller(page);
+	struct zui_scroll *sv;
 	zui_app *app = page->app;
 	if (!app->laid_out) zui_do_layout(app, page);
 	sv = zui_scroller(page);
-	if (sv->kind == ZK_PAGE) return;
+	if (!sv) return;	/* nothing here scrolls */
 	float max = scroll_max(app, sv);
-	float to = (float)y - (sv->kind == ZK_SCROLL ? sv->y : zui_pg(page)->title_panel.h);
+	float to = (float)y - (sv->base.kind == ZK_SCROLL ? sv->base.y : zui_pg(page)->title_panel.h);
 	to = to < 0 ? 0 : to > max ? max : to;
 	sv->stick_end = false;
 	sv->vel = 0;
 	app->fling = false;
 	if (glide && app->wl) {
-		sv->scroll_goal = to;
-		sv->scroll_goal_on = true;
+		sv->goal = to;
+		sv->goal_on = true;
 	} else {
 		sv->scroll = to;
-		sv->scroll_goal_on = false;
+		sv->goal_on = false;
 	}
 	app->dirty = true;
 }
@@ -1576,7 +1574,8 @@ ZUI_EXPORT void zui_inject_text(zui_app *app, const char *utf8) {
 void zui_scroll_by(zui_app *app, float dy) {
 	zui_node *page = app->page;
 	if (!page) return;
-	zui_node *sv = zui_scroller(page);
+	struct zui_scroll *sv = zui_scroller(page);
+	if (!sv) return;
 	float s = sv->scroll + dy, max = scroll_max(app, sv);
 	sv->scroll = s < 0 ? 0 : s > max ? max : s;
 	app->dirty = true;
@@ -1625,7 +1624,7 @@ void zui_osk(zui_app *app, bool show) {
 	if (show && app->focus && app->page) {
 		bool foot = false;
 		for (zui_node *p = app->focus; p; p = p->parent) foot = foot || p->kind == ZK_FOOTER;
-		int bottom = foot ? (int)lroundf(app->height) : (int)lroundf(app->focus->y + app->focus->h - zui_scroller(app->page)->scroll);
+		int bottom = foot ? (int)lroundf(app->height) : (int)lroundf(app->focus->y + app->focus->h - (zui_scroller(app->page) ? zui_scroller(app->page)->scroll : 0));
 		snprintf(line, sizeof(line), "osk show %d\n", bottom);
 	} else {
 		snprintf(line, sizeof(line), show ? "osk show\n" : "osk hide\n");
@@ -1671,10 +1670,10 @@ void zui_step(zui_app *app, uint32_t now) {
 		transition_finish(app);
 	zui_widgets_step(app, now);
 	if (!page) return;
-	zui_node *sv = zui_scroller(page);
-	if (sv->scroll_goal_on && !app->touching) {
-		sv->scroll += (sv->scroll_goal - sv->scroll) * (1 - expf(-dt / 90));
-		if (fabsf(sv->scroll_goal - sv->scroll) < 0.5f) { sv->scroll = sv->scroll_goal; sv->scroll_goal_on = false; }
+	struct zui_scroll *sv = zui_scroller(page);
+	if (sv && sv->goal_on && !app->touching) {
+		sv->scroll += (sv->goal - sv->scroll) * (1 - expf(-dt / 90));
+		if (fabsf(sv->goal - sv->scroll) < 0.5f) { sv->scroll = sv->goal; sv->goal_on = false; }
 		app->dirty = true;
 	}
 	if (zui_pg(page)->tabs && !app->swiping) {
@@ -1683,6 +1682,10 @@ void zui_step(zui_app *app, uint32_t now) {
 		if (running) app->dirty = true;
 	}
 	if (app->touching) return;
+	if (!sv) {
+		app->fling = false;	/* nothing here scrolls */
+		return;
+	}
 	float max = scroll_max(app, sv);
 	if (sv->stick_end) {
 		if (sv->glide && (int32_t)(now - sv->glide_at) < 600) {
@@ -1732,7 +1735,7 @@ static bool has_indeterminate(zui_node *n) {
 bool zui_animating(zui_app *app) {
 	uint32_t now = zui_now();
 	zui_node *page = app->page;
-	zui_node *sv = page ? zui_scroller(page) : NULL;
+	struct zui_scroll *sv = page ? zui_scroller(page) : NULL;
 	if (app->trans_to || app->fling || app->busy) return true;
 	if (sv && sv->glide && sv->stick_end) return true;
 	if (page && zui_pg(page)->tabs && zui_pivot_of(zui_pg(page)->tabs)->pos.ms && (int32_t)(now - zui_pivot_of(zui_pg(page)->tabs)->pos.start) < (int32_t)zui_pivot_of(zui_pg(page)->tabs)->pos.ms) return true;
@@ -1740,7 +1743,7 @@ bool zui_animating(zui_app *app) {
 	if (app->toast && (int32_t)(now - app->toast_at) < 2600) return true;
 	if (sv && !app->touching && (sv->scroll < 0 || sv->scroll > scroll_max(app, sv))) return true;
 	if (page && has_indeterminate(page)) return true;
-	if (sv && sv->scroll_goal_on) return true;
+	if (sv && sv->goal_on) return true;
 	if (zui_widgets_animating(app, now)) return true;
 	if (page && zui_widgets_page_moving(app, page, now)) return true;
 	return false;
@@ -1828,12 +1831,12 @@ static void draw_node(zui_app *app, zui_node *n, const struct zg_xf *base, uint3
 		zui_node *pg = zui_page_of(n);
 		zg_clip(0, n->y, app->width, n->h);
 		struct zg_xf in = xf;
-		zg_xf_translate(&in, 0, -roundf(n->scroll * zui_gfx_scale()) / zui_gfx_scale(), 0);
+		zg_xf_translate(&in, 0, -roundf(zui_sv(n)->scroll * zui_gfx_scale()) / zui_gfx_scale(), 0);
 		draw_children(app, n, &in, now);
 		zg_clip(0, zui_pg(pg)->title_panel.h, app->width, app->height - zui_pg(pg)->title_panel.h);
 		break;
 	}
-	case ZK_COLUMN: case ZK_ROW: case ZK_CONTENT_PANEL:
+	case ZK_COLUMN: case ZK_PIVOT_ITEM: case ZK_ROW: case ZK_CONTENT_PANEL:
 		if (n->bar) zg_rect(0, n->y - 4, app->width, app->height - n->y + 4, 0, pal.surface2);
 		if (n->bar && !n->no_dots && app->style->m.bar_button > 0)	/* WP's three dots: open it for the words */
 			for (int d = 0; d < 3; d++) zg_circle(app->width - 26 + d * 7, n->y + 6, 1.5f, pal.text);
@@ -1844,7 +1847,8 @@ static void draw_node(zui_app *app, zui_node *n, const struct zg_xf *base, uint3
 		draw_children(app, n, &xf, now);
 		break;
 	case ZK_LIST: {
-		float sc = zui_list_owner(n)->scroll;
+		struct zui_scroll *owner = zui_sv(zui_list_owner(n));
+		float sc = owner ? owner->scroll : 0;
 		zui_list_draw(app, n, &xf, now, turn_role, turn_t, turn_dir, sc);
 		break;
 	}
@@ -1855,14 +1859,14 @@ static void draw_node(zui_app *app, zui_node *n, const struct zg_xf *base, uint3
 		zui_node *front = zui_tab_at(n, cur);
 		float W = app->width;
 		struct zg_xf a = xf;
-		zg_xf_translate(&a, -off * W, front ? -front->scroll : 0, 0);
+		zg_xf_translate(&a, -off * W, front ? -zui_sv(front)->scroll : 0, 0);
 		if (fabsf(off) > 0.001f) {
 			int k = zui_tab_count(n);
 			int other = ((cur + (off > 0 ? 1 : -1)) % k + k) % k;
 			zui_node *o = zui_tab_at(n, other);
 			if (o) {
 				struct zg_xf b = xf;
-				zg_xf_translate(&b, -off * W + (off > 0 ? W : -W), -o->scroll, 0);
+				zg_xf_translate(&b, -off * W + (off > 0 ? W : -W), -zui_sv(o)->scroll, 0);
 				draw_node(app, o, &b, now);
 			}
 		}
@@ -1935,12 +1939,12 @@ static void draw_page(zui_app *app, zui_node *page, uint32_t now, int role, floa
 	const struct zui_style *st = app->style;
 	/* whole pixels, as the shell moves a window: glyphs stay on their grid and
 	 * do not shimmer as a list goes by */
-	float scroll = roundf(page->scroll * zui_gfx_scale()) / zui_gfx_scale();
+	float scroll = 0;	/* a page does not scroll: what does is a scroll container in it */
 	turn_role = role;
 	turn_t = t;
 	turn_dir = dir;
-	zui_node *sv = zui_scroller(page);
-	turn_scroll = sv->scroll;
+	struct zui_scroll *sv = zui_scroller(page);
+	turn_scroll = sv ? sv->scroll : 0;
 	/* DotMatrix's lattice moves with what is on it, or dots would crawl */
 	if (page->bg) {
 		/* the page's own, over the whole window: behind the titles and what scrolls, and itself still */
@@ -1951,7 +1955,7 @@ static void draw_page(zui_app *app, zui_node *page, uint32_t now, int role, floa
 		zg_set_dot_origin(0);
 		zui_brush_paint(app, page->bg, 0, 0, app->width, app->height, 0);
 	}
-	zg_set_dot_origin(role ? 0 : -roundf(sv->scroll * zui_gfx_scale()) / zui_gfx_scale());
+	zg_set_dot_origin(role || !sv ? 0 : -roundf(sv->scroll * zui_gfx_scale()) / zui_gfx_scale());
 	int rows = 0;
 	bool flat = st->flat_cards;
 	for (zui_node *c = page->first; c; c = c->next) {
@@ -1964,12 +1968,9 @@ static void draw_page(zui_app *app, zui_node *page, uint32_t now, int role, floa
 	}
 	zg_clip(0, zui_pg(page)->title_panel.h, app->width, app->height - zui_pg(page)->title_panel.h);
 	struct zg_xf base;
-	if (sv->stick_end && !role) {
+	if (sv && sv->stick_end && !role) {
 		float mx = scroll_max(app, sv);
-		if (!sv->glide) {
-			sv->scroll = mx;
-			if (sv == page) scroll = roundf(mx * zui_gfx_scale()) / zui_gfx_scale();
-		}
+		if (!sv->glide) sv->scroll = mx;
 	}
 	float alpha = 1;
 	/* the large title, if the style has one, scrolls as the first row */

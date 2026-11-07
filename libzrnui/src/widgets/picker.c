@@ -93,7 +93,7 @@ void picker_tapped(zui_app *app, zui_node *n) {
 		picker_set_open(n, true);
 		return;
 	}
-	float py = app->down_y + (in_footer(n) || !app->page ? 0 : app->page->scroll);
+	float py = app->down_y;
 	int i = (int)floorf((py - (n->y + 24 + 4)) / PICK_ROW);
 	if (i >= 0 && i < p->count) {
 		bool changed = i != p->sel;

@@ -273,15 +273,16 @@ static void changed_height(zui_node *n, int row, float delta) {
 	struct zui_list *L = zui_list_get(n);
 	if (fabsf(delta) < 0.01f) return;
 	for (int i = row + 1; i <= L->count; i++) L->y[i] += delta;
-	zui_node *owner = zui_list_owner(n), *page = zui_page_of(n);
-	float scroll = owner->scroll;
+	struct zui_scroll *owner = zui_sv(zui_list_owner(n));
+	zui_node *page = zui_page_of(n);
+	float scroll = owner ? owner->scroll : 0;
 	n->h += delta;
 	for (int i = 0; i < ZUI_LIST_SLOTS; i++)
 		if (L->slot[i] && L->slot_row[i] > row) L->slot[i]->y += delta, zui_move_children(L->slot[i], delta);
-	owner->content_h += delta;
+	if (owner) owner->content_h += delta;
 	/* what is on the screen stays where it is, when a row above it turned out
 	 * another height than guessed */
-	if (owner->kind != ZK_PAGE && n->y + L->y[row] < scroll + zui_pg(page)->title_panel.h && !owner->stick_end) {
+	if (owner && n->y + L->y[row] < scroll + zui_pg(page)->title_panel.h && !owner->stick_end) {
 		owner->scroll += delta;
 		n->app->down_scroll += delta;	/* or the next move of the finger undoes it */
 	}
@@ -417,7 +418,8 @@ void zui_bind_row(zui_node *n, int row) { bind_row(n, row); }
 void zui_list_ensure(zui_node *n, uint32_t now) {
 	struct zui_list *L = zui_list_get(n);
 	if (!L->count) return;
-	float scroll = zui_list_owner(n)->scroll, H = n->app->height;
+	struct zui_scroll *owner = zui_sv(zui_list_owner(n));
+	float scroll = owner ? owner->scroll : 0, H = n->app->height;
 	float top = scroll - n->y, bot = top + H;
 	int lo = 0, hi = L->count;
 	while (lo < hi) {
@@ -585,7 +587,7 @@ ZUI_EXPORT void zui_list_prepend(zui_node *n, int k) {
 	L->arrive_from = 0;
 	for (int i = 0; i < ZUI_LIST_SLOTS; i++)
 		if (L->slot[i]) L->slot_row[i] += k;
-	if (zui_list_owner(n)->kind != ZK_PAGE) zui_list_owner(n)->scroll += at;
+	if (zui_sv(zui_list_owner(n))) zui_sv(zui_list_owner(n))->scroll += at;
 	n->app->down_scroll += at;
 	n->app->laid_out = false;
 	n->app->dirty = true;
@@ -604,16 +606,17 @@ ZUI_EXPORT void zui_list_allow_more(zui_node *n) { zui_list_get(n)->asked = fals
 
 /* ---- the end of a page ---- */
 ZUI_EXPORT void zui_page_scroll_end(zui_node *page, bool glide) {
-	zui_node *sv = zui_scroller(zui_page_of(page));
+	struct zui_scroll *sv = zui_scroller(zui_page_of(page));
+	if (!sv) return;	/* a page does not scroll */
 	sv->stick_end = true;
 	sv->glide = glide;
 	if (glide) sv->glide_at = zui_now();
-	sv->app->dirty = true;
+	sv->base.app->dirty = true;
 }
 ZUI_EXPORT bool zui_page_at_end(zui_node *page, double within) {
-	zui_node *sv = zui_scroller(zui_page_of(page));
-	if (sv->kind == ZK_PAGE) return true;	/* it does not scroll: it is all at its end */
-	return sv->stick_end || sv->content_h - sv->app->height - sv->scroll <= within;
+	struct zui_scroll *sv = zui_scroller(zui_page_of(page));
+	if (!sv) return true;	/* it does not scroll: it is all at its end */
+	return sv->stick_end || sv->content_h - sv->base.app->height - sv->scroll <= within;
 }
 
 /* ---- tabs ---- */
@@ -629,7 +632,7 @@ ZUI_EXPORT void zui_pivot_title(zui_node *pivot, const char *text) {
 		if (c->kind == ZK_TITLE) { zui_set_text(c, text ? text : ""); return; }
 	zui_title(panel, text ? text : "");
 }
-ZUI_EXPORT zui_node *zui_pivot_item(zui_node *pivot) { return zui_column(pivot); }
+ZUI_EXPORT zui_node *zui_pivot_item(zui_node *pivot) { return zui_node_new_kind(pivot, ZK_PIVOT_ITEM); }
 /* the item's title (PivotItem.Header): a header the pivot draws in its title row, the column skips it;
  * called again, it changes the text */
 ZUI_EXPORT zui_node *zui_pivot_item_header(zui_node *item, const char *text) {
@@ -672,7 +675,7 @@ void zui_tabs_step(zui_node *tabs, int dir) {
 		zui_node *old = zui_tab_at(tabs, cur);
 		zui_pivot_of(tabs)->cur = i;
 		zui_pivot_of(tabs)->prev = cur;
-		old->vel = 0;
+		zui_sv(old)->vel = 0;
 		app->fling = false;
 		app->laid_out = false;
 		off -= (float)dir;
@@ -696,7 +699,7 @@ ZUI_EXPORT void zui_pivot_select(zui_node *tabs, int i) {
 	if (i != zui_pivot_of(tabs)->cur) {
 		zui_node *old = zui_tab_at(tabs, zui_pivot_of(tabs)->cur);
 		zui_pivot_of(tabs)->cur = i;
-		old->vel = 0;
+		zui_sv(old)->vel = 0;
 		app->fling = false;
 		zui_pivot_of(tabs)->prev = zui_child_index(old);
 		app->laid_out = false;

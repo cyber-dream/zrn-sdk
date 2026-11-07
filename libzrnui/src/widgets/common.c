@@ -42,5 +42,6 @@ bool in_footer(const zui_node *n) {
 /* a node's top in window points, whatever scrolls */
 float screen_y(const zui_node *n) {
 	zui_app *app = n->app;
-	return n->y - (in_footer(n) || !app->page ? 0 : app->page->scroll);
+	(void)app;	/* a page does not scroll: what is under a scroll container is moved by it */
+	return n->y;
 }

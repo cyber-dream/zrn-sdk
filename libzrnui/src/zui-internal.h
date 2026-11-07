@@ -130,6 +130,7 @@ enum zui_kind {
 	ZK_FRAME,	/* the app's one root: the pages are its children, whatever else is in it is over them all */
 	ZK_CONTENT_PANEL,	/* a page's ContentPanel: a column with the margin and the gaps; the root has none */
 	ZK_TITLE_PANEL,	/* a page's TitlePanel: only holds the two titles, the style draws them */
+	ZK_PIVOT_ITEM,	/* a pivot's item: a column that scrolls (an heir of the scroll container) */
 };
 
 struct zui_pixmap { int w, h, refs; uint8_t *rgba; unsigned tex, gen; };
@@ -153,6 +154,7 @@ struct zui_class {
 	const char *name;
 	size_t size;				/* of the node's struct: at least sizeof(struct zui_node) */
 	void (*destroy)(zui_node *n);		/* frees what the subtype holds (not the node itself) */
+	bool scrolls;				/* a scroll container or one of its heirs: its struct is a zui_scroll */
 };
 const struct zui_class *zui_class_of(int kind);
 
@@ -176,13 +178,7 @@ struct zui_node {
 	struct zui_brush *bg;	/* what fills the node's area, behind it (zui_set_background) */
 	struct zanim knob;	/* a switch's knob, 0 off .. 1 on */
 	struct zanim focus_anim;
-	/* a page */
-	float scroll, content_h, vel;
 	struct zt_slot title_slot[2];
-	/* a page */
-	bool stick_end, glide;
-	uint32_t glide_at;
-	float down_fix;
 	/* pictures, lists, the rest */
 	zui_pixmap *pix;
 	bool group, applist, has_gap, fit, no_dots, quiet, sharp, emphasis, mine, inline_hint;
@@ -201,12 +197,27 @@ struct zui_node {
 	uint32_t swivel_at;
 	/* widgets/: pickers, tiles, hubs, suggestions; hold */
 	void *ext;
-	float scroll_goal;
-	bool scroll_goal_on;
 	zui_cb hold_cb;
 	void *hold_data;
 	zui_free_fn hold_free;
 };
+
+/* A scroll container, as Windows Phone's ScrollViewer: the one thing that scrolls. A hub's section and
+ * a pivot's item are heirs of it (a class with `scrolls`), and nothing else has a scroll: a page does not.
+ * The finger moves `scroll`; `vel` carries on when it lets go. */
+struct zui_scroll {
+	struct zui_node base;
+	float scroll, content_h, vel;
+	float goal;			/* where a scroll to a place is going, if goal_on */
+	bool goal_on;
+	bool stick_end, glide;		/* kept at its end as things come; going there smoothly */
+	uint32_t glide_at;
+};
+/* the scroll state of a node that has it, NULL for the rest */
+static inline struct zui_scroll *zui_sv(const zui_node *n) {
+	return n && n->cls->scrolls ? (struct zui_scroll *)n : NULL;
+}
+extern const struct zui_class zui_scroll_class;
 
 /* A page: the root of what is on the screen. It is two panels, as on Windows Phone: the TitlePanel
  * (the top margin, the app's name, the page's title) stays, the ContentPanel under it holds the content.
@@ -218,6 +229,7 @@ struct zui_page {
 	zui_node *back_to;	/* the page under this one */
 	zui_node *tabs, *hub;	/* its pivot, its hub */
 	zui_node *footer, *title_node, *content_node;
+	float content_h;	/* how far down it goes: its layout, a page itself never scrolls */
 	bool fullscreen, compact;
 };
 static inline struct zui_page *zui_pg(const zui_node *n) {
@@ -359,7 +371,7 @@ void zui_widgets_step(zui_app *app, uint32_t now);
 float zui_hub_offset(const zui_node *hub);
 void zui_brush_paint(zui_app *app, struct zui_brush *b, float x, float y, float w, float h, float r);
 void zui_brush_free(struct zui_brush *b);
-zui_node *zui_scroller(zui_node *page);	/* what scrolls on a page: the tab or hub section in front, else the page */
+struct zui_scroll *zui_scroller(zui_node *page);	/* what scrolls on a page: the tab or hub section in front, else the page */
 zui_node *zui_list_owner(zui_node *list);	/* what scrolls a list */
 zui_node *zui_hub_front(const zui_node *hub);	/* the section nearest the screen's left edge */
 int zui_hub_copies(const zui_node *hub, const zui_node *section, float dx[3]);

@@ -125,7 +125,8 @@ int zui_offscreen_png(zui_app *app, zui_node *page, const char *path, int w, int
 	if (scroll) {
 		zui_do_layout(app, page);
 		app->laid_out = true;
-		page->scroll = (float)atof(scroll);
+		struct zui_scroll *sv = zui_scroller(page);
+		if (sv) sv->scroll = (float)atof(scroll);
 	}
 	uint32_t now = zui_now();
 	struct zui_palette pal = zui_pal(app);
