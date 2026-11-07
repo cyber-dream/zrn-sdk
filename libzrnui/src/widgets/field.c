@@ -73,13 +73,11 @@ void draw_suggestions(zui_app *app) {
 	int c = suggestions_for(app, idx, &x, &y, &w);
 	if (!c) return;
 	struct suggest *s = zui_field_of(app->focus)->suggest;
-	struct zui_palette pal = zui_pal(app);
-	bool dots = dotted(app);
 	zg_set_xf(NULL);
-	zg_rect(x, y, w, c * SUGGEST_ROW, 0, dots ? pal.bg : 0xffffffff);
-	zg_border(x, y, w, c * SUGGEST_ROW, 0, dots ? 1.2f : 1, dots ? pal.text : 0x999999ff);
+	zg_rect(x, y, w, c * SUGGEST_ROW, 0, 0xffffffff);
+	zg_border(x, y, w, c * SUGGEST_ROW, 0, 1, 0x999999ff);
 	for (int i = 0; i < c; i++)
-		text_now(s->item[idx[i]], ZT_REGULAR, 17, x + 10, y + i * SUGGEST_ROW + 9, dots ? pal.text : 0x000000ff, w - 20);
+		text_now(s->item[idx[i]], ZT_REGULAR, 17, x + 10, y + i * SUGGEST_ROW + 9, 0x000000ff, w - 20);
 }
 
 bool zui_suggest_touch(zui_app *app, float x, float y, float scroll) {

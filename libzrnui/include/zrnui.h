@@ -2,7 +2,7 @@
 /*
  * libzrnui: the ztOS app toolkit. One C library underneath C, C++, Rust and
  * Python apps; widgets are drawn straight on the GPU (GLES2), in a style
- * the system chooses (Metro or DotMatrix); an app follows it, so they never mix.
+ * the system's style, Metro.
  *
  * An app is a set of pages. A page is a column: put things in it and the
  * library lays them out, scrolls them, presses them and moves between pages.
@@ -75,15 +75,12 @@ zui_app *zui_app_new(void);
 int zui_run(zui_app *app, zui_node *first_page);
 void zui_quit(zui_app *app);
 void zui_app_free(zui_app *app);
-/* The style is the system's: ZTRF_SHELL_STYLE, else `style` in ztmetro's config,
- * else Metro. ZUI_STYLE overrides it for looking at renders. An app cannot pick
- * one: this only exists for tests, and only while nothing else has decided. */
+/* The style is Metro, the only one; "metro" is the only name this takes, and it does nothing else. */
 void zui_app_set_style(zui_app *app, const char *style);
 const char *zui_app_style(const zui_app *app);
-/* Does nothing: both styles are black. Kept for the ABI. */
+/* Does nothing: the style is black. Kept for the ABI. */
 void zui_app_set_theme(zui_app *app, const char *theme);
-/* 0xRRGGBB; by default the system's accent (~/.config/ztmetro/config).
- * DotMatrix keeps its palette whatever is set here. */
+/* 0xRRGGBB; by default the system's accent (~/.config/ztmetro/config). */
 void zui_app_set_accent(zui_app *app, uint32_t rgb);
 uint32_t zui_app_accent(const zui_app *app);
 /* The loading dots across the top, while something loads. */
@@ -205,8 +202,7 @@ zui_brush *zui_brush_image(zui_pixmap *pix);
  *     uniform float u_time;  seconds since the first frame it was painted
  *     uniform vec2  u_res;   the area's size in points
  * and uniforms of its own (declared as float, vec2, vec3 or vec4 and given by zui_brush_set_uniform; unused
- * components are 0). The area's rounded corners, alpha and opacity are done for it, and in DotMatrix the
- * colour's brightness is what the dots show. It paints on every frame unless told it need not. If it does
+ * components are 0). The area's rounded corners, alpha and opacity are done for it. It paints on every frame unless told it need not. If it does
  * not compile nothing is painted and zui_brush_error says why (line numbers are those of the source). */
 zui_brush *zui_brush_shader(const char *source);
 void zui_brush_set_uniform(zui_brush *brush, const char *name, double x, double y, double z, double w);
@@ -350,8 +346,7 @@ void zui_inject_touch(zui_app *app, int phase, double x, double y);
 void zui_inject_text(zui_app *app, const char *utf8);
 
 /* ---- more of what Windows Phone 8.1 had ---- */
-/* Each of these looks as ZrnMetroCore draws it in Metro, and the same in
- * DotMatrix. None of them is meant to be put inside a zui_list row: rows are
+/* Each of these looks as ZrnMetroCore draws it in Metro. None of them is meant to be put inside a zui_list row: rows are
  * painted once, so what moves in one stays still until zui_list_refresh. */
 
 /* CheckBox and RadioButton. zui_get_on / zui_set_on; the handler gets

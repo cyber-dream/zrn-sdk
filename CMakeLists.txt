@@ -25,7 +25,7 @@ set_target_properties(zrnui PROPERTIES VERSION 0.1.0 SOVERSION 0)
 
 # the examples: CLion runs them from .run/*.xml with ZUI_WINDOW=480x800 in the
 # environment (the window, in points, on a Wayland session). On a shell:
-#   ZUI_WINDOW=480x800 ZUI_STYLE=dotmatrix ./helloworld
+#   ZUI_WINDOW=480x800 ./helloworld
 foreach(example IN ITEMS helloworld-c hello-c settings-c)
 	string(REGEX REPLACE "-c$" "" short ${example})
 	add_executable(${short} examples/${example}/main.c)

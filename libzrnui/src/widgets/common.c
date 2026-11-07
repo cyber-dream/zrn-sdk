@@ -9,8 +9,6 @@
 #include <string.h>
 #include "widgets/widgets.h"
 
-bool dotted(const zui_app *app) { return app->style == &zui_style_dotmatrix; }
-
 float clamp01(float v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
 
 char *dupstr(const char *s) { return strdup(s ? s : ""); }

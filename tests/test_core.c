@@ -393,29 +393,6 @@ static void test_brushes(const char *dir) {
 	}
 	zui_app_free(app);
 
-	/* in DotMatrix the shader's brightness is what the dots show: lit dots and dark between them */
-	setenv("ZUI_STYLE", "dotmatrix", 1);
-	app = zui_app_new();
-	unsetenv("ZUI_STYLE");
-	page = zui_page_blank(app);
-	zui_brush *dm = zui_brush_shader("vec4 zui_shade(vec2 uv) { return vec4(1.0, 1.0, 1.0, 1.0); }");
-	zui_brush_shader_set_animated(dm, false);
-	zui_set_background(page, dm);
-	zui_brush_free(dm);
-	if (render_brush(app, page, dir, "shader-dots", &px, &w, &h) == 0) {
-		int lit = 0, dark = 0;
-		for (int yy = 300; yy < 340; yy++)
-			for (int xx = 100; xx < 140; xx++) {
-				unsigned char *q = pixel(px, w, xx, yy);
-				if (q[0] + q[1] + q[2] > 150) lit++; else if (q[0] + q[1] + q[2] < 20) dark++;
-			}
-		CHECK(lit > 100 && dark > 20, "DotMatrix draws a shader as dots, not a flat fill (%d lit, %d dark of 1600)", lit, dark);
-		free(px);
-	} else {
-		CHECK(0, "a shader brush renders in DotMatrix");
-	}
-	zui_app_free(app);
-
 	/* one that does not compile says why, paints nothing, and the page goes on */
 	app = zui_app_new();
 	page = zui_page_blank(app);
@@ -788,15 +765,12 @@ static void test_tiles_hub(const char *dir) {
 int main(int argc, char **argv) {
 	setenv("ZUI_NO_OPEN", "1", 1);	/* one frame at a time: not the opening turn */
 	const char *dir = argc > 1 ? argv[1] : "/tmp";
-	test_layout_and_taps("dotmatrix");
 	test_layout_and_taps("metro");
 	test_slider_field_pages();
 	test_list_tabs_image(dir);
 	test_brushes(dir);
 	test_root("metro");
-	test_root("dotmatrix");
 	test_widgets("metro", dir);
-	test_widgets("dotmatrix", dir);
 	test_tiles_hub(dir);
 	if (!getenv("ZUI_TEST_NO_GPU")) test_offscreen(dir);
 	printf("%d checks, %d failed\n", checks, failures);

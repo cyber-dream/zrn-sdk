@@ -62,9 +62,7 @@ void draw_dialog(zui_app *app, struct ov *o, float a, uint32_t now) {
 	zg_xf_identity(&xf);
 	zg_xf_translate(&xf, 0, (1 - e) * -24, 0);
 	zg_set_xf(&xf);
-	bool dots = dotted(app);
-	zg_rect(0, d.y, W, d.h, 0, zc_alpha(dots ? pal.bg : pal.surface2, a));
-	if (dots) zg_border(0, d.y, W, d.h, 0, 1.2f, zc_alpha(pal.text, a));
+	zg_rect(0, d.y, W, d.h, 0, zc_alpha(pal.surface2, a));
 	zt_draw(d.T, M.margin, d.y + d.ty, zc_alpha(pal.text, a));
 	if (o->msg && *o->msg) zt_draw(d.L, M.margin, d.y + d.my, zc_alpha(pal.text2, a));
 	for (int i = 0; i < o->count; i++) {

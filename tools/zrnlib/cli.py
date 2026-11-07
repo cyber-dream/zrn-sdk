@@ -397,8 +397,6 @@ def cmd_render(args, out):
            "EGL_LOG_LEVEL": "fatal", "MESA_LOG_LEVEL": "error"}
     if args.page is not None:
         env["ZUI_RENDER_PAGE"] = str(args.page)
-    if args.style:
-        env["ZUI_STYLE"] = args.style
     if args.scroll:
         env["ZUI_RENDER_SCROLL"] = str(args.scroll)
     p = subprocess.run(app_command(proj, built), cwd=proj.root, env=run_env(built["zrnui"], env),
@@ -442,8 +440,6 @@ def cmd_run(args, out):
     built = build_project(proj, None, out)
     w, h = (int(v) for v in args.size.lower().split("x"))
     env = {"ZUI_WINDOW": f"{w}x{h}", "ZRN_APP_ID": proj.id}
-    if args.style:
-        env["ZUI_STYLE"] = args.style
     if args.scale:
         env["ZUI_SCALE"] = str(args.scale)
     if args.script:
@@ -902,7 +898,6 @@ def parser():
     p = sub.add_parser("render", parents=[common], help="draw a page into a PNG (no display needed)")
     p.add_argument("output")
     p.add_argument("--page", help="number, in the order the app makes pages (0 is the first)")
-    p.add_argument("--style", choices=("metro", "dotmatrix"))
     p.add_argument("--size", default="360x740", help="points, WxH (the S9 is 360x740)")
     p.add_argument("--scale", type=int, default=2, help="pixels per point (the S9 is 4)")
     p.add_argument("--scroll", type=float, help="scroll the page down this many points first")
@@ -911,7 +906,6 @@ def parser():
     p = sub.add_parser("run", parents=[common], help="run in a phone-sized Wayland window")
     p.add_argument("--headless", action="store_true", help="no window: a virtual compositor")
     p.add_argument("--script", help='steps: "wait 500; tap 180 300; type hi; snap a.png; back; quit"')
-    p.add_argument("--style", choices=("metro", "dotmatrix"))
     p.add_argument("--size", default="360x740")
     p.add_argument("--scale", type=int)
     p.add_argument("--timeout", type=float)

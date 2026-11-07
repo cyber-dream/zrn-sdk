@@ -7,7 +7,7 @@
  * A gradient is baked once into a small picture on the unit square (as XAML's default
  * RelativeToBoundingBox maps it) and drawn as a picture stretched over the area: it is smooth, so a
  * small one stretched looks right, and it goes through the same path as any picture: rounded
- * corners, opacity, and DotMatrix turning it into dots by its brightness.
+ * corners and opacity.
  */
 #include <math.h>
 #include <stdio.h>

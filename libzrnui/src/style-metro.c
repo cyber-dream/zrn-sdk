@@ -163,12 +163,6 @@ static void bubble(zui_app *app, zui_node *n) {
 	tail(app, n, c);
 	zg_rect(n->x, n->y + 8, n->w, n->h - 8, 0, c);
 }
-static void dot_bubble(zui_app *app, zui_node *n) {
-	struct zui_palette pal = app->style->palette(app);
-	uint32_t c = n->mine ? pal.text : zc_rgb(app->accent);
-	tail(app, n, c);
-	zg_border(n->x, n->y + 8, n->w, n->h - 8, 0, 1.2f, c);
-}
 
 static void foot(zui_app *app, zui_node *n) {
 	struct zui_palette pal = app->style->palette(app);
@@ -316,27 +310,24 @@ static void field(zui_app *app, zui_node *n, uint32_t now) {
 	(void)now;
 	struct zui_palette pal = app->style->palette(app);
 	float x = n->x, w = n->w, y = n->y;
-	bool dotted = app->style == &zui_style_dotmatrix;
 	float by = n->inline_hint ? y : y + 22, h = M.field_h;
 	if (!n->inline_hint) {
 		struct zt_layout *C = zt_slot_get(&n->t[1], n->subtitle ? n->subtitle : "", ZT_REGULAR, 13, w, 1);
 		zt_draw(C, x, y, pal.text2);
 	}
 	/* Metro's box is pale with dark text; a pale fill of dots would drown the text */
-	uint32_t ink = dotted ? pal.text : 0x000000ff;
-	if (dotted) zg_border(x, by, w, h, 0, 1.2f, pal.text);
-	else zg_rect(x, by, w, h, 0, n->focused ? 0xffffffff : 0xcfcfcfff);
+	uint32_t ink = 0x000000ff;
+	zg_rect(x, by, w, h, 0, n->focused ? 0xffffffff : 0xcfcfcfff);
 	if (n->inline_hint && (!n->text || !*n->text) && !n->focused) {
 		struct zt_layout *P = zt_slot_get(&n->t[1], n->subtitle ? n->subtitle : "", ZT_REGULAR, 16, w - 20, 1);
-		zt_draw(P, x + 10, by + (h - P->line_h) / 2, dotted ? pal.text2 : 0x595959ff);
+		zt_draw(P, x + 10, by + (h - P->line_h) / 2, 0x595959ff);
 	}
 	if (zui_field_of(n)->multiline) {
 		h = n->h;
 		zg_rect(x, by, w, h, 0, n->focused ? 0xffffffff : 0xcfcfcfff);
-		if (dotted) { zg_rect(x, by, w, h, 0, 0x000000ff); zg_border(x, by, w, h, 0, 1.2f, pal.text); }
 		/* the tail, as WhatsApp's box has at its bottom right */
 		for (int i = 0; i < 12; i += 2)
-			zg_rect(x + w - 12 + i, by + h, 2, (12 - i) * 0.67f, 0, dotted ? pal.text : n->focused ? 0xffffffff : 0xcfcfcfff);
+			zg_rect(x + w - 12 + i, by + h, 2, (12 - i) * 0.67f, 0, n->focused ? 0xffffffff : 0xcfcfcfff);
 		char *t = NULL;
 		const char *txt = n->text ? n->text : "";
 		if (n->focused) {
@@ -364,7 +355,7 @@ static void field(zui_app *app, zui_node *n, uint32_t now) {
 			if (over > 0) zg_noclip();
 		} else {
 			struct zt_layout *P = zt_slot_get(&n->t[1], n->subtitle ? n->subtitle : "", ZT_REGULAR, 16, w - 20, 1);
-			zt_draw(P, x + 10, by + (h - P->line_h) / 2, dotted ? pal.text2 : 0x595959ff);
+			zt_draw(P, x + 10, by + (h - P->line_h) / 2, 0x595959ff);
 		}
 		free(t);
 		return;
@@ -376,7 +367,7 @@ static void field(zui_app *app, zui_node *n, uint32_t now) {
 		/* one bullet for each character, not each byte */
 		size_t chars = 0;
 		for (const char *c = n->text; *c; c++) chars += ((unsigned char)*c & 0xc0) != 0x80;
-		const char *bullet = dotted ? "*" : "\xe2\x80\xa2";
+		const char *bullet = "\xe2\x80\xa2";
 		size_t bl = strlen(bullet);
 		dots_text = malloc(chars * bl + 1);
 		for (size_t i = 0; i < chars; i++) memcpy(dots_text + i * bl, bullet, bl);
@@ -498,59 +489,3 @@ const struct zui_style zui_style_metro = {
 	.flat_cards = true,
 };
 
-/* DotMatrix: the same widgets, the same places. The renderer draws every fill as
- * dots on one lattice (zg_set_dots) and text in the 3x5 dot type (zt_set_dot_type). */
-static struct zui_palette dot_palette(const zui_app *app) {
-	uint32_t main_c = zc_rgb(app->dot_main), acc = zc_rgb(app->accent);
-	struct zui_palette p = {
-		.bg = 0x000000ff, .surface = 0x000000ff, .surface2 = 0x000000ff,
-		.text = main_c, .text2 = zc_mix(main_c, 0x000000ff, 0.4f), .text3 = zc_mix(main_c, 0x000000ff, 0.62f),
-		.divider = 0x00000000, .track = zc_mix(main_c, 0x000000ff, 0.7f), .knob = main_c,
-		.shadow = 0x00000000, .danger = acc, .scrim = 0x000000b3,
-		.on_accent = main_c, .accent_text = acc, .bubble_caption = zc_mix(main_c, 0x000000ff, 0.4f),
-	};
-	return p;
-}
-
-const struct zui_style zui_style_dotmatrix = {
-	.name = "dotmatrix",
-	.fonts = {
-		[ZT_REGULAR] = "Selawik-Regular.ttf;Segoe UI",
-		[ZT_MEDIUM] = "Selawik-Semibold.ttf;Segoe UI Semibold",
-		[ZT_STRONG] = "Selawik-Semibold.ttf;Segoe UI Semibold",
-		[ZT_LIGHT] = "Selawik-Semilight.ttf;Segoe UI Semilight",
-	},
-	.line_spacing = 1.25f,
-	.transition_ms = 720,
-	.palette = dot_palette,
-	.m = {
-		.margin = 24, .top = 56, .gap = 12, .card_r = 0, .card_pad = 0, .section_gap = 10,
-		.text = 16, .heading = 25.5f, .caption = 13, .label = 13, .title = 48, .bar_title = 0,
-		.item_h = 52, .item_h2 = 66, .item_title = 21, .item_sub = 13, .icon_tile = 0,
-		.button_h = 40, .button_r = 0, .button_text = 14.5f,
-		.field_h = 44, .field_r = 0,
-		.title_h = 152, .title_compact_h = 106, .large_title_h = 0,
-	},
-	.header = header,
-	.page_top = page_top,
-	.card = card,
-	.divider = divider,
-	.section_label = section_label,
-	.button = button,
-	.item = item,
-	.toggle = toggle,
-	.slider = slider,
-	.progress = progress,
-	.field = field,
-	.busy = busy,
-	.toast = toast,
-	.tabs = tabs,
-	.tabs_h = 0,
-	.bubble = dot_bubble,
-	.bubble_pad = 10,
-	.footer = foot,
-	.press_xf = press_xf,
-	.page_xf = page_xf,
-	.rows_highlight = false,
-	.flat_cards = true,
-};

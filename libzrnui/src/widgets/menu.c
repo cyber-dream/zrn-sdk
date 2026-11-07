@@ -34,11 +34,9 @@ int menu_row_at(zui_app *app, struct ov *o, float x, float y) {
 
 void draw_menu(zui_app *app, struct ov *o, float a) {
 	struct zui_palette pal = zui_pal(app);
-	bool dots = dotted(app);
 	float W = app->width, h = o->count * MENU_ROW + 16, y = o->y;
-	uint32_t paper = dots ? pal.bg : pal.text, ink = dots ? pal.text : pal.bg;
+	uint32_t paper = pal.text, ink = pal.bg;
 	zg_rect(0, y, W, h, 0, zc_alpha(paper, a));
-	if (dots) zg_border(0, y, W, h, 0, 1.2f, zc_alpha(pal.text, a));
 	for (int i = 0; i < o->count; i++) {
 		float top = y + 8 + i * MENU_ROW;
 		bool down = o->pressed == i;

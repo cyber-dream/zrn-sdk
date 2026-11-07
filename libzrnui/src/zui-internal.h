@@ -43,11 +43,6 @@ void zg_shader_free(unsigned program);
 void zg_shader_rect(unsigned program, float x, float y, float w, float h, float r, float time,
 	int nuniforms, const char *const *names, const float (*values)[4]);
 void zg_image(unsigned tex, float x, float y, float w, float h, float r, float crop_x, float crop_y);
-/* DotMatrix: everything filled comes out as dots `pitch` points apart on one
- * lattice (0: off); a picture as dots of that colour at its brightness */
-void zg_set_dots(float pitch, uint32_t main_rgb);
-void zg_set_dot_origin(float y);
-void zg_dot(float cx, float cy, float radius, uint32_t rgba);
 void zg_use_row_batcher(void);
 unsigned zg_main_generation(void);
 bool zg_ready_here(void);
@@ -95,8 +90,6 @@ void zt_use_row_cache(void);
 void zui_lock(void);
 void zui_unlock(void);
 void zt_set_fonts(const char *const files[ZT_FONTS], float line_spacing);
-/* DotMatrix's 3x5 dot type in place of all fonts (and of shaping) */
-void zt_set_dot_type(bool on);
 /* max_w <= 0: one line, no wrapping; max_lines 1 with max_w > 0: ellipsis */
 struct zt_layout *zt_layout_make(const char *utf8, int font, float size, float max_w, int max_lines);
 void zt_layout_free(struct zt_layout *layout);
@@ -330,7 +323,6 @@ struct zui_app {
 	float fit_h;	/* a fullscreen page: the height an image set to fit has */
 	char *app_id, *title;
 	const struct zui_style *style;
-	uint32_t dot_main;
 	uint32_t accent;	/* 0xRRGGBB */
 	unsigned style_gen;
 	zui_node *page;		/* in front */
@@ -521,12 +513,10 @@ struct zui_style {
 	bool rows_highlight;
 	bool flat_cards;	/* a card's rows move one by one in page changes */
 };
-extern const struct zui_style zui_style_metro, zui_style_dotmatrix;
-void zui_dot_palette(uint32_t *main_rgb, uint32_t *accent_rgb);
+extern const struct zui_style zui_style_metro;
 const struct zui_style *zui_style_find(const char *name);
 struct zui_palette zui_pal(const zui_app *app);
 /* a small picture by name, in a box `size` points across */
-extern bool zui_icons_as_dots;
 void zui_icon(const char *name, float x, float y, float size, float stroke, uint32_t rgba);
 float zui_ease_out(float t);		/* cubic */
 float zui_ease_emph(float t);		/* zrnCoolStyle's settle: quick start, long soft end */

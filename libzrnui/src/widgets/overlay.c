@@ -238,7 +238,7 @@ static float ov_alpha(const struct ov *o, uint32_t now) {
 
 static void scrim(zui_app *app, float a, bool solid) {
 	struct zui_palette pal = zui_pal(app);
-	float al = solid ? 1 : dotted(app) ? 0.97f : (float)(pal.scrim & 0xff) / 255.0f;
+	float al = solid ? 1 : (float)(pal.scrim & 0xff) / 255.0f;
 	zg_rect(0, 0, app->width, app->height, 0, zc_alpha(pal.bg, al * a));
 }
 
@@ -261,7 +261,7 @@ void zui_widgets_draw_over(zui_app *app, uint32_t now) {
 		break;
 	case OV_BOARD:
 		/* the page stays faintly there under the tiles, ZrnMetroCore's 0.85 */
-		zg_rect(0, 0, app->width, app->height, 0, zc_alpha(zui_pal(app).bg, (dotted(app) ? 0.97f : 0.85f) * (o->closing || getenv("ZUI_NO_OPEN") ? a : clamp01((float)(int32_t)(now - o->t0) / 100))));
+		zg_rect(0, 0, app->width, app->height, 0, zc_alpha(zui_pal(app).bg, 0.85f * (o->closing || getenv("ZUI_NO_OPEN") ? a : clamp01((float)(int32_t)(now - o->t0) / 100))));
 		draw_board(app, o, now);
 		break;
 	default:

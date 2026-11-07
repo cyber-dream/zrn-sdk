@@ -49,12 +49,10 @@ static float swivel_ease(float t, bool in) {
 }
 
 void draw_board(zui_app *app, struct ov *o, uint32_t now) {
-	struct zui_palette pal = zui_pal(app);
 	float x0, top, side;
 	board_geometry(app, o, &x0, &top, &side);
 	bool nomove = getenv("ZUI_NO_OPEN") != NULL;
 	float age = (float)(int32_t)(now - (o->closing ? o->t_close : o->t0));
-	bool dots = dotted(app);
 	for (int i = 0; i < o->count; i++) {
 		float own = age - i * BOARD_STAGGER;
 		float angle, alpha = 1;
@@ -80,13 +78,7 @@ void draw_board(zui_app *app, struct ov *o, uint32_t now) {
 		bool live = o->live[i];
 		uint32_t fill = live ? zc_rgb(app->accent) : 0x262626ff;
 		uint32_t ink = live ? 0xffffffff : 0xd9d9d9ff;
-		if (dots) {
-			fill = live ? zc_rgb(app->accent) : pal.text3;
-			zg_border(cx, cy, side, side, 0, 1.2f, zc_alpha(fill, alpha));
-			ink = live ? pal.text : pal.text3;
-		} else {
-			zg_rect(cx, cy, side, side, 0, zc_alpha(fill, alpha));
-		}
+		zg_rect(cx, cy, side, side, 0, zc_alpha(fill, alpha));
 		struct zt_layout *L = zt_layout_make(o->item[i], ZT_LIGHT, BOARD_FONT, side - BOARD_INSET, 1);
 		zt_draw(L, cx + BOARD_INSET, cy + side - BOARD_INSET - L->line_h, zc_alpha(ink, alpha));
 		zt_layout_free(L);

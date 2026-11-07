@@ -47,11 +47,8 @@ void draw_check(zui_app *app, zui_node *n, uint32_t now) {
 	} else {
 		zg_border(x, y, 26, 26, 0, 2, ink);
 		if (k > 0.01f) {
-			if (dotted(app)) zui_icon("check", x + 2, y + 2, 22, 2, zc_alpha(ink, k));
-			else {
-				zg_rect(x + 4, y + 4, 18, 18, 0, zc_alpha(ink, k));
-				zui_icon("check", x + 1, y + 1, 24, 2.2f, zc_alpha(pal.bg, k));
-			}
+			zg_rect(x + 4, y + 4, 18, 18, 0, zc_alpha(ink, k));
+			zui_icon("check", x + 1, y + 1, 24, 2.2f, zc_alpha(pal.bg, k));
 		}
 	}
 	text_at(&n->t[0], n->text, ZT_LIGHT, 20, x + 26 + 14, n->y + (h - zt_line_height(20)) / 2, ink,

@@ -356,7 +356,7 @@ void draw_hub(zui_app *app, zui_node *hub, const struct zg_xf *base, uint32_t no
 		} else {
 			zui_draw_pixmap(app, hb->bg, x, hub->y, span, hub->h, 0, false, pal.surface2);
 		}
-		if (!dotted(app)) zg_rect(0, hub->y, W, hub->h, 0, zc_alpha(pal.bg, 0.6f));
+		zg_rect(0, hub->y, W, hub->h, 0, zc_alpha(pal.bg, 0.6f));
 	}
 	/* the hub's own title, over the picture, going by slower than the sections */
 	float top = hub->y + (hb ? hb->top : 0);

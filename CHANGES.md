@@ -1,5 +1,16 @@
 # Changes that break compatibility
 
+## DotMatrix is gone; Metro is the one style
+
+The dot-matrix style (dots for every fill, the 3x5 dot type, its six palettes) is removed from the library.
+
+**What broke**
+
+- `ZUI_STYLE`, `ZTRF_SHELL_STYLE` and `style` in ztmetro's config are not read; the style is Metro.
+  `zui_app_set_style` takes only `"metro"`, and `zrn render --style` and `zrn run --style` are gone.
+- `zui_app_set_accent` works as it did in Metro; `dotmatrix_palette` in the config is not read.
+- No change for apps that did not ask for DotMatrix.
+
 ## The hub's and its sections' titles are arguments again (Header is a property in WP)
 
 `Hub.Header` and `HubSection.Header` are properties on Windows Phone, so they are arguments here,

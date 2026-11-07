@@ -4,7 +4,6 @@
 #include <string.h>
 #include "zui-internal.h"
 
-bool zui_icons_as_dots;
 
 struct pen { float x, y, k, w; uint32_t c; };
 
@@ -28,8 +27,7 @@ static void dot(const struct pen *p, float cx, float cy, float r) {
 	zg_circle(p->x + cx * p->k, p->y + cy * p->k, r * p->k, p->c);
 }
 
-/* Segoe MDL2 Assets, the system's, by the names apps use. DotMatrix and a system
- * without the font draw the strokes below: they fall on the lattice as dots. */
+/* Segoe MDL2 Assets, the system's, by the names apps use. A system without the font draws the strokes below. */
 static const struct { const char *name; uint32_t code; } MDL2[] = {
 	{ "send", 0xE724 }, { "settings", 0xE713 }, { "smile", 0xE76E }, { "chevron", 0xE76C }, { "back", 0xE72B }, { "check", 0xE73E }, { "plus", 0xE710 },
 	{ "close", 0xE711 }, { "more", 0xE712 }, { "search", 0xE721 }, { "wifi", 0xE701 }, { "bluetooth", 0xE702 },
@@ -40,9 +38,8 @@ static const struct { const char *name; uint32_t code; } MDL2[] = {
 
 void zui_icon(const char *name, float x, float y, float size, float stroke, uint32_t c) {
 	if (!name) return;
-	if (!zui_icons_as_dots)
-		for (size_t i = 0; i < sizeof(MDL2) / sizeof(MDL2[0]); i++)
-			if (!strcmp(MDL2[i].name, name) && zt_icon(MDL2[i].code, x, y, size, c)) return;
+	for (size_t i = 0; i < sizeof(MDL2) / sizeof(MDL2[0]); i++)
+		if (!strcmp(MDL2[i].name, name) && zt_icon(MDL2[i].code, x, y, size, c)) return;
 	struct pen p = { x, y, size / 24.0f, stroke, c };
 	const struct pen *P = &p;
 	if (!strcmp(name, "send")) {

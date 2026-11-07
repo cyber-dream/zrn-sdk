@@ -24,7 +24,7 @@ struct vtx {
 	float r, bw, blur, mode;
 	uint8_t c[4];		/* premultiplied */
 };
-enum { M_FILL = 0, M_BORDER = 1, M_SHADOW = 2, M_GLYPH = 3, M_IMAGE = 4, M_DOT = 5, M_ROW = 6, M_WEDGE = 7 };
+enum { M_FILL = 0, M_BORDER = 1, M_SHADOW = 2, M_GLYPH = 3, M_IMAGE = 4, M_ROW = 6, M_WEDGE = 7 };
 
 #define MAX_QUADS 8192
 static struct {
@@ -33,8 +33,6 @@ static struct {
 	GLuint program, vbo, ibo, atlas;
 	GLint u_size, u_eye, u_px, u_atlas, u_image;
 	GLuint bound_image;
-	GLint u_dots, u_dorg, u_main;
-	float dots, dorg; uint32_t dmain;
 	struct vtx v[MAX_QUADS * 4];
 	int n;		/* quads */
 	int fb_w, fb_h;
@@ -66,28 +64,18 @@ static const char FS[] =
 	"#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\n"
 	"varying vec2 v_local; varying vec2 v_half; varying vec4 v_p; varying vec4 v_color;"
 	"uniform float u_px; uniform sampler2D u_atlas; uniform sampler2D u_image;"
-	"uniform float u_dots; uniform float u_dorg; uniform vec3 u_main;"
 	"float box(vec2 p, vec2 b, float r){ vec2 q=abs(p)-b+r;"
 	" return min(max(q.x,q.y),0.0)+length(max(q,0.0))-r; }"
 	"void main(){ float mode=v_p.w;"
 	" if(mode>6.5){ float e1=box(v_local,v_half,0.0); float e2=dot(v_local,v_p.xy)+v_p.z;"
 	"  gl_FragColor=v_color*clamp(0.5-e1/u_px,0.0,1.0)*clamp(0.5-e2/u_px,0.0,1.0); return; }"
 	" if(mode>5.5){ gl_FragColor=texture2D(u_image,vec2(0.5+0.5*v_local.x/v_half.x,0.5-0.5*v_local.y/v_half.y))*v_color.a; return; }"
-	" if(mode>4.5){ float q=box(v_local,v_half,v_p.x); gl_FragColor=v_color*clamp(0.5-q/u_px,0.0,1.0); return; }"
-	" vec2 off=vec2(0.0); float lit=1.0;"
-	" if(u_dots>0.0&&mode<2.5||u_dots>0.0&&mode>3.5){ vec2 fc=vec2(gl_FragCoord.x,-gl_FragCoord.y)*u_px;"
-	"  fc.y-=u_dorg; vec2 cell=(floor(fc/u_dots)+0.5)*u_dots; off=cell-fc;"
-	"  lit=clamp(0.5+(u_dots*0.36-length(off))/u_px,0.0,1.0); }"
-	" if(mode>3.5){ vec2 lc=v_local+off; float e=box(lc,v_half,v_p.x);"
-	"  if(u_dots>0.0){ vec2 uu=clamp(0.5+0.5*lc/v_half*v_p.yz,0.0,1.0); vec4 tx=texture2D(u_image,uu);"
-	"   float lum=0.12+0.88*dot(tx.rgb,vec3(0.3,0.59,0.11)); gl_FragColor=vec4(u_main*lum,1.0)*v_color.a*lit*step(e,0.0); return; }"
-	"  e=box(v_local,v_half,v_p.x);"
+	" if(mode>3.5){ float e=box(v_local,v_half,v_p.x);"
 	"  vec2 uv=0.5+0.5*v_local/v_half*v_p.yz; uv=clamp(uv,0.0,1.0);"
 	"  gl_FragColor=texture2D(u_image,uv)*v_color.a*clamp(0.5-e/u_px,0.0,1.0); return; }"
 	" if(mode>2.5){ gl_FragColor=v_color*texture2D(u_atlas,v_local).a; return; }"
-	" float d=box(v_local+off,v_half,v_p.x);"
+	" float d=box(v_local,v_half,v_p.x);"
 	" float a;"
-	" if(u_dots>0.0&&mode<1.5){ a=step(d,0.0); if(mode>0.5) a*=step(-v_p.y-u_dots*0.5,d); gl_FragColor=v_color*a*lit; return; }"
 	" if(mode<0.5){ a=clamp(0.5-d/u_px,0.0,1.0); }"
 	" else if(mode<1.5){ a=clamp(0.5-d/u_px,0.0,1.0)*clamp(0.5+(d+v_p.y)/u_px,0.0,1.0); }"
 	" else { float b=max(v_p.z,u_px); a=1.0-smoothstep(-b,b,d); a=a*a*(3.0-2.0*a); }"
@@ -138,9 +126,6 @@ bool zg_init(void) {
 	G.u_px = glGetUniformLocation(G.program, "u_px");
 	G.u_atlas = glGetUniformLocation(G.program, "u_atlas");
 	G.u_image = glGetUniformLocation(G.program, "u_image");
-	G.u_dots = glGetUniformLocation(G.program, "u_dots");
-	G.u_dorg = glGetUniformLocation(G.program, "u_dorg");
-	G.u_main = glGetUniformLocation(G.program, "u_main");
 	glGenBuffers(1, &G.vbo);
 	glGenBuffers(1, &G.ibo);
 	uint16_t *idx = malloc(sizeof(uint16_t) * 6 * (65536 / 4));
@@ -395,7 +380,7 @@ static void shape(float x, float y, float w, float h, float r, float bw, float b
 	float hx = w / 2, hy = h / 2;
 	if (r > hx) r = hx;
 	if (r > hy) r = hy;
-	float pad = 1.5f / G.scale + blur * 1.2f + G.dots;
+	float pad = 1.5f / G.scale + blur * 1.2f;
 	float x0 = x - pad, y0 = y - pad, x1 = x + w + pad, y1 = y + h + pad;
 	float cx = x + hx, cy = y + hy;
 	const float pos[4][2] = { { x0, y0 }, { x1, y0 }, { x0, y1 }, { x1, y1 } };
@@ -405,11 +390,6 @@ static void shape(float x, float y, float w, float h, float r, float bw, float b
 }
 
 void zg_rect(float x, float y, float w, float h, float r, uint32_t rgba) {
-	/* black is what is behind the dots: a bar over a list must hide it whole */
-	if (G.dots && (rgba >> 8) == 0) {
-		shape(x, y, w, h, r, 0, 0, M_DOT, rgba);
-		return;
-	}
 	shape(x, y, w, h, r, 0, 0, M_FILL, rgba);
 }
 
@@ -479,26 +459,6 @@ void zg_arc(float cx, float cy, float radius, float a0, float a1, float width, u
 		px = x;
 		py = y;
 	}
-}
-
-void zg_set_dots(float pitch, uint32_t main_rgb) {
-	flush();
-	G.dots = pitch;
-	G.dmain = main_rgb;
-	glUniform1f(G.u_dots, pitch);
-	glUniform1f(G.u_dorg, 0);
-	glUniform3f(G.u_main, ((main_rgb >> 16) & 255) / 255.0f, ((main_rgb >> 8) & 255) / 255.0f, (main_rgb & 255) / 255.0f);
-}
-
-void zg_set_dot_origin(float y) {
-	if (!G.dots || y == G.dorg) { G.dorg = y; return; }
-	flush();
-	G.dorg = y;
-	glUniform1f(G.u_dorg, y);
-}
-
-void zg_dot(float cx, float cy, float radius, uint32_t rgba) {
-	shape(cx - radius, cy - radius, radius * 2, radius * 2, radius, 0, 0, M_DOT, rgba);
 }
 
 /* ---- rows painted once: into a texture, then only moved ---- */
@@ -592,22 +552,16 @@ void zg_image(unsigned tex, float x, float y, float w, float h, float r, float c
  * A brush can paint with one: the same vertex stage as everything else, and at each pixel the colour the
  * app's `vec4 zui_shade(vec2 uv)` gives (uv 0..1 over the area, y down; straight, not premultiplied
  * alpha). It may read u_time (seconds), u_res (the area's size in points) and any uniform of its own.
- * The area's rounded corners, the alpha and DotMatrix (the colour's brightness as dots) are done here. */
+ * The area's rounded corners and the alpha are done here. */
 static const char USER_FS_HEAD[] =
 	"#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\n"
 	"varying vec2 v_local; varying vec2 v_half; varying vec4 v_p; varying vec4 v_color;"
-	"uniform float u_px; uniform float u_dots; uniform float u_dorg; uniform vec3 u_main;"
+	"uniform float u_px;"
 	"uniform float u_time; uniform vec2 u_res;\n";
 static const char USER_FS_TAIL[] =
 	"\nfloat zui_box(vec2 p, vec2 b, float r){ vec2 q=abs(p)-b+r;"
 	" return min(max(q.x,q.y),0.0)+length(max(q,0.0))-r; }"
 	"void main(){"
-	" if(u_dots>0.0){ vec2 fc=vec2(gl_FragCoord.x,-gl_FragCoord.y)*u_px; fc.y-=u_dorg;"
-	"  vec2 cell=(floor(fc/u_dots)+0.5)*u_dots; vec2 off=cell-fc;"
-	"  float lit=clamp(0.5+(u_dots*0.36-length(off))/u_px,0.0,1.0);"
-	"  vec2 lc=v_local+off; float e=zui_box(lc,v_half,v_p.x);"
-	"  vec4 c=zui_shade(0.5+0.5*lc/v_half); float lum=0.12+0.88*dot(c.rgb,vec3(0.3,0.59,0.11));"
-	"  gl_FragColor=vec4(u_main*lum,1.0)*c.a*v_color.a*lit*step(e,0.0); return; }"
 	" float e=zui_box(v_local,v_half,v_p.x);"
 	" vec4 c=zui_shade(0.5+0.5*v_local/v_half);"
 	" gl_FragColor=vec4(c.rgb*c.a,c.a)*v_color.a*clamp(0.5-e/u_px,0.0,1.0); }";
@@ -660,10 +614,6 @@ void zg_shader_rect(unsigned prog, float x, float y, float w, float h, float r, 
 	glUniform2f(glGetUniformLocation(prog, "u_size"), G.w, G.h);
 	glUniform1f(glGetUniformLocation(prog, "u_eye"), (G.h / 2) / tanf(17.0f * (float)M_PI / 180.0f));
 	glUniform1f(glGetUniformLocation(prog, "u_px"), 1.0f / G.scale);
-	glUniform1f(glGetUniformLocation(prog, "u_dots"), G.dots);
-	glUniform1f(glGetUniformLocation(prog, "u_dorg"), G.dorg);
-	glUniform3f(glGetUniformLocation(prog, "u_main"), ((G.dmain >> 16) & 255) / 255.0f,
-		((G.dmain >> 8) & 255) / 255.0f, (G.dmain & 255) / 255.0f);
 	glUniform1f(glGetUniformLocation(prog, "u_time"), time);
 	glUniform2f(glGetUniformLocation(prog, "u_res"), w, h);
 	for (int i = 0; i < nuniforms; i++) {

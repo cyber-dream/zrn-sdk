@@ -66,11 +66,9 @@ void draw_picker(zui_app *app, zui_node *n, uint32_t now) {
 	struct picker *p = picker_of(n);
 	float o = app->wl ? picker_open(n, now) : (n->on ? 1 : 0);
 	float x = n->x, w = n->w, y = n->y + 24, h = PICK_ROW + ((p->count - 1) * PICK_ROW + 8) * o;
-	bool dots = dotted(app);
 	text_at(&n->t[0], n->text, ZT_REGULAR, 15, n->x, n->y, pal.text2, w);
 	/* the box: an outline closed, the edit background open */
-	uint32_t paper = dots ? pal.bg : 0xffffffff;
-	if (!dots) zg_rect(x, y, w, h, 0, zc_alpha(paper, o));
+	zg_rect(x, y, w, h, 0, zc_alpha(0xffffffff, o));
 	zg_border(x, y, w, h, 0, 2, pal.text);
 	/* (no clip: an option never leaves the box, from closed to open) */
 	for (int i = 0; i < p->count; i++) {
@@ -80,9 +78,9 @@ void draw_picker(zui_app *app, zui_node *n, uint32_t now) {
 		if (i == p->sel) ink = zc_mix(pal.text, pal.accent_text, o);
 		else {
 			if (o <= 0.001f) continue;
-			ink = zc_alpha(dots ? pal.text : 0x000000ff, o);
+			ink = zc_alpha(0x000000ff, o);
 		}
-		if (i == p->sel && !dots) ink = zc_mix(0xffffffff, zc_rgb(app->accent), o);
+		if (i == p->sel) ink = zc_mix(0xffffffff, zc_rgb(app->accent), o);
 		text_now(p->opt[i], ZT_REGULAR, 17, x + 10, top + 9, ink, w - 20);
 	}
 }

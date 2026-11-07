@@ -67,7 +67,6 @@ struct ov {
 
 /* the widgets' own files */
 /* common.c */
-bool dotted(const zui_app *app);
 float clamp01(float v);
 char *dupstr(const char *s);
 void text_at(struct zt_slot *slot, const char *text, int font, float size, float x, float y,

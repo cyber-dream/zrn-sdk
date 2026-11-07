@@ -401,7 +401,6 @@ static void paint_slot(zui_node *n, zui_node *s) {
 	if (!s->row_tex) { s->row_tex = zg_row_tex(tw, th); s->row_tw = tw; s->row_th = th; }
 	float ox = s->x, oy = s->y;
 	zg_row_begin(s->row_tex, tw, th, scale);
-	if (app->style == &zui_style_dotmatrix) { zg_set_dots(2.3f, app->dot_main); zg_set_dot_origin(-oy); }
 	struct zg_xf xf;
 	zg_xf_identity(&xf);
 	zg_xf_translate(&xf, 0, -oy, 0);

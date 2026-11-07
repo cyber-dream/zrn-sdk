@@ -31,7 +31,7 @@ $(B)/libzrnui.so: $(B)/libzrnui.so.$(VERSION)
 
 $(B)/zrnui.pc: Makefile
 	@mkdir -p $(B)
-	printf 'prefix=%s\nlibdir=%s\nincludedir=%s/include\n\nName: zrnui\nDescription: ztOS app toolkit (GLES2, Metro and DotMatrix)\nVersion: %s\nRequires.private: wayland-client wayland-egl egl glesv2 freetype2 harfbuzz fontconfig libpng xkbcommon gbm\nLibs: -L$${libdir} -lzrnui\nCflags: -I$${includedir}\n' \
+	printf 'prefix=%s\nlibdir=%s\nincludedir=%s/include\n\nName: zrnui\nDescription: ztOS app toolkit (GLES2, Metro)\nVersion: %s\nRequires.private: wayland-client wayland-egl egl glesv2 freetype2 harfbuzz fontconfig libpng xkbcommon gbm\nLibs: -L$${libdir} -lzrnui\nCflags: -I$${includedir}\n' \
 		'$(PREFIX)' '$(LIBDIR)' '$(PREFIX)' '$(VERSION)' > $@
 
 install: all $(B)/zrnui.pc
@@ -44,7 +44,7 @@ install: all $(B)/zrnui.pc
 	install -Dm644 -t $(DESTDIR)$(PREFIX)/share/zrnui/fonts fonts/*.ttf fonts/*.txt
 
 # for the IDE, which has this directory as its Makefile project: the examples
-# run from the repository's Makefile (make run STYLE=metro|dotmatrix WINDOW=WxH)
+# run from the repository's Makefile (make run WINDOW=WxH)
 run run-helloworld run-hello:
 	$(MAKE) -C .. $@
 

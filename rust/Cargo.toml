@@ -3,7 +3,7 @@ name = "zrnui"
 version = "0.1.0"
 edition = "2021"
 license = "LGPL-2.1-or-later"
-description = "libzrnui for Rust: the ztOS app toolkit (GLES2, Metro and DotMatrix), a safe wrapper over its C ABI"
+description = "libzrnui for Rust: the ztOS app toolkit (GLES2, Metro), a safe wrapper over its C ABI"
 links = "zrnui"
 build = "build.rs"
 

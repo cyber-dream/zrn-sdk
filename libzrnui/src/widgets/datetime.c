@@ -228,7 +228,7 @@ void draw_pick(zui_app *app, struct ov *o, float a, uint32_t now) {
 	if (o->kind == OV_TIME)
 		text_now(":", ZT_LIGHT, 34, o->col[0].x + o->col[0].w + 4, cy - 24, zc_alpha(pal.text3, a), 0);
 	/* the bar: a tick and a cross */
-	zg_rect(0, H - BAR_H, W, BAR_H, 0, zc_alpha(dotted(app) ? pal.bg : pal.surface2, a));
+	zg_rect(0, H - BAR_H, W, BAR_H, 0, zc_alpha(pal.surface2, a));
 	draw_pick_button(app, W * 0.25f, H - BAR_H + 8, "check", "done", o->pressed == 0, a);
 	draw_pick_button(app, W * 0.75f, H - BAR_H + 8, "close", "cancel", o->pressed == 1, a);
 	(void)now;

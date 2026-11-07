@@ -21,7 +21,6 @@
 #include "zui-internal.h"
 
 #include <strings.h>
-#define DOT_PALETTE_NAMES { "Mono", "Amber", "Green", "Ice", "White", "Red" }
 #define SLOP 8.0f
 
 ZUI_EXPORT const char *zui_version(void) { return "0.1.0"; }
@@ -175,53 +174,16 @@ static uint32_t system_accent(void) {
 	return 0x0050ef;
 }
 
+/* Metro is the one style; the name is only for what asks for it by name (zui_app_set_style). */
 const struct zui_style *zui_style_find(const char *name) {
 	if (!name) return NULL;
-	if (strcmp(name, "dotmatrix") == 0 || strcmp(name, "DotMatrix") == 0) return &zui_style_dotmatrix;
 	if (strcmp(name, "metro") == 0 || strcmp(name, "Metro") == 0) return &zui_style_metro;
 	return NULL;
 }
 
-/* The style is the system's, so an app never differs from what is around it:
- * the session's (ZTRF_SHELL_STYLE), else `style` in the config, else Metro.
- * ZUI_STYLE is for renders and tests. */
-static const struct zui_style *pick_style(void) {
-	const struct zui_style *s = zui_style_find(getenv("ZUI_STYLE"));
-	if (s) return s;
-	s = zui_style_find(getenv("ZTRF_SHELL_STYLE"));
-	if (s) return s;
-	char v[32];
-	if (config_value("style", v, sizeof(v)) && (s = zui_style_find(v))) return s;
-	return &zui_style_metro;
-}
-
-/* DotMatrix's six palettes: main, accent (ztmetro/retro/dotmatrix.c) */
-void zui_dot_palette(uint32_t *main_rgb, uint32_t *accent_rgb) {
-	static const uint32_t P[6][2] = {
-		{ 0xFFFFFF, 0xFF3B30 }, { 0xFFB02E, 0xFF4B3A }, { 0x8CFF5A, 0xFFD23F },
-		{ 0x9FE7FF, 0xFF6B8A }, { 0xF4F2EC, 0xFF5A3C }, { 0xFF4636, 0xFFC857 },
-	};
-	static const char *const names[6] = DOT_PALETTE_NAMES;
-	char v[32];
-	int k = 0;
-	if (config_value("dotmatrix_palette", v, sizeof(v))) {
-		if (isdigit((unsigned char)v[0])) k = atoi(v);
-		else for (int i = 0; i < 6; i++) if (!strcasecmp(names[i], v)) k = i;
-	}
-	if (k < 0 || k > 5) k = 0;
-	*main_rgb = P[k][0];
-	*accent_rgb = P[k][1];
-}
+static const struct zui_style *pick_style(void) { return &zui_style_metro; }
 
 static void apply_style(zui_app *app) {
-	if (app->style == &zui_style_dotmatrix) {
-		uint32_t main_rgb, acc;
-		zui_dot_palette(&main_rgb, &acc);
-		app->accent = acc;
-		app->dot_main = main_rgb;
-	}
-	zt_set_dot_type(app->style == &zui_style_dotmatrix);
-	zui_icons_as_dots = app->style == &zui_style_dotmatrix;
 	zt_set_fonts(app->style->fonts, app->style->line_spacing);
 	app->style_gen++;
 	app->laid_out = false;
@@ -268,7 +230,6 @@ ZUI_EXPORT void zui_app_set_theme(zui_app *app, const char *theme) {
 }
 
 ZUI_EXPORT void zui_app_set_accent(zui_app *app, uint32_t rgb) {
-	if (app->style == &zui_style_dotmatrix) return;	/* the palette's */
 	app->accent = rgb & 0xffffff;
 	app->dirty = true;
 }
@@ -1976,17 +1937,14 @@ static void draw_page(zui_app *app, zui_node *page, uint32_t now, int role, floa
 	turn_dir = dir;
 	struct zui_scroll *sv = zui_scroller(page);
 	turn_scroll = sv ? sv->scroll : 0;
-	/* DotMatrix's lattice moves with what is on it, or dots would crawl */
 	if (page->bg) {
 		/* the page's own, over the whole window: behind the titles and what scrolls, and itself still */
 		struct zg_xf still;
 		zg_xf_identity(&still);
 		zg_set_xf(&still);
 		zg_set_alpha(1);
-		zg_set_dot_origin(0);
 		zui_brush_paint(app, page->bg, 0, 0, app->width, app->height, 0);
 	}
-	zg_set_dot_origin(role || !sv ? 0 : -roundf(sv->scroll * zui_gfx_scale()) / zui_gfx_scale());
 	/* a pivot or a hub is a page whose body is one thing, its class draws it: one row of the turn */
 	bool body = page->kind == ZK_PIVOT || page->kind == ZK_HUB;
 	int rows = body ? 1 : 0;
@@ -2049,7 +2007,6 @@ static void draw_page(zui_app *app, zui_node *page, uint32_t now, int role, floa
 		}
 	}
 	zg_noclip();
-	zg_set_dot_origin(0);
 	zg_xf_identity(&base);
 	alpha = 1;
 	if (role) st->page_xf(app, t, dir, role == 1, -1, rows + 1, &base, &alpha);
@@ -2074,7 +2031,6 @@ static void draw_page(zui_app *app, zui_node *page, uint32_t now, int role, floa
 
 void zui_draw(zui_app *app, uint32_t now) {
 	zui_frame_begin();
-	zg_set_dots(app->style == &zui_style_dotmatrix ? 2.3f : 0, app->dot_main);
 	const struct zui_style *st = app->style;
 	zui_node *page = app->page;
 	if (!page) return;
@@ -2097,7 +2053,6 @@ void zui_draw(zui_app *app, uint32_t now) {
 		zg_xf_identity(&still);
 		zg_set_xf(&still);
 		zg_set_alpha(1);
-		zg_set_dot_origin(0);
 		zui_brush_paint(app, app->root->bg, 0, 0, app->width, app->height, 0);
 		zg_set_xf(NULL);
 	}

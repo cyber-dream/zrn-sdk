@@ -79,7 +79,6 @@ float layout_tiles(zui_node *g, float x, float y, float w) {
 }
 
 void draw_tile(zui_app *app, zui_node *n, const struct zg_xf *base, uint32_t now) {
-	struct zui_palette pal = zui_pal(app);
 	struct tile *t = tile_of(n);
 	float k = zanim_value(&n->knob, now, NULL);
 	struct zg_xf xf = *base;
@@ -92,11 +91,9 @@ void draw_tile(zui_app *app, zui_node *n, const struct zg_xf *base, uint32_t now
 	zg_set_xf(&xf);
 	float x = n->x, y = n->y, w = n->w, h = n->h;
 	uint32_t base_c = n->tint ? zc_rgb(n->tint & 0xffffff) : zc_rgb(app->accent);
-	bool dots = dotted(app);
 	uint32_t face = back ? zc_mix(base_c, 0x000000ff, 0.35f) : base_c;
-	uint32_t ink = dots ? (back ? pal.text2 : pal.text) : 0xffffffff;
-	if (dots) zg_border(x, y, w, h, 0, 1.2f, back ? pal.text2 : pal.text);
-	else zg_rect(x, y, w, h, 0, face);
+	uint32_t ink = 0xffffffff;
+	zg_rect(x, y, w, h, 0, face);
 	if (back) {
 		struct zt_layout *L = zt_layout_make(t->back, ZT_REGULAR, 15, w - 20, 0);
 		zt_draw(L, x + 10, y + 10, ink);
