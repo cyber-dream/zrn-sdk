@@ -135,16 +135,6 @@ enum zui_kind {
 struct zui_pixmap { int w, h, refs; uint8_t *rgba; unsigned tex, gen; };
 
 #define ZUI_LIST_SLOTS 48
-struct zui_list_state {
-	int count, want0, want1, last_first, last_dir, arrive_from;
-	bool asked;
-	float row_h, *y;	/* y[row], y[count] the end */
-	zui_list_height height;
-	zui_list_bind bind;
-	void *data;
-	zui_node *slot[ZUI_LIST_SLOTS];
-	int slot_row[ZUI_LIST_SLOTS];
-};
 
 /* something moving from one value to another over time */
 struct zanim { float from, to; uint32_t start, ms; float v0, w; };	/* w: a spring, per ms; 0: eased */
@@ -208,7 +198,6 @@ struct zui_node {
 	struct zanim arrive;	/* a new row rising in */
 	char *badge, *monogram;
 	float row_gap;
-	struct zui_list_state *list;
 	/* a row of a list: painted once, then only moved */
 	unsigned row_tex;
 	int row_tw, row_th;
@@ -243,6 +232,21 @@ struct zui_field {
 static inline struct zui_field *zui_field_of(const zui_node *n) {
 	assert(n && n->kind == ZK_FIELD);
 	return (struct zui_field *)n;
+}
+/* A list: the rows are made as they come into sight (children of it, ZUI_LIST_SLOTS at most). */
+struct zui_list {
+	struct zui_node base;
+	int count, want0, want1, last_first, last_dir, arrive_from;
+	bool asked;
+	float row_h, *y;	/* y[row], y[count] the end */
+	zui_list_height height;
+	zui_list_bind bind;
+	void *data;
+	zui_node *slot[ZUI_LIST_SLOTS];
+	int slot_row[ZUI_LIST_SLOTS];
+};
+static inline struct zui_list *zui_list_get(const zui_node *n) {	/* NULL for what is not a list */
+	return n && n->kind == ZK_LIST ? (struct zui_list *)n : NULL;
 }
 static inline struct zui_pivot *zui_pivot_of(const zui_node *n) {
 	assert(n && n->kind == ZK_PIVOT);
@@ -381,7 +385,6 @@ bool zui_has_pressed(const zui_app *app, const zui_node *n);
 void zt_caret_at(const char *text, int upto, float w, float *x, float *y, float *line_h);
 void zui_tabs_step(zui_node *tabs, int dir);
 float zui_list_layout(zui_node *n, float x, float y, float w);
-void zui_list_free(zui_node *n);
 int zui_child_index(const zui_node *c);
 const char *zui_tab_title(const zui_node *item);
 zui_node *zui_tab_at(zui_node *tabs, int i);

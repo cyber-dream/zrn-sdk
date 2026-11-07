@@ -219,7 +219,7 @@ void zui_draw_leading(zui_app *app, zui_node *n, float x, float y, float size, f
 }
 
 /* ---- long lists ---- */
-static void rebuild_prefix(struct zui_list_state *L) {
+static void rebuild_prefix(struct zui_list *L) {
 	free(L->y);
 	L->y = malloc(sizeof(float) * (size_t)(L->count + 1));
 	float at = 0;
@@ -232,8 +232,7 @@ static void rebuild_prefix(struct zui_list_state *L) {
 
 ZUI_EXPORT zui_node *zui_list(zui_node *parent, int count, zui_list_height height, zui_list_bind bind, void *data) {
 	zui_node *n = zui_node_new_kind(parent, ZK_LIST);
-	struct zui_list_state *L = calloc(1, sizeof(*L));
-	n->list = L;
+	struct zui_list *L = zui_list_get(n);
 	L->count = count < 0 ? 0 : count;
 	L->height = height;
 	L->bind = bind;
@@ -243,23 +242,23 @@ ZUI_EXPORT zui_node *zui_list(zui_node *parent, int count, zui_list_height heigh
 	return n;
 }
 
-ZUI_EXPORT void zui_list_set_row_height(zui_node *n, double h) { n->list->row_h = (float)h; rebuild_prefix(n->list); n->app->laid_out = false; }
+ZUI_EXPORT void zui_list_set_row_height(zui_node *n, double h) { zui_list_get(n)->row_h = (float)h; rebuild_prefix(zui_list_get(n)); n->app->laid_out = false; }
 
 static void slot_drop(zui_node *list, int i) {
 	zui_lock();
-	struct zui_list_state *L = list->list;
+	struct zui_list *L = zui_list_get(list);
 	if (L->slot[i]) zui_destroy(L->slot[i]);
 	L->slot[i] = NULL;
 	L->slot_row[i] = -1;
 	zui_unlock();
 }
 
-void zui_list_free(zui_node *n) {
-	if (!n->list) return;
-	free(n->list->y);
-	free(n->list);
-	n->list = NULL;
+static void list_destroy(zui_node *n) {
+	struct zui_list *L = zui_list_get(n);
+	free(L->y);
+	L->y = NULL;
 }
+const struct zui_class zui_list_class = { .name = "list", .size = sizeof(struct zui_list), .destroy = list_destroy };
 
 /* what scrolls the list: the tab it is in, the hub section it is in, or its page (see zui_scroller) */
 zui_node *zui_list_owner(zui_node *n) {
@@ -271,7 +270,7 @@ zui_node *zui_list_owner(zui_node *n) {
 }
 
 static void changed_height(zui_node *n, int row, float delta) {
-	struct zui_list_state *L = n->list;
+	struct zui_list *L = zui_list_get(n);
 	if (fabsf(delta) < 0.01f) return;
 	for (int i = row + 1; i <= L->count; i++) L->y[i] += delta;
 	zui_node *owner = zui_list_owner(n), *page = zui_page_of(n);
@@ -289,7 +288,7 @@ static void changed_height(zui_node *n, int row, float delta) {
 }
 
 static void bind_row(zui_node *n, int row) {
-	struct zui_list_state *L = n->list;
+	struct zui_list *L = zui_list_get(n);
 	int at = -1;
 	float best = -1;
 	for (int i = 0; i < ZUI_LIST_SLOTS; i++) {
@@ -337,7 +336,7 @@ void zui_unlock(void) { pthread_mutex_unlock(&big_lock); }
 ZUI_EXPORT void zui_list_lock(zui_app *app, bool lock) { (void)app; if (lock) zui_lock(); else zui_unlock(); }
 bool zui_rows_running(void) { return rows_on; }
 
-static zui_node *slot_of(struct zui_list_state *L, int row) {
+static zui_node *slot_of(struct zui_list *L, int row) {
 	for (int i = 0; i < ZUI_LIST_SLOTS; i++)
 		if (L->slot[i] && L->slot_row[i] == row) return L->slot[i];
 	return NULL;
@@ -383,7 +382,7 @@ static void *rows_main(void *arg) {
 		for (int k = 0; k < (r1 - r0 + 1) + 10; k++) {
 			int row = k <= r1 - r0 ? r0 + k : dir >= 0 ? r1 + (k - (r1 - r0)) : r0 - (k - (r1 - r0));
 			zui_lock();
-			struct zui_list_state *L = n->list;
+			struct zui_list *L = zui_list_get(n);
 			if (!L || want.set || row < 0 || row >= L->count) {
 				zui_unlock();
 				if (want.set) break;
@@ -416,7 +415,7 @@ void zui_bind_row(zui_node *n, int row) { bind_row(n, row); }
 
 /* the frame's side: heights the thread found, rows it must not wait for, what next */
 void zui_list_ensure(zui_node *n, uint32_t now) {
-	struct zui_list_state *L = n->list;
+	struct zui_list *L = zui_list_get(n);
 	if (!L->count) return;
 	float scroll = zui_list_owner(n)->scroll, H = n->app->height;
 	float top = scroll - n->y, bot = top + H;
@@ -473,7 +472,7 @@ void zui_list_ensure(zui_node *n, uint32_t now) {
 
 /* Moved textures; a row not painted yet, or under the finger, drawn as it is */
 void zui_list_draw(zui_app *app, zui_node *n, const struct zg_xf *base, uint32_t now, int role, float t, int dir, float scroll) {
-	struct zui_list_state *L = n->list;
+	struct zui_list *L = zui_list_get(n);
 	float a0 = zg_get_alpha(), s = zui_gfx_scale();
 	float rounded = roundf(scroll * s) / s;
 	/* only the tab in front swivels: turned rows off to the side are pulled back
@@ -523,7 +522,7 @@ ZUI_EXPORT void zui_swivel(zui_node *n, bool in, int delay_ms) {
 }
 
 float zui_list_layout(zui_node *n, float x, float y, float w) {
-	struct zui_list_state *L = n->list;
+	struct zui_list *L = zui_list_get(n);
 	for (int i = 0; i < ZUI_LIST_SLOTS; i++) {
 		if (!L->slot[i]) continue;
 		int r = L->slot_row[i];
@@ -541,7 +540,7 @@ float zui_list_layout(zui_node *n, float x, float y, float w) {
 
 ZUI_EXPORT void zui_list_set_count(zui_node *n, int count) {
 	zui_lock();
-	struct zui_list_state *L = n->list;
+	struct zui_list *L = zui_list_get(n);
 	for (int i = 0; i < ZUI_LIST_SLOTS; i++) if (L->slot[i]) slot_drop(n, i);
 	L->arrive_from = 0;
 	L->count = count < 0 ? 0 : count;
@@ -555,7 +554,7 @@ ZUI_EXPORT void zui_list_set_count(zui_node *n, int count) {
 /* k more rows at the end */
 ZUI_EXPORT void zui_list_append(zui_node *n, int k) {
 	zui_lock();
-	struct zui_list_state *L = n->list;
+	struct zui_list *L = zui_list_get(n);
 	int old = L->count;
 	L->arrive_from = old;
 	L->y = realloc(L->y, sizeof(float) * (size_t)(old + k + 1));
@@ -570,7 +569,7 @@ ZUI_EXPORT void zui_list_append(zui_node *n, int k) {
 /* k more rows at the start; nothing on the screen moves or is made again */
 ZUI_EXPORT void zui_list_prepend(zui_node *n, int k) {
 	zui_lock();
-	struct zui_list_state *L = n->list;
+	struct zui_list *L = zui_list_get(n);
 	int old = L->count;
 	float *y = malloc(sizeof(float) * (size_t)(old + k + 1));
 	float at = 0;
@@ -595,13 +594,13 @@ ZUI_EXPORT void zui_list_prepend(zui_node *n, int k) {
 
 /* this row's content changed */
 ZUI_EXPORT void zui_list_refresh(zui_node *n, int row) {
-	struct zui_list_state *L = n->list;
+	struct zui_list *L = zui_list_get(n);
 	for (int i = 0; i < ZUI_LIST_SLOTS; i++)
 		if (L->slot[i] && L->slot_row[i] == row) slot_drop(n, i);
 	n->app->dirty = true;
 }
 
-ZUI_EXPORT void zui_list_allow_more(zui_node *n) { n->list->asked = false; }
+ZUI_EXPORT void zui_list_allow_more(zui_node *n) { zui_list_get(n)->asked = false; }
 
 /* ---- the end of a page ---- */
 ZUI_EXPORT void zui_page_scroll_end(zui_node *page, bool glide) {

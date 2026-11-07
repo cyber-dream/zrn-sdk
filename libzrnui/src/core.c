@@ -329,7 +329,6 @@ static void node_free(zui_node *n) {
 	zui_pixmap_free(n->pix);
 	zui_brush_free(n->bg);
 	if (n->row_tex) zg_tex_free(n->row_tex);
-	zui_list_free(n);
 	free(n);
 }
 

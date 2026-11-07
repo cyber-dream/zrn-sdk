@@ -2,6 +2,7 @@
 /* The classes of nodes: one per kind. A kind that has nothing of its own is a plain node. */
 #include "zui-internal.h"
 #include "widgets/widgets.h"
+extern const struct zui_class zui_list_class;
 
 static const struct zui_class plain = { .name = "node", .size = sizeof(struct zui_node) };
 
@@ -13,6 +14,7 @@ const struct zui_class *zui_class_of(int kind) {
 	switch (kind) {
 	case ZK_PIVOT: return &pivot;
 	case ZK_FIELD: return &field;
+	case ZK_LIST: return &zui_list_class;
 	case ZK_HUB: return &zui_hub_class;
 	case ZK_TILE: return &zui_tile_class;
 	case ZK_PICKER: return &zui_picker_class;
