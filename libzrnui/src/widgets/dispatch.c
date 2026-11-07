@@ -13,7 +13,7 @@ bool zui_widgets_animating(zui_app *app, uint32_t now) {
 	struct ov *o = app->ov;
 	if (o && ov_moving(o, now)) return true;
 	if (app->n_pickers && app->page && pickers_moving(app->page, now)) return true;
-	zui_node *hub = app->page ? zui_pg(app->page)->hub : NULL;
+	zui_node *hub = app->page ? zui_page_hub(app->page) : NULL;
 	if (hub) {
 		bool running = false;
 		zanim_value(&hub->knob, now, &running);
@@ -45,10 +45,10 @@ void zui_widgets_step(zui_app *app, uint32_t now) {
 	} else if (app->n_pickers && app->wl) {
 		app->laid_out = false;
 	}
-	if (app->page && zui_pg(app->page)->hub) {
+	if (app->page && zui_page_hub(app->page)) {
 		bool running = false;
-		zanim_value(&zui_pg(app->page)->hub->knob, now, &running);
-		if (running || zui_hub_title_moving(zui_pg(app->page)->hub, now)) app->dirty = true;
+		zanim_value(&zui_page_hub(app->page)->knob, now, &running);
+		if (running || zui_hub_title_moving(zui_page_hub(app->page), now)) app->dirty = true;
 	}
 }
 

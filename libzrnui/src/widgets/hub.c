@@ -27,7 +27,7 @@ float zui_node_hub_shift(const zui_node *n, float screen_x) {
 #define HUB_TITLE_CATCH_MS 220	/* the title catching up with a finger that took it mid-way */
 
 struct hub {
-	struct zui_node base;
+	struct zui_page page;	/* a hub is a page: the sections are its children */
 	zui_pixmap *bg;
 	/* the title going round: let go past the last section (or the first), it goes off one edge and comes
 	 * in from the other, to where it belongs, while the sections settle */
@@ -52,13 +52,13 @@ static float hub_stride(const zui_node *hub) {
 
 static int hub_count(const zui_node *hub) {
 	int c = 0;
-	for (const zui_node *s = hub->first; s; s = s->next) c += s->visible;
+	for (const zui_node *s = hub->first; s; s = s->next) c += s->visible && s->kind == ZK_HUBSEC;
 	return c;
 }
 
 static zui_node *hub_nth(const zui_node *hub, int idx) {
 	for (zui_node *s = hub->first; s; s = s->next) {
-		if (!s->visible) continue;
+		if (!s->visible || s->kind != ZK_HUBSEC) continue;
 		if (idx-- == 0) return s;
 	}
 	return NULL;
@@ -154,12 +154,10 @@ float zui_hub_content_top(const zui_node *hub) {
 }
 
 ZUI_EXPORT zui_node *zui_hub(zui_app *app, const char *title) {
-	zui_node *page = zui_page_blank(app);
-	zui_node *n = zui_node_new_kind(page, ZK_HUB);
+	zui_node *n = zui_page_new_kind(app, ZK_HUB);
 	struct hub *h = hub_of(n);
 	h->title = zui_node_new_detached(app, ZK_HEADER);
 	zui_set_text(h->title, "");
-	zui_pg(page)->hub = n;
 	if (title) zui_hub_title(n, title);
 	return n;
 }
@@ -316,7 +314,7 @@ float layout_hub(zui_node *hub) {
 	float y0 = hub->y + hb->top;
 	int i = 0;
 	for (zui_node *s = hub->first; s; s = s->next) {
-		if (!s->visible) continue;
+		if (!s->visible || s->kind != ZK_HUBSEC) continue;
 		float sx = M.margin + i++ * stride, at = y0 + HUB_HEAD;
 		for (zui_node *c = s->first; c; c = c->next) {
 			if (!c->visible) continue;
@@ -371,7 +369,7 @@ void draw_hub(zui_app *app, zui_node *hub, const struct zg_xf *base, uint32_t no
 	/* what scrolls in a section goes no higher than under the title */
 	zg_clip(0, top, W, app->height - top);
 	for (zui_node *s = hub->first; s; s = s->next) {
-		if (!s->visible) continue;
+		if (!s->visible || s->kind != ZK_HUBSEC) continue;
 		/* each section where it shows: they go round, and one may show at both edges */
 		float dx[3];
 		int copies = zui_hub_copies(hub, s, dx);
@@ -385,7 +383,7 @@ void draw_hub(zui_app *app, zui_node *hub, const struct zg_xf *base, uint32_t no
 				if (c->visible) zui_draw_node(app, c, &xf, now);
 		}
 	}
-	if (hub->parent) zg_clip(0, zui_pg(hub->parent)->title_panel.h, W, app->height - zui_pg(hub->parent)->title_panel.h);
+	zg_clip(0, zui_pg(hub)->title_panel.h, W, app->height - zui_pg(hub)->title_panel.h);
 }
 
 void hub_free(zui_node *n) {
@@ -394,12 +392,11 @@ void hub_free(zui_node *n) {
 		if (h->title) zui_node_free_detached(h->title);
 		zui_pixmap_free(h->bg);
 	}
-	if (n->parent && zui_pg(n->parent)->hub == n) zui_pg(n->parent)->hub = NULL;
 }
 
 static float hub_layout(zui_node *n, float x, float y, float w) { (void)x; (void)y; (void)w; return layout_hub(n); }
 static void hub_draw(zui_app *app, zui_node *n, const struct zg_xf *xf, uint32_t now) { draw_hub(app, n, xf, now); }
-const struct zui_class zui_hub_class = { .name = "hub", .size = sizeof(struct hub), .destroy = hub_free,
+const struct zui_class zui_hub_class = { .name = "hub", .size = sizeof(struct hub), .is_page = true, .destroy = hub_free,
 	.layout = hub_layout, .draw = hub_draw };
 
 /* a section is a scroll container (an heir of it) whose place the hub gives it */

@@ -6,7 +6,7 @@
 #include "widgets/widgets.h"
 
 static const struct zui_class plain = { .name = "node", .size = sizeof(struct zui_node) };
-static const struct zui_class page = { .name = "page", .size = sizeof(struct zui_page) };
+static const struct zui_class page = { .name = "page", .size = sizeof(struct zui_page), .is_page = true };
 
 const struct zui_class *zui_class_of(int kind) {
 	const struct zui_class *core = zui_core_class(kind);

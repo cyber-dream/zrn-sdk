@@ -619,12 +619,7 @@ ZUI_EXPORT bool zui_page_at_end(zui_node *page, double within) {
 }
 
 /* ---- tabs ---- */
-ZUI_EXPORT zui_node *zui_pivot(zui_app *app) {
-	zui_node *page = zui_page_blank(app);
-	zui_node *n = zui_node_new_kind(page, ZK_PIVOT);
-	zui_pg(page)->tabs = n;
-	return n;
-}
+ZUI_EXPORT zui_node *zui_pivot(zui_app *app) { return zui_page_new_kind(app, ZK_PIVOT); }
 ZUI_EXPORT void zui_pivot_title(zui_node *pivot, const char *text) {
 	zui_node *panel = zui_title_panel(pivot);
 	for (zui_node *c = panel->first; c; c = c->next)
@@ -652,14 +647,24 @@ int zui_child_index(const zui_node *c) {
 	for (const zui_node *p = c->prev; p; p = p->prev) i++;
 	return i;
 }
+/* a pivot's items are its children of kind ZK_PIVOT_ITEM (it is a page: its TitlePanel and footer are children too) */
 zui_node *zui_tab_at(zui_node *tabs, int i) {
-	zui_node *c = tabs->first;
-	while (c && i-- > 0) c = c->next;
-	return c;
+	for (zui_node *c = tabs->first; c; c = c->next)
+		if (c->kind == ZK_PIVOT_ITEM && i-- == 0) return c;
+	return NULL;
+}
+int zui_tab_index(const zui_node *tabs, const zui_node *item) {
+	int k = 0;
+	for (const zui_node *c = tabs->first; c; c = c->next) {
+		if (c->kind != ZK_PIVOT_ITEM) continue;
+		if (c == item) return k;
+		k++;
+	}
+	return -1;
 }
 int zui_tab_count(const zui_node *tabs) {
 	int k = 0;
-	for (zui_node *c = tabs->first; c; c = c->next) k++;
+	for (const zui_node *c = tabs->first; c; c = c->next) k += c->kind == ZK_PIVOT_ITEM;
 	return k;
 }
 ZUI_EXPORT int zui_pivot_current(const zui_node *tabs) { return zui_pivot_of(tabs)->cur; }
@@ -700,7 +705,7 @@ ZUI_EXPORT void zui_pivot_select(zui_node *tabs, int i) {
 		zui_pivot_of(tabs)->cur = i;
 		zui_sv(old)->vel = 0;
 		app->fling = false;
-		zui_pivot_of(tabs)->prev = zui_child_index(old);
+		zui_pivot_of(tabs)->prev = zui_tab_index(tabs, old);
 		app->laid_out = false;
 		zui_fire(tabs, ZUI_EVENT_CHANGE);
 	}

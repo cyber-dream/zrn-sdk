@@ -34,7 +34,7 @@ bool in_footer(const zui_node *n) {
 	for (; n; n = n->parent) {
 		if (n->kind == ZK_FOOTER) return true;
 		/* what the app keeps in the frame is over the pages and does not scroll */
-		if (n->parent && n->parent->kind == ZK_FRAME && n->kind != ZK_PAGE) return true;
+		if (n->parent && n->parent->kind == ZK_FRAME && !zui_is_page(n)) return true;
 	}
 	return false;
 }

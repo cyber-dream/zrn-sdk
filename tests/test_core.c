@@ -163,7 +163,7 @@ static void test_root(const char *style) {
 	zui_pivot_item_header(tab, "first");
 	zui_button(tab, "In a tab", NULL, NULL);
 	zui_layout(app, pivot, 360, 740);
-	zui_node_frame(pivot, NULL, &y, NULL, NULL);
+	zui_node_frame(tab, NULL, &y, NULL, NULL);	/* the pivot is the page itself: its item is what lies under the titles */
 	CHECK(y > 152, "%s: a pivot's tab titles are under the title's room (y %.0f)", style, y);
 	zui_app_free(app);
 }

@@ -145,6 +145,8 @@ void zanim_set(struct zanim *a, float value);
 
 struct zui_rect { float x, y, w, h; };
 struct zui_node;
+struct zui_node *zui_page_new_kind(zui_app *app, int kind);
+float layout_hub(zui_node *hub);	/* widgets/hub.c */
 struct zui_node *zui_page_of(struct zui_node *n);	/* the page a node is in (or is): what a hub or a pivot made from the app stands for */
 
 /* What a kind of node is: the size of its struct (zui_node is the first member of every
@@ -154,6 +156,7 @@ struct zui_class {
 	const char *name;
 	size_t size;				/* of the node's struct: at least sizeof(struct zui_node) */
 	void (*destroy)(zui_node *n);		/* frees what the subtype holds (not the node itself) */
+	bool is_page;				/* a page, or a kind that is one (a pivot, a hub): its struct starts with zui_page */
 	bool scrolls;				/* a scroll container or one of its heirs: its struct is a zui_scroll */
 	/* what the core asks of a kind, when it is not one of the core's own (all optional) */
 	float (*layout)(zui_node *n, float x, float y, float w);	/* its height; it sets what is its own */
@@ -234,19 +237,19 @@ struct zui_page {
 	struct zui_rect title_panel, content_panel;
 	int depth;		/* 0 for the first page */
 	zui_node *back_to;	/* the page under this one */
-	zui_node *tabs, *hub;	/* its pivot, its hub */
 	zui_node *footer, *title_node, *content_node;
 	float content_h;	/* how far down it goes: its layout, a page itself never scrolls */
 	bool fullscreen, compact;
 };
+static inline bool zui_is_page(const zui_node *n) { return n && n->cls->is_page; }
 static inline struct zui_page *zui_pg(const zui_node *n) {
-	assert(n && n->kind == ZK_PAGE);
+	assert(zui_is_page(n));
 	return (struct zui_page *)n;
 }
 
-/* A pivot: its items are its children, one in front. */
+/* A pivot: a page whose items are its children, one in front. */
 struct zui_pivot {
-	struct zui_node base;
+	struct zui_page page;
 	int cur, prev;		/* the item in front, and the one that was */
 	struct zanim pos;	/* the highlight, from cur: 0 at rest, the way left to a neighbour while moving */
 };
@@ -277,6 +280,9 @@ struct zui_list {
 static inline struct zui_list *zui_list_get(const zui_node *n) {	/* NULL for what is not a list */
 	return n && n->kind == ZK_LIST ? (struct zui_list *)n : NULL;
 }
+/* the page's pivot or hub, which is the page itself (NULL if it is neither) */
+static inline zui_node *zui_page_pivot(const zui_node *n) { return n && n->kind == ZK_PIVOT ? (zui_node *)n : NULL; }
+static inline zui_node *zui_page_hub(const zui_node *n) { return n && n->kind == ZK_HUB ? (zui_node *)n : NULL; }
 static inline struct zui_pivot *zui_pivot_of(const zui_node *n) {
 	assert(n && n->kind == ZK_PIVOT);
 	return (struct zui_pivot *)n;
@@ -413,6 +419,7 @@ float zui_list_layout(zui_node *n, float x, float y, float w);
 int zui_child_index(const zui_node *c);
 const char *zui_tab_title(const zui_node *item);
 zui_node *zui_tab_at(zui_node *tabs, int i);
+int zui_tab_index(const zui_node *tabs, const zui_node *item);
 int zui_tab_count(const zui_node *tabs);
 void zui_frame_begin(void);
 bool zui_pixmap_ready(zui_app *app, zui_pixmap *p, bool nearest);
