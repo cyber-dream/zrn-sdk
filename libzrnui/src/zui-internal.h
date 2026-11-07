@@ -162,6 +162,9 @@ struct zui_class {
 	void (*activate)(zui_app *app, zui_node *n);	/* the lift of a tap on it */
 };
 const struct zui_class *zui_class_of(int kind);
+const struct zui_class *zui_core_class(int kind);	/* core.c: the kinds it lays out and draws itself */
+void zui_list_destroy(zui_node *n);
+void suggest_free(zui_node *n);
 
 struct zui_node {
 	zui_app *app;
@@ -222,7 +225,6 @@ struct zui_scroll {
 static inline struct zui_scroll *zui_sv(const zui_node *n) {
 	return n && n->cls->scrolls ? (struct zui_scroll *)n : NULL;
 }
-extern const struct zui_class zui_scroll_class;
 
 /* A page: the root of what is on the screen. It is two panels, as on Windows Phone: the TitlePanel
  * (the top margin, the app's name, the page's title) stays, the ContentPanel under it holds the content.
@@ -362,8 +364,6 @@ const char *zui_data_dir(void);
 void zui_osk(zui_app *app, bool show);
 
 /* widgets/: what core.c asks of it */
-float zui_widget_layout(zui_node *n, float x, float y, float w);	/* < 0: not a widget of its */
-bool zui_widget_draw(zui_app *app, zui_node *n, const struct zg_xf *xf, uint32_t now);
 bool zui_widget_interactive(const zui_node *n);
 bool zui_widget_activate(zui_app *app, zui_node *n);	/* true: it was one */
 void zui_widget_free(zui_node *n);

@@ -253,12 +253,11 @@ static void slot_drop(zui_node *list, int i) {
 	zui_unlock();
 }
 
-static void list_destroy(zui_node *n) {
+void zui_list_destroy(zui_node *n) {
 	struct zui_list *L = zui_list_get(n);
 	free(L->y);
 	L->y = NULL;
 }
-const struct zui_class zui_list_class = { .name = "list", .size = sizeof(struct zui_list), .destroy = list_destroy };
 
 /* what scrolls the list: the tab it is in, the hub section it is in, or its page (see zui_scroller) */
 zui_node *zui_list_owner(zui_node *n) {

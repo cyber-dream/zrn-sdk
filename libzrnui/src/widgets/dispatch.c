@@ -52,16 +52,6 @@ void zui_widgets_step(zui_app *app, uint32_t now) {
 	}
 }
 
-float zui_widget_layout(zui_node *n, float x, float y, float w) {
-	return n->cls->layout ? n->cls->layout(n, x, y, w) : -1;
-}
-
-bool zui_widget_draw(zui_app *app, zui_node *n, const struct zg_xf *xf, uint32_t now) {
-	if (!n->cls->draw) return false;
-	n->cls->draw(app, n, xf, now);
-	return true;
-}
-
 bool zui_widget_interactive(const zui_node *n) {
 	return n->cls->interactive && n->cls->interactive(n);
 }
