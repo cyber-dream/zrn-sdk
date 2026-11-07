@@ -1,0 +1,632 @@
+<FontFamily xmlns="http://schemas.microsoft.com/winfx/2006/xaml/composite-font" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:System="clr-namespace:System;assembly=mscorlib"
+    Baseline="0.9"
+    LineSpacing="1.2">
+  
+    <!-- Copyright (c) Microsoft Corporation. All rights reserved. -->
+  
+    <FontFamily.FamilyNames>
+        <System:String
+            x:Key="en-US">Portable User Interface</System:String>
+    </FontFamily.FamilyNames>
+
+  <!-- Character to family lookups (in lookup order) -->
+  <FontFamily.FamilyMaps>
+
+    <!-- [0000-05FF] C0 Controls and Basic Latin, C1 Controls and Latin-1 Supplement, Latin Extended-A, Latin Extended-B, IPA Extensions, Spacing Modifier Letters, Combining Diacritical Marks, Greek and Coptic, Cyrillic, Cryllic Supplement, Armenian, Hebrew -->
+    <FontFamilyMap
+        Unicode    = "0000-05FF"
+        Target     = "Segoe UI"
+        Scale      = "1.0"/>
+
+    <!-- [0600-06FF] Arabic -->
+    <FontFamilyMap
+        Unicode    = "0600-06FF"
+        Target     = "Urdu Typesetting"
+        Scale      = "1.0"
+        Language   = "ur"/>
+    <FontFamilyMap
+        Unicode    = "0600-06FF"
+        Target     = "Microsoft Uighur"
+        Scale      = "1.0"
+        Language   = "ug"/>
+    <FontFamilyMap
+        Unicode    = "0600-06FF"
+        Target     = "Segoe UI"
+        Scale      = "1.0"/>
+
+    <!-- [0700-074F] Syriac -->
+    <FontFamilyMap
+        Unicode    = "0700-074F"
+        Target     = "Estrangelo Edessa"
+        Scale      = "1.0"/>
+
+    <!-- [0750-077F] Arabic Supplement -->
+    <FontFamilyMap
+        Unicode    = "0750-077F"
+        Target     = "Urdu Typesetting"
+        Scale      = "1.0"
+        Language   = "ur"/>
+    <FontFamilyMap
+        Unicode    = "0750-077F"
+        Target     = "Microsoft Uighur"
+        Scale      = "1.0"
+        Language   = "ug"/>
+    <FontFamilyMap
+        Unicode    = "0750-077F"
+        Target     = "Segoe UI"
+        Scale      = "1.0"/>
+
+    <!-- [0780-07BF] Thaana -->
+    <FontFamilyMap
+        Unicode    = "0780-07BF"
+        Target     = "MV Boli"
+        Scale      = "1.0"/>
+
+    <!-- [07C0-07FF] Nko -->
+    <FontFamilyMap
+        Unicode    = "07C0-07FF"
+        Target     = "Ebrima"
+        Scale      = "1.0"/>
+
+    <!-- [0900-0DFF] Devanagari, Bengali, Gurmukhi, Gujarati, Oriya, Tamil, Telugu, Kannada, Malayalam, Sinhala -->
+    <FontFamilyMap
+        Unicode    = "0900-0DFF"
+        Target     = "Nirmala UI"
+        Scale      = "1.0"/>
+
+    <!-- [0E00-0E7F] Thai -->
+    <FontFamilyMap
+        Unicode    = "0E00-0E7F"
+        Target     = "Leelawadee"
+        Scale      = "1.0"/>
+
+    <!-- [0E80-0EFF] Lao -->
+    <FontFamilyMap
+        Unicode    = "0E80-0EFF"
+        Target     = "Lao UI"
+        Scale      = "1.0"/>
+
+    <!-- [0F00-0FFF] Tibetan -->
+    <FontFamilyMap
+        Unicode    = "0F00-0FFF"
+        Target     = "Microsoft Himalaya"
+        Scale      = "1.0"/>
+
+    <!-- [10A0-10FF] Georgian -->
+    <FontFamilyMap
+        Unicode    = "10A0-10FF"
+        Target     = "Segoe UI"
+        Scale      = "1.0"/>
+
+    <!-- [1100-11FF] Hangul Jamo -->
+    <FontFamilyMap
+        Unicode    = "1100-11FF"
+        Target     = "Microsoft NeoGothic"
+        Scale      = "1.0"/>
+
+    <!-- [1200-139F] Ethiopic, Ethiopic Supplement -->
+    <FontFamilyMap
+        Unicode    = "1200-139F"
+        Target     = "Ebrima"
+        Scale      = "1.0"/>
+
+    <!-- [13A0-167F] Cherokee, Unified Canadian Aboriginal Syllabics -->
+    <FontFamilyMap
+        Unicode    = "13A0-167F"
+        Target     = "Gadugi"
+        Scale      = "1.0"/>
+
+    <!-- [1680-16FF] Ogham, Runic -->
+    <FontFamilyMap
+        Unicode    = "1680-16FF"
+        Target     = "Segoe UI Symbol"
+        Scale      = "1.0"/>
+
+    <!-- [1780-17FF] Khmer -->
+    <FontFamilyMap
+        Unicode    = "1780-17FF"
+        Target     = "Khmer UI"
+        Scale      = "1.0"/>
+
+    <!-- [1800-18AF] Mongolian -->
+    <FontFamilyMap
+        Unicode    = "1800-18AF"
+        Target     = "Mongolian Baiti"
+        Scale      = "1.0"/>
+
+    <!-- [18B0-18FF] Unified Canadian Aboriginal Syllabics Extended -->
+    <FontFamilyMap
+        Unicode    = "18B0-18FF"
+        Target     = "Gadugi"
+        Scale      = "1.0"/>
+
+    <!-- [1950-197F] Tai Le -->
+    <FontFamilyMap
+        Unicode    = "1950-197F"
+        Target     = "Microsoft Tai Le"
+        Scale      = "1.0"/>
+
+    <!-- [1980-19DF] New Tai Lue -->
+    <FontFamilyMap
+        Unicode    = "1980-19DF"
+        Target     = "Microsoft New Tai Lue"
+        Scale      = "1.0"/>
+
+    <!-- [19E0-19FF] Khmer Symbols -->
+    <FontFamilyMap
+        Unicode    = "19E0-19FF"
+        Target     = "Khmer UI"
+        Scale      = "1.0"/>
+
+    <!-- [1D00-1FFF] Phonetic Extensions, Phonetic Extensions Supplement, Combining Diacritical Marks Supplement, Latin Extended  Additional, Greek Extended -->
+    <FontFamilyMap
+        Unicode    = "1D00-1FFF"
+        Target     = "Segoe UI"
+        Scale      = "1.0"/>
+
+    <!-- [2000-206F] General Punctuation -->
+    <FontFamilyMap
+        Unicode    = "2000-206F"
+        Target     = "Segoe UI, Segoe UI Symbol"
+        Scale      = "1.0"/>
+
+    <!-- [2070-20CF] Superscripts and Subscripts, Currency Symbols -->
+    <FontFamilyMap
+        Unicode    = "2070-20CF"
+        Target     = "Segoe UI"
+        Scale      = "1.0"/>
+
+    <!-- [20D0-214F] Combining Diacritical Marks and Symbols, Letterlike Symbols -->
+    <FontFamilyMap
+        Unicode    = "20D0-214F"
+        Target     = "Segoe UI, Segoe UI Symbol"
+        Scale      = "1.0"/>
+
+    <!-- [2150-218F] Number Forms -->
+    <FontFamilyMap
+        Unicode    = "2150-218F"
+        Target     = "Segoe UI, Yu Gothic, Microsoft Mhei, DengXian, SimSun"
+        Scale      = "1.0"/>
+
+    <!-- [2190-21FF] Arrows -->
+    <FontFamilyMap
+        Unicode    = "2190-21FF"
+        Target     = "Segoe UI, Segoe UI Symbol"
+        Scale      = "1.0"/>
+
+    <!-- [2200-22FF] Mathematical Operators -->
+    <FontFamilyMap
+        Unicode    = "2200-22FF"
+        Target     = "Segoe UI, Segoe UI Symbol, Cambria Math"
+        Scale      = "1.0"/>
+
+    <!-- [2300-23FF] Miscellaneous Technical -->
+    <FontFamilyMap
+        Unicode    = "2300-23FF"
+        Target     = "Segoe UI Symbol, Cambria Math"
+        Scale      = "1.0"/>
+
+    <!-- [2400-259F] Control Pictures, Optical Character Recognition (OCR), Enclosed Alphanumerics, Box Drawing, Block Elements -->
+    <FontFamilyMap
+        Unicode    = "2400-259F"
+        Target     = "Segoe UI Symbol"
+        Scale      = "1.0"/>
+
+    <!-- [25A0-27BF] Geometric Shapes, Miscellaneous Symbols, Dingbats -->
+    <FontFamilyMap
+        Unicode    = "25A0-27BF"
+        Target     = "Segoe UI, Segoe UI Symbol"
+        Scale      = "1.0"/>
+
+    <!-- [27C0-27EF] Miscellaneous Mathematical Symbols-A -->
+    <FontFamilyMap
+        Unicode    = "27C0-27EF"
+        Target     = "Segoe UI Symbol, Cambria Math"
+        Scale      = "1.0"/>
+
+    <!-- [27F0-297F] Supplemental Arrows-A, Braille Patterns, Supplemental Arrows-B -->
+    <FontFamilyMap
+        Unicode    = "27F0-297F"
+        Target     = "Segoe UI Symbol"
+        Scale      = "1.0"/>
+
+    <!-- [2980-2AFF] Miscellaneous Mathematical Symbols-B, Supplemental Mathematical Operators -->
+    <FontFamilyMap
+        Unicode    = "2980-2AFF"
+        Target     = "Segoe UI Symbol, Cambria Math"
+        Scale      = "1.0"/>
+
+    <!-- [2B00-2C5F] Miscellaneous Symbols and Arrows, Glagolitic -->
+    <FontFamilyMap
+        Unicode    = "2B00-2C5F"
+        Target     = "Segoe UI Symbol"
+        Scale      = "1.0"/>
+
+    <!-- [2C60-2C7F] Latin Extended-C -->
+    <FontFamilyMap
+        Unicode    = "2C60-2C7F"
+        Target     = "Segoe UI"
+        Scale      = "1.0"/>
+
+    <!-- [2D00-2D2F] Georgian Supplement -->
+    <FontFamilyMap
+        Unicode    = "2D00-2D2F"
+        Target     = "Segoe UI"
+        Scale      = "1.0"/>
+
+    <!-- [2D30-2DDF] Tifinagh, Ethiopic Extended -->
+    <FontFamilyMap
+        Unicode    = "2D30-2DDF"
+        Target     = "Ebrima"
+        Scale      = "1.0"/>
+
+    <!-- [2DE0-2E7F] Cyrillic Extended-A, Supplemental Punctuation -->
+    <FontFamilyMap
+        Unicode    = "2DE0-2E7F"
+        Target     = "Segoe UI"
+        Scale      = "1.0"/>
+
+    <!-- [2E80-303F] CJK Radicals Supplement, Kangxi Radicals, Ideographic Description Characters, CJK Symbols and Punctuation -->
+    <FontFamilyMap
+        Unicode    = "2E80-303F"
+        Target     = "Microsoft Mhei, Segoe UI Symbol, DengXian, SimSun, Yu Gothic"
+        Scale      = "1.0"
+        Language   = "zh-Hant"/>
+    <FontFamilyMap
+        Unicode    = "2E80-303F"
+        Target     = "Yu Gothic, Segoe UI Symbol, Microsoft Mhei, DengXian, SimSun"
+        Scale      = "1.0"
+        Language   = "ja"/>
+    <FontFamilyMap
+        Unicode    = "2E80-303F"
+        Target     = "Yu Gothic, Segoe UI Symbol, Microsoft Mhei, DengXian, SimSun"
+        Scale      = "1.0"
+        Language   = "ko"/>
+    <FontFamilyMap
+        Unicode    = "2E80-303F"
+        Target     = "DengXian, Segoe UI Symbol, SimSun, Microsoft Mhei, Yu Gothic"
+        Scale      = "1.0"/>
+
+    <!-- [3040-30FF] Hiragana, Katakana -->
+    <FontFamilyMap
+        Unicode    = "3040-30FF"
+        Target     = "DengXian, Yu Gothic"
+        Scale      = "1.0"
+        Language   = "zh-Hans"/>
+    <FontFamilyMap
+        Unicode    = "3040-30FF"
+        Target     = "Microsoft Mhei, Yu Gothic"
+        Scale      = "1.0"
+        Language   = "zh-Hant"/>
+    <FontFamilyMap
+        Unicode    = "3040-30FF"
+        Target     = "Yu Gothic"
+        Scale      = "1.0"/>
+
+    <!-- [3100-312F] Bopomofo -->
+    <FontFamilyMap
+        Unicode    = "3100-312F"
+        Target     = "DengXian"
+        Scale      = "1.0"
+        Language   = "zh-Hans"/>
+    <FontFamilyMap
+        Unicode    = "3100-312F"
+        Target     = "Microsoft Mhei"
+        Scale      = "1.0"/>
+
+    <!-- [3130-318F] Hangul Compatibility Jamo -->
+    <FontFamilyMap
+        Unicode    = "3130-318F"
+        Target     = "Microsoft NeoGothic"
+        Scale      = "1.0"/>
+
+    <!-- [31C0-31EF] CJK Strokes -->
+    <FontFamilyMap
+        Unicode    = "31C0-31EF"
+        Target     = "Microsoft Mhei"
+        Scale      = "1.0"/>
+
+    <!-- [31F0-31FF] Katakana Phonetic Extensions -->
+    <FontFamilyMap
+        Unicode    = "31F0-31FF"
+        Target     = "Yu Gothic"
+        Scale      = "1.0"/>
+
+    <!-- [3200-4DBF] Enclosed CJK Letters and Months, CJK Compatibility, CJK Unified Ideographs Extension A -->
+    <FontFamilyMap
+        Unicode    = "3200-4DBF"
+        Target     = "Segoe UI Symbol, Microsoft Mhei, DengXian, SimSun, Yu Gothic"
+        Scale      = "1.0"
+        Language   = "zh-Hant"/>
+    <FontFamilyMap
+        Unicode    = "3200-4DBF"
+        Target     = "Segoe UI Symbol, Yu Gothic, Microsoft Mhei, DengXian, SimSun"
+        Scale      = "1.0"
+        Language   = "ja"/>
+    <FontFamilyMap
+        Unicode    = "3200-4DBF"
+        Target     = "Segoe UI Symbol, Yu Gothic, Microsoft Mhei, DengXian, SimSun"
+        Scale      = "1.0"
+        Language   = "ko"/>
+    <FontFamilyMap
+        Unicode    = "3200-4DBF"
+        Target     = "Segoe UI Symbol, DengXian, SimSun, Microsoft Mhei, Yu Gothic"
+        Scale      = "1.0"/>
+
+    <!-- [4DC0-4DFF] Yijing Hexagram Symbols -->
+    <FontFamilyMap
+        Unicode    = "4DC0-4DFF"
+        Target     = "Segoe UI Symbol"
+        Scale      = "1.0"/>
+
+    <!-- [4E00-9FFF] CJK Unified Ideographs -->
+    <FontFamilyMap
+        Unicode    = "4E00-9FFF"
+        Target     = "Microsoft Mhei, DengXian, SimSun, Yu Gothic"
+        Scale      = "1.0"
+        Language   = "zh-Hant"/>
+    <FontFamilyMap
+        Unicode    = "4E00-9FFF"
+        Target     = "Yu Gothic, Microsoft Mhei, DengXian, SimSun"
+        Scale      = "1.0"
+        Language   = "ja"/>
+    <FontFamilyMap
+        Unicode    = "4E00-9FFF"
+        Target     = "Yu Gothic, Microsoft Mhei, DengXian, SimSun"
+        Scale      = "1.0"
+        Language   = "ko"/>
+    <FontFamilyMap
+        Unicode    = "4E00-9FFF"
+        Target     = "DengXian, SimSun, Microsoft Mhei, Yu Gothic"
+        Scale      = "1.0"/>
+
+    <!-- [A000-A4CF] Yi Syllables, Yi Radicals -->
+    <FontFamilyMap
+        Unicode    = "A000-A4CF"
+        Target     = "Microsoft Yi Baiti"
+        Scale      = "1.0"/>
+
+    <!-- [A4D0-A4FF] Lisu -->
+    <FontFamilyMap
+        Unicode    = "A4D0-A4FF"
+        Target     = "Segoe UI"
+        Scale      = "1.0"/>
+
+    <!-- [A500-A59F] Vai -->
+    <FontFamilyMap
+        Unicode    = "A500-A59F"
+        Target     = "Ebrima"
+        Scale      = "1.0"/>
+
+    <!-- [A640-A69F] Cyrillic Extended-B -->
+    <FontFamilyMap
+        Unicode    = "A640-A69F"
+        Target     = "Segoe UI"
+        Scale      = "1.0"/>
+
+    <!-- [A700-A7FF] Modifier Tone Letters, Latin Extended-D -->
+    <FontFamilyMap
+        Unicode    = "A700-A7FF"
+        Target     = "Segoe UI"
+        Scale      = "1.0"/>
+
+    <!-- [A840-A87F] Phags-pa -->
+    <FontFamilyMap
+        Unicode    = "A840-A87F"
+        Target     = "Microsoft PhagsPa"
+        Scale      = "1.0"/>
+
+    <!-- [A8E0-A8FF] Devanagari Extended -->
+    <FontFamilyMap
+        Unicode    = "A8E0-A8FF"
+        Target     = "Nirmala UI"
+        Scale      = "1.0"/>
+
+    <!-- [AB00-AB2F] Ethiopic Extended-A -->
+    <FontFamilyMap
+        Unicode    = "AB00-AB2F"
+        Target     = "Ebrima"
+        Scale      = "1.0"/>
+
+    <!-- [AC00-D7AF] Hangul Syllables -->
+    <FontFamilyMap
+        Unicode    = "AC00-D7AF"
+        Target     = "Microsoft NeoGothic"
+        Scale      = "1.0"/>
+
+    <!-- [E000-E8FF] Private Use Area (PUA) -->
+    <FontFamilyMap
+        Unicode    = "E000-E8FF"
+        Target     = "DengXian, SimSun"
+        Scale      = "1.0"/>
+
+    <!-- [F900-FAFF] CJK Compatibility Ideographs -->
+    <FontFamilyMap
+        Unicode    = "F900-FAFF"
+        Target     = "Microsoft Mhei, DengXian, SimSun, Yu Gothic"
+        Scale      = "1.0"
+        Language   = "zh-Hant"/>
+    <FontFamilyMap
+        Unicode    = "F900-FAFF"
+        Target     = "Yu Gothic, Microsoft Mhei, DengXian, SimSun"
+        Scale      = "1.0"
+        Language   = "ja"/>
+    <FontFamilyMap
+        Unicode    = "F900-FAFF"
+        Target     = "Yu Gothic, Microsoft Mhei, DengXian, SimSun"
+        Scale      = "1.0"
+        Language   = "ko"/>
+    <FontFamilyMap
+        Unicode    = "F900-FAFF"
+        Target     = "DengXian, SimSun, Microsoft Mhei, Yu Gothic"
+        Scale      = "1.0"/>
+
+    <!-- [FB00-FB4F] Alphabetic Presentation Forms -->
+    <FontFamilyMap
+        Unicode    = "FB00-FB4F"
+        Target     = "Segoe UI"
+        Scale      = "1.0"/>
+
+    <!-- [FB50-FDFF] Arabic Presentation Forms-A -->
+    <FontFamilyMap
+        Unicode    = "FB50-FDFF"
+        Target     = "Urdu Typesetting"
+        Scale      = "1.0"
+        Language   = "ur"/>
+    <FontFamilyMap
+        Unicode    = "FB50-FDFF"
+        Target     = "Microsoft Uighur"
+        Scale      = "1.0"
+        Language   = "ug"/>
+    <FontFamilyMap
+        Unicode    = "FB50-FDFF"
+        Target     = "Segoe UI"
+        Scale      = "1.0"/>
+
+    <!-- [FE10-FE6F] Vertical forms, Combinging Half Marks, CJK Compatibility Forms, Small Form Variants -->
+    <FontFamilyMap
+        Unicode    = "FE10-FE6F"
+        Target     = "Microsoft Mhei, DengXian, SimSun, Yu Gothic"
+        Scale      = "1.0"
+        Language   = "zh-Hant"/>
+    <FontFamilyMap
+        Unicode    = "FE10-FE6F"
+        Target     = "Yu Gothic, Microsoft Mhei, DengXian, SimSun"
+        Scale      = "1.0"
+        Language   = "ja"/>
+    <FontFamilyMap
+        Unicode    = "FE10-FE6F"
+        Target     = "Yu Gothic, Microsoft Mhei, DengXian, SimSun"
+        Scale      = "1.0"
+        Language   = "ko"/>
+    <FontFamilyMap
+        Unicode    = "FE10-FE6F"
+        Target     = "DengXian, SimSun, Microsoft Mhei, Yu Gothic"
+        Scale      = "1.0"/>
+
+    <!-- [FE70-FEFF] Arabic Presentation Forms-B -->
+    <FontFamilyMap
+        Unicode    = "FE70-FEFF"
+        Target     = "Urdu Typesetting"
+        Scale      = "1.0"
+        Language   = "ur"/>
+    <FontFamilyMap
+        Unicode    = "FE70-FEFF"
+        Target     = "Microsoft Uighur"
+        Scale      = "1.0"
+        Language   = "ug"/>
+    <FontFamilyMap
+        Unicode    = "FE70-FEFF"
+        Target     = "Segoe UI"
+        Scale      = "1.0"/>
+
+    <!-- [FF00-FFEF] Halfwidth and Fullwidth Forms -->
+    <FontFamilyMap
+        Unicode    = "FF00-FFEF"
+        Target     = "Microsoft Mhei, DengXian, SimSun, Yu Gothic, Microsoft NeoGothic"
+        Scale      = "1.0"
+        Language   = "zh-Hant"/>
+    <FontFamilyMap
+        Unicode    = "FF00-FFEF"
+        Target     = "Yu Gothic, Microsoft Mhei, DengXian, SimSun, Microsoft NeoGothic"
+        Scale      = "1.0"
+        Language   = "ja"/>
+    <FontFamilyMap
+        Unicode    = "FF00-FFEF"
+        Target     = "Yu Gothic, Microsoft Mhei, DengXian, SimSun, Microsoft NeoGothic"
+        Scale      = "1.0"
+        Language   = "ko"/>
+    <FontFamilyMap
+        Unicode    = "FF00-FFEF"
+        Target     = "DengXian, SimSun, Microsoft Mhei, Yu Gothic, Microsoft NeoGothic"
+        Scale      = "1.0"/>
+
+    <!-- [FFF0-FFFF] Specials -->
+    <FontFamilyMap
+        Unicode    = "FFF0-FFFF"
+        Target     = "Segoe UI, Tahoma"
+        Scale      = "1.0"/>
+
+    <!-- [10300-1034F] Old Italic, Gothic -->
+    <FontFamilyMap
+        Unicode    = "10300-1034F"
+        Target     = "Segoe UI Symbol"
+        Scale      = "1.0"/>
+
+    <!-- [10400-1044F] Deseret -->
+    <FontFamilyMap
+        Unicode    = "10400-1044F"
+        Target     = "Segoe UI Symbol"
+        Scale      = "1.0"/>
+
+    <!-- [10480-104AF] Osmanya -->
+    <FontFamilyMap
+        Unicode    = "10480-104AF"
+        Target     = "Ebrima"
+        Scale      = "1.0"/>
+
+    <!-- [10C00-10C4F] Old Turkic -->
+    <FontFamilyMap
+        Unicode    = "10C00-10C4F"
+        Target     = "Segoe UI Symbol"
+        Scale      = "1.0"/>
+
+    <!-- [1D300-1D35F] Tai Xuan Jing Symbols -->
+    <FontFamilyMap
+        Unicode    = "1D300-1D35F"
+        Target     = "Segoe UI Symbol"
+        Scale      = "1.0"/>
+
+    <!-- [1D400-1D7FF] Mathematical Alphanumeric Symbols -->
+    <FontFamilyMap
+        Unicode    = "1D400-1D7FF"
+        Target     = "Segoe UI Symbol, Cambria Math"
+        Scale      = "1.0"/>
+
+    <!-- [1F000-1F64F] Mahjong Tiles, Domino Tiles, Playing Cards, Enclosed Alphanumeric Supplement, Enclosed Ideographic Supplement, Miscellaneous Symbols and Pictographs, Emoticons -->
+    <FontFamilyMap
+        Unicode    = "1F000-1F64F"
+        Target     = "Segoe UI Symbol"
+        Scale      = "1.0"/>
+
+    <!-- [1F680-1F77F] Transport and Map Symbols, Alchemical Symbols -->
+    <FontFamilyMap
+        Unicode    = "1F680-1F77F"
+        Target     = "Segoe UI Symbol"
+        Scale      = "1.0"/>
+
+    <!-- [20000-2B81F] CJK Unified Ideographs Extension B, CJK Unified Ideographs Extension C, CJK Unified Ideographs Extension D -->
+    <FontFamilyMap
+        Unicode    = "20000-2B81F"
+        Target     = "Yu Gothic, Microsoft Mhei"
+        Scale      = "1.0"
+        Language   = "ja"/>
+    <FontFamilyMap
+        Unicode    = "20000-2B81F"
+        Target     = "Yu Gothic, Microsoft Mhei"
+        Scale      = "1.0"
+        Language   = "ko"/>
+    <FontFamilyMap
+        Unicode    = "20000-2B81F"
+        Target     = "Microsoft Mhei, Yu Gothic"
+        Scale      = "1.0"/>
+
+    <!-- [2F800-2FA1F] CJK Compatibility Ideographs Supplement -->
+    <FontFamilyMap
+        Unicode    = "2F800-2FA1F"
+        Target     = "Yu Gothic, Microsoft Mhei"
+        Scale      = "1.0"
+        Language   = "ja"/>
+    <FontFamilyMap
+        Unicode    = "2F800-2FA1F"
+        Target     = "Yu Gothic, Microsoft Mhei"
+        Scale      = "1.0"
+        Language   = "ko"/>
+    <FontFamilyMap
+        Unicode    = "2F800-2FA1F"
+        Target     = "Microsoft Mhei, Yu Gothic"
+        Scale      = "1.0"/>
+
+  </FontFamily.FamilyMaps>
+
+</FontFamily>

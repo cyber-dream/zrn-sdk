@@ -1,0 +1,327 @@
+/**
+ * Kestrel - anim.c
+ * Animation: easing, the render transform of an element (PlaneProjection,
+ * ScaleTransform, TranslateTransform), Kelement_animate, and the lean of a
+ * pressed element (Tilt).
+ *
+ * The clock is the root's: the sum of the deltas of Kroot_tick, so a test can
+ * move time by hand and an app that pauses stops its animations. An animation
+ * that is running is advanced by Kroot_tick for the element that has it.
+ */
+
+#include "internal.h"
+
+#define TILT_DEG 14.0f
+#define TILT_LIFT 40.0f
+#define PRESS_SINK 0.045f
+#define TILT_IN_MS 90.0f
+#define TILT_OUT_MS 160.0f
+#define EYE_FOV_DEG 34.0f
+
+
+/* ============================================================================
+ *  easing
+ * ============================================================================ */
+
+/* (0.2, 0.8, 0.2, 1) as a cubic Bezier */
+static float ease_emphasized(float t) {
+	const float x1 = 0.2f, y1 = 0.8f, x2 = 0.2f, y2 = 1.0f;
+	float s = t, u;
+	int i;
+	for (i = 0; i < 8; i++) {
+		float dx;
+		u = 1 - s;
+		dx = 3 * u * u * x1 + 6 * u * s * (x2 - x1) + 3 * s * s * (1 - x2);
+		if (fabsf(dx) < 1e-5f) break;
+		s -= (3 * u * u * s * x1 + 3 * u * s * s * x2 + s * s * s - t) / dx;
+		s = kst_clampf(s, 0, 1);
+	}
+	u = 1 - s;
+	return 3 * u * u * s * y1 + 3 * u * s * s * y2 + s * s * s;
+}
+
+float kst_ease(KEasing easing, float t) {
+	t = kst_clampf(t, 0, 1);
+	switch (easing) {
+	case K_EASE_OUT: { float u = 1 - t; return 1 - u * u * u; }
+	case K_EASE_IN: return t * t * t;
+	case K_EASE_EMPHASIZED: return ease_emphasized(t);
+	default: return t;
+	}
+}
+
+float Keasing(KEasing easing, float t) { return kst_ease(easing, t); }
+
+
+/* ============================================================================
+ *  transforms: column-major 4x4, m[column * 4 + row]
+ * ============================================================================ */
+
+void kst_xf_identity(float m[16]) {
+	memset(m, 0, 16 * sizeof(float));
+	m[0] = m[5] = m[10] = m[15] = 1;
+}
+
+void kst_xf_mul(float out[16], const float a[16], const float b[16]) {
+	float r[16];
+	int c, row, k;
+	for (c = 0; c < 4; c++) {
+		for (row = 0; row < 4; row++) {
+			float s = 0;
+			for (k = 0; k < 4; k++) s += a[k * 4 + row] * b[c * 4 + k];
+			r[c * 4 + row] = s;
+		}
+	}
+	memcpy(out, r, sizeof r);
+}
+
+static void xf_translate(float out[16], float x, float y, float z) {
+	float t[16];
+	kst_xf_identity(t);
+	t[12] = x; t[13] = y; t[14] = z;
+	kst_xf_mul(out, out, t);
+}
+
+/* positive takes the right-hand side away from the viewer; z grows toward the viewer */
+static void xf_rotate_y(float out[16], float deg) {
+	float a = deg * KST_PI / 180.0f, c = cosf(a), s = sinf(a), r[16];
+	kst_xf_identity(r);
+	r[0] = c; r[8] = s; r[2] = -s; r[10] = c;
+	kst_xf_mul(out, out, r);
+}
+
+/* positive takes the bottom away from the viewer */
+static void xf_rotate_x(float out[16], float deg) {
+	float a = deg * KST_PI / 180.0f, c = cosf(a), s = sinf(a), r[16];
+	kst_xf_identity(r);
+	r[5] = c; r[9] = s; r[6] = -s; r[10] = c;
+	kst_xf_mul(out, out, r);
+}
+
+static void xf_scale(float out[16], float s) {
+	float r[16];
+	kst_xf_identity(r);
+	r[0] = r[5] = r[10] = s;
+	kst_xf_mul(out, out, r);
+}
+
+void kst_xf_of_element(const kst_element_t* e, float ox, float oy, float width, float height, float scale, float out[16]) {
+	float cx = ox + e->proj_cx * width, cy = oy + e->proj_cy * height;
+	kst_xf_identity(out);
+	/* applied last to first: the centre to the origin, the rotations, the scale, back, and the slide */
+	xf_translate(out, cx + e->translate_x * scale, cy + e->translate_y * scale, 0);
+	if (e->render_scale != 1.0f) xf_scale(out, e->render_scale);
+	if (e->rot_x != 0.0f) xf_rotate_x(out, e->rot_x);
+	if (e->rot_y != 0.0f) xf_rotate_y(out, e->rot_y);
+	xf_translate(out, -cx, -cy, 0);
+}
+
+void kst_update_transformed(kst_element_t* e) {
+	e->transformed = e->rot_x != 0.0f || e->rot_y != 0.0f || e->render_scale != 1.0f || e->translate_x != 0.0f || e->translate_y != 0.0f;
+}
+
+void Kelement_set_projection(Kid id, float rotation_x, float rotation_y, float center_x, float center_y) {
+	kst_element_t* e = kst_get(id, K_CLASS_ELEMENT);
+	if (!e) return;
+	e->rot_x = rotation_x;
+	e->rot_y = rotation_y;
+	e->proj_cx = center_x;
+	e->proj_cy = center_y;
+	kst_update_transformed(e);
+	kst_changed_paint(e);
+}
+
+void Kelement_set_render_scale(Kid id, float scale) {
+	kst_element_t* e = kst_get(id, K_CLASS_ELEMENT);
+	if (!e) return;
+	e->render_scale = scale;
+	kst_update_transformed(e);
+	kst_changed_paint(e);
+}
+
+void Kelement_set_translate(Kid id, float x, float y) {
+	kst_element_t* e = kst_get(id, K_CLASS_ELEMENT);
+	if (!e) return;
+	e->translate_x = x;
+	e->translate_y = y;
+	kst_update_transformed(e);
+	kst_changed_paint(e);
+}
+
+void Kelement_set_tilt(Kid id, int enabled) {
+	kst_element_t* e = kst_get(id, K_CLASS_ELEMENT);
+	if (e) e->tilt = enabled != 0;
+}
+
+
+/* ============================================================================
+ *  Kelement_animate
+ * ============================================================================ */
+
+static float* property_slot(kst_element_t* e, KAnimatedProperty p) {
+	switch (p) {
+	case K_PROP_OPACITY: return &e->opacity;
+	case K_PROP_ROTATION_X: return &e->rot_x;
+	case K_PROP_ROTATION_Y: return &e->rot_y;
+	case K_PROP_SCALE: return &e->render_scale;
+	case K_PROP_TRANSLATE_X: return &e->translate_x;
+	case K_PROP_TRANSLATE_Y: return &e->translate_y;
+	default: return NULL;
+	}
+}
+
+static void property_set(kst_element_t* e, KAnimatedProperty p, float v) {
+	float* slot = property_slot(e, p);
+	if (!slot) return;
+	*slot = v;
+	kst_update_transformed(e);
+	kst_changed_paint(e);
+}
+
+float Kelement_get_property(Kid id, KAnimatedProperty property) {
+	kst_element_t* e = kst_get(id, K_CLASS_ELEMENT);
+	float* slot = e ? property_slot(e, property) : NULL;
+	return slot ? *slot : 0.0f;
+}
+
+int kst_animations_enabled(const kst_root_t* r) {
+	if (!r) return 0;
+	if (r->animations == K_ANIMATIONS_ON) return 1;
+	if (r->animations == K_ANIMATIONS_OFF) return 0;
+	return r->renderer == K_RENDERER_GPU || r->gpu_window;
+}
+
+void Kelement_animate(Kid id, KAnimatedProperty property, float to, float duration_ms, KEasing easing, float delay_ms) {
+	kst_element_t* e = kst_get(id, K_CLASS_ELEMENT);
+	float* slot;
+	if (!e || property < 0 || property >= K_PROP_LAST_) return;
+	slot = property_slot(e, property);
+	if (e->tweens) e->tweens->p[property].active = 0;
+	if (!e->root || !kst_animations_enabled(e->root) || (duration_ms <= 0 && delay_ms <= 0)) {
+		property_set(e, property, to);
+		return;
+	}
+	if (!e->tweens) {
+		e->tweens = (kst_tween_t*)calloc(1, sizeof *e->tweens);
+		if (!e->tweens) {
+			kst_error(K_ERROR_OUT_OF_MEMORY, "out of memory");
+			return;
+		}
+	}
+	e->tweens->p[property].active = 1;
+	e->tweens->p[property].from = *slot;
+	e->tweens->p[property].to = to;
+	e->tweens->p[property].start = (float)e->root->time_ms;
+	e->tweens->p[property].duration = duration_ms;
+	e->tweens->p[property].delay = delay_ms;
+	e->tweens->p[property].easing = easing;
+	kst_changed_paint(e);
+}
+
+int Kelement_is_animating(Kid id) {
+	kst_element_t* e = kst_get(id, K_CLASS_ELEMENT);
+	int i;
+	if (!e || !e->tweens) return K_FALSE;
+	for (i = 0; i < K_PROP_LAST_; i++) if (e->tweens->p[i].active) return K_TRUE;
+	return K_FALSE;
+}
+
+void kst_tweens_tick(kst_element_t* e) {
+	int i, any = 0;
+	float now;
+	if (!e->tweens) return;
+	now = e->root ? (float)e->root->time_ms : 1e30f;
+	for (i = 0; i < K_PROP_LAST_; i++) {
+		kst_tween_t* t = e->tweens;
+		float u;
+		if (!t->p[i].active) continue;
+		u = now - t->p[i].start - t->p[i].delay;
+		if (u < 0) { any = 1; continue; }
+		if (t->p[i].duration <= 0 || u >= t->p[i].duration) {
+			t->p[i].active = 0;
+			property_set(e, (KAnimatedProperty)i, t->p[i].to);
+		} else {
+			property_set(e, (KAnimatedProperty)i, t->p[i].from + (t->p[i].to - t->p[i].from) * kst_ease(t->p[i].easing, u / t->p[i].duration));
+			any = 1;
+		}
+	}
+	if (!any) kst_tweens_free(e);
+}
+
+void kst_tweens_free(kst_element_t* e) {
+	free(e->tweens);
+	e->tweens = NULL;
+}
+
+
+/* ============================================================================
+ *  tilt
+ * ============================================================================ */
+
+static void tilt_aim(kst_root_t* r, float x, float y) {
+	kst_element_t* e = r->tilt_element;
+	KPoint c;
+	if (!e || e->rect.width <= 0 || e->rect.height <= 0) return;
+	c = kst_to_root(e, (KPoint){ e->rect.width * 0.5f, e->rect.height * 0.5f });
+	r->tilt_fx = kst_clampf((x - c.x) / (e->rect.width * 0.5f), -1, 1);
+	r->tilt_fy = kst_clampf((y - c.y) / (e->rect.height * 0.5f), -1, 1);
+}
+
+void kst_tilt_press(kst_root_t* r, kst_element_t* e, float x, float y) {
+	if (!kst_animations_enabled(r)) return;
+	if (r->tilt_element && r->tilt_element != e) {
+		r->tilt_element->rot_x = r->tilt_element->rot_y = 0;
+		r->tilt_element->render_scale = 1;
+		kst_update_transformed(r->tilt_element);
+	}
+	r->tilt_element = e;
+	r->tilt_amount = 0;
+	r->tilt_target = 1;
+	e->proj_cx = e->proj_cy = 0.5f;
+	tilt_aim(r, x, y);
+}
+
+void kst_tilt_move(kst_root_t* r, float x, float y) {
+	if (r->tilt_element && r->tilt_target > 0) tilt_aim(r, x, y);
+}
+
+void kst_tilt_release(kst_root_t* r) {
+	if (r->tilt_element) r->tilt_target = 0;
+}
+
+void kst_tilt_tick(kst_root_t* r, float dt) {
+	kst_element_t* e = r->tilt_element;
+	float eased, cap_y, cap_x, deg_y, deg_x;
+	if (!e) return;
+	if (r->tilt_target > r->tilt_amount) r->tilt_amount = kst_minf(1, r->tilt_amount + dt / TILT_IN_MS);
+	else if (r->tilt_target < r->tilt_amount) r->tilt_amount = kst_maxf(0, r->tilt_amount - dt / TILT_OUT_MS);
+	eased = kst_ease(K_EASE_OUT, r->tilt_amount);
+	/* its far end never rises more than TILT_LIFT points */
+	cap_y = e->rect.width > 0 ? asinf(kst_minf(1, TILT_LIFT / (e->rect.width * 0.5f))) * 180.0f / KST_PI : TILT_DEG;
+	cap_x = e->rect.height > 0 ? asinf(kst_minf(1, TILT_LIFT / (e->rect.height * 0.5f))) * 180.0f / KST_PI : TILT_DEG;
+	deg_y = r->tilt_fx * kst_minf(TILT_DEG, cap_y) * eased;
+	deg_x = r->tilt_fy * kst_minf(TILT_DEG, cap_x) * eased;
+	e->rot_y = deg_y;
+	e->rot_x = deg_x;
+	e->render_scale = 1 - PRESS_SINK * eased;
+	kst_update_transformed(e);
+	kst_changed_paint(e);
+	if (r->tilt_amount <= 0 && r->tilt_target <= 0) {
+		e->rot_x = e->rot_y = 0;
+		e->render_scale = 1;
+		kst_update_transformed(e);
+		r->tilt_element = NULL;
+	}
+}
+
+void Kroot_set_animations(Kid root, KAnimations mode) {
+	kst_root_t* r = kst_root_lookup(root);
+	if (r) r->animations = mode;
+}
+
+KAnimations Kroot_get_animations(Kid root) {
+	kst_root_t* r = kst_root_lookup(root);
+	return r ? r->animations : K_ANIMATIONS_AUTO;
+}
+
+int Kroot_animations_enabled(Kid root) { return kst_animations_enabled(kst_root_lookup(root)); }

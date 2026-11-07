@@ -26,7 +26,13 @@ set_target_properties(zrnui PROPERTIES VERSION 0.1.0 SOVERSION 0)
 # the examples: CLion runs them from .run/*.xml with ZUI_WINDOW=480x800 in the
 # environment (the window, in points, on a Wayland session). On a shell:
 #   ZUI_WINDOW=480x800 ./helloworld
-foreach(example IN ITEMS helloworld-c hello-c settings-c)
+# Kestrel (WP8 Silverlight controls, headless): helloworld-c is written on it
+add_subdirectory(kestrel)
+add_executable(helloworld examples/helloworld-c/main.c)
+target_link_libraries(helloworld PRIVATE kestrel::kestrel)
+set_target_properties(helloworld PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
+foreach(example IN ITEMS hello-c settings-c)
 	string(REGEX REPLACE "-c$" "" short ${example})
 	add_executable(${short} examples/${example}/main.c)
 	target_link_libraries(${short} PRIVATE zrnui)
