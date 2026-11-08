@@ -678,11 +678,14 @@ void kst_gl_end(kst_gl_t* gl, int swap) {
 	if (swap && !gl->offscreen) eglSwapBuffers(gl->display, gl->surface);
 }
 
+void kst_gl_swap(kst_gl_t* gl) {
+	if (gl && !gl->offscreen) eglSwapBuffers(gl->display, gl->surface);
+}
+
 int kst_gl_read(kst_gl_t* gl, uint8_t* rgba, int width, int height) {
 	int y;
 	uint8_t* row;
-	if (!gl->offscreen) return 0;
-	glBindFramebuffer(GL_FRAMEBUFFER, gl->fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, gl->offscreen ? gl->fbo : 0); /* the window swaps through the default framebuffer */
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
 	/* GL's rows run bottom to top */
@@ -712,6 +715,7 @@ void kst_gl_resize(kst_gl_t* gl, int width, int height) { (void)gl; (void)width;
 void kst_gl_destroy(kst_gl_t* gl) { (void)gl; }
 void kst_gl_begin(kst_gl_t* gl, kst_painter_t* p, int width, int height, float scale) { (void)gl; (void)p; (void)width; (void)height; (void)scale; }
 void kst_gl_end(kst_gl_t* gl, int swap) { (void)gl; (void)swap; }
+void kst_gl_swap(kst_gl_t* gl) { (void)gl; }
 int kst_gl_read(kst_gl_t* gl, uint8_t* rgba, int width, int height) { (void)gl; (void)rgba; (void)width; (void)height; return 0; }
 void kst_gl_forget_image(kst_image_t* image) { (void)image; }
 int kst_gl_available(void) { return 0; }

@@ -25,6 +25,7 @@ pkg_check_modules(FONTCONFIG IMPORTED_TARGET fontconfig)
 
 set(KESTREL_SOURCES
 	src/core.c
+	src/debug.c
 	src/anim.c
 	src/theme.c
 	src/theme_resources.c
@@ -68,6 +69,8 @@ if(KESTREL_WITH_WAYLAND)
 endif()
 if(WAYLAND_FOUND)
 	list(APPEND KESTREL_SOURCES protocol/xdg-shell-protocol.c)
+	list(APPEND KESTREL_SOURCES protocol/viewporter-protocol.c)
+	list(APPEND KESTREL_SOURCES protocol/fractional-scale-v1-protocol.c)
 endif()
 
 if(KESTREL_BUILD_SHARED)

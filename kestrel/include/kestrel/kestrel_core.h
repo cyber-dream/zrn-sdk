@@ -558,6 +558,17 @@ typedef enum KAccent {
 } KAccent;
 
 /**
+ * The debug overlay of Kroot_set_debug: a bit field. K_DEBUG_BOUNDS outlines
+ * the arranged rect of every element; K_DEBUG_LABELS also writes the class
+ * (and the Name) of each over its outline. The names live in kestrel_host.h.
+ */
+enum {
+	K_DEBUG_OFF = 0,
+	K_DEBUG_BOUNDS = 1,
+	K_DEBUG_LABELS = 1 | 2
+};
+
+/**
  * Every class of the library. Kelement_get_class returns the class of an
  * object; Kelement_is_a tells whether it is, or derives from, a class.
  */

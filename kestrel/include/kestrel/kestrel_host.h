@@ -115,8 +115,24 @@ extern "C" {
 	 * Escape does this in Kroot_inject_key.
 	 */
 	KESTREL_API int Kroot_back(Kid root);
-	/** @brief Device pixels per logical pixel (a 720p WP8 phone draws 1.5). The frame is size * scale. */
+	/**
+	 * @brief The UI scale: the layout grid is the window divided by it, the painter draws the grid
+	 * back up (at 720 x 1280 and a scale of 1.5 the page is laid out in the 480 x 800 grid and
+	 * comes out one and a half times as big). The scale belongs to the shell of a phone;
+	 * a window sets it from the preferred_scale of the compositor (KESTREL_SCALE overrides it
+	 * only as a debug override), not from the app.
+	 */
 	KESTREL_API void Kroot_set_scale(Kid root, float scale);
+
+	/**
+	 * @brief The debug overlay, drawn over the frame after all the painting: the
+	 * arranged rect of every element, without the controls taking part. K_DEBUG_BOUNDS
+	 * outlines the elements (the accent for containers, the base for leaves);
+	 * K_DEBUG_LABELS also writes the class (and the Name) over each outline.
+	 * The boxes are where the input hits, so they show the real layout.
+	 */
+	KESTREL_API void Kroot_set_debug(Kid root, int flags);
+	KESTREL_API int Kroot_get_debug(Kid root);
 
 	/**
 	 * Theme. Dark: white on black. Light: black on white. The accent colors

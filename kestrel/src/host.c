@@ -200,7 +200,8 @@ Kid Kroot_create(int width, int height) {
 	}
 	r->width = width;
 	r->height = height;
-	r->scale = 1.0f;
+	/* the scale divides into the UI scale (of the layout grid) and the density of the buffer (crispness) */
+	r->ui = r->density = r->scale = 1.0f;
 	r->first_frame = 1;
 	r->layout_dirty = r->paint_dirty = 1;
 	{
@@ -267,11 +268,37 @@ void Kroot_set_size(Kid root, int width, int height) {
 	if (r->visual) kst_changed_layout(r->visual);
 }
 
+/** The UI scale: the size of the layout grid relative to the window (the painter draws it
+ * back up); at 720 x 1280 and a scale of 1.5 the page is laid out in the 480 x 800 grid.
+ * The scale belongs to the shell; this is the override of KESTREL_SCALE, not a zoom. */
 void Kroot_set_scale(Kid root, float scale) {
 	kst_root_t* r = get_root(root);
 	if (!r || scale <= 0) return;
-	r->scale = scale;
+	r->ui = scale;
+	r->scale = scale * r->density;
 	r->paint_dirty = 1;
+}
+
+/** The density of the buffer against the logical size of the window: only crispness,
+ * what the compositor needs to draw the window sharply; the size of the content is the job of the UI scale. */
+void kst_root_set_density(Kid root, float density) {
+	kst_root_t* r = get_root(root);
+	if (!r || density <= 0) return;
+	r->density = density;
+	r->scale = density * r->ui;
+	r->paint_dirty = 1;
+}
+
+void Kroot_set_debug(Kid root, int flags) {
+	kst_root_t* r = get_root(root);
+	if (!r) return;
+	r->debug_flags = flags ? K_DEBUG_BOUNDS | (flags & 2 ? 2 : 0) : 0;
+	r->paint_dirty = 1;
+}
+
+int Kroot_get_debug(Kid root) {
+	kst_root_t* r = get_root(root);
+	return r ? r->debug_flags : 0;
 }
 
 void Kroot_set_theme(Kid root, KTheme theme) {
@@ -323,14 +350,15 @@ void Kroot_set_background(Kid root, KColor color) {
 
 static void layout_popups(kst_root_t* r) {
 	int i;
+	const float lw = (float)r->width / r->ui, lh = (float)r->height / r->ui;
 	for (i = 0; i < r->popup_count; i++) {
 		kst_popup_t* popup = KST_AS(kst_popup_t, r->popups[i]);
 		kst_element_t* child = popup->base.child_count ? popup->base.children[0] : NULL;
 		KPoint origin, pos;
 		float width;
 		if (!child) continue;
-		kst_measure(child, kst_size((float)r->width, (float)r->height));
-		width = popup->full_width ? (float)r->width : child->desired.width;
+		kst_measure(child, kst_size(lw, lh));
+		width = popup->full_width ? lw : child->desired.width;
 		kst_arrange(child, kst_rect(0, 0, width, child->desired.height));
 		origin = kst_to_root(&popup->base, (KPoint){ 0, 0 });
 		pos.x = popup->h_offset;
@@ -346,13 +374,13 @@ static void layout_popups(kst_root_t* r) {
 					default: pos.x += t.x; pos.y += t.y + target->rect.height; break;
 				}
 				/* flip to the other side when it would leave the screen */
-				if (popup->placement == K_PLACE_BOTTOM && pos.y + child->desired.height > (float)r->height && t.y - child->desired.height >= 0) pos.y = t.y - child->desired.height;
-				if (popup->placement == K_PLACE_TOP && pos.y < 0 && t.y + target->rect.height + child->desired.height <= (float)r->height) pos.y = t.y + target->rect.height;
+				if (popup->placement == K_PLACE_BOTTOM && pos.y + child->desired.height > lh && t.y - child->desired.height >= 0) pos.y = t.y - child->desired.height;
+				if (popup->placement == K_PLACE_TOP && pos.y < 0 && t.y + target->rect.height + child->desired.height <= lh) pos.y = t.y + target->rect.height;
 			}
 		}
 		if (popup->full_width) pos.x = 0;
-		pos.x = kst_clampf(pos.x, 0, kst_maxf(0, (float)r->width - width));
-		pos.y = kst_clampf(pos.y, 0, kst_maxf(0, (float)r->height - child->desired.height));
+		pos.x = kst_clampf(pos.x, 0, kst_maxf(0, lw - width));
+		pos.y = kst_clampf(pos.y, 0, kst_maxf(0, lh - child->desired.height));
 		child->rect.x += pos.x - origin.x;
 		child->rect.y += pos.y - origin.y;
 	}
@@ -361,13 +389,18 @@ static void layout_popups(kst_root_t* r) {
 void Kroot_update_layout(Kid root) {
 	kst_root_t* r = get_root(root);
 	int pass;
+	float lw, lh;
 	if (!r) return;
+	/* the layout grid is the window divided by the scale: at 720 x 1280 and a scale of 1.5
+	 * the page is laid out in the phone grid of 480 x 800, the painter draws it x 1.5 */
+	lw = (float)r->width / r->ui;
+	lh = (float)r->height / r->ui;
 	/* a pass can change what the next one needs (scroll bars appear): up to a few */
 	for (pass = 0; pass < 4; pass++) {
 		r->layout_dirty = 0;
 		if (r->visual) {
-			kst_measure(r->visual, kst_size((float)r->width, (float)r->height));
-			kst_arrange(r->visual, kst_rect(0, 0, (float)r->width, (float)r->height));
+			kst_measure(r->visual, kst_size(lw, lh));
+			kst_arrange(r->visual, kst_rect(0, 0, lw, lh));
 		}
 		layout_popups(r);
 		if (!r->layout_dirty) break;
@@ -379,7 +412,7 @@ void Kroot_update_layout(Kid root) {
  *  painting
  * ============================================================================ */
 
-void kst_paint_element(kst_element_t* e, kst_painter_t* p) {
+void kst_paint_element(kst_element_t* e, kst_painter_t* p, kst_root_t* r) {
 	float tx = p->tx, ty = p->ty, alpha = p->alpha;
 	float saved_xf[16];
 	int saved_has_xf = p->has_xf, count, heap, i;
@@ -402,10 +435,11 @@ void kst_paint_element(kst_element_t* e, kst_painter_t* p) {
 	if (e->clip_to_bounds) kst_push_clip(p, kst_local_rect(e));
 	if (e->cls->paint) e->cls->paint(e, p);
 	list = kst_ordered(e, &count, &heap);
-	for (i = 0; i < count; i++) if (!list[i]->is_popup_child) kst_paint_element(list[i], p);
+	for (i = 0; i < count; i++) if (!list[i]->is_popup_child) kst_paint_element(list[i], p, r);
 	kst_ordered_free(list, heap);
 	if (e->cls->paint_over) e->cls->paint_over(e, p);
 	if (e->clip_to_bounds) kst_pop_clip(p);
+	kst_debug_element(e, p, r);
 	if (e->transformed) {
 		memcpy(p->xf, saved_xf, sizeof saved_xf);
 		p->has_xf = saved_has_xf;
@@ -425,9 +459,9 @@ static void paint_tooltip(kst_root_t* r, kst_painter_t* p) {
 	if (!l) return;
 	w = l->width + 16;
 	h = l->height + 12;
-	x = kst_clampf(r->pointer_x, 0, (float)r->width - w);
+	x = kst_clampf(r->pointer_x, 0, (float)r->width / r->ui - w);
 	y = r->pointer_y + 28;
-	if (y + h > (float)r->height) y = r->pointer_y - h - 8;
+	if (y + h > (float)r->height / r->ui) y = r->pointer_y - h - 8;
 	p->tx = 0; p->ty = 0; p->alpha = 1;
 	kst_fill_rect(p, kst_rect(x, y, w, h), kst_theme_color(NULL, KST_TC_CHROME));
 	kst_stroke_rect(p, kst_rect(x, y, w, h), Kthickness_uniform(1), r->theme.colors[KST_TC_BORDER]);
@@ -440,7 +474,7 @@ int kst_root_paint(kst_root_t* r, kst_painter_t* p) {
 	if (r->layout_dirty || r->first_frame) Kroot_update_layout(r->id);
 	if (!(r->paint_dirty || r->first_frame)) return K_FALSE;
 	kst_paint_clear(p, r->theme.has_background ? r->theme.background : r->theme.colors[KST_TC_BACKGROUND]);
-	if (r->visual) kst_paint_element(r->visual, p);
+	if (r->visual) kst_paint_element(r->visual, p, r);
 	for (i = 0; i < r->popup_count; i++) {
 		kst_element_t* popup = r->popups[i];
 		KPoint origin = kst_to_root(popup, (KPoint){ 0, 0 });
@@ -450,12 +484,12 @@ int kst_root_paint(kst_root_t* r, kst_painter_t* p) {
 			p->tx = 0;
 			p->ty = 0;
 			p->alpha = 1.0f;
-			kst_fill_rect(p, kst_rect(0, 0, (float)r->width, (float)r->height), r->theme.colors[KST_TC_CONTENT_DIALOG_DIMMING]);
+			kst_fill_rect(p, kst_rect(0, 0, (float)r->width / r->ui, (float)r->height / r->ui), r->theme.colors[KST_TC_CONTENT_DIALOG_DIMMING]);
 		}
 		p->tx = origin.x * r->scale;
 		p->ty = origin.y * r->scale;
 		p->alpha = 1.0f;
-		kst_paint_element(popup->children[0], p);
+		kst_paint_element(popup->children[0], p, r);
 	}
 	paint_tooltip(r, p);
 	r->paint_dirty = 0;
@@ -493,8 +527,9 @@ int Kroot_render(Kid root, KFrame* frame) {
 	kst_painter_t p;
 	int w, h, changed;
 	if (!r) return K_FALSE;
-	w = (int)ceilf((float)r->width * r->scale);
-	h = (int)ceilf((float)r->height * r->scale);
+	/* the buffer follows the density of the window, not the UI scale: the painter's scale (ui times density) fills it exactly */
+	w = (int)ceilf((float)r->width * r->density);
+	h = (int)ceilf((float)r->height * r->density);
 	if (r->layout_dirty || r->first_frame) Kroot_update_layout(root);
 	changed = r->paint_dirty || r->first_frame || r->pixels_w != w || r->pixels_h != h;
 	if (changed) {
@@ -736,6 +771,9 @@ int Kroot_inject_pointer(Kid root, KPointerEvent event, float x, float y) {
 	int handled = 0;
 	if (!r) return K_FALSE;
 	if (r->layout_dirty) Kroot_update_layout(root);
+	/* the window gives the pointer in its logical pixels; the layout thinks in the grid of the UI scale */
+	x /= r->ui;
+	y /= r->ui;
 	r->pointer_x = x;
 	r->pointer_y = y;
 	memset(&in, 0, sizeof in);

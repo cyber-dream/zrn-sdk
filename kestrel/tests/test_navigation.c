@@ -103,9 +103,9 @@ static void test_safe_area(void) {
 	Kroot_update_layout(g_root);
 	page = Kframe_get_page(g_frame);
 	r = Kelement_get_bounds(page);
-	/* the page starts under the status bar, the frame itself fills the screen */
-	CHECK_NEAR(r.y, 25);
-	CHECK_NEAR(r.height, 775);
+	/* the page starts under the status bar of 32 (KST_SAFE_AREA_TOP), the frame itself fills the screen */
+	CHECK_NEAR(r.y, 32);
+	CHECK_NEAR(r.height, 768);
 	r = Kelement_get_bounds(g_frame);
 	CHECK_NEAR(r.y, 0);
 	CHECK_NEAR(r.height, 800);

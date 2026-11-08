@@ -150,7 +150,7 @@ void kst_flyout_show_at(kst_element_t* e, kst_element_t* target) {
 		}
 		b->has_background = 1;
 		b->has_border_brush = 1;
-		presenter->min_height = f->placement == K_FLYOUT_PLACEMENT_FULL ? (float)r->height : (e->cls == &kst_class_menu_flyout ? 0 : FLYOUT_MIN_HEIGHT);
+		presenter->min_height = f->placement == K_FLYOUT_PLACEMENT_FULL ? (float)r->height / r->scale : (e->cls == &kst_class_menu_flyout ? 0 : FLYOUT_MIN_HEIGHT);
 	}
 	kst_changed_layout(presenter);
 	f->is_open = 1;

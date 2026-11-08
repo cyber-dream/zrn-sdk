@@ -26,7 +26,7 @@
  * pixels, where the first element of a page starts (the 25 px of a Windows Phone page). A constant
  * for now; it is going to come from the shell, and change while the app runs.
  */
-#define KST_SAFE_AREA_TOP 25.0f
+#define KST_SAFE_AREA_TOP 32.0f
 
 typedef struct kst_element kst_element_t;
 typedef struct kst_class kst_class_t;
@@ -1114,6 +1114,11 @@ void kst_gl_resize(kst_gl_t* gl, int width, int height);
 /** Makes the context current and prepares `p` to draw on it; kst_gl_end draws what is left and swaps. */
 void kst_gl_begin(kst_gl_t* gl, kst_painter_t* p, int width, int height, float scale);
 void kst_gl_end(kst_gl_t* gl, int swap);
+/** Swaps the buffer of an on-screen window to the compositor; nothing on an offscreen one. */
+void kst_gl_swap(kst_gl_t* gl);
+/** The density of the buffer against the logical size of the window, the painter draws the
+ * grid of the UI scale into it. */
+void kst_root_set_density(Kid root, float density);
 /** Off-screen only: the frame as RGBA8, rows top to bottom. */
 int kst_gl_read(kst_gl_t* gl, uint8_t* rgba, int width, int height);
 void kst_gl_destroy(kst_gl_t* gl);
@@ -1167,7 +1172,12 @@ void kst_image_free(kst_image_t* image);
 struct kst_root {
 	Kid id;
 	int width, height;
+	/** The painter's scale: the UI scale times the density of the buffer. */
 	float scale;
+	/** The UI scale: the layout grid is the window divided by it; the shell owns it. */
+	float ui;
+	/** The density of the buffer against the logical size: only crispness. */
+	float density;
 	kst_theme_t theme;
 	kst_element_t* visual;
 	kst_element_t** popups;
@@ -1200,6 +1210,8 @@ struct kst_root {
 	/** The overrides of ThemeResource keys the application set (resources.c). */
 	struct kst_res_override* overrides;
 	int override_count, override_cap;
+	/** The debug overlay: zero, or a mix of K_DEBUG_BOUNDS and K_DEBUG_LABELS (debug.c). */
+	int debug_flags;
 };
 
 kst_root_t* kst_root_lookup(Kid id);
@@ -1208,6 +1220,8 @@ kst_root_t* kst_root_lookup(Kid id);
  * and every element). K_TRUE when it painted. The software and the GPU renderer both go through it.
  */
 int kst_root_paint(kst_root_t* r, kst_painter_t* p);
+/** Draws the debug overlay over the frame (debug.c): the bounds of the elements, their class names. */
+void kst_debug_element(const kst_element_t* e, kst_painter_t* p, const kst_root_t* r);
 /** The name Kroot_get_renderer_name reports. */
 void kst_note_renderer(const char* name);
 
@@ -1241,6 +1255,6 @@ void kst_set_capture(kst_root_t* r, kst_element_t* e);
 void kst_release_capture(kst_root_t* r, kst_element_t* e);
 void kst_element_forget(kst_element_t* e);
 int kst_dispatch(kst_element_t* e, kst_input_t* in);
-void kst_paint_element(kst_element_t* e, kst_painter_t* p);
+void kst_paint_element(kst_element_t* e, kst_painter_t* p, kst_root_t* r);
 
 #endif

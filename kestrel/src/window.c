@@ -9,6 +9,9 @@
 #ifdef KESTREL_HAVE_WAYLAND
 
 #include <poll.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/mman.h>
 #include <time.h>
 #include <unistd.h>
@@ -17,6 +20,10 @@
 #include <xkbcommon/xkbcommon.h>
 
 #include "../protocol/xdg-shell-client-protocol.h"
+#include "../protocol/viewporter-client-protocol.h"
+#include "../protocol/fractional-scale-v1-client-protocol.h"
+
+static float scale_of_env(const char* env);
 
 typedef struct buffer {
 	struct wl_buffer* buffer;
@@ -38,13 +45,26 @@ typedef struct window {
 	struct wl_surface* surface;
 	struct xdg_surface* xdg_surface;
 	struct xdg_toplevel* toplevel;
+	/** The fractional scaling (wp_viewporter + wp_fractional_scale_v1) when the compositor has it and the scale is fractional. */
+	struct wp_viewporter* viewporter;
+	struct wp_fractional_scale_manager_v1* scale_manager;
+	struct wp_viewport* viewport;
+	struct wp_fractional_scale_v1* fractional;
+	/** The preferred scale the compositor reports (in 1/120), 0 before the first event. */
+	uint32_t preferred_scale;
 	buffer_t buffers[2];
 	/** The OpenGL ES 2 renderer when the window has one: no wl_shm buffers then. */
 	kst_gl_t* gl;
 	int gl_w, gl_h;
 	int buf_w, buf_h;
+	/** KESTREL_DUMP: the dump of the KESTREL_DUMP of each renderer runs once, on the 60th painted frame. */
+	int dumped_sw, frames_sw;
 	Kid root;
-	int scale;
+	int scale;    /* the integer buffer scale: the ceiling of fscale while the fractional one goes through the viewport */
+	float fscale; /* the real scale: device pixels per logical pixel, fractional through the viewport */
+	float env_scale; /* KESTREL_SCALE when set: the override that wins over the preferred_scale of the compositor, 0 otherwise */
+	/** The UI scale: the shell's preferred_scale, or KESTREL_SCALE as the debug override; the layout grid is the window divided by it. */
+	float ui_scale;
 	int width, height; /* logical */
 	int configured, closed, pending_w, pending_h;
 	struct xkb_context* xkb;
@@ -99,11 +119,37 @@ static int buffers_make(window_t* w, int pw, int ph) {
 	return 1;
 }
 
+/** The dump of the env KESTREL_DUMP: the buffer of the window into a PPM, when KESTREL_DUMP is set,
+ * right after the first painted frame of a size. Half a PPM of the debug harness, in the window.
+ * TODO.md: debug only, remove before release. */
+static void window_dump(window_t* w, const uint8_t* p32, int pw, int ph, const char* what, int bgra) {
+	const char* dir = getenv("KESTREL_DUMP");
+	char file[512];
+	FILE* f;
+	int x, y;
+	if (!dir || !*dir || !p32) return;
+	snprintf(file, sizeof file, "%s/%s", dir, what);
+	f = fopen(file, "wb");
+	if (!f) { kst_error(K_ERROR_IO, "KESTREL_DUMP: cannot open %s", file); return; }
+	fprintf(f, "P6\n%d %d\n255\n", pw, ph);
+	for (y = 0; y < ph; y++)
+		for (x = 0; x < pw; x++) {
+			const uint8_t* px = p32 + ((size_t)y * (size_t)pw + (size_t)x) * 4;
+			fwrite(px + (bgra ? 2 : 0), 1, 1, f); /* the shm buffer is BGRA, the GL one RGBA */
+			fwrite(px + 1, 1, 1, f);
+			fwrite(px + (bgra ? 0 : 2), 1, 1, f);
+		}
+	fclose(f);
+	fprintf(stderr, "kestrel: dumped %s (%dx%d)\n", file, pw, ph);
+}
+
 /* One frame on the GPU: painted only when something changed, then swapped. */
 static void present_gl(window_t* w) {
 	kst_root_t* r = kst_root_lookup(w->root);
 	kst_painter_t p;
-	int pw = w->width * w->scale, ph = w->height * w->scale, painted;
+	int pw = (int)(w->width * w->fscale + 0.5f), ph = (int)(w->height * w->fscale + 0.5f);
+	uint8_t* shot;
+	static int frames_gl, dumped_gl;
 	if (!r) return;
 	if (pw != w->gl_w || ph != w->gl_h) {
 		/* the buffer of a new size is blank: draw everything again */
@@ -111,9 +157,18 @@ static void present_gl(window_t* w) {
 		w->gl_h = ph;
 		r->paint_dirty = 1;
 	}
-	kst_gl_begin(w->gl, &p, pw, ph, (float)w->scale);
-	painted = kst_root_paint(r, &p);
-	kst_gl_end(w->gl, painted);
+	kst_gl_begin(w->gl, &p, pw, ph, r->scale);
+	(void)kst_root_paint(r, &p);
+	kst_gl_end(w->gl, 0);                                    /* flush it, but do not swap yet */
+	if (!dumped_gl && getenv("KESTREL_DUMP")) {
+		shot = (uint8_t*)malloc((size_t)pw * (size_t)ph * 4);
+		if (shot && kst_gl_read(w->gl, shot, pw, ph) && ++frames_gl >= 60) {
+			dumped_gl = 1;
+			window_dump(w, shot, pw, ph, "window-gl.ppm", 0);
+		}
+		free(shot);
+	}
+	kst_gl_swap(w->gl);
 }
 
 static void present(window_t* w) {
@@ -121,7 +176,7 @@ static void present(window_t* w) {
 	if (w->gl) { present_gl(w); return; }
 	buffer_t* b = NULL;
 	int i, x, y;
-	int pw = w->width * w->scale, ph = w->height * w->scale;
+	int pw = (int)(w->width * w->fscale + 0.5f), ph = (int)(w->height * w->fscale + 0.5f);
 	if (pw != w->buf_w || ph != w->buf_h) {
 		if (!buffers_make(w, pw, ph)) return;
 		w->buffers[0].busy = w->buffers[1].busy = 0;
@@ -142,7 +197,62 @@ static void present(window_t* w) {
 	b->busy = 1;
 	wl_surface_attach(w->surface, b->buffer, 0, 0);
 	wl_surface_damage_buffer(w->surface, 0, 0, pw, ph);
+	if (!w->dumped_sw && getenv("KESTREL_DUMP") && ++w->frames_sw >= 60) {
+		w->dumped_sw = 1;
+		window_dump(w, b->data, pw, ph, "window-sw.ppm", 1);
+	}
 	wl_surface_commit(w->surface);
+}
+
+/* ---- scaling ---- */
+
+/** Adopts a scale: the UI scale itself (the layout grid is the window divided by it, and
+ * Kroot_set_scale is what the painter multiplies by); the buffer is drawn at the integer
+ * ceiling, a fractional one goes through the viewport (the buffer of the ceiling squeezed
+ * into the logical size, the compositor samples it at its own factor); without a viewport
+ * only the integer scale works. The scale belongs to the shell: preferred_scale, or KESTREL_SCALE as a debug override. */
+static void apply_scale(window_t* w, float fscale) {
+	kst_root_t* r = kst_root_lookup(w->root);
+	w->fscale = fscale;
+	w->scale = (int)fscale;
+	if ((float)w->scale < fscale) w->scale++;
+	if (w->viewport) wp_viewport_set_destination(w->viewport, w->width, w->height);
+	else w->fscale = (float)w->scale; /* the compositor has no wp_viewporter: only the integer scale works */
+	if (!w->viewport && w->scale > 1 && w->surface) wl_surface_set_buffer_scale(w->surface, w->scale);
+	/* the density is what fills the buffer; the UI scale is the preferred_scale of the shell
+	 * (the env overrides it only as a debug override): the layout grid is the window divided by it */
+	kst_root_set_density(w->root, w->fscale);
+	Kroot_set_scale(w->root, w->ui_scale);
+	if (r) r->paint_dirty = 1; /* the buffers of the new size are blank */
+}
+
+/* ---- xdg-shell ---- */
+
+static float scale_of_env(const char* env) {
+	float f = env && *env ? strtof(env, NULL) : 0.0f;
+	return f > 0 ? f : 0.0f;
+}
+
+static void preferred_scale(void* d, struct wp_fractional_scale_v1* s, uint32_t scale) {
+	window_t* w = (window_t*)d;
+	float f = scale / 120.0f; /* in 1/120 of a scale of 1: 180 is 1.5 */
+	(void)s;
+	w->preferred_scale = scale;
+	/* the compositor owns the scale of a mobile shell; the environment only overrides it */
+	if (w->env_scale <= 0 && f > 0 && f != w->fscale) apply_scale(w, f);
+}
+
+static const struct wp_fractional_scale_v1_listener fractional_listener = { preferred_scale };
+
+/* One-time diagnostics of the scale path: what the compositor and the env gave. TODO.md: remove before release. */
+static void scale_report(const window_t* w) {
+	static int done;
+	if (done) return;
+	done = 1;
+	fprintf(stderr, "kestrel: window scale: ui=%.3f density=%.3f buffer_scale=%d viewport=%s env=%s preferred=%.3f buffer=%dx%d logical=%dx%d grid=%dx%d\n",
+		w->ui_scale, w->fscale, w->scale, w->viewport ? "yes" : "no", w->env_scale > 0 ? "set" : "none",
+		w->preferred_scale / 120.0f, (int)(w->width * w->fscale + 0.5f), (int)(w->height * w->fscale + 0.5f), w->width, w->height,
+		(int)(w->width / w->ui_scale + 0.5f), (int)(w->height / w->ui_scale + 0.5f));
 }
 
 /* ---- xdg-shell ---- */
@@ -159,7 +269,10 @@ static void surface_configure(void* d, struct xdg_surface* s, uint32_t serial) {
 		Kroot_set_size(w->root, w->width, w->height);
 	}
 	w->configured = 1;
-	Kroot_set_scale(w->root, (float)w->scale);
+	if (w->viewport) wp_viewport_set_destination(w->viewport, w->width, w->height); /* the logical size of the resize */
+	Kroot_set_scale(w->root, w->ui_scale);
+	kst_root_set_density(w->root, w->fscale);
+	scale_report(w);
 	present(w);
 }
 static const struct xdg_surface_listener xdg_surface_listener = { .configure = surface_configure };
@@ -362,6 +475,8 @@ static void reg_global(void* d, struct wl_registry* r, uint32_t name, const char
 	window_t* w = (window_t*)d;
 	if (!strcmp(iface, wl_compositor_interface.name)) w->compositor = (struct wl_compositor*)wl_registry_bind(r, name, &wl_compositor_interface, version < 4 ? version : 4);
 	else if (!strcmp(iface, wl_shm_interface.name)) w->shm = (struct wl_shm*)wl_registry_bind(r, name, &wl_shm_interface, 1);
+	else if (!strcmp(iface, wp_viewporter_interface.name)) w->viewporter = (struct wp_viewporter*)wl_registry_bind(r, name, &wp_viewporter_interface, 1);
+	else if (!strcmp(iface, wp_fractional_scale_manager_v1_interface.name)) w->scale_manager = (struct wp_fractional_scale_manager_v1*)wl_registry_bind(r, name, &wp_fractional_scale_manager_v1_interface, 1);
 	else if (!strcmp(iface, xdg_wm_base_interface.name)) w->wm_base = (struct xdg_wm_base*)wl_registry_bind(r, name, &xdg_wm_base_interface, 1);
 	else if (!strcmp(iface, wl_seat_interface.name)) {
 		w->seat = (struct wl_seat*)wl_registry_bind(r, name, &wl_seat_interface, version < 5 ? version : 5);
@@ -388,12 +503,19 @@ int Kwindow_run(Kid root, const char* title) {
 	if (!r) { kst_error(K_ERROR_INVALID_ID, "invalid root handle"); return K_FALSE; }
 	memset(&w, 0, sizeof w);
 	w.root = root;
-	/* a root of 0 x 0 takes its size from the window: the first configure of the compositor, 480 x 800 until then */
+	/* The size of the window is not the business of the app: on a phone it is always fullscreen,
+	 * the compositor gives it in the first configure (480 x 800 of the grid until then). */
 	w.width = r->width > 0 ? r->width : 480;
 	w.height = r->height > 0 ? r->height : 800;
 	if (r->width <= 0) Kroot_set_size(root, w.width, w.height);
 	w.scale = scale_env && atoi(scale_env) > 0 ? atoi(scale_env) : 1;
 	w.touch_id = -1;
+	w.env_scale = scale_of_env(scale_env);
+	/* only the numbers now; the surface is not created yet, apply_scale runs on it after */
+	w.fscale = w.env_scale > 0 ? w.env_scale : 1.0f;
+	w.scale = (int)w.fscale;
+	if ((float)w.scale < w.fscale) w.scale++;
+	w.ui_scale = w.env_scale > 0 ? w.env_scale : 1.0f;
 	w.display = wl_display_connect(NULL);
 	if (!w.display) { kst_error(K_ERROR_IO, "no Wayland display (is WAYLAND_DISPLAY set?)"); return K_FALSE; }
 	w.xkb = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
@@ -408,7 +530,14 @@ int Kwindow_run(Kid root, const char* title) {
 	g_window = &w;
 	xdg_wm_base_add_listener(w.wm_base, &wm_base_listener, &w);
 	w.surface = wl_compositor_create_surface(w.compositor);
-	if (w.scale > 1) wl_surface_set_buffer_scale(w.surface, w.scale);
+	if (w.viewporter && w.scale_manager && (w.env_scale <= 0 || w.env_scale != (float)w.scale)) {
+		/* the viewport: a fractional scale (of the environment or, without it, the preferred_scale
+		 * of the compositor, the owner of the scale on a mobile shell) goes through it */
+		w.viewport = wp_viewporter_get_viewport(w.viewporter, w.surface);
+		w.fractional = wp_fractional_scale_manager_v1_get_fractional_scale(w.scale_manager, w.surface);
+		wp_fractional_scale_v1_add_listener(w.fractional, &fractional_listener, &w);
+	}
+	apply_scale(&w, w.fscale);
 	w.xdg_surface = xdg_wm_base_get_xdg_surface(w.wm_base, w.surface);
 	xdg_surface_add_listener(w.xdg_surface, &xdg_surface_listener, &w);
 	w.toplevel = xdg_surface_get_toplevel(w.xdg_surface);
@@ -416,11 +545,10 @@ int Kwindow_run(Kid root, const char* title) {
 	xdg_toplevel_set_title(w.toplevel, title ? title : "Kestrel");
 	xdg_toplevel_set_app_id(w.toplevel, title ? title : "kestrel");
 	wl_surface_commit(w.surface);
-	Kroot_set_scale(root, (float)w.scale);
-	/* the GPU when asked or when it can: the software painter and wl_shm stay as the safe mode */
+	/* The GPU when asked or when it can: the software painter and wl_shm stay as the safe mode. */
 	ok = 1;
 	if (r->renderer != K_RENDERER_SOFTWARE) {
-		w.gl = kst_gl_create_window(w.display, w.surface, w.width * w.scale, w.height * w.scale);
+		w.gl = kst_gl_create_window(w.display, w.surface, (int)(w.width * w.fscale + 0.5f), (int)(w.height * w.fscale + 0.5f));
 		if (!w.gl && r->renderer == K_RENDERER_GPU) {
 			kst_error(K_ERROR_IO, "no OpenGL ES 2 window (K_RENDERER_GPU): %s", Kget_error_message());
 			ok = 0;

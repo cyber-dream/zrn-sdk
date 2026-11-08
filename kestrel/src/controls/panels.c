@@ -991,7 +991,7 @@ static void viewbox_paint(kst_element_t* e, kst_painter_t* p) {
 	p->tx += (e->rect.width - w) * 0.5f * scale;
 	p->ty += (e->rect.height - h) * 0.5f * scale;
 	p->scale = scale * kst_minf(v->scale_x, v->scale_y);
-	kst_paint_element(c, p);
+	kst_paint_element(c, p, c->root);
 	p->scale = scale;
 	p->tx = tx;
 	p->ty = ty;
