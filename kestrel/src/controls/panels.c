@@ -900,6 +900,7 @@ Kid Kborder_get_child(Kid id) {
 void Kborder_set_background(Kid id, KColor color) {
 	kst_element_t* e = kst_get(id, K_CLASS_BORDER);
 	if (!e) return;
+	kst_unbind(e, KST_BP_BORDER_BACKGROUND);
 	KST_AS(kst_border_t, e)->background = color;
 	KST_AS(kst_border_t, e)->has_background = 1;
 	kst_changed_paint(e);
@@ -908,6 +909,7 @@ void Kborder_set_background(Kid id, KColor color) {
 void Kborder_set_border_brush(Kid id, KColor color) {
 	kst_element_t* e = kst_get(id, K_CLASS_BORDER);
 	if (!e) return;
+	kst_unbind(e, KST_BP_BORDER_BORDER_BRUSH);
 	KST_AS(kst_border_t, e)->border_brush = color;
 	KST_AS(kst_border_t, e)->has_border_brush = 1;
 	kst_changed_paint(e);
@@ -916,6 +918,7 @@ void Kborder_set_border_brush(Kid id, KColor color) {
 void Kborder_set_border_thickness(Kid id, KThickness thickness) {
 	kst_element_t* e = kst_get(id, K_CLASS_BORDER);
 	if (!e) return;
+	kst_unbind(e, KST_BP_BORDER_BORDER_THICKNESS);
 	KST_AS(kst_border_t, e)->border_thickness = thickness;
 	kst_changed_layout(e);
 }
@@ -930,6 +933,7 @@ void Kborder_set_corner_radius(Kid id, KCornerRadius radius) {
 void Kborder_set_padding(Kid id, KThickness padding) {
 	kst_element_t* e = kst_get(id, K_CLASS_BORDER);
 	if (!e) return;
+	kst_unbind(e, KST_BP_BORDER_PADDING);
 	KST_AS(kst_border_t, e)->padding = padding;
 	kst_changed_layout(e);
 }

@@ -238,12 +238,12 @@ static void test_text_box(void) {
 
 static void test_theme_colors(void) {
 	Kid root = Kroot_create(100, 100);
-	KColor c = Kroot_get_theme_color(root, "PhoneForegroundColor");
+	KColor c = Kroot_get_theme_color(root, K_RES_PHONE_FOREGROUND_COLOR);
 	CHECK(c.r == 1 && c.g == 1 && c.b == 1 && c.a == 1);
 	Kroot_set_theme(root, K_THEME_LIGHT);
-	c = Kroot_get_theme_color(root, "PhoneBackgroundColor");
+	c = Kroot_get_theme_color(root, K_RES_PHONE_BACKGROUND_COLOR);
 	CHECK(c.r == 1 && c.a == 1);
-	c = Kroot_get_theme_color(root, "PhoneForegroundColor");
+	c = Kroot_get_theme_color(root, K_RES_PHONE_FOREGROUND_COLOR);
 	CHECK(c.r == 0 && c.a == 1); /* #FF000000 of the 8.1 Light dictionary (the WP8 table had #DE000000) */
 	Kroot_set_accent(root, K_ACCENT_LIME);
 	c = Kroot_get_accent_color(root);

@@ -289,6 +289,7 @@ void kst_destroy(kst_element_t* e) {
 	kst_run_destroy(e);
 	kst_handle_free(e->id);
 	kst_tweens_free(e);
+	kst_bindings_free(e);
 	free(e->children);
 	free(e->name);
 	free(e->tooltip);
@@ -809,7 +810,13 @@ Kid Kelement_hit_test(Kid scope, KPoint p) {
 
 SETTER(Kelement_set_width, float, width, 1)
 SETTER(Kelement_set_height, float, height, 1)
-SETTER(Kelement_set_margin, KThickness, margin, 1)
+void Kelement_set_margin(Kid id, KThickness value) {
+	kst_element_t* e = kst_get(id, K_CLASS_ELEMENT);
+	if (!e) return;
+	kst_unbind(e, KST_BP_ELEMENT_MARGIN);
+	e->margin = value;
+	kst_changed_layout(e);
+}
 SETTER(Kelement_set_horizontal_alignment, KHorizontalAlignment, halign, 1)
 SETTER(Kelement_set_vertical_alignment, KVerticalAlignment, valign, 1)
 SETTER(Kelement_set_visibility, KVisibility, visibility, 1)

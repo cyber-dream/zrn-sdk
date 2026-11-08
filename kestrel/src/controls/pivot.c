@@ -22,8 +22,6 @@
 #define TITLE_FONT KST_81_FONT_LARGE
 #define TITLE_X 19.0f
 #define TITLE_TOP 38.0f
-#define HEADER_FONT 57.0f
-#define HEADER_SPACING (-25)
 #define HEADER_MARGIN_LEFT 16.0f
 #define HEADER_MARGIN_TOP (-6.5f)
 #define HEADER_TEXT_X 19.0f
@@ -61,8 +59,13 @@ typedef struct kst_pivot {
 #define PIVOT(e) KST_AS(kst_pivot_t, e)
 #define PITEM(e) KST_AS(kst_pivot_item_t, e)
 
-static kst_font_t header_font(void) {
-	kst_font_t f = { K_FONT_SEMILIGHT, HEADER_FONT, HEADER_SPACING };
+/** PivotHeaderItemFontFamily, FontSize and CharacterSpacing of the theme resources of the root (an override applies). */
+static kst_font_t header_font(const kst_pivot_t* p) {
+	const kst_root_t* r = ((const kst_element_t*)p)->root;
+	kst_font_t f = { K_FONT_SEMILIGHT, 57.0f, -25 };
+	kst_res_font_family(r, K_RES_PIVOT_HEADER_ITEM_FONT_FAMILY, &f.family);
+	kst_res_double(r, K_RES_PIVOT_HEADER_ITEM_FONT_SIZE, &f.size);
+	kst_res_int(r, K_RES_PIVOT_HEADER_ITEM_CHARACTER_SPACING, &f.spacing);
 	return f;
 }
 
@@ -79,7 +82,7 @@ static const char* item_header(const kst_pivot_t* p, int i) {
 /** The width a header takes in the strip: its text and the 16 px of its margin. */
 static float header_slot(const kst_pivot_t* p, int i) {
 	const char* h = item_header(p, i);
-	return kst_text_width(header_font(), h, (int)strlen(h)) + HEADER_MARGIN_LEFT;
+	return kst_text_width(header_font(p), h, (int)strlen(h)) + HEADER_MARGIN_LEFT;
 }
 
 static float strip_length(const kst_pivot_t* p) {
@@ -120,8 +123,8 @@ static float title_height(const kst_pivot_t* p) {
 
 /** Where the strip starts (the top of its panel) and how high it is: the line of the 57 px font, the margin and the padding cancel. */
 static float strip_top(const kst_pivot_t* p) { return TITLE_TOP + title_height(p); }
-static float strip_height(void) { return kst_font_line_height(header_font()); }
-static float items_top(const kst_pivot_t* p) { return strip_top(p) + strip_height(); }
+static float strip_height(const kst_pivot_t* p) { return kst_font_line_height(header_font(p)); }
+static float items_top(const kst_pivot_t* p) { return strip_top(p) + strip_height(p); }
 
 /** A header as it stands in the strip: the item, the text's left edge, and how near it is to being the chosen one (0..1). */
 typedef struct header_place {
@@ -164,7 +167,7 @@ static int header_places(const kst_pivot_t* p, header_place_t* out, int max, flo
 #define MAX_PLACES 64
 
 static KRect header_rect_of(const header_place_t* h, const kst_pivot_t* p) {
-	return kst_rect(h->x, strip_top(p), h->width, strip_height());
+	return kst_rect(h->x, strip_top(p), h->width, strip_height(p));
 }
 
 static KSize pivot_measure(kst_element_t* e, KSize available) {
@@ -203,7 +206,7 @@ static void pivot_paint(kst_element_t* e, kst_painter_t* painter) {
 		float t = places[i].near;
 		KColor c = { off.r + (fg.r - off.r) * t, off.g + (fg.g - off.g) * t, off.b + (fg.b - off.b) * t, off.a + (fg.a - off.a) * t };
 		/* the margin top of -6.5 pulls the text up by as much as the padding pushes the box down: it starts where the strip does */
-		kst_draw_string(painter, header_font(), h, (int)strlen(h), places[i].x, strip_top(p) + HEADER_MARGIN_TOP, c);
+		kst_draw_string(painter, header_font(p), h, (int)strlen(h), places[i].x, strip_top(p) + HEADER_MARGIN_TOP, c);
 	}
 }
 

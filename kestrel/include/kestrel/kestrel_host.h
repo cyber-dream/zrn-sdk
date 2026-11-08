@@ -131,15 +131,30 @@ extern "C" {
 	/** @brief The color behind the tree: PhoneBackgroundBrush of the theme unless set. */
 	KESTREL_API void Kroot_set_background(Kid root, KColor color);
 	/**
-	 * @return A color of the theme by its name, transparent black for an unknown name. The WP8 names
-	 * ("PhoneForegroundColor", "PhoneSubtleColor"...) and, of Windows Phone 8.1 (themeresources.xaml),
-	 * "PhoneBaseLowColor", "PhoneBaseMidColor", "PhoneBaseMediumMidColor", "PhoneBaseMediumMidSolidColor",
-	 * "PhoneBaseMediumHighColor", "PhoneBaseLowSolidColor", "PhoneTextOverAccentColor", "TextBoxBackgroundColor",
-	 * "TextBoxBorderColor", "TextBoxForegroundColor", "TextBoxPlaceholderColor", "TextBoxFocusedBackgroundThemeBrush",
-	 * "SliderThumbBackgroundThemeBrush", "SliderThumbDisabledBackgroundThemeBrush", "SliderTrackBackgroundThemeBrush",
-	 * "SliderTrackDecreaseDisabledBackgroundThemeBrush".
+	 * ThemeResource (themeresources.xaml of Windows Phone 8.1, kestrel_resources.h): the value of a key for the theme
+	 * (Dark / Light) and the accent of the root, or the override the application set. A key of another type, an
+	 * unknown key or an invalid root gives the zero value: transparent black, 0, 0, zeros, K_FONT_NORMAL.
+	 * Brushes are colors (K_RES_PHONE_FOREGROUND_BRUSH); those that are the accent follow Kroot_set_accent. Font weights are Ints.
 	 */
-	KESTREL_API KColor Kroot_get_theme_color(Kid root, const char* name);
+	KESTREL_API KColor Kroot_get_theme_color(Kid root, KThemeResource key);
+	KESTREL_API float Kroot_get_theme_double(Kid root, KThemeResource key);
+	KESTREL_API int Kroot_get_theme_int(Kid root, KThemeResource key);
+	KESTREL_API KThickness Kroot_get_theme_thickness(Kid root, KThemeResource key);
+	KESTREL_API KFontFamily Kroot_get_theme_font_family(Kid root, KThemeResource key);
+
+	/**
+	 * @brief Overrides a key for the root, in both themes: the override wins over the theme until Kroot_clear_resource.
+	 * A key of the theme keeps its type (an override of another type is refused); a key from K_RES_USER_BASE up is the
+	 * application's own and takes the type of the first set (or a set after a clear). Elements bound to the key follow.
+	 * @return K_FALSE for an invalid root, a key that is no key or the wrong type.
+	 */
+	KESTREL_API int Kroot_set_resource_color(Kid root, KThemeResource key, KColor value);
+	KESTREL_API int Kroot_set_resource_double(Kid root, KThemeResource key, float value);
+	KESTREL_API int Kroot_set_resource_int(Kid root, KThemeResource key, int value);
+	KESTREL_API int Kroot_set_resource_thickness(Kid root, KThemeResource key, KThickness value);
+	KESTREL_API int Kroot_set_resource_font_family(Kid root, KThemeResource key, KFontFamily value);
+	/** @brief Removes the override of a key: the theme's value is back (a user key is gone). */
+	KESTREL_API void Kroot_clear_resource(Kid root, KThemeResource key);
 
 	/** @brief Measure and Arrange of the whole tree if anything changed. */
 	KESTREL_API void Kroot_update_layout(Kid root);

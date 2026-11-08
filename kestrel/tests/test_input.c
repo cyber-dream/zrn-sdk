@@ -597,18 +597,24 @@ static void test_handlers_that_navigate(void) {
 
 static void test_toggle_switch_input(void) {
 	Kid root, stack, sw;
+	KPoint sw_c;
 	setup(&root, &stack);
 	sw = Kpanel_add(stack, Ktoggle_switch_create());
 	Kelement_set_vertical_alignment(sw, K_VALIGN_TOP);
 	Ktoggle_switch_on_toggled(sw, on_change, NULL);
 	Kroot_update_layout(root);
 	g_changes = 0;
-	/* a tap anywhere on it flips it */
-	tap(root, center(sw));
+	/* the switch is the 77 x 36 box at the right of the control: only a tap on it flips it */
+	{ KPoint c = { 480 - 38.5f, 18 }; sw_c = c; }
+	tap(root, (KPoint){ 100, 18 });          /* empty space of the row */
+	CHECK(!Ktoggle_switch_get_is_on(sw) && g_changes == 0);
+	tap(root, (KPoint){ 480 - 80, 18 });     /* just left of the switch */
+	CHECK(!Ktoggle_switch_get_is_on(sw) && g_changes == 0);
+	tap(root, sw_c);
 	CHECK(Ktoggle_switch_get_is_on(sw) && g_changes == 1);
-	tap(root, center(sw));
+	tap(root, sw_c);
 	CHECK(!Ktoggle_switch_get_is_on(sw) && g_changes == 2);
-	/* Space, once it has the focus (the tap gave it) */
+	/* Space, once it has the focus (the tap on the switch gave it) */
 	CHECK(Kroot_get_focus(root) == sw);
 	key(root, K_KEY_SPACE, 0);
 	CHECK(Ktoggle_switch_get_is_on(sw) && g_changes == 3);
@@ -638,7 +644,7 @@ static void test_toggle_switch_input(void) {
 	CHECK(!Ktoggle_switch_get_is_on(sw) && g_changes == 6);
 	/* disabled: nothing */
 	Kelement_set_enabled(sw, K_FALSE);
-	tap(root, center(sw));
+	tap(root, sw_c);
 	CHECK(!Ktoggle_switch_get_is_on(sw) && g_changes == 6);
 	Kroot_destroy(root);
 }

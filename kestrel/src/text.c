@@ -40,16 +40,24 @@ static fallback_face_t g_fallbacks[KST_MAX_FALLBACKS];
 static int g_fallback_count;
 
 /*
- * The files of each face, the first that opens wins: Segoe UI when the font directory has it (its
- * Windows names, or the lower-case ones of the ztOS fonts), else Selawik, the free font with the
- * same metrics that is bundled. Segoe UI Bold is not a stand-in for Semibold: it is a heavier
- * weight, so a missing Semibold stays Selawik's.
+ * The faces, in the order they are tried, the first that opens wins:
+ *   1. a file of the exact weight in the font directory (the Windows names of Segoe UI, the Segoe WP
+ *      ones of the phone, the lower-case ones of the ztOS fonts);
+ *   2. Segoe installed in the system (fontconfig: "Segoe WP", then "Segoe UI"), the nearest weight;
+ *   3. a Segoe file of the font directory that stands in for the weight (Regular for the light
+ *      faces, Bold for Semibold), so that a missing weight does not mix in another family;
+ *   4. Selawik, the free font with the same metrics that is bundled.
  */
-#define KST_FACE_CANDIDATES 4
+#define KST_FACE_CANDIDATES 8
 static const char* const g_face_files[KST_FACE_COUNT][KST_FACE_CANDIDATES] = {
-	{ "Segoe UI.ttf", "segoeui.ttf", "Selawik-Regular.ttf", NULL },
-	{ "Segoe UI Semilight.ttf", "segoeuisl.ttf", "Selawik-Semilight.ttf", NULL },
-	{ "Segoe UI Semibold.ttf", "seguisb.ttf", "Selawik-Semibold.ttf", NULL }
+	{ "Segoe UI.ttf", "segoeui.ttf", "Segoe WP.ttf", NULL },
+	{ "Segoe UI Semilight.ttf", "segoeuisl.ttf", "Segoe WP SemiLight.ttf", "Segoe WP Light.ttf", NULL },
+	{ "Segoe UI Semibold.ttf", "seguisb.ttf", "Segoe WP Semibold.ttf", NULL }
+};
+static const char* const g_face_standins[KST_FACE_COUNT][KST_FACE_CANDIDATES] = {
+	{ "Selawik-Regular.ttf", NULL },
+	{ "Segoe UI.ttf", "segoeui.ttf", "Selawik-Semilight.ttf", NULL },
+	{ "Segoe UI Bold.ttf", "segoeuib.ttf", "Selawik-Semibold.ttf", NULL }
 };
 
 void Kset_font_directory(const char* path) { kst_set_string(&g_font_dir, path); }
@@ -130,17 +138,63 @@ static glyph_entry_t* glyph_slot(uint32_t cp, int32_t face_size, int create) {
 	return &g_glyphs[i];
 }
 
-static FT_Face load_face(int index) {
+static FT_Face open_in_dir(const char* dir, const char* name) {
 	char path[1024];
+	FT_Face face = NULL;
+	snprintf(path, sizeof path, "%s/%s", dir, name);
+	if (FT_New_Face(g_ft, path, 0, &face) != 0) return NULL;
+	return face;
+}
+
+/* Segoe from the system, the nearest weight to the face; NULL when fontconfig has none. */
+static FT_Face open_system_segoe(int index) {
+#ifdef KESTREL_HAVE_FONTCONFIG
+	static const char* const families[] = { "Segoe WP", "Segoe UI" };
+	int weight = index == KST_FACE_SEMIBOLD ? FC_WEIGHT_DEMIBOLD : (index == KST_FACE_SEMILIGHT ? FC_WEIGHT_LIGHT : FC_WEIGHT_REGULAR);
+	size_t f;
+	for (f = 0; f < sizeof families / sizeof families[0]; f++) {
+		FcPattern* pattern = FcPatternCreate();
+		FcPattern* match;
+		FcResult result;
+		FcChar8* file = NULL;
+		FcChar8* family = NULL;
+		FT_Face face = NULL;
+		if (!pattern) return NULL;
+		FcPatternAddString(pattern, FC_FAMILY, (const FcChar8*)families[f]);
+		FcPatternAddInteger(pattern, FC_WEIGHT, weight);
+		FcPatternAddInteger(pattern, FC_SLANT, FC_SLANT_ROMAN);
+		FcConfigSubstitute(NULL, pattern, FcMatchPattern);
+		FcDefaultSubstitute(pattern);
+		match = FcFontMatch(NULL, pattern, &result);
+		/* fontconfig always answers: accept only a face that is Segoe */
+		if (match && FcPatternGetString(match, FC_FAMILY, 0, &family) == FcResultMatch && family &&
+			strncmp((const char*)family, "Segoe", 5) == 0 &&
+			FcPatternGetString(match, FC_FILE, 0, &file) == FcResultMatch && file) {
+			if (FT_New_Face(g_ft, (const char*)file, 0, &face) != 0) face = NULL;
+		}
+		if (match) FcPatternDestroy(match);
+		FcPatternDestroy(pattern);
+		if (face) return face;
+	}
+#else
+	KST_UNUSED(index);
+#endif
+	return NULL;
+}
+
+static FT_Face load_face(int index) {
 	int c;
+	FT_Face face;
 	const char* dir = g_font_dir;
 	if (g_faces[index]) return g_faces[index];
 	if (!dir) dir = getenv("KESTREL_FONT_DIR");
 	if (!dir || !*dir) dir = KESTREL_FONT_DIR;
 	for (c = 0; c < KST_FACE_CANDIDATES && g_face_files[index][c]; c++) {
-		snprintf(path, sizeof path, "%s/%s", dir, g_face_files[index][c]);
-		if (FT_New_Face(g_ft, path, 0, &g_faces[index]) == 0) return g_faces[index];
-		g_faces[index] = NULL;
+		if ((face = open_in_dir(dir, g_face_files[index][c])) != NULL) return g_faces[index] = face;
+	}
+	if ((face = open_system_segoe(index)) != NULL) return g_faces[index] = face;
+	for (c = 0; c < KST_FACE_CANDIDATES && g_face_standins[index][c]; c++) {
+		if ((face = open_in_dir(dir, g_face_standins[index][c])) != NULL) return g_faces[index] = face;
 	}
 	kst_error(K_ERROR_IO, "cannot open a font for the face %d in %s", index, dir);
 	return NULL;

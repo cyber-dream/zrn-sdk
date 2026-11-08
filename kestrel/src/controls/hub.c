@@ -19,8 +19,6 @@
 
 /* themeresources.xaml: HubHeaderFontSize 78, HubHeaderCharacterSpacing -22, HubHeaderMarginThickness 15,1,0,0, HubSectionHeaderFontSize 19,
  * HubSectionHeaderCharacterSpacing -10, HubSectionHeaderMarginThickness -1,5,0,31.5, HubSectionMarginThickness 19,0,0,0 */
-#define HUB_HEADER_FONT 78.0f
-#define HUB_HEADER_SPACING (-22)
 #define HUB_HEADER_X 15.0f
 #define HUB_HEADER_Y 1.0f
 #define SECTION_FONT 19.0f
@@ -56,8 +54,12 @@ typedef struct kst_hub_section {
 #define HUB(e) KST_AS(kst_hub_t, e)
 #define SECTION(e) KST_AS(kst_hub_section_t, e)
 
-static kst_font_t hub_header_font(void) {
-	kst_font_t f = { K_FONT_LIGHT, HUB_HEADER_FONT, HUB_HEADER_SPACING };
+/** HubHeaderFontSize and HubHeaderCharacterSpacing of the theme resources of the root (an override applies). */
+static kst_font_t hub_header_font(const kst_hub_t* h) {
+	const kst_root_t* r = ((const kst_element_t*)h)->root;
+	kst_font_t f = { K_FONT_LIGHT, 78.0f, -22 };
+	kst_res_double(r, K_RES_HUB_HEADER_FONT_SIZE, &f.size);
+	kst_res_int(r, K_RES_HUB_HEADER_CHARACTER_SPACING, &f.spacing);
 	return f;
 }
 
@@ -68,7 +70,7 @@ static kst_font_t section_font(void) {
 
 /** The row of the hub header: the header's line (none without a header) and its margin of 1. */
 static float hub_header_height(const kst_hub_t* h) {
-	return (h->header && *h->header ? kst_font_line_height(hub_header_font()) : 0) + HUB_HEADER_Y;
+	return (h->header && *h->header ? kst_font_line_height(hub_header_font(h)) : 0) + HUB_HEADER_Y;
 }
 
 static kst_hub_t* hub_of(const kst_element_t* e) {
@@ -264,7 +266,7 @@ static void hub_paint(kst_element_t* e, kst_painter_t* p) {
 	/* the header goes with the sections at half the speed; vertically it scrolls away with them */
 	if (is_vertical(h)) y -= (float)s->offset_y;
 	else x -= (float)s->offset_x * HEADER_PARALLAX;
-	kst_draw_string(p, hub_header_font(), h->header, (int)strlen(h->header), x, y, kst_ctl_foreground(&h->base));
+	kst_draw_string(p, hub_header_font(h), h->header, (int)strlen(h->header), x, y, kst_ctl_foreground(&h->base));
 }
 
 static void hub_apply_orientation(kst_hub_t* h) {

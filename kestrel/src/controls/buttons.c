@@ -753,7 +753,11 @@ static int ts_on_knob(const kst_element_t* e, float x, float y) {
 static int ts_input(kst_element_t* e, kst_input_t* in) {
 	kst_toggle_switch_t* t = TSW(e);
 	switch (in->type) {
-		case KST_IN_POINTER_DOWN:
+		case KST_IN_POINTER_DOWN: {
+			ts_geometry_t box;
+			/* only the switch itself takes a tap: the header, the On/Off text and the empty space pass it on */
+			ts_geometry(e, &box);
+			if (in->x < box.box.x || in->x >= box.box.x + box.box.width || in->y < box.box.y || in->y >= box.box.y + box.box.height) return 0;
 			if (!kst_effectively_enabled(e)) return 1;
 			t->pressed = 1;
 			t->dragging = 0;
@@ -767,6 +771,7 @@ static int ts_input(kst_element_t* e, kst_input_t* in) {
 			}
 			if (e->root) kst_set_capture(e->root, e);
 			return 1;
+		}
 		case KST_IN_POINTER_MOVE:
 			if (!t->pressed) return 0;
 			if (t->moved == -1 && fabsf(in->x - t->press_x) > 3.0f) t->dragging = 1;

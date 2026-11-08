@@ -75,7 +75,7 @@ typedef struct KColor {
 	float r, g, b, a;
 } KColor;
 
-/** Thickness of Silverlight: Margin, Padding, BorderThickness. */
+/** Four edge sizes (left, top, right, bottom): Margin, Padding, BorderThickness. Windows.UI.Xaml.Thickness of 8.1. */
 typedef struct KThickness {
 	float left, top, right, bottom;
 } KThickness;

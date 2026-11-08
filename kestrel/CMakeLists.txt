@@ -27,6 +27,8 @@ set(KESTREL_SOURCES
 	src/core.c
 	src/anim.c
 	src/theme.c
+	src/theme_resources.c
+	src/resources.c
 	src/text.c
 	src/render/painter.c
 	src/render/software.c
@@ -59,7 +61,7 @@ if(KESTREL_WITH_GL)
 	pkg_check_modules(GLES IMPORTED_TARGET egl glesv2)
 endif()
 
-# a Wayland window (wl_shm, no GPU); without these libraries Kwindow_run fails at run time
+# a window for a root, on Wayland; without these libraries Kwindow_run fails at run time
 option(KESTREL_WITH_WAYLAND "Build the Wayland window (Kwindow_run) when wayland-client and xkbcommon are found" ON)
 if(KESTREL_WITH_WAYLAND)
 	pkg_check_modules(WAYLAND IMPORTED_TARGET wayland-client xkbcommon)
@@ -102,6 +104,9 @@ endif()
 
 # the Selawik fonts that stand in for Segoe WP are found here unless Kset_font_directory / $KESTREL_FONT_DIR says otherwise
 target_compile_definitions(kestrel PRIVATE KESTREL_FONT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fonts")
+
+# the theme colors: the readable file, overridable with $KESTREL_THEME
+target_compile_definitions(kestrel PRIVATE KESTREL_THEME_FILE="${CMAKE_CURRENT_SOURCE_DIR}/theme.ini")
 
 if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
 	target_compile_options(kestrel PRIVATE -Wall -Wextra -Wno-unused-parameter)

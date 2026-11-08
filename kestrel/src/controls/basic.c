@@ -117,25 +117,26 @@ const char* Ktext_block_get_text(Kid id) {
 	return t && t->text ? t->text : "";
 }
 
-#define TB_SET(name, type, field, flag) \
+#define TB_SET(name, type, field, flag, prop) \
 	void name(Kid id, type value) { \
 		kst_text_block_t* t = get_tb(id); \
 		if (!t) return; \
+		if (prop) kst_unbind(&t->base, prop); \
 		t->field = value; \
 		if (flag) t->set_flags |= (flag); \
 		tb_drop_layout(t); \
 		kst_changed_layout(&t->base); \
 	}
 
-TB_SET(Ktext_block_set_font_size, float, font_size, KST_TB_FONT_SIZE)
-TB_SET(Ktext_block_set_font_family, KFontFamily, font_family, KST_TB_FONT_FAMILY)
-TB_SET(Ktext_block_set_foreground, KColor, foreground, KST_TB_FOREGROUND)
-TB_SET(Ktext_block_set_text_wrapping, KTextWrapping, wrapping, 0)
-TB_SET(Ktext_block_set_text_alignment, KTextAlignment, alignment, 0)
-TB_SET(Ktext_block_set_text_trimming, KTextTrimming, trimming, 0)
-TB_SET(Ktext_block_set_max_lines, int, max_lines, 0)
-TB_SET(Ktext_block_set_line_height, float, line_height, 0)
-TB_SET(Ktext_block_set_character_spacing, int, character_spacing, 0)
+TB_SET(Ktext_block_set_font_size, float, font_size, KST_TB_FONT_SIZE, KST_BP_TEXT_FONT_SIZE)
+TB_SET(Ktext_block_set_font_family, KFontFamily, font_family, KST_TB_FONT_FAMILY, 0)
+TB_SET(Ktext_block_set_foreground, KColor, foreground, KST_TB_FOREGROUND, KST_BP_TEXT_FOREGROUND)
+TB_SET(Ktext_block_set_text_wrapping, KTextWrapping, wrapping, 0, 0)
+TB_SET(Ktext_block_set_text_alignment, KTextAlignment, alignment, 0, 0)
+TB_SET(Ktext_block_set_text_trimming, KTextTrimming, trimming, 0, 0)
+TB_SET(Ktext_block_set_max_lines, int, max_lines, 0, 0)
+TB_SET(Ktext_block_set_line_height, float, line_height, 0, 0)
+TB_SET(Ktext_block_set_character_spacing, int, character_spacing, 0, KST_BP_TEXT_CHARACTER_SPACING)
 
 int Ktext_block_set_style(Kid id, KTextStyle style) {
 	/* family, size, foreground role (0 inherited, 1 subtle, 2 contrast, 3 accent), line height (0 the font's),
@@ -175,6 +176,10 @@ int Ktext_block_set_style(Kid id, KTextStyle style) {
 	kst_text_block_t* t = get_tb(id);
 	int i = (int)style - (int)K_TEXT_STYLE_NONE;
 	if (!t || i <= 0 || i >= (int)(K_TEXT_STYLE_LAST_ - K_TEXT_STYLE_NONE)) return K_FALSE;
+	kst_unbind(&t->base, KST_BP_TEXT_FONT_SIZE);
+	kst_unbind(&t->base, KST_BP_TEXT_FOREGROUND);
+	kst_unbind(&t->base, KST_BP_TEXT_CHARACTER_SPACING);
+	kst_unbind(&t->base, KST_BP_ELEMENT_MARGIN);
 	t->font_family = styles[i].family;
 	t->font_size = styles[i].size;
 	t->set_flags |= KST_TB_FONT_FAMILY | KST_TB_FONT_SIZE;
@@ -419,6 +424,7 @@ static kst_control_t* get_control(Kid id) { return KST_AS(kst_control_t, kst_get
 void Kcontrol_set_foreground(Kid id, KColor color) {
 	kst_control_t* c = get_control(id);
 	if (!c) return;
+	kst_unbind(&c->base, KST_BP_CONTROL_FOREGROUND);
 	c->foreground = color;
 	c->set_flags |= KST_C_FOREGROUND;
 	kst_changed_paint(&c->base);
@@ -427,6 +433,7 @@ void Kcontrol_set_foreground(Kid id, KColor color) {
 void Kcontrol_set_background(Kid id, KColor color) {
 	kst_control_t* c = get_control(id);
 	if (!c) return;
+	kst_unbind(&c->base, KST_BP_CONTROL_BACKGROUND);
 	c->background = color;
 	c->set_flags |= KST_C_BACKGROUND;
 	kst_changed_paint(&c->base);
@@ -435,6 +442,7 @@ void Kcontrol_set_background(Kid id, KColor color) {
 void Kcontrol_set_border_brush(Kid id, KColor color) {
 	kst_control_t* c = get_control(id);
 	if (!c) return;
+	kst_unbind(&c->base, KST_BP_CONTROL_BORDER_BRUSH);
 	c->border_brush = color;
 	c->set_flags |= KST_C_BORDER_BRUSH;
 	kst_changed_paint(&c->base);
@@ -443,6 +451,7 @@ void Kcontrol_set_border_brush(Kid id, KColor color) {
 void Kcontrol_set_border_thickness(Kid id, KThickness t) {
 	kst_control_t* c = get_control(id);
 	if (!c) return;
+	kst_unbind(&c->base, KST_BP_CONTROL_BORDER_THICKNESS);
 	c->border_thickness = t;
 	c->set_flags |= KST_C_BORDER_THICKNESS;
 	kst_changed_layout(&c->base);
@@ -451,6 +460,7 @@ void Kcontrol_set_border_thickness(Kid id, KThickness t) {
 void Kcontrol_set_padding(Kid id, KThickness t) {
 	kst_control_t* c = get_control(id);
 	if (!c) return;
+	kst_unbind(&c->base, KST_BP_CONTROL_PADDING);
 	c->padding = t;
 	c->set_flags |= KST_C_PADDING;
 	kst_changed_layout(&c->base);
@@ -464,6 +474,7 @@ KThickness Kcontrol_get_padding(Kid id) {
 void Kcontrol_set_font_size(Kid id, float size) {
 	kst_control_t* c = get_control(id);
 	if (!c) return;
+	kst_unbind(&c->base, KST_BP_CONTROL_FONT_SIZE);
 	c->font_size = size;
 	c->set_flags |= KST_C_FONT_SIZE;
 	kst_invalidate_deep(&c->base);

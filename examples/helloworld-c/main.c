@@ -19,24 +19,65 @@ static Kid main_page(const Kid frame, void* parameter) {
 
     /* Root grid of page */
     const Kid root_grid = Kgrid_create();
+    Kgrid_add_row(root_grid, K_GRID_AUTO, 0);   // заголовок по высоте содержимого
+    Kgrid_add_row(root_grid, K_GRID_STAR, 1);   // всё остальное
     Kpage_set_content(page, root_grid);
     Kgrid_set_row(root_grid, 2);
     Kgrid_set_column(root_grid, 1);
 
-    const Kid header_stack = Kstack_panel_create(K_VERTICAL);
-    Kgrid_place(root_grid, header_stack, 0,0);
+    /* Top Stack */
+    {
+        const Kid header_stack = Kstack_panel_create(K_VERTICAL);
+        Kgrid_place(root_grid, header_stack, 0,0);
+        Kelement_set_margin(header_stack, Kthickness(19,0,0,0));
 
-    const Kid app_title_text = Ktext_block_create("DEMO APP");
-    Ktext_block_set_style(app_title_text, K_TEXT_STYLE_TITLE);
-    Kpanel_add(header_stack,app_title_text);
+        const Kid app_title_text = Ktext_block_create("SETTINGS");
+        Ktext_block_set_style(app_title_text, K_TEXT_STYLE_TITLE);
+        Kpanel_add(header_stack,app_title_text);
+        Kelement_set_margin(app_title_text, Kthickness(0,12,0,0));
 
-    const Kid app_big_title = Ktext_block_create("hi german!");
-    Ktext_block_set_style(app_big_title, K_TEXT_STYLE_HEADER);
-    Kpanel_add(header_stack,app_big_title);
+        const Kid app_big_title = Ktext_block_create("brightness");
+        Ktext_block_set_style(app_big_title, K_TEXT_STYLE_HEADER);
+        Kpanel_add(header_stack,app_big_title);
+        Kelement_set_margin(app_big_title, Kthickness(0,-6.5f,0,26.5f));
+        Ktext_block_set_character_spacing(app_big_title, Kroot_get_theme_int(root, K_RES_PIVOT_HEADER_ITEM_FONT_SIZE));
+    }
 
-    const Kid theme_button = Kbutton_create("Change theme");
-    Kbutton_on_click(theme_button, on_theme_click, (void*)(uintptr_t)root);
-    Kpanel_add(header_stack,theme_button);
+    /* Main Grid */
+    {
+        const Kid main_stack = Kstack_panel_create(K_VERTICAL);
+        Kgrid_place(root_grid, main_stack, 0, 1);
+        Kelement_set_margin(main_stack, Kthickness(19,9.5f,19,0));
+
+        /* Auto brightness */
+        {
+            const Kid auto_brightness_stack = Kstack_panel_create(K_VERTICAL);
+            Kpanel_add(main_stack,auto_brightness_stack );
+
+            const Kid title = Ktext_block_create("Automatically adjust");
+            Ktext_block_set_style(title, K_TEXT_STYLE_LIST_VIEW_ITEM_SUBHEADER);
+            Kpanel_add(auto_brightness_stack, title);
+
+            const Kid toggle = Ktoggle_switch_create();
+            Kpanel_add(auto_brightness_stack, toggle);
+        }
+
+        {
+            const Kid level_stack = Kstack_panel_create(K_VERTICAL);
+            Kpanel_add(main_stack, level_stack);
+
+            const Kid title = Ktext_block_create("Level");
+            Ktext_block_set_style(title, K_TEXT_STYLE_LIST_VIEW_ITEM_SUBHEADER);
+            Kpanel_add(level_stack, title);
+
+            const Kid combo = Kcombo_box_create();
+            Kcombo_box_set_placeholder_text(combo, "");
+            Kpanel_add(level_stack, combo);
+            Kitems_control_add_text(combo, "low");
+            Kitems_control_add_text(combo, "medium");
+            Kitems_control_add_text(combo, "high");
+        }
+    }
 
     return page;
 }

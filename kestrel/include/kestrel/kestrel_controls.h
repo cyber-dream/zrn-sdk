@@ -141,6 +141,17 @@ extern "C" {
 	KESTREL_API void Kcontrol_set_border_brush(Kid control, KColor color);
 	KESTREL_API void Kcontrol_set_border_thickness(Kid control, KThickness thickness);
 	KESTREL_API void Kcontrol_set_padding(Kid control, KThickness padding);
+	/**
+	 * @brief {ThemeResource key} for a property of a control: Foreground, Background and BorderBrush take a color key,
+	 * Padding and BorderThickness a Thickness key, FontSize a Double key. Follows the theme, the accent and the overrides
+	 * of the root; the direct setter removes the binding. @return K_FALSE for a Kid that is not a control or a key of another type.
+	 */
+	KESTREL_API int Kcontrol_bind_foreground(Kid control, KThemeResource key);
+	KESTREL_API int Kcontrol_bind_background(Kid control, KThemeResource key);
+	KESTREL_API int Kcontrol_bind_border_brush(Kid control, KThemeResource key);
+	KESTREL_API int Kcontrol_bind_border_thickness(Kid control, KThemeResource key);
+	KESTREL_API int Kcontrol_bind_padding(Kid control, KThemeResource key);
+	KESTREL_API int Kcontrol_bind_font_size(Kid control, KThemeResource key);
 	KESTREL_API KThickness Kcontrol_get_padding(Kid control);
 	KESTREL_API void Kcontrol_set_font_size(Kid control, float size);
 	KESTREL_API float Kcontrol_get_font_size(Kid control);

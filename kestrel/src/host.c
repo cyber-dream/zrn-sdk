@@ -49,6 +49,7 @@ void kst_root_unregister_popup(kst_root_t* r, kst_element_t* popup) {
 void kst_root_attach(kst_root_t* r, kst_element_t* e) {
 	int i;
 	e->root = r;
+	kst_bindings_apply(e);
 	if (e->cls == &kst_class_popup && KST_AS(kst_popup_t, e)->is_open) kst_root_register_popup(r, e);
 	for (i = 0; i < e->child_count; i++) kst_root_attach(r, e->children[i]);
 	kst_raise(e, K_EVENT_LOADED);
@@ -227,6 +228,7 @@ void Kroot_destroy(Kid root) {
 		kst_destroy(r->overlay);
 	}
 	free(r->popups);
+	kst_root_resources_free(r);
 	free(r->pixels);
 	if (r->gpu) kst_gl_destroy(r->gpu);
 	kst_handle_free(r->id);
@@ -282,6 +284,7 @@ void Kroot_set_theme(Kid root, KTheme theme) {
 	kst_theme_init(&r->theme, theme, r->theme.accent);
 	if (has) { r->theme.background = bg; r->theme.has_background = 1; }
 	r->paint_dirty = 1;
+	kst_root_resources_changed(r);
 }
 
 KTheme Kroot_get_theme(Kid root) {
@@ -295,6 +298,7 @@ void Kroot_set_accent_color(Kid root, KColor color) {
 	r->theme.accent = color;
 	r->theme.colors[KST_TC_ACCENT] = color;
 	r->paint_dirty = 1;
+	kst_root_resources_changed(r);
 }
 
 void Kroot_set_accent(Kid root, KAccent accent) { Kroot_set_accent_color(root, kst_accent_color(accent)); }
@@ -310,34 +314,6 @@ void Kroot_set_background(Kid root, KColor color) {
 	r->theme.background = color;
 	r->theme.has_background = 1;
 	r->paint_dirty = 1;
-}
-
-KColor Kroot_get_theme_color(Kid root, const char* name) {
-	static const struct { const char* name; kst_theme_color_id_t id; } table[] = {
-		{ "PhoneForegroundColor", KST_TC_FOREGROUND }, { "PhoneBackgroundColor", KST_TC_BACKGROUND },
-		{ "PhoneContrastForegroundColor", KST_TC_CONTRAST_FOREGROUND }, { "PhoneContrastBackgroundColor", KST_TC_CONTRAST_BACKGROUND },
-		{ "PhoneDisabledColor", KST_TC_DISABLED }, { "PhoneProgressBarBackgroundColor", KST_TC_PROGRESS_BAR_BACKGROUND },
-		{ "PhoneTextBoxColor", KST_TC_TEXT_BOX }, { "PhoneTextBoxForegroundColor", KST_TC_TEXT_BOX_FOREGROUND },
-		{ "PhoneTextBoxEditBackgroundColor", KST_TC_TEXT_BOX_EDIT_BACKGROUND }, { "PhoneTextBoxReadOnlyColor", KST_TC_TEXT_BOX_READ_ONLY },
-		{ "PhoneTextCaretColor", KST_TC_TEXT_CARET }, { "PhoneSubtleColor", KST_TC_SUBTLE },
-		{ "PhoneButtonBasePressedForegroundColor", KST_TC_BUTTON_PRESSED_FOREGROUND }, { "PhoneChromeColor", KST_TC_CHROME },
-		{ "PhoneInactiveColor", KST_TC_INACTIVE }, { "PhoneBorderColor", KST_TC_BORDER },
-		{ "PhoneSemitransparentColor", KST_TC_SEMITRANSPARENT }, { "PhoneAccentColor", KST_TC_ACCENT },
-		{ "PhoneBaseMediumHighColor", KST_TC_BASE_MEDIUM_HIGH }, { "PhoneBaseMidColor", KST_TC_BASE_MID },
-		{ "PhoneBaseMediumMidColor", KST_TC_BASE_MEDIUM_MID }, { "PhoneBaseMediumMidSolidColor", KST_TC_BASE_MEDIUM_MID_SOLID },
-		{ "PhoneBaseLowColor", KST_TC_BASE_LOW }, { "PhoneBaseLowSolidColor", KST_TC_BASE_LOW_SOLID },
-		{ "PhoneTextOverAccentColor", KST_TC_TEXT_OVER_ACCENT },
-		{ "TextBoxBackgroundColor", KST_TC_TEXT_BOX_BACKGROUND_81 }, { "TextBoxBorderColor", KST_TC_TEXT_BOX_BORDER_81 },
-		{ "TextBoxForegroundColor", KST_TC_TEXT_BOX_FOREGROUND_81 }, { "TextBoxPlaceholderColor", KST_TC_TEXT_BOX_PLACEHOLDER_81 },
-		{ "TextBoxFocusedBackgroundThemeBrush", KST_TC_TEXT_BOX_FOCUSED_BACKGROUND_81 },
-		{ "SliderThumbBackgroundThemeBrush", KST_TC_SLIDER_THUMB }, { "SliderThumbDisabledBackgroundThemeBrush", KST_TC_SLIDER_THUMB_DISABLED },
-		{ "SliderTrackBackgroundThemeBrush", KST_TC_SLIDER_TRACK }, { "SliderTrackDecreaseDisabledBackgroundThemeBrush", KST_TC_SLIDER_DECREASE_DISABLED }
-	};
-	kst_root_t* r = get_root(root);
-	size_t i;
-	if (!r || !name) return Kcolor_rgba(0, 0, 0, 0);
-	for (i = 0; i < sizeof table / sizeof table[0]; i++) if (strcmp(table[i].name, name) == 0) return r->theme.colors[table[i].id];
-	return Kcolor_rgba(0, 0, 0, 0);
 }
 
 

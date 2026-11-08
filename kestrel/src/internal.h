@@ -209,6 +209,10 @@ struct kst_element {
 	int destroying;
 
 	kst_handler_t handlers[KST_HANDLER_COUNT];
+
+	/** Properties bound to a ThemeResource (resources.c): a small list, NULL when there is none. */
+	struct kst_binding* bindings;
+	int binding_count;
 };
 
 /* a few kinds of data hang off elements of the same names as their classes */
@@ -944,6 +948,87 @@ KColor kst_accent_color(KAccent accent);
 
 
 /* ============================================================================
+ *  ThemeResource (resources.c, theme_resources.c)
+ * ============================================================================ */
+
+typedef enum kst_res_type {
+	KST_RT_NONE = 0,
+	KST_RT_COLOR,
+	KST_RT_DOUBLE,
+	KST_RT_INT,
+	KST_RT_THICKNESS,
+	KST_RT_FONT_FAMILY
+} kst_res_type_t;
+
+typedef union kst_res_value {
+	/** A color: ARGB; of an accent color only the alpha counts. */
+	uint32_t argb;
+	/** A double in f[0], a thickness (left, top, right, bottom) in f. */
+	float f[4];
+	/** An int, a font weight, a KFontFamily. */
+	int i;
+} kst_res_value_t;
+
+/** One generated key: the table is indexed by key - K_RES_FIRST_. */
+typedef struct kst_res_def {
+	const char* name;
+	uint8_t type;
+	/** 1: the Dark color is the accent of the root (with the alpha of `dark`), 2: the Light one. */
+	uint8_t accent;
+	kst_res_value_t dark, light;
+} kst_res_def_t;
+
+extern const kst_res_def_t kst_res_table[];
+
+typedef struct kst_res_override {
+	KThemeResource key;
+	kst_res_type_t type;
+	union { KColor color; float d; int i; KThickness thickness; } v;
+} kst_res_override_t;
+
+/** The value of a key of a root (NULL: the default theme) as the type says; K_FALSE when the key has no such value. */
+int kst_res_color(const kst_root_t* r, KThemeResource key, KColor* out);
+int kst_res_double(const kst_root_t* r, KThemeResource key, float* out);
+int kst_res_int(const kst_root_t* r, KThemeResource key, int* out);
+int kst_res_thickness(const kst_root_t* r, KThemeResource key, KThickness* out);
+int kst_res_font_family(const kst_root_t* r, KThemeResource key, KFontFamily* out);
+
+/** The properties of an element that can follow a key. */
+typedef enum kst_bind_prop {
+	KST_BP_ELEMENT_MARGIN = 1,
+	KST_BP_TEXT_FOREGROUND,
+	KST_BP_TEXT_FONT_SIZE,
+	KST_BP_TEXT_CHARACTER_SPACING,
+	KST_BP_CONTROL_FOREGROUND,
+	KST_BP_CONTROL_BACKGROUND,
+	KST_BP_CONTROL_BORDER_BRUSH,
+	KST_BP_CONTROL_BORDER_THICKNESS,
+	KST_BP_CONTROL_PADDING,
+	KST_BP_CONTROL_FONT_SIZE,
+	KST_BP_BORDER_BACKGROUND,
+	KST_BP_BORDER_BORDER_BRUSH,
+	KST_BP_BORDER_BORDER_THICKNESS,
+	KST_BP_BORDER_PADDING
+} kst_bind_prop_t;
+
+typedef struct kst_binding {
+	kst_bind_prop_t prop;
+	KThemeResource key;
+} kst_binding_t;
+
+/** Binds `prop` of `e` to `key` (replacing its binding) and applies it; K_FALSE when the key is not of the type the property takes. */
+int kst_bind(kst_element_t* e, kst_bind_prop_t prop, KThemeResource key);
+/** A direct setter was called: the property keeps its value and stops following a key. */
+void kst_unbind(kst_element_t* e, kst_bind_prop_t prop);
+/** Applies every binding of `e` (when it enters a root). */
+void kst_bindings_apply(kst_element_t* e);
+void kst_bindings_free(kst_element_t* e);
+/** The theme, the accent or an override changed: every bound property of the tree of the root is resolved again. */
+void kst_root_resources_changed(kst_root_t* r);
+void kst_root_resources_free(kst_root_t* r);
+
+
+/* ============================================================================
  *  text (text.c)
  * ============================================================================ */
 
@@ -1112,6 +1197,9 @@ struct kst_root {
 	float tilt_fx, tilt_fy, tilt_amount, tilt_target;
 	/** The off-screen GPU context of Kroot_render, made when it is first asked for. */
 	struct kst_gl* gpu;
+	/** The overrides of ThemeResource keys the application set (resources.c). */
+	struct kst_res_override* overrides;
+	int override_count, override_cap;
 };
 
 kst_root_t* kst_root_lookup(Kid id);

@@ -31,6 +31,7 @@
 #define KESTREL_ELEMENT_H
 
 #include "kestrel_core.h"
+#include "kestrel_resources.h"
 
 
 /** Routed events that carry no data: read the new state from the sender. */
@@ -153,6 +154,12 @@ extern "C" {
 
 	KESTREL_API void Kelement_set_margin(Kid element, KThickness margin);
 	KESTREL_API KThickness Kelement_get_margin(Kid element);
+	/**
+	 * @brief {ThemeResource key} for the Margin: a Thickness key (K_RES_PIVOT_ITEM_MARGIN...). The margin follows the key
+	 * (the theme, the accent, an override of the root) until Kelement_set_margin sets another one.
+	 * @return K_FALSE for an element that is not one or a key that is not a Thickness.
+	 */
+	KESTREL_API int Kelement_bind_margin(Kid element, KThemeResource key);
 
 	KESTREL_API void Kelement_set_horizontal_alignment(Kid element, KHorizontalAlignment alignment);
 	KESTREL_API void Kelement_set_vertical_alignment(Kid element, KVerticalAlignment alignment);
@@ -372,6 +379,11 @@ extern "C" {
 	KESTREL_API void Kborder_set_background(Kid border, KColor color);
 	KESTREL_API void Kborder_set_border_brush(Kid border, KColor color);
 	KESTREL_API void Kborder_set_border_thickness(Kid border, KThickness thickness);
+	/** @brief {ThemeResource key}: a color key for the background and the border brush, a Thickness key for the border thickness and the padding. The direct setter removes the binding. */
+	KESTREL_API int Kborder_bind_background(Kid border, KThemeResource key);
+	KESTREL_API int Kborder_bind_border_brush(Kid border, KThemeResource key);
+	KESTREL_API int Kborder_bind_border_thickness(Kid border, KThemeResource key);
+	KESTREL_API int Kborder_bind_padding(Kid border, KThemeResource key);
 	KESTREL_API void Kborder_set_corner_radius(Kid border, KCornerRadius radius);
 	KESTREL_API void Kborder_set_padding(Kid border, KThickness padding);
 
@@ -411,6 +423,16 @@ extern "C" {
 	KESTREL_API void Ktext_block_set_line_height(Kid text_block, float line_height);
 	/** @brief CharacterSpacing in 1/1000 em (the panorama titles use -35). */
 	KESTREL_API void Ktext_block_set_character_spacing(Kid text_block, int spacing);
+	/**
+	 * @brief {ThemeResource key} for a property of a TextBlock: the foreground (a color key, a brush such as
+	 * K_RES_PHONE_FOREGROUND_BRUSH), the font size (a Double key), the character spacing (an Int key such as
+	 * K_RES_PIVOT_HEADER_ITEM_CHARACTER_SPACING). The property follows the key when the theme, the accent or an
+	 * override of the root changes; its direct setter (and Ktext_block_set_style) removes the binding.
+	 * @return K_FALSE for a Kid that is not a TextBlock or a key of another type.
+	 */
+	KESTREL_API int Ktext_block_bind_foreground(Kid text_block, KThemeResource key);
+	KESTREL_API int Ktext_block_bind_font_size(Kid text_block, KThemeResource key);
+	KESTREL_API int Ktext_block_bind_character_spacing(Kid text_block, KThemeResource key);
 	/**
 	 * @brief Applies a text style: font, size, foreground, line height, character spacing, wrapping and
 	 * margin of the style (the 8.1 ones carry no margin, the K_TEXT_STYLE_PHONE_* ones 12 on each side).
