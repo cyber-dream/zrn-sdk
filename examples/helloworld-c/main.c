@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 #include <kestrel.h>
+#include "text_page.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -9,6 +10,26 @@ static void on_theme_click(const Kid sender, void* user_data) {
     (void)sender;
     const Kid root = (Kid)(uintptr_t)user_data;
     Kroot_set_theme(root, Kroot_get_theme(root) == K_THEME_DARK ? K_THEME_LIGHT : K_THEME_DARK);
+}
+
+static void on_list_tap(Kid sender, int index, void* user_data) {
+    (void)sender;
+
+    const Kid root = (Kid)(uintptr_t)user_data;
+    const Kid frame = Kroot_get_visual(root);
+
+    switch (index) {
+        case 0:
+            Kframe_navigate(frame, text_page, (void*)(uintptr_t)root);
+            break;
+    default:break;
+    }
+}
+
+static void on_open_text(Kid sender, void* user_data) {
+    (void)sender;
+    const Kid frame = (Kid)(uintptr_t)user_data;
+    Kframe_navigate(frame, text_page, user_data);
 }
 
 static Kid main_page(const Kid frame, void* parameter) {
@@ -43,96 +64,34 @@ static Kid main_page(const Kid frame, void* parameter) {
         Ktext_block_set_character_spacing(app_big_title, Kroot_get_theme_int(root, K_RES_PIVOT_HEADER_ITEM_FONT_SIZE));
     }
 
-    /* Main Grid */
+    /* List View */
     {
         const Kid scroll_viewer = Kscroll_viewer_create();
+        Kelement_set_margin(scroll_viewer, Kthickness(19,0,0,0));
         Kgrid_place(root_grid, scroll_viewer, 0, 1);
 
-        const Kid main_stack = Kstack_panel_create(K_VERTICAL);
-        Kscroll_viewer_set_content(scroll_viewer, main_stack);
-        Kelement_set_margin(main_stack, Kthickness(19,9.5f,19,0));
-
-        /* Auto brightness: the switch carries its own caption */
         {
-            const Kid auto_brightness_stack = Kstack_panel_create(K_VERTICAL);
-            Kpanel_add(main_stack, auto_brightness_stack);
+            const Kid list = Klist_view_create();
+            Klist_view_set_is_item_click_enabled(list, K_TRUE);
+            Kcontent_control_set_content(scroll_viewer, list);
 
-            const Kid toggle = Ktoggle_switch_create();
-            Ktoggle_switch_set_header(toggle, "Automatically adjust");
-            Ktoggle_switch_set_off_content(toggle, "Off (customizable)");
-            Kpanel_add(auto_brightness_stack, toggle);
-        }
+            /* Text */
+            {
+                const Kid item = Klist_view_item_create("");
+                Klist_view_on_item_click(list, on_list_tap, (void*)(uintptr_t)root);
+                const Kid stack = Kstack_panel_create(K_VERTICAL);
+                Kcontent_control_set_content(item, stack);
 
-        /* Level: the combo box carries its own caption */
-        {
-            const Kid level_stack = Kstack_panel_create(K_VERTICAL);
-            Kpanel_add(main_stack, level_stack);
+                const Kid title = Ktext_block_create("text box");
+                Ktext_block_set_style(title, K_TEXT_STYLE_SUBHEADER);
+                Kpanel_add(stack, title);
 
-            const Kid combo = Kcombo_box_create();
-            Kcombo_box_set_header(combo, "Level");
-            Kcombo_box_set_placeholder_text(combo, "pick one");
-            Kitems_control_add_text(combo, "low");
-            Kitems_control_add_text(combo, "medium");
-            Kitems_control_add_text(combo, "high");
-            Kpanel_add(level_stack, combo);
-        }
+                const Kid text = Ktext_block_create("all about text widget");
+                Ktext_block_set_style(text, K_TEXT_STYLE_LIST_VIEW_ITEM_SUBHEADER);
+                Kpanel_add(stack, text);
 
-        /* --- the rest of the toolkit, one of each --- */
-        {
-            const Kid other = Kstack_panel_create(K_VERTICAL);
-            Kpanel_add(main_stack, other);
-
-            const Kid cb = Kcheck_box_create("Check me");
-            Kpanel_add(other, cb);
-
-            const Kid rb = Kradio_button_create("Radio", NULL);
-            Kpanel_add(other, rb);
-
-            const Kid tb = Ktoggle_button_create("Toggle");
-            Kpanel_add(other, tb);
-
-            const Kid btn = Kbutton_create("Button");
-            Kpanel_add(other, btn);
-
-            const Kid rbtn = Krepeat_button_create("Repeat");
-            Kpanel_add(other, rbtn);
-
-            const Kid hbtn = Khyperlink_button_create("Hyperlink");
-            Kpanel_add(other, hbtn);
-
-            const Kid sld = Kslider_create(K_HORIZONTAL);
-            Kslider_set_header(sld, "Slider");
-            Kpanel_add(other, sld);
-
-            const Kid tbox = Ktext_box_create("");
-            Ktext_box_set_header(tbox, "TextBox");
-            Ktext_box_set_placeholder_text(tbox, "type here");
-            Kpanel_add(other, tbox);
-
-            const Kid pbox = Kpassword_box_create();
-            Kpassword_box_set_header(pbox, "PasswordBox");
-            Kpanel_add(other, pbox);
-
-            const Kid asb = Kauto_suggest_box_create();
-            Kauto_suggest_box_set_header(asb, "AutoSuggestBox");
-            Kpanel_add(other, asb);
-
-            const Kid pr = Kprogress_ring_create();
-            Kprogress_ring_set_is_active(pr, 1);
-            Kpanel_add(other, pr);
-
-            const Kid pb = Kprogress_bar_create();
-            Krange_base_set_value(pb, 0.6);
-            Kpanel_add(other, pb);
-
-            const Kid sep = Kseparator_create();
-            Kpanel_add(other, sep);
-
-            const Kid th = Kthumb_create();
-            Kpanel_add(other, th);
-
-            const Kid end = Ktext_block_create("End of content");
-            Kpa
+                Kitems_control_add(list, item);
+            }
         }
     }
 

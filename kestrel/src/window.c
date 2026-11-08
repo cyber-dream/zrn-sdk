@@ -219,11 +219,12 @@ static void apply_scale(window_t* w, float fscale) {
 	if (w->viewport) wp_viewport_set_destination(w->viewport, w->width, w->height);
 	else w->fscale = (float)w->scale; /* the compositor has no wp_viewporter: only the integer scale works */
 	if (!w->viewport && w->scale > 1 && w->surface) wl_surface_set_buffer_scale(w->surface, w->scale);
-	/* the density is what fills the buffer; the UI scale is the preferred_scale of the shell
-	 * (the env overrides it only as a debug override): the layout grid is the window divided
-	 * by it. Recomputed here every time: the preferred_scale can arrive after the start. */
+	/* the density is what fills the buffer: the preferred_scale of the shell. The logical size
+	 * the shell gives already has its scale applied (a 1080p phone at 2.65 shows 407 x 837),
+	 * so the UI scale stays 1 and the layout grid is the logical size itself; the env
+	 * overrides it only as a debug override */
 	if (w->env_scale > 0) w->ui_scale = w->env_scale;
-	else if (w->preferred_scale > 0) w->ui_scale = w->preferred_scale / 120.0f;
+	else w->ui_scale = 1.0f;
 	kst_root_set_density(w->root, w->fscale);
 	Kroot_set_scale(w->root, w->ui_scale);
 	if (r) r->paint_dirty = 1; /* the buffers of the new size are blank */

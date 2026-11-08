@@ -673,7 +673,7 @@ static void ts_paint(kst_element_t* e, kst_painter_t* p) {
 	int enabled = kst_effectively_enabled(e);
 	KColor foreground = kst_theme_color(e, KST_TC_FOREGROUND), text_color, outline, curtain, knob_fill;
 	KRect outer, inner, curtain_rect;
-	float knob_x, knob_w;
+	float knob_x;
 	const char* content = t->is_on ? t->on_content : t->off_content;
 	ts_geometry(e, &g);
 	if (t->base.set_flags & KST_C_FOREGROUND) foreground = t->base.foreground;
@@ -701,21 +701,9 @@ static void ts_paint(kst_element_t* e, kst_painter_t* p) {
 	curtain_rect = kst_rect(inner.x, inner.y, curtain_w, inner.height);
 	if (curtain_rect.width > 0) kst_fill_rect(p, curtain_rect, curtain);
 	knob_x = g.box.x + TS_KNOB_TRAVEL * t->knob;
-	knob_w = TS_KNOB_W;
-	/* the overshoot of the spring squashes the knob against the end of the track,
-	 * its far edge stays put and the width gives way */
-	if (t->knob > 1.0f) {
-		float ov = TS_KNOB_TRAVEL * (t->knob - 1.0f);
-		knob_x = g.box.x + TS_KNOB_TRAVEL + ov;
-		knob_w = TS_KNOB_W - ov;
-	} else if (t->knob < 0.0f) {
-		float ov = TS_KNOB_TRAVEL * -t->knob;
-		knob_x = g.box.x;
-		knob_w = TS_KNOB_W - ov;
-	}
 	/* SwitchKnob: Fill is the foreground, the 2.5 px Stroke (inside its bounds) the background of the page */
-	kst_fill_rect(p, kst_rect(knob_x, g.box.y, knob_w, TS_SWITCH_H), kst_theme_color(e, KST_TC_BACKGROUND));
-	kst_fill_rect(p, kst_rect(knob_x + TS_OUTLINE, g.box.y + TS_OUTLINE, kst_maxf(0.0f, knob_w - 2 * TS_OUTLINE), TS_SWITCH_H - 2 * TS_OUTLINE), knob_fill);
+	kst_fill_rect(p, kst_rect(knob_x, g.box.y, TS_KNOB_W, TS_SWITCH_H), kst_theme_color(e, KST_TC_BACKGROUND));
+	kst_fill_rect(p, kst_rect(knob_x + TS_OUTLINE, g.box.y + TS_OUTLINE, TS_KNOB_W - 2 * TS_OUTLINE, TS_SWITCH_H - 2 * TS_OUTLINE), knob_fill);
 }
 
 static void ts_set_goal(kst_toggle_switch_t* t, float goal) {
@@ -723,8 +711,12 @@ static void ts_set_goal(kst_toggle_switch_t* t, float goal) {
 	t->knob_goal = goal;
 	if (!kst_animations_enabled(e->root)) {
 		t->knob = goal;
+		t->knob_animating = 0;
 		e->wants_tick = 0;
 	} else if (t->knob != goal) {
+		t->knob_from = t->knob;
+		t->knob_elapsed = 0;
+		t->knob_animating = 1;
 		e->wants_tick = 1;
 	}
 	kst_changed_paint(e);
@@ -743,16 +735,16 @@ static int ts_set_on(kst_toggle_switch_t* t, int on) {
 
 static void ts_tick(kst_element_t* e, float dt) {
 	kst_toggle_switch_t* t = TSW(e);
-	/* a slightly underdamped spring: a period of ~120 ms (fast), a damping of 0.65
-	 * (about 7% of overshoot, "a little springy"), semi-implicit Euler in ms */
-	const float omega = 6.2832f / 120.0f, zeta = 0.65f;
-	if (t->dragging) { t->knob_vel = 0; return; }
-	t->knob_vel += (omega * omega * (t->knob_goal - t->knob) - 2.0f * zeta * omega * t->knob_vel) * dt;
-	t->knob += t->knob_vel * dt;
-	if (fabsf(t->knob - t->knob_goal) < 0.002f && fabsf(t->knob_vel) < 0.0005f) {
-		t->knob = t->knob_goal;
-		t->knob_vel = 0;
-		e->wants_tick = 0;
+	if (t->dragging) { t->knob_animating = 0; return; }
+	if (!t->knob_animating) return;
+	t->knob_elapsed += dt;
+	{
+		float tt = t->knob_elapsed / 180.0f;
+		if (tt >= 1.0f) { t->knob = t->knob_goal; t->knob_animating = 0; e->wants_tick = 0; }
+		else {
+			float u = 1 - tt, ease = 1 - u * u * u;
+			t->knob = t->knob_from + (t->knob_goal - t->knob_from) * ease;
+		}
 	}
 	kst_changed_paint(e);
 }

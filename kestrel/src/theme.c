@@ -11,9 +11,11 @@
  * change nothing.
  */
 
+#define _POSIX_C_SOURCE 200809L
 #include "internal.h"
 
 #include <stdio.h>
+#include <unistd.h>
 
 typedef struct {
 	const char* name;   /* the key of theme.ini, without the KST_TC_ prefix */
@@ -121,16 +123,31 @@ static void ini_assign(const char* section, const char* key, uint32_t v) {
 /** Applies theme.ini over the built-in tables: [dark] / [light] / [accent], "NAME = #AARRGGBB". */
 static void ini_apply(void) {
 	const char* path = getenv("KESTREL_THEME");
+	char beside[512], *slash;
 	FILE* file;
 	char line[512];
 	char section[sizeof line] = "";
-	if (!path || !*path) path = KESTREL_THEME_FILE;
+	if (!path || !*path) {
+		/* beside the binary first (a phone has no build tree), then the compiled path */
+		ssize_t n = readlink("/proc/self/exe", beside, sizeof beside - 1);
+		if (n > 0) {
+			beside[n] = 0;
+			slash = strrchr(beside, '/');
+			if (slash) {
+				snprintf(slash + 1, sizeof beside - (size_t)(slash + 1 - beside), "theme.ini");
+				file = fopen(beside, "r");
+				if (file) goto read;
+			}
+		}
+		path = KESTREL_THEME_FILE;
+	}
 	if (!path || !*path) return;
 	file = fopen(path, "r");
 	if (!file) {
 		kst_error(K_ERROR_IO, "theme file not opened: %s", path);
 		return;
 	}
+read:
 	while (fgets(line, sizeof line, file)) {
 		char *p = line, *eq, *end, *value;
 		uint32_t v;

@@ -213,6 +213,9 @@ Kid Kroot_create(int width, int height) {
 		else if (env && !strcmp(env, "on")) r->animations = K_ANIMATIONS_ON;
 	}
 	kst_theme_init(&r->theme, K_THEME_DARK, kst_accent_color(K_ACCENT_COBALT));
+	r->theme_from = r->theme_target = r->theme;
+	r->theme_transitioning = 0;
+	r->theme_t = 0;
 	r->id = kst_handle_alloc(r, 1);
 	r->overlay = kst_create(K_CLASS_CANVAS);
 	if (r->overlay) kst_root_attach(r, r->overlay);
@@ -308,8 +311,22 @@ void Kroot_set_theme(Kid root, KTheme theme) {
 	if (!r) return;
 	bg = r->theme.background;
 	has = r->theme.has_background;
-	kst_theme_init(&r->theme, theme, r->theme.accent);
-	if (has) { r->theme.background = bg; r->theme.has_background = 1; }
+	if (!kst_animations_enabled(r)) {
+		/* instant, as before: no cross-fade when animations are off */
+		kst_theme_init(&r->theme, theme, r->theme.accent);
+		if (has) { r->theme.background = bg; r->theme.has_background = 1; }
+		r->theme_from = r->theme_target = r->theme;
+		r->theme_transitioning = 0;
+		r->theme_t = 0;
+		r->paint_dirty = 1;
+		kst_root_resources_changed(r);
+		return;
+	}
+	r->theme_from = r->theme;
+	kst_theme_init(&r->theme_target, theme, r->theme.accent);
+	if (has) { r->theme_target.background = bg; r->theme_target.has_background = 1; }
+	r->theme_transitioning = 1;
+	r->theme_t = 0;
 	r->paint_dirty = 1;
 	kst_root_resources_changed(r);
 }
@@ -594,13 +611,53 @@ static void tick_tree(kst_element_t* e, float dt) {
 	for (i = 0; i < e->child_count; i++) tick_tree(e->children[i], dt);
 }
 
+/* KESTREL_ANIMATION_SPEED: a float multiplier for every animation (0.5 = half speed,
+ * 2 = twice as fast; 0 or negative disables the speed override and leaves 1). */
+static KColor kst_lerp_color(KColor a, KColor b, float t) {
+	KColor c = { a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t, a.a + (b.a - a.a) * t };
+	return c;
+}
+
+static void kst_theme_lerp(kst_theme_t* out, const kst_theme_t* a, const kst_theme_t* b, float t) {
+	int i;
+	out->theme = t >= 0.5f ? b->theme : a->theme;
+	out->accent = kst_lerp_color(a->accent, b->accent, t);
+	out->background = kst_lerp_color(a->background, b->background, t);
+	out->has_background = b->has_background;
+	for (i = 0; i < KST_TC_COUNT; i++) out->colors[i] = kst_lerp_color(a->colors[i], b->colors[i], t);
+}
+
+static float kst_animation_speed(void) {
+	static int cached = 0;
+	static float v = 1.0f;
+	if (!cached) {
+		const char* e = getenv("KESTREL_ANIMATION_SPEED");
+		if (e && *e) { float f = strtof(e, NULL); if (f > 0) v = f; }
+		cached = 1;
+	}
+	return v;
+}
 void Kroot_tick(Kid root, float delta_ms) {
 	kst_root_t* r = get_root(root);
+	float speed;
 	if (!r) return;
 	r->time_ms += delta_ms;
-	kst_tilt_tick(r, delta_ms);
-	if (r->visual) tick_tree(r->visual, delta_ms);
-	if (r->overlay) tick_tree(r->overlay, delta_ms);
+	speed = kst_animation_speed();
+	/* cross-fade of the theme: the displayed theme moves from theme_from to theme_target */
+	if (r->theme_transitioning) {
+		r->theme_t += (delta_ms * speed) / 250.0f;
+		if (r->theme_t >= 1.0f) {
+			r->theme_t = 1.0f;
+			r->theme_transitioning = 0;
+			r->theme = r->theme_target;
+		} else {
+			kst_theme_lerp(&r->theme, &r->theme_from, &r->theme_target, r->theme_t);
+		}
+		r->paint_dirty = 1;
+	}
+	kst_tilt_tick(r, delta_ms * speed);
+	if (r->visual) tick_tree(r->visual, delta_ms * speed);
+	if (r->overlay) tick_tree(r->overlay, delta_ms * speed);
 	if (r->tooltip_target && r->tooltip_target->tooltip) {
 		float before = r->tooltip_timer;
 		r->tooltip_timer += delta_ms;

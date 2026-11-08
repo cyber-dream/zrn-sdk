@@ -417,6 +417,7 @@ kst_element_t* kst_ic_add(kst_items_control_t* o, kst_element_t* item, const cha
 	return container;
 }
 
+/* OBSOLETE DEPRECATED TODO delete this method, add text_block like other widgets*/
 Kid Kitems_control_add_text(Kid id, const char* text) {
 	kst_items_control_t* o = get_ic(id);
 	kst_element_t* c;

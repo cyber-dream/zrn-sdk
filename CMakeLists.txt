@@ -28,7 +28,7 @@ set_target_properties(zrnui PROPERTIES VERSION 0.1.0 SOVERSION 0)
 #   ZUI_WINDOW=480x800 ./helloworld
 # Kestrel (WP8 Silverlight controls, headless): helloworld-c is written on it
 add_subdirectory(kestrel)
-add_executable(helloworld examples/helloworld-c/main.c)
+add_executable(helloworld examples/helloworld-c/main.c examples/helloworld-c/text_page.c)
 target_link_libraries(helloworld PRIVATE kestrel::kestrel)
 set_target_properties(helloworld PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
