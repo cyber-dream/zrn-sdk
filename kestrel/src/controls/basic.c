@@ -142,7 +142,9 @@ int Ktext_block_set_style(Kid id, KTextStyle style) {
 	/* family, size, foreground role (0 inherited, 1 subtle, 2 contrast, 3 accent), line height (0 the font's),
 	 * character spacing, wrapping, margin */
 	static const struct { KFontFamily family; float size; int role; float line_height; int spacing; int wrap; float margin; } styles[K_TEXT_STYLE_LAST_ - K_TEXT_STYLE_NONE] = {
-		/* Windows Phone 8.1 (themeresources.xaml of the phone SDK), sizes as they are */
+		/* Windows Phone 8.1 (themeresources.xaml of the phone SDK), sizes as they are: the phone
+		 * renders them through the scale of its shell (a Lumia 520 screen shot measures
+		 * brightness 70px = 57.5 x 1.2, SETTINGS 16px = 18.14 x 1.2), the scale does the zooming */
 		[K_TEXT_STYLE_BASE - K_TEXT_STYLE_NONE] = { K_FONT_NORMAL, 18.14f, 0, 21.5f, 0, 1, 0 },
 		[K_TEXT_STYLE_BODY - K_TEXT_STYLE_NONE] = { K_FONT_NORMAL, 18.14f, 0, 24.0f, 0, 1, 0 },
 		[K_TEXT_STYLE_HEADER - K_TEXT_STYLE_NONE] = { K_FONT_SEMILIGHT, 57.5f, 0, 57.5f, 0, 0, 0 },
