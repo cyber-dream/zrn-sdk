@@ -453,8 +453,10 @@ typedef struct kst_toggle_switch {
 	kst_control_t base;
 	int is_on;
 	char *header, *on_content, *off_content;
-	/** The knob and the curtain: 0 is off, 1 is on; `knob_goal` is where they are going. */
-	float knob, knob_goal;
+	/** The knob and the curtain: 0 is off, 1 is on; `knob_goal` is where they are going.
+	 * A slightly underdamped spring runs there: fast (~a 6th of a second), with a little
+	 * overshoot that squashes the knob against the end of the track, as the phone does. */
+	float knob, knob_goal, knob_vel;
 	int pressed, dragging, moved;
 	float press_x, grab;
 } kst_toggle_switch_t;

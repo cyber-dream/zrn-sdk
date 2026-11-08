@@ -673,7 +673,7 @@ static void ts_paint(kst_element_t* e, kst_painter_t* p) {
 	int enabled = kst_effectively_enabled(e);
 	KColor foreground = kst_theme_color(e, KST_TC_FOREGROUND), text_color, outline, curtain, knob_fill;
 	KRect outer, inner, curtain_rect;
-	float knob_x, curtain_x;
+	float knob_x, knob_w;
 	const char* content = t->is_on ? t->on_content : t->off_content;
 	ts_geometry(e, &g);
 	if (t->base.set_flags & KST_C_FOREGROUND) foreground = t->base.foreground;
@@ -693,18 +693,29 @@ static void ts_paint(kst_element_t* e, kst_painter_t* p) {
 	/* the inner border of the template has a transparent brush, so the curtain lies 2.5 px inside the outline's inner edge */
 	inner = kst_rect(outer.x + 2 * TS_OUTLINE, outer.y + 2 * TS_OUTLINE, outer.width - 4 * TS_OUTLINE, outer.height - 4 * TS_OUTLINE);
 	kst_stroke_rect(p, outer, Kthickness_uniform(TS_OUTLINE), outline);
-	curtain_x = -TS_CURTAIN_W + TS_CURTAIN_W * t->knob;
-	curtain_rect = kst_rect(inner.x + curtain_x, inner.y, TS_CURTAIN_W, inner.height);
-	if (curtain_rect.x < inner.x) {
-		curtain_rect.width -= inner.x - curtain_rect.x;
-		curtain_rect.x = inner.x;
-	}
-	if (curtain_rect.x + curtain_rect.width > inner.x + inner.width) curtain_rect.width = inner.x + inner.width - curtain_rect.x;
+	/* the curtain is the accent fill to the left of the knob: it grows with the knob
+	 * and stays full while the knob squashes against the wall on the overshoot */
+	float curtain_w = inner.width * t->knob;
+	if (curtain_w < 0) curtain_w = 0;
+	if (curtain_w > inner.width) curtain_w = inner.width;
+	curtain_rect = kst_rect(inner.x, inner.y, curtain_w, inner.height);
 	if (curtain_rect.width > 0) kst_fill_rect(p, curtain_rect, curtain);
 	knob_x = g.box.x + TS_KNOB_TRAVEL * t->knob;
+	knob_w = TS_KNOB_W;
+	/* the overshoot of the spring squashes the knob against the end of the track,
+	 * its far edge stays put and the width gives way */
+	if (t->knob > 1.0f) {
+		float ov = TS_KNOB_TRAVEL * (t->knob - 1.0f);
+		knob_x = g.box.x + TS_KNOB_TRAVEL + ov;
+		knob_w = TS_KNOB_W - ov;
+	} else if (t->knob < 0.0f) {
+		float ov = TS_KNOB_TRAVEL * -t->knob;
+		knob_x = g.box.x;
+		knob_w = TS_KNOB_W - ov;
+	}
 	/* SwitchKnob: Fill is the foreground, the 2.5 px Stroke (inside its bounds) the background of the page */
-	kst_fill_rect(p, kst_rect(knob_x, g.box.y, TS_KNOB_W, TS_SWITCH_H), kst_theme_color(e, KST_TC_BACKGROUND));
-	kst_fill_rect(p, kst_rect(knob_x + TS_OUTLINE, g.box.y + TS_OUTLINE, TS_KNOB_W - 2 * TS_OUTLINE, TS_SWITCH_H - 2 * TS_OUTLINE), knob_fill);
+	kst_fill_rect(p, kst_rect(knob_x, g.box.y, knob_w, TS_SWITCH_H), kst_theme_color(e, KST_TC_BACKGROUND));
+	kst_fill_rect(p, kst_rect(knob_x + TS_OUTLINE, g.box.y + TS_OUTLINE, kst_maxf(0.0f, knob_w - 2 * TS_OUTLINE), TS_SWITCH_H - 2 * TS_OUTLINE), knob_fill);
 }
 
 static void ts_set_goal(kst_toggle_switch_t* t, float goal) {
@@ -732,11 +743,17 @@ static int ts_set_on(kst_toggle_switch_t* t, int on) {
 
 static void ts_tick(kst_element_t* e, float dt) {
 	kst_toggle_switch_t* t = TSW(e);
-	float step = dt / TS_ANIMATION_MS;
-	if (t->dragging) return;
-	if (t->knob < t->knob_goal) t->knob = kst_minf(t->knob + step, t->knob_goal);
-	else if (t->knob > t->knob_goal) t->knob = kst_maxf(t->knob - step, t->knob_goal);
-	if (t->knob == t->knob_goal) e->wants_tick = 0;
+	/* a slightly underdamped spring: a period of ~120 ms (fast), a damping of 0.65
+	 * (about 7% of overshoot, "a little springy"), semi-implicit Euler in ms */
+	const float omega = 6.2832f / 120.0f, zeta = 0.65f;
+	if (t->dragging) { t->knob_vel = 0; return; }
+	t->knob_vel += (omega * omega * (t->knob_goal - t->knob) - 2.0f * zeta * omega * t->knob_vel) * dt;
+	t->knob += t->knob_vel * dt;
+	if (fabsf(t->knob - t->knob_goal) < 0.002f && fabsf(t->knob_vel) < 0.0005f) {
+		t->knob = t->knob_goal;
+		t->knob_vel = 0;
+		e->wants_tick = 0;
+	}
 	kst_changed_paint(e);
 }
 

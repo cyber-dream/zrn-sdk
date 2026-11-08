@@ -45,35 +45,94 @@ static Kid main_page(const Kid frame, void* parameter) {
 
     /* Main Grid */
     {
+        const Kid scroll_viewer = Kscroll_viewer_create();
+        Kgrid_place(root_grid, scroll_viewer, 0, 1);
+
         const Kid main_stack = Kstack_panel_create(K_VERTICAL);
-        Kgrid_place(root_grid, main_stack, 0, 1);
+        Kscroll_viewer_set_content(scroll_viewer, main_stack);
         Kelement_set_margin(main_stack, Kthickness(19,9.5f,19,0));
 
-        /* Auto brightness */
+        /* Auto brightness: the switch carries its own caption */
         {
             const Kid auto_brightness_stack = Kstack_panel_create(K_VERTICAL);
-            Kpanel_add(main_stack,auto_brightness_stack );
+            Kpanel_add(main_stack, auto_brightness_stack);
 
-            /* the caption is the switch's own Header (WP8.1), not a loose TextBlock */
             const Kid toggle = Ktoggle_switch_create();
             Ktoggle_switch_set_header(toggle, "Automatically adjust");
+            Ktoggle_switch_set_off_content(toggle, "Off (customizable)");
             Kpanel_add(auto_brightness_stack, toggle);
         }
 
+        /* Level: the combo box carries its own caption */
         {
             const Kid level_stack = Kstack_panel_create(K_VERTICAL);
             Kpanel_add(main_stack, level_stack);
 
-            const Kid title = Ktext_block_create("Level");
-            Ktext_block_set_style(title, K_TEXT_STYLE_LIST_VIEW_ITEM_SUBHEADER);
-            Kpanel_add(level_stack, title);
-
             const Kid combo = Kcombo_box_create();
-            Kcombo_box_set_placeholder_text(combo, "");
-            Kpanel_add(level_stack, combo);
+            Kcombo_box_set_header(combo, "Level");
+            Kcombo_box_set_placeholder_text(combo, "pick one");
             Kitems_control_add_text(combo, "low");
             Kitems_control_add_text(combo, "medium");
             Kitems_control_add_text(combo, "high");
+            Kpanel_add(level_stack, combo);
+        }
+
+        /* --- the rest of the toolkit, one of each --- */
+        {
+            const Kid other = Kstack_panel_create(K_VERTICAL);
+            Kpanel_add(main_stack, other);
+
+            const Kid cb = Kcheck_box_create("Check me");
+            Kpanel_add(other, cb);
+
+            const Kid rb = Kradio_button_create("Radio", NULL);
+            Kpanel_add(other, rb);
+
+            const Kid tb = Ktoggle_button_create("Toggle");
+            Kpanel_add(other, tb);
+
+            const Kid btn = Kbutton_create("Button");
+            Kpanel_add(other, btn);
+
+            const Kid rbtn = Krepeat_button_create("Repeat");
+            Kpanel_add(other, rbtn);
+
+            const Kid hbtn = Khyperlink_button_create("Hyperlink");
+            Kpanel_add(other, hbtn);
+
+            const Kid sld = Kslider_create(K_HORIZONTAL);
+            Kslider_set_header(sld, "Slider");
+            Kpanel_add(other, sld);
+
+            const Kid tbox = Ktext_box_create("");
+            Ktext_box_set_header(tbox, "TextBox");
+            Ktext_box_set_placeholder_text(tbox, "type here");
+            Kpanel_add(other, tbox);
+
+            const Kid pbox = Kpassword_box_create();
+            Kpassword_box_set_header(pbox, "PasswordBox");
+            Kpanel_add(other, pbox);
+
+            const Kid asb = Kauto_suggest_box_create();
+            Kauto_suggest_box_set_header(asb, "AutoSuggestBox");
+            Kpanel_add(other, asb);
+
+            const Kid pr = Kprogress_ring_create();
+            Kprogress_ring_set_is_active(pr, 1);
+            Kpanel_add(other, pr);
+
+            const Kid pb = Kprogress_bar_create();
+            Krange_base_set_value(pb, 0.6);
+            Kpanel_add(other, pb);
+
+            const Kid sep = Kseparator_create();
+            Kpanel_add(other, sep);
+
+            const Kid th = Kthumb_create();
+            Kpanel_add(other, th);
+
+            const Kid end = Ktext_block_create("End of content");
+            Kpa
         }
     }
 
@@ -84,7 +143,7 @@ int main(void) {
     if (!Kinit()) return 1;
     // 0 x 0: the size comes from the shell (KESTREL_WINDOW or the compositor configure)
     const Kid root = Kroot_create(0, 0);
-    Kroot_set_debug(root, K_DEBUG_BOUNDS);  /* рамки */
+    // Kroot_set_debug(root, K_DEBUG_BOUNDS);  /* рамки */
     // Kroot_set_debug(root, K_DEBUG_LABELS);  /* рамки + имена классов */
 
     // App::OnLaunched: a Frame is the content of the window, then it navigates to the first page
