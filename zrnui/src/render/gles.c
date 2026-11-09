@@ -156,10 +156,13 @@ static int choose(zrn_gl_t* gl, int window) {
 	const EGLint attribs[] = {
 		EGL_SURFACE_TYPE, window ? EGL_WINDOW_BIT : EGL_PBUFFER_BIT,
 		EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-		EGL_RED_SIZE, 8, EGL_GREEN_SIZE, 8, EGL_BLUE_SIZE, 8, EGL_ALPHA_SIZE, 8, EGL_NONE
+		EGL_RED_SIZE, 8, EGL_GREEN_SIZE, 8, EGL_BLUE_SIZE, 8, EGL_ALPHA_SIZE, 8,
+		EGL_SAMPLE_BUFFERS, 1, EGL_SAMPLES, 4, EGL_NONE
 	};
 	EGLint n = 0;
-	return eglChooseConfig(gl->display, attribs, &gl->config, 1, &n) && n > 0;
+	if (eglChooseConfig(gl->display, attribs, &gl->config, 1, &n) && n > 0) return 1;
+	zrn_error(Z_ERROR_IO, "MSAA (4x) not available");
+	return 0;
 }
 
 static int init_gl(zrn_gl_t* gl) {
@@ -669,6 +672,7 @@ void zrn_gl_begin(zrn_gl_t* gl, zrn_painter_t* p, int width, int height, float s
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	glEnable(GL_BLEND);
+	glEnable(0x809D); /* GL_MULTISAMPLE */
 	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
 }
 
