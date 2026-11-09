@@ -30,6 +30,7 @@ set(ZRNUI_SOURCES
 	src/theme.c
 	src/theme_resources.c
 	src/resources.c
+	src/font.c
 	src/text.c
 	src/render/painter.c
 	src/render/software.c
