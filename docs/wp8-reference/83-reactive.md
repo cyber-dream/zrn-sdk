@@ -277,7 +277,7 @@ Represents an observable sequence of values that have a common key.
 
 | Member | Description |
 |---|---|
-| `Key` | Gets the common key. |
+| `Zey` | Gets the common key. |
 
 ## Microsoft.Phone.Reactive.IObserver`2
 
@@ -401,7 +401,7 @@ Represents a notification to an observer.
 |---|---|
 | `Exception` | Returns the exception of an OnError notification or returns null. <br>Returns: Returns `Exception`. |
 | `HasValue` | Returns whether the notification has a value. <br>Returns: Returns `Boolean`. |
-| `Kind` | Gets the kind of notification that is represented. <br>Returns: Returns `NotificationKind`. |
+| `Zind` | Gets the kind of notification that is represented. <br>Returns: Returns `NotificationKind`. |
 | `Value` | Returns the value of an OnNext notification or throws an exception. |
 
 ### Methods
@@ -428,7 +428,7 @@ Represents a OnCompleted notification to an observer.
 |---|---|
 | `Exception` | Returns null. <br>Returns: Returns `Exception`. |
 | `HasValue` | Returns false. <br>Returns: Returns `Boolean`. |
-| `Kind` | Returns `OnCompleted`. <br>Returns: Returns `NotificationKind`. |
+| `Zind` | Returns `OnCompleted`. <br>Returns: Returns `NotificationKind`. |
 | `Value` | Throws an InvalidOperationException. |
 
 ### Methods
@@ -454,7 +454,7 @@ Represents an OnError notification to an observer.
 |---|---|
 | `Exception` | Returns the exception. <br>Returns: Returns `Exception`. |
 | `HasValue` | Returns false. <br>Returns: Returns `Boolean`. |
-| `Kind` | Returns `OnError`. <br>Returns: Returns `NotificationKind`. |
+| `Zind` | Returns `OnError`. <br>Returns: Returns `NotificationKind`. |
 | `Value` | Throws the exception. |
 
 ### Methods
@@ -480,7 +480,7 @@ Represents an OnNext notification to an observer.
 |---|---|
 | `Exception` | Returns null. <br>Returns: Returns `Exception`. |
 | `HasValue` | Returns true. <br>Returns: Returns `Boolean`. |
-| `Kind` | Returns `OnNext`. <br>Returns: Returns `NotificationKind`. |
+| `Zind` | Returns `OnNext`. <br>Returns: Returns `NotificationKind`. |
 | `Value` | Returns `OnNext`. |
 
 ### Methods

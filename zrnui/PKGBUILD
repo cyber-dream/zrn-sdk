@@ -1,0 +1,31 @@
+pkgname=zrnui
+pkgver=2.0.0
+pkgrel=1
+pkgdesc="TBD"
+arch=('x86_64' 'aarch64')
+url="https://github.com/Zerone-Laboratories/zrn-sdk"
+license=('MIT')
+depends=('freetype2' 'libpng' 'fontconfig' 'wayland' 'libxkbcommon' 'mesa' 'egl-wayland')
+makedepends=('cmake' 'pkgconf')
+source=()
+options=('!strip')
+
+build() {
+    cmake -S "$srcdir" -B build \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DZRNUI_BUILD_SHARED=ON \
+        -DZRNUI_BUILD_TESTS=OFF \
+        -DZRNUI_FONT_DIR=/usr/share/fonts/zrnui/selawik \
+        -DZRNUI_THEME_FILE=/usr/share/zrnui/theme/theme.ini
+    cmake --build build
+}
+
+package() {
+    find build -maxdepth 1 -name 'libzrnui.so*' -exec install -Dm755 {} "$pkgdir/usr/lib/" \;
+    install -d "$pkgdir/usr/include"
+    cp -r include/* "$pkgdir/usr/include/"
+    install -d "$pkgdir/usr/share/fonts/zrnui"
+    install -m644 fonts/* "$pkgdir/usr/share/fonts/zrnui/selawik"
+    install -m644 theme.ini "$pkgdir/usr/share/zrnui/theme.ini"
+}

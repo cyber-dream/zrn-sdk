@@ -1,0 +1,126 @@
+cmake_minimum_required(VERSION 3.16)
+
+project(zrnui VERSION 0.1.0 DESCRIPTION "zrnui - Windows Phone 8.1 XAML controls in C" LANGUAGES C)
+
+# ON when zrnui is the project being built, OFF when it is added with add_subdirectory
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+	set(ZRNUI_IS_TOP_LEVEL ON)
+else()
+	set(ZRNUI_IS_TOP_LEVEL OFF)
+endif()
+
+option(ZRNUI_BUILD_SHARED "Build zrnui as a shared library" OFF)
+option(ZRNUI_BUILD_TESTS "Build the tests" ${ZRNUI_IS_TOP_LEVEL})
+option(ZRNUI_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(FREETYPE REQUIRED IMPORTED_TARGET freetype2)
+pkg_check_modules(PNG REQUIRED IMPORTED_TARGET libpng)
+# Selawik is a Latin subset: Cyrillic and everything else is drawn with a font fontconfig finds for the character
+pkg_check_modules(FONTCONFIG IMPORTED_TARGET fontconfig)
+
+set(ZRNUI_SOURCES
+	src/core.c
+	src/debug.c
+	src/anim.c
+	src/theme.c
+	src/theme_resources.c
+	src/resources.c
+	src/text.c
+	src/render/painter.c
+	src/render/software.c
+	src/render/gles.c
+	src/host.c
+	src/controls/panels.c
+	src/controls/basic.c
+	src/controls/buttons.c
+	src/controls/range.c
+	src/controls/scroll.c
+	src/controls/textbox.c
+	src/controls/items.c
+	src/controls/listview.c
+	src/controls/combo.c
+	src/controls/flip.c
+	src/controls/frame.c
+	src/controls/pivot.c
+	src/controls/hub.c
+	src/controls/pickers.c
+	src/controls/richtext.c
+	src/controls/appbar.c
+	src/controls/flyout.c
+	src/window.c
+)
+
+# the OpenGL ES 2 renderer: the window and Zroot_render use it when asked or when the machine has it;
+# the software painter is always built and is the safe mode
+option(ZRNUI_WITH_GL "Build the OpenGL ES 2 renderer when egl and glesv2 are found" ON)
+if(ZRNUI_WITH_GL)
+	pkg_check_modules(GLES IMPORTED_TARGET egl glesv2)
+endif()
+
+# a window for a root, on Wayland; without these libraries Zwindow_run fails at run time
+option(ZRNUI_WITH_WAYLAND "Build the Wayland window (Zwindow_run) when wayland-client and xkbcommon are found" ON)
+if(ZRNUI_WITH_WAYLAND)
+	pkg_check_modules(WAYLAND IMPORTED_TARGET wayland-client xkbcommon)
+endif()
+if(WAYLAND_FOUND)
+	list(APPEND ZRNUI_SOURCES protocol/xdg-shell-protocol.c)
+	list(APPEND ZRNUI_SOURCES protocol/viewporter-protocol.c)
+	list(APPEND ZRNUI_SOURCES protocol/fractional-scale-v1-protocol.c)
+endif()
+
+if(ZRNUI_BUILD_SHARED)
+	add_library(zrnui SHARED ${ZRNUI_SOURCES})
+	target_compile_definitions(zrnui PRIVATE ZRNUI_BUILD_DLL PUBLIC ZRNUI_USE_DLL)
+	set_target_properties(zrnui PROPERTIES C_VISIBILITY_PRESET hidden)
+else()
+	add_library(zrnui STATIC ${ZRNUI_SOURCES})
+endif()
+add_library(zrnui::zrnui ALIAS zrnui)
+
+target_include_directories(zrnui PUBLIC include PRIVATE src)
+target_link_libraries(zrnui PRIVATE PkgConfig::FREETYPE PkgConfig::PNG m)
+if(WAYLAND_FOUND)
+	target_link_libraries(zrnui PRIVATE PkgConfig::WAYLAND)
+	target_compile_definitions(zrnui PRIVATE ZRNUI_HAVE_WAYLAND)
+endif()
+if(GLES_FOUND)
+	target_link_libraries(zrnui PRIVATE PkgConfig::GLES)
+	target_compile_definitions(zrnui PRIVATE ZRNUI_HAVE_GL)
+	if(WAYLAND_FOUND)
+		pkg_check_modules(WAYLAND_EGL IMPORTED_TARGET wayland-egl)
+		if(WAYLAND_EGL_FOUND)
+			target_link_libraries(zrnui PRIVATE PkgConfig::WAYLAND_EGL)
+		endif()
+	endif()
+endif()
+if(FONTCONFIG_FOUND)
+	target_link_libraries(zrnui PRIVATE PkgConfig::FONTCONFIG)
+	target_compile_definitions(zrnui PRIVATE ZRNUI_HAVE_FONTCONFIG)
+else()
+	message(WARNING "fontconfig not found: only the Latin letters of the bundled Selawik fonts will be drawn")
+endif()
+
+# the Selawik fonts that stand in for Segoe WP are found here unless Zset_font_directory / $ZRNUI_FONT_DIR says otherwise
+set(ZRNUI_FONT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/fonts" CACHE PATH "Directory containing the bundled Selawik fonts")
+target_compile_definitions(zrnui PRIVATE ZRNUI_FONT_DIR="${ZRNUI_FONT_DIR}")
+
+# the theme colors: the readable file, overridable with $ZRNUI_THEME
+set(ZRNUI_THEME_FILE "${CMAKE_CURRENT_SOURCE_DIR}/theme.ini" CACHE FILEPATH "Path to the theme.ini file")
+target_compile_definitions(zrnui PRIVATE ZRNUI_THEME_FILE="${ZRNUI_THEME_FILE}")
+
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+	target_compile_options(zrnui PRIVATE -Wall -Wextra -Wno-unused-parameter)
+	if(ZRNUI_WARNINGS_AS_ERRORS)
+		target_compile_options(zrnui PRIVATE -Werror)
+	endif()
+endif()
+
+if(ZRNUI_BUILD_TESTS)
+	enable_testing()
+	add_subdirectory(tests)
+endif()

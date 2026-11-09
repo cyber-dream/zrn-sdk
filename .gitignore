@@ -7,7 +7,8 @@ Cargo.lock
 # never commit keys
 *.key
 cmake-build-*/
-/kestrel/fonts/Segoe UI.ttf
-/kestrel/fonts/Segoe UI Bold.ttf
-/kestrel/fonts/Segoe UI Bold Italic.ttf
-/kestrel/fonts/Segoe UI Italic.ttf
+/zrnui/fonts/Segoe UI.ttf
+/zrnui/fonts/Segoe UI Bold.ttf
+/zrnui/fonts/Segoe UI Bold Italic.ttf
+/zrnui/fonts/Segoe UI Italic.ttf
+/docs/

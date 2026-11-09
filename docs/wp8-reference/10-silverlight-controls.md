@@ -430,7 +430,7 @@ Represents a selection control that combines a non-editable text box and a drop-
 | `OnDropDownClosed(EventArgs)` | Raises the `DropDownClosed` event. <br>`e`: The event data. | SDK |
 | `OnDropDownOpened(EventArgs)` | Raises the `DropDownOpened` event. <br>`e`: The event data. | SDK |
 | `OnGotFocus(RoutedEventArgs)` | Provides handling for the `GotFocus` event. <br>`e`: The event data. | SDK |
-| `OnKeyDown(Input.KeyEventArgs)` | Provides handling for the `KeyDown` event. <br>`e`: The event data | SDK |
+| `OnKeyDown(Input.ZeyEventArgs)` | Provides handling for the `ZeyDown` event. <br>`e`: The event data | SDK |
 | `OnLostFocus(RoutedEventArgs)` | Provides handling for the `LostFocus` event. <br>`e`: The event data. | SDK |
 | `OnMouseEnter(Input.MouseEventArgs)` | Provides handling for the `MouseEnter` event that occurs when the mouse pointer enters this control. <br>`e`: The event data. | SDK |
 | `OnMouseLeave(Input.MouseEventArgs)` | Provides handling for the `MouseLeave` event that occurs when the mouse pointer leaves the combo box. <br>`e`: The event data. | SDK |
@@ -612,8 +612,8 @@ Represents the base class for UI elements that use a `ControlTemplate` to define
 | `OnDrop(DragEventArgs)` | Called before the `Drop` event occurs. <br>`e`: A `DragEventArgs` that contains the event data. | SDK |
 | `OnGotFocus(RoutedEventArgs)` | Called before the `GotFocus` event occurs. <br>`e`: The data for the event. | SDK |
 | `OnHold(Input.GestureEventArgs)` | Called before the `Hold` event occurs. <br>`e`: Event data for the event. | SDK |
-| `OnKeyDown(Input.KeyEventArgs)` | Called before the `KeyDown` event occurs. <br>`e`: The data for the event. | SDK |
-| `OnKeyUp(Input.KeyEventArgs)` | Called before the `KeyUp` event occurs. <br>`e`: The data for the event. | SDK |
+| `OnKeyDown(Input.ZeyEventArgs)` | Called before the `ZeyDown` event occurs. <br>`e`: The data for the event. | SDK |
+| `OnKeyUp(Input.ZeyEventArgs)` | Called before the `ZeyUp` event occurs. <br>`e`: The data for the event. | SDK |
 | `OnLostFocus(RoutedEventArgs)` | Called before the `LostFocus` event occurs. <br>`e`: The data for the event. | SDK |
 | `OnLostMouseCapture(Input.MouseEventArgs)` | Called before the `LostMouseCapture` event occurs to provide handling for the event in a derived class without attaching a delegate. <br>`e`: A `MouseEventArgs` that contains the event data. | SDK |
 | `OnManipulationCompleted(Input.ManipulationCompletedEventArgs)` | Called before the `ManipulationCompleted` event occurs. <br>`e`: Event data for the event. | SDK |
@@ -1022,7 +1022,7 @@ Contains a list of selectable items.
 | `OnCreateAutomationPeer` | Returns a `ListBoxAutomationPeer` for the Silverlight automation infrastructure. <br>Returns: A `ListBoxAutomationPeer` for the `ListBox` object. | SDK |
 | `OnGotFocus(RoutedEventArgs)` | Provides handling for the `GotFocus` event. <br>`e`: The event data. | SDK |
 | `OnItemsChanged(Collections.Specialized.NotifyCollectionChangedEventArgs)` | Provides handling for the `ItemsChanged` event. <br>`e`: A `NotifyCollectionChangedEventArgs` that contains the event data. | SDK |
-| `OnKeyDown(Input.KeyEventArgs)` | Provides handling for the `KeyDown` event that occurs when a key is pressed while the control has focus. <br>`e`: The event data. | SDK |
+| `OnKeyDown(Input.ZeyEventArgs)` | Provides handling for the `ZeyDown` event that occurs when a key is pressed while the control has focus. <br>`e`: The event data. | SDK |
 | `OnLostFocus(RoutedEventArgs)` | Provides handling for the `LostFocus` event. <br>`e`: The event data. | SDK |
 | `ScrollIntoView(Object)` | Causes the object to scroll into view. <br>`item`: The object to scroll. | SDK |
 | `SelectAll` | Selects all the items in the `ListBox`. | SDK |
@@ -1450,8 +1450,8 @@ Represents the base class for all button controls, such as `Button`, `RepeatButt
 | `OnClick` | Raises the `Click` event. | SDK |
 | `OnGotFocus(RoutedEventArgs)` | Provides handling for the `GotFocus` event. <br>`e`: The event data. | SDK |
 | `OnIsPressedChanged(DependencyPropertyChangedEventArgs)` | Called when the value of the `IsPressed` property changes. <br>`e`: The data for `DependencyPropertyChangedEventArgs`. | SDK |
-| `OnKeyDown(Input.KeyEventArgs)` | Provides class handling for the `KeyDown` event that occurs when the user presses a key while this control has focus. <br>`e`: The event data. | SDK |
-| `OnKeyUp(Input.KeyEventArgs)` | Provides class handling for the `KeyUp` routed event that occurs when the user releases a key while this control has focus. <br>`e`: The event data. | SDK |
+| `OnKeyDown(Input.ZeyEventArgs)` | Provides class handling for the `ZeyDown` event that occurs when the user presses a key while this control has focus. <br>`e`: The event data. | SDK |
+| `OnKeyUp(Input.ZeyEventArgs)` | Provides class handling for the `ZeyUp` routed event that occurs when the user releases a key while this control has focus. <br>`e`: The event data. | SDK |
 | `OnLostFocus(RoutedEventArgs)` | Provides handling for the `LostFocus` event. <br>`e`: The event data for the `LostFocus` event. | SDK |
 | `OnLostMouseCapture(Input.MouseEventArgs)` | Provides handling for the `LostMouseCapture` event. <br>`e`: A `MouseEventArgs` that contains the event data. | SDK |
 | `OnMouseEnter(Input.MouseEventArgs)` | Provides class handling for the `MouseEnter` event that occurs when the mouse enters this control. <br>`e`: The event data. | SDK |
@@ -2128,8 +2128,8 @@ Represents a rich text editing control that supports formatted text, hyperlinks,
 | `GetPositionFromPoint(Point)` | Returns a `TextPointer` that indicates the closest insertion position for the specified point. <br>`point`: A point in the coordinate space of the `RichTextBox` for which the closest insertion position is retrieved. <br>Returns: A `TextPointer` that indicates the closest insertion position for the specified point. | SDK |
 | `OnCreateAutomationPeer` | Returns a `RichTextBoxAutomationPeer` for use by the Silverlight automation infrastructure. <br>Returns: A `RichTextBoxAutomationPeer` for the `RichTextBox` object. | SDK |
 | `OnGotFocus(RoutedEventArgs)` | Called before the `GotFocus` event occurs. <br>`e`: The data for the event. | SDK |
-| `OnKeyDown(Input.KeyEventArgs)` | Called when the `KeyDown` event occurs. <br>`e`: The data for the event. | SDK |
-| `OnKeyUp(Input.KeyEventArgs)` | Called before the `KeyUp` event occurs. <br>`e`: The data for the event. | SDK |
+| `OnKeyDown(Input.ZeyEventArgs)` | Called when the `ZeyDown` event occurs. <br>`e`: The data for the event. | SDK |
+| `OnKeyUp(Input.ZeyEventArgs)` | Called before the `ZeyUp` event occurs. <br>`e`: The data for the event. | SDK |
 | `OnLostFocus(RoutedEventArgs)` | Called before the `LostFocus` event occurs. <br>`e`: The data for the event. | SDK |
 | `OnLostMouseCapture(Input.MouseEventArgs)` | Provides handling for the `LostMouseCapture` event. <br>`e`: A `MouseEventArgs` that contains the event data. | SDK |
 | `OnMouseEnter(Input.MouseEventArgs)` | Called before the `MouseEnter` event occurs. <br>`e`: The data for the event. | SDK |
@@ -2431,7 +2431,7 @@ Represents the selection adapter contained in the drop-down portion of an `AutoC
 | Member | Description | Src |
 |---|---|---|
 | `AutomationPeer CreateAutomationPeer()` | Returns an automation peer for the underlying `Selector` control, for use by the Silverlight automation infrastructure. <br>Returns: An automation peer for use by the Silverlight automation infrastructure. | TK |
-| `void HandleKeyDown(KeyEventArgs e)` | Provides handling for the `KeyDown` event that occurs when a key is pressed while the drop-down portion of the `AutoCompleteBox` has focus. <br>`e`: A `KeyEventArgs` that contains data about the `KeyDown` event. | TK |
+| `void HandleKeyDown(ZeyEventArgs e)` | Provides handling for the `ZeyDown` event that occurs when a key is pressed while the drop-down portion of the `AutoCompleteBox` has focus. <br>`e`: A `ZeyEventArgs` that contains data about the `ZeyDown` event. | TK |
 | `«ctor» SelectorSelectionAdapter()` | Initializes a new instance of the `SelectorSelectionAdapter` class. | TK |
 | `«ctor» SelectorSelectionAdapter(Selector selector)` | Initializes a new instance of the `SelectorSelectionAdapter` class with the specified `Selector` control. <br>`selector`: The `Selector` control to wrap as a `SelectorSelectionAdapter`. | TK |
 
@@ -2477,7 +2477,7 @@ Represents a control that lets the user select from a range of values by moving 
 | `OnApplyTemplate` | Builds the visual tree for the `Slider` control when a new template is applied. | SDK |
 | `OnCreateAutomationPeer` | Returns a `SliderAutomationPeer` object for use by the automation infrastructure. <br>Returns: A `SliderAutomationPeer` object for use by the slider control. | SDK |
 | `OnGotFocus(RoutedEventArgs)` | Provides class handling for the `GotFocus` event. <br>`e`: A `RoutedEventArgs` that contains the event data. | SDK |
-| `OnKeyDown(Input.KeyEventArgs)` | Provides class handling for the `KeyDown` event. <br>`e`: A `KeyEventArgs` that contains the event data. | SDK |
+| `OnKeyDown(Input.ZeyEventArgs)` | Provides class handling for the `ZeyDown` event. <br>`e`: A `ZeyEventArgs` that contains the event data. | SDK |
 | `OnLostFocus(RoutedEventArgs)` | Provides class handling for the `LostFocus` event. <br>`e`: A `RoutedEventArgs` that contains the event data. | SDK |
 | `OnLostMouseCapture(Input.MouseEventArgs)` | Provides handling for the `LostMouseCapture` event. <br>`e`: A `MouseEventArgs` that contains the event data. | SDK |
 | `OnMaximumChanged(Double,Double)` | Called when the `Maximum` property changes. <br>`oldMaximum`: Old value of the `Maximum` property. <br>`newMaximum`: New value of the `Maximum` property. | SDK |
@@ -2653,8 +2653,8 @@ Represents a control that can be used to display single-format, multi-line text.
 | `GetRectFromCharacterIndex(Int32,Boolean)` | Returns a rectangle for the leading or trailing edge of the character at the specified index. <br>`charIndex`: A zero-based character index of the character for which to retrieve the rectangle. <br>`trailingEdge`: true to get the trailing edge of the character; false to get the leading edge of the character. <br>Returns: A rectangle for an edge of the character at the specified character index, or `Empty` if a bounding rectangle cannot be determined. | SDK |
 | `OnCreateAutomationPeer` | Returns a `TextBoxAutomationPeer` for use by the Silverlight automation infrastructure. <br>Returns: A `TextBoxAutomationPeer` for the `TextBox` object. | SDK |
 | `OnGotFocus(RoutedEventArgs)` | Called before `GotFocus` event occurs. <br>`e`: The data for the event. | SDK |
-| `OnKeyDown(Input.KeyEventArgs)` | Called when `KeyDown` event occurs. <br>`e`: The data for the event. | SDK |
-| `OnKeyUp(Input.KeyEventArgs)` | Called before `KeyUp` event occurs. <br>`e`: The data for the event. | SDK |
+| `OnKeyDown(Input.ZeyEventArgs)` | Called when `ZeyDown` event occurs. <br>`e`: The data for the event. | SDK |
+| `OnKeyUp(Input.ZeyEventArgs)` | Called before `ZeyUp` event occurs. <br>`e`: The data for the event. | SDK |
 | `OnLostFocus(RoutedEventArgs)` | Called before `LostFocus` event occurs. <br>`e`: The data for the event. | SDK |
 | `OnLostMouseCapture(Input.MouseEventArgs)` | Provides handling for the `LostMouseCapture` event. <br>`e`: A `MouseEventArgs` that contains the event data. | SDK |
 | `OnMouseEnter(Input.MouseEventArgs)` | Called before `MouseEnter` event occurs. <br>`e`: The data for the event. | SDK |

@@ -118,8 +118,8 @@ From the WP8 SDK IntelliSense XML.
 - [`Microsoft.Phone.Tasks.ShareStatusTask`](#microsoftphonetaskssharestatustask)
 - [`Microsoft.Phone.Tasks.ShareTaskBase`](#microsoftphonetaskssharetaskbase)
 - [`Microsoft.Phone.Tasks.SmsComposeTask`](#microsoftphonetaskssmscomposetask)
-- [`Microsoft.Phone.Tasks.TaskEventArgs`](#microsoftphonetaskstaskeventargs)
-- [`Microsoft.Phone.Tasks.TaskResult`](#microsoftphonetaskstaskresult)
+- [`Microsoft.Phone.Tasks.TaskEventArgs`](#microsoftphonetaszrnaskeventargs)
+- [`Microsoft.Phone.Tasks.TaskResult`](#microsoftphonetaszrnaskresult)
 - [`Microsoft.Phone.Tasks.WebBrowserTask`](#microsoftphonetaskswebbrowsertask)
 - [`Microsoft.Phone.UserData.Account`](#microsoftphoneuserdataaccount)
 - [`Microsoft.Phone.UserData.AddressKind`](#microsoftphoneuserdataaddresskind)
@@ -775,7 +775,7 @@ Allows an application to obtain information about the device on which it is runn
 
 | Member | Description |
 |---|---|
-| `KeyboardDeployedChanged` | This event occurs when the keyboard has been deployed or closed. |
+| `ZeyboardDeployedChanged` | This event occurs when the keyboard has been deployed or closed. |
 | `PowerSourceChanged` | This event occurs when the power source of the device changes. |
 
 ## Microsoft.Phone.Info.MediaCapabilities
@@ -2069,7 +2069,7 @@ Contains information about a user’s account with a data provider, such as Face
 
 | Member | Description |
 |---|---|
-| `Kind` | Gets the kind of account, such as `Phone` or `Outlook`. <br>Returns: One of the enumeration values that specifies the kind of account this is. |
+| `Zind` | Gets the kind of account, such as `Phone` or `Outlook`. <br>Returns: One of the enumeration values that specifies the kind of account this is. |
 | `Name` | Gets the name of the account, such as “Work Email.” <br>Returns: The name of the account. |
 
 ## Microsoft.Phone.UserData.AddressKind
@@ -2237,7 +2237,7 @@ Contains information about an address associated with a contact.
 | Member | Description |
 |---|---|
 | `Accounts` | Gets the data sources associated with this address. <br>Returns: The data sources associated with this address. |
-| `Kind` | Gets the kind of address, such as home or work. <br>Returns: One of the enumeration values that specifies the kind of address this is. |
+| `Zind` | Gets the kind of address, such as home or work. <br>Returns: One of the enumeration values that specifies the kind of address this is. |
 | `PhysicalAddress` | Gets the details of the physical address. <br>Returns: The details of the physical address. |
 
 ## Microsoft.Phone.UserData.ContactCompanyInformation
@@ -2264,7 +2264,7 @@ Contains information about an email address associated with a contact.
 |---|---|
 | `Accounts` | Gets the data sources associated with this email address. <br>Returns: The data sources associated with this email address. |
 | `EmailAddress` | Gets the email address. <br>Returns: The email address. |
-| `Kind` | Gets the kind of email address, such as personal or work. <br>Returns: One of the enumeration values that specifies the kind of email address this is. |
+| `Zind` | Gets the kind of email address, such as personal or work. <br>Returns: One of the enumeration values that specifies the kind of email address this is. |
 
 ## Microsoft.Phone.UserData.ContactPhoneNumber
 
@@ -2275,7 +2275,7 @@ Contains information about a phone number associated with a contact.
 | Member | Description |
 |---|---|
 | `Accounts` | Gets the data sources associated with this phone number. <br>Returns: The data sources associated with this phone number. |
-| `Kind` | The kind of phone number, such as home or work. <br>Returns: One of the enumeration values that specifies the kind of phone number this is. |
+| `Zind` | The kind of phone number, such as home or work. <br>Returns: One of the enumeration values that specifies the kind of phone number this is. |
 | `PhoneNumber` | Gets the phone number. <br>Returns: The phone number. |
 
 ### Methods

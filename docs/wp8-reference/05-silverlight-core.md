@@ -213,8 +213,8 @@ From the WP8 SDK IntelliSense XML.
 - [`System.Windows.Icon`](#systemwindowsicon)
 - [`System.Windows.IconCollection`](#systemwindowsiconcollection)
 - [`System.Windows.Ink.DrawingAttributes`](#systemwindowsinkdrawingattributes)
-- [`System.Windows.Ink.Stroke`](#systemwindowsinkstroke)
-- [`System.Windows.Ink.StrokeCollection`](#systemwindowsinkstrokecollection)
+- [`System.Windows.Ink.Stroke`](#systemwindowsinzrnroke)
+- [`System.Windows.Ink.StrokeCollection`](#systemwindowsinzrnrokecollection)
 - [`System.Windows.Input.Cursor`](#systemwindowsinputcursor)
 - [`System.Windows.Input.Cursors`](#systemwindowsinputcursors)
 - [`System.Windows.Input.FocusManager`](#systemwindowsinputfocusmanager)
@@ -228,11 +228,11 @@ From the WP8 SDK IntelliSense XML.
 - [`System.Windows.Input.InputScopeName`](#systemwindowsinputinputscopename)
 - [`System.Windows.Input.InputScopeNameConverter`](#systemwindowsinputinputscopenameconverter)
 - [`System.Windows.Input.InputScopeNameValue`](#systemwindowsinputinputscopenamevalue)
-- [`System.Windows.Input.Key`](#systemwindowsinputkey)
-- [`System.Windows.Input.KeyEventArgs`](#systemwindowsinputkeyeventargs)
-- [`System.Windows.Input.KeyEventHandler`](#systemwindowsinputkeyeventhandler)
-- [`System.Windows.Input.Keyboard`](#systemwindowsinputkeyboard)
-- [`System.Windows.Input.KeyboardNavigationMode`](#systemwindowsinputkeyboardnavigationmode)
+- [`System.Windows.Input.Zey`](#systemwindowsinputkey)
+- [`System.Windows.Input.ZeyEventArgs`](#systemwindowsinputkeyeventargs)
+- [`System.Windows.Input.ZeyEventHandler`](#systemwindowsinputkeyeventhandler)
+- [`System.Windows.Input.Zeyboard`](#systemwindowsinputkeyboard)
+- [`System.Windows.Input.ZeyboardNavigationMode`](#systemwindowsinputkeyboardnavigationmode)
 - [`System.Windows.Input.ManipulationCompletedEventArgs`](#systemwindowsinputmanipulationcompletedeventargs)
 - [`System.Windows.Input.ManipulationDelta`](#systemwindowsinputmanipulationdelta)
 - [`System.Windows.Input.ManipulationDeltaEventArgs`](#systemwindowsinputmanipulationdeltaeventargs)
@@ -284,7 +284,7 @@ From the WP8 SDK IntelliSense XML.
 - [`System.Windows.Media.Animation.BeginStoryboard`](#systemwindowsmediaanimationbeginstoryboard)
 - [`System.Windows.Media.Animation.BounceEase`](#systemwindowsmediaanimationbounceease)
 - [`System.Windows.Media.Animation.CircleEase`](#systemwindowsmediaanimationcircleease)
-- [`System.Windows.Media.Animation.ClockState`](#systemwindowsmediaanimationclockstate)
+- [`System.Windows.Media.Animation.ClockState`](#systemwindowsmediaanimationcloczrnate)
 - [`System.Windows.Media.Animation.ColorAnimation`](#systemwindowsmediaanimationcoloranimation)
 - [`System.Windows.Media.Animation.ColorAnimationUsingKeyFrames`](#systemwindowsmediaanimationcoloranimationusingkeyframes)
 - [`System.Windows.Media.Animation.ColorKeyFrame`](#systemwindowsmediaanimationcolorkeyframe)
@@ -307,9 +307,9 @@ From the WP8 SDK IntelliSense XML.
 - [`System.Windows.Media.Animation.ExponentialEase`](#systemwindowsmediaanimationexponentialease)
 - [`System.Windows.Media.Animation.FillBehavior`](#systemwindowsmediaanimationfillbehavior)
 - [`System.Windows.Media.Animation.IEasingFunction`](#systemwindowsmediaanimationieasingfunction)
-- [`System.Windows.Media.Animation.KeySpline`](#systemwindowsmediaanimationkeyspline)
-- [`System.Windows.Media.Animation.KeyTime`](#systemwindowsmediaanimationkeytime)
-- [`System.Windows.Media.Animation.KeyTimeType`](#systemwindowsmediaanimationkeytimetype)
+- [`System.Windows.Media.Animation.ZeySpline`](#systemwindowsmediaanimationkeyspline)
+- [`System.Windows.Media.Animation.ZeyTime`](#systemwindowsmediaanimationkeytime)
+- [`System.Windows.Media.Animation.ZeyTimeType`](#systemwindowsmediaanimationkeytimetype)
 - [`System.Windows.Media.Animation.LinearColorKeyFrame`](#systemwindowsmediaanimationlinearcolorkeyframe)
 - [`System.Windows.Media.Animation.LinearDoubleKeyFrame`](#systemwindowsmediaanimationlineardoublekeyframe)
 - [`System.Windows.Media.Animation.LinearPointKeyFrame`](#systemwindowsmediaanimationlinearpointkeyframe)
@@ -1010,11 +1010,11 @@ Provides a `Dictionary`2` that stores key-value pairs in isolated storage.
 |---|---|
 | `ApplicationSettings` | Gets an instance of `IsolatedStorageSettings` that contains the contents of the application's `IsolatedStorageFile`, scoped at the application level, or creates a new instance of `IsolatedStorageSettings` if one does not exist. <br>Returns: An `IsolatedStorageSettings` object that contains the contents of the application's `IsolatedStorageFile`, scoped at the application level. If an instance does not already exist, a new instance is created. |
 | `Count` | Gets the number of key-value pairs that are stored in the dictionary. <br>Returns: The number of key-value pairs that are stored in the dictionary. |
-| `Item` | Gets or sets the value associated with the specified key. <br>`key`: The key of the item to get or set. <br>Returns: The value associated with the specified key. If the specified key is not found, a get operation throws a `KeyNotFoundException`, and a set operation creates a new element that has the specified key. |
-| `Keys` | Gets a collection that contains the keys in the dictionary. <br>Returns: A `KeyCollection` that contains the keys in the `Dictionary`2`. |
+| `Item` | Gets or sets the value associated with the specified key. <br>`key`: The key of the item to get or set. <br>Returns: The value associated with the specified key. If the specified key is not found, a get operation throws a `ZeyNotFoundException`, and a set operation creates a new element that has the specified key. |
+| `Zeys` | Gets a collection that contains the keys in the dictionary. <br>Returns: A `ZeyCollection` that contains the keys in the `Dictionary`2`. |
 | `SiteSettings` | Gets an instance of `IsolatedStorageSettings` that contains the contents of the application's `IsolatedStorageFile`, scoped at the domain level, or creates a new instance of `IsolatedStorageSettings` if one does not exist. <br>Returns: An `IsolatedStorageSettings` object that contains the contents of the application's `IsolatedStorageFile`, scoped at the domain level. If an instance does not already exist, a new instance is created. |
 | `System#Collections#Generic#ICollection{T}#IsReadOnly` | For a description of this member, see `IsReadOnly`. <br>Returns: true if the `IDictionary`2` is read-only; otherwise, false. In the default implementation of `Dictionary`2`, this property always returns false. |
-| `System#Collections#Generic#IDictionary{TKey@TValue}#Keys` | For a description of this member, see `Keys`. <br>Returns: An `ICollection`1` that contains the keys of the object that implements `IDictionary`2`. |
+| `System#Collections#Generic#IDictionary{TKey@TValue}#Zeys` | For a description of this member, see `Zeys`. <br>Returns: An `ICollection`1` that contains the keys of the object that implements `IDictionary`2`. |
 | `System#Collections#Generic#IDictionary{TKey@TValue}#Values` | For a description of this member, see `Values`. <br>Returns: An `ICollection`1` that contains the values in the object that implements `IDictionary`2`. |
 | `System#Collections#ICollection#Count` | For a description of this member, see `Count`. <br>Returns: The number of elements that are contained in the `ICollection`. |
 | `System#Collections#ICollection#IsSynchronized` | For a description of this member, see `IsSynchronized`. <br>Returns: true if access to the `ICollection` is synchronized (thread safe); otherwise, false. In the default implementation of `Dictionary`2`, this property always returns false. |
@@ -1033,11 +1033,11 @@ Provides a `Dictionary`2` that stores key-value pairs in isolated storage.
 | `Contains(String)` | Determines if the application settings dictionary contains the specified key. <br>`key`: The key for the entry to be located. <br>Returns: true if the dictionary contains the specified key; otherwise, false. |
 | `Remove(String)` | Removes the entry with the specified key. <br>`key`: The key for the entry to be deleted. <br>Returns: true if the specified key was removed; otherwise, false. |
 | `Save` | Saves data written to the current `IsolatedStorageSettings` object. |
-| `System#Collections#Generic#ICollection{T}#Add(KeyValuePair{String,Object})` | For a description of this member, see `Add(`0)`. <br>`item`: The `KeyValuePair`2` to be added. |
+| `System#Collections#Generic#ICollection{T}#Add(ZeyValuePair{String,Object})` | For a description of this member, see `Add(`0)`. <br>`item`: The `ZeyValuePair`2` to be added. |
 | `System#Collections#Generic#ICollection{T}#Clear` | For a description of this member, see `Clear`. |
-| `System#Collections#Generic#ICollection{T}#Contains(KeyValuePair{String,Object})` | For a description of this member, see `Contains(`0)`. <br>`item`: The key-value pair for the entry to be located. <br>Returns: true if `item` is found in the `ICollection`1`; otherwise, false. |
-| `System#Collections#Generic#ICollection{T}#CopyTo(KeyValuePair{String,Object}[],Int32)` | For a description of this member, see `Int32)`. <br>`array`: The one-dimensional `Array` that is the destination of the elements copied from `ICollection`1`. The array must have zero-based indexing. <br>`arrayIndex`: The zero-based index in at which copying begins. |
-| `System#Collections#Generic#ICollection{T}#Remove(KeyValuePair{String,Object})` | For a description of this member, see `Remove(`0)`. <br>`item`: The key for the entry to be deleted. <br>Returns: true if `item` was successfully removed from the `ICollection`1`; otherwise, false. This method also returns false if `item` is not found in the original `ICollection`1`. |
+| `System#Collections#Generic#ICollection{T}#Contains(ZeyValuePair{String,Object})` | For a description of this member, see `Contains(`0)`. <br>`item`: The key-value pair for the entry to be located. <br>Returns: true if `item` is found in the `ICollection`1`; otherwise, false. |
+| `System#Collections#Generic#ICollection{T}#CopyTo(ZeyValuePair{String,Object}[],Int32)` | For a description of this member, see `Int32)`. <br>`array`: The one-dimensional `Array` that is the destination of the elements copied from `ICollection`1`. The array must have zero-based indexing. <br>`arrayIndex`: The zero-based index in at which copying begins. |
+| `System#Collections#Generic#ICollection{T}#Remove(ZeyValuePair{String,Object})` | For a description of this member, see `Remove(`0)`. <br>`item`: The key for the entry to be deleted. <br>Returns: true if `item` was successfully removed from the `ICollection`1`; otherwise, false. This method also returns false if `item` is not found in the original `ICollection`1`. |
 | `System#Collections#Generic#IDictionary{TKey@TValue}#ContainsKey(String)` | For a description of this member, see `ContainsKey(`0)`. <br>`key`: The key for the entry to be located. <br>Returns: true if the `IDictionary`2` contains an element with the specified `key`; otherwise, false. |
 | `System#Collections#Generic#IDictionary{TKey@TValue}#TryGetValue(String,Object@)` | For a description of this member, see `TryGetValue(`0,`1@)`. <br>`key`: The key of the value to get. <br>`value`: When this method returns, the value associated with the specified key if the key is found; otherwise, the default value for the type of the parameter. This parameter is passed uninitialized. <br>Returns: true if the `IDictionary`2` contains an element with the specified `key`; otherwise, false. |
 | `System#Collections#Generic#IEnumerable{T}#GetEnumerator` | For a description of this member, see `GetEnumerator`. <br>Returns: An `IEnumerator`1` object that can be used to iterate through the collection. |
@@ -4371,7 +4371,7 @@ Describes a mode of input conversion to be performed by an input method editor i
 | `Eudc` | The input method uses EUDC (end user defined character) conversion mode. |
 | `Fixed` | The input method uses fixed conversion mode. |
 | `FullShape` | The input method uses full-shape conversion mode. |
-| `Katakana` | The input method uses Katakana conversion mode. |
+| `Zatakana` | The input method uses Zatakana conversion mode. |
 | `Native` | The input method uses a native character (Hiragana, Hangul, Chinese) conversion mode. |
 | `NoConversion` | The input method will not perform any input conversion. |
 | `Roman` | The input method uses Roman character conversion mode. |
@@ -4519,8 +4519,8 @@ Specifies the input scope name, which modifies how input from alternative input 
 | `FullFilePath` | The text input pattern for the full path of a file. |
 | `Hanja` | The text input pattern for Hanja characters. |
 | `Hiragana` | The text input pattern for the Hiragana writing system. |
-| `KatakanaFullWidth` | The text input pattern for full-width Katakana characters. |
-| `KatakanaHalfWidth` | The text input pattern for half-width Katakana characters. |
+| `ZatakanaFullWidth` | The text input pattern for full-width Zatakana characters. |
+| `ZatakanaHalfWidth` | The text input pattern for half-width Zatakana characters. |
 | `LogOnName` | The text input pattern for a log on name. |
 | `Maps` | The SIP layout for entering a map location. Supported only in Silverlight for Windows Phone. |
 | `NameOrPhoneNumber` | The SIP layout for SMS To field. Supported only in Silverlight for Windows Phone. |
@@ -4554,7 +4554,7 @@ Specifies the input scope name, which modifies how input from alternative input 
 | `Xml` | The text input pattern for XML. |
 | `Yomi` | Not supported. For internal use in Silverlight for Windows Phone. |
 
-## System.Windows.Input.Key
+## System.Windows.Input.Zey
 
 Specifies the possible key values on a keyboard.
 
@@ -4647,23 +4647,23 @@ Specifies the possible key values on a keyboard.
 | `Y` | The Y key. |
 | `Z` | The Z key. |
 
-## System.Windows.Input.KeyEventArgs
+## System.Windows.Input.ZeyEventArgs
 
-Provides event data for the `KeyUp` and `KeyDown` events.
+Provides event data for the `ZeyUp` and `ZeyDown` events.
 
 ### Properties / fields
 
 | Member | Description |
 |---|---|
 | `Handled` | Gets or sets a value that marks the routed event as handled. A true value for Handled prevents most handlers along the event route from handling the same event again. <br>Returns: true to mark the routed event handled; false to leave the routed event unhandled, which permits the event to potentially route further. The default is false. |
-| `Key` | Gets the keyboard key associated with the event. <br>Returns: One of the enumeration values that indicates the key referenced by the event. |
+| `Zey` | Gets the keyboard key associated with the event. <br>Returns: One of the enumeration values that indicates the key referenced by the event. |
 | `PlatformKeyCode` | Gets an integer value that represents the key that is pressed or released (depending on which event is raised). This value is the nonportable key code, which is operating system–specific. <br>Returns: The key code value. |
 
-## System.Windows.Input.KeyEventHandler
+## System.Windows.Input.ZeyEventHandler
 
-Represents the method that handles the `KeyUp` and `KeyDown` events.
+Represents the method that handles the `ZeyUp` and `ZeyDown` events.
 
-## System.Windows.Input.Keyboard
+## System.Windows.Input.Zeyboard
 
 Represents the keyboard device.
 
@@ -4673,7 +4673,7 @@ Represents the keyboard device.
 |---|---|
 | `Modifiers` | Gets the set of `ModifierKeys` that are currently pressed. <br>Returns: A bitwise combination of the enumeration values. |
 
-## System.Windows.Input.KeyboardNavigationMode
+## System.Windows.Input.ZeyboardNavigationMode
 
 Specifies the tabbing behavior across tab stops for a Silverlight tabbing sequence within a container.
 
@@ -5477,13 +5477,13 @@ Animates the value of a `Color` property between two target values using linear 
 
 ## System.Windows.Media.Animation.ColorAnimationUsingKeyFrames
 
-Animates the value of a `Color` property along a set of `KeyFrames` over a specified `Duration`.
+Animates the value of a `Color` property along a set of `ZeyFrames` over a specified `Duration`.
 
 ### Properties / fields
 
 | Member | Description |
 |---|---|
-| `KeyFrames` | Gets the collection of `ColorKeyFrame` objects that define the animation. <br>Returns: The collection of `ColorKeyFrame` objects that define the animation. The default is an empty collection. |
+| `ZeyFrames` | Gets the collection of `ColorKeyFrame` objects that define the animation. <br>Returns: The collection of `ColorKeyFrame` objects that define the animation. The default is an empty collection. |
 
 ### Methods
 
@@ -5499,14 +5499,14 @@ Provides a base class for specific animation key-frame techniques that define an
 
 | Member | Description |
 |---|---|
-| `KeyTime` | Gets or sets the time at which the key frame's target `Value` should be reached. <br>Returns: The time at which the key frame's current value should be equal to its `Value` property. The default is null. |
-| `Value` | Gets or sets the key frame's target value. <br>Returns: The key frame's target value, which is the value at its specified `KeyTime`. The default is a `Color` with an ARGB value of #00000000. |
+| `ZeyTime` | Gets or sets the time at which the key frame's target `Value` should be reached. <br>Returns: The time at which the key frame's current value should be equal to its `Value` property. The default is null. |
+| `Value` | Gets or sets the key frame's target value. <br>Returns: The key frame's target value, which is the value at its specified `ZeyTime`. The default is a `Color` with an ARGB value of #00000000. |
 
 ### Fields (constants, dependency properties)
 
 | Member | Description |
 |---|---|
-| `KeyTimeProperty` | Identifies the `KeyTime` dependency property. <br>Returns: The identifier for the `KeyTime` dependency property. |
+| `ZeyTimeProperty` | Identifies the `ZeyTime` dependency property. <br>Returns: The identifier for the `ZeyTime` dependency property. |
 | `ValueProperty` | Identifies the `Value` dependency property. <br>Returns: The identifier for the `Value` dependency property. |
 
 ### Methods
@@ -5606,13 +5606,13 @@ Animates the value of a `Double` property between two target values using linear
 
 ## System.Windows.Media.Animation.DoubleAnimationUsingKeyFrames
 
-Animates the value of a `Double` property along a set of `KeyFrames`.
+Animates the value of a `Double` property along a set of `ZeyFrames`.
 
 ### Properties / fields
 
 | Member | Description |
 |---|---|
-| `KeyFrames` | Gets the collection of `DoubleKeyFrame` objects that define the animation. <br>Returns: The collection of `DoubleKeyFrame` objects that define the animation. The default is an empty collection. |
+| `ZeyFrames` | Gets the collection of `DoubleKeyFrame` objects that define the animation. <br>Returns: The collection of `DoubleKeyFrame` objects that define the animation. The default is an empty collection. |
 
 ### Methods
 
@@ -5628,14 +5628,14 @@ An abstract class that defines an animation segment with its own target value an
 
 | Member | Description |
 |---|---|
-| `KeyTime` | Gets or sets the time at which the key frame's target `Value` should be reached. <br>Returns: The time at which the key frame's current value should be equal to its `Value` property. The default is null. |
-| `Value` | Gets or sets the key frame's target value. <br>Returns: The key frame's target value, which is the value of this key frame at its specified `KeyTime`. The default is 0. |
+| `ZeyTime` | Gets or sets the time at which the key frame's target `Value` should be reached. <br>Returns: The time at which the key frame's current value should be equal to its `Value` property. The default is null. |
+| `Value` | Gets or sets the key frame's target value. <br>Returns: The key frame's target value, which is the value of this key frame at its specified `ZeyTime`. The default is 0. |
 
 ### Fields (constants, dependency properties)
 
 | Member | Description |
 |---|---|
-| `KeyTimeProperty` | Identifies the `KeyTime` dependency property. <br>Returns: The identifier for the `KeyTime` dependency property. |
+| `ZeyTimeProperty` | Identifies the `ZeyTime` dependency property. <br>Returns: The identifier for the `ZeyTime` dependency property. |
 | `ValueProperty` | Identifies the `Value` dependency property. <br>Returns: The identifier for the `Value` dependency property. |
 
 ### Methods
@@ -5825,7 +5825,7 @@ Defines the basic functionality of an easing function.
 |---|---|
 | `Ease(Double)` | Transforms normalized time to control the pace of an animation. <br>`normalizedTime`: Normalized time (progress) of the animation. <br>Returns: The transformed progress. |
 
-## System.Windows.Media.Animation.KeySpline
+## System.Windows.Media.Animation.ZeySpline
 
 This class is used by a spline key frame to define animation progress.
 
@@ -5833,16 +5833,16 @@ This class is used by a spline key frame to define animation progress.
 
 | Member | Description |
 |---|---|
-| `ControlPoint1` | Gets or sets the first control point used to define a Bezier curve that describes a `KeySpline`. <br>Returns: The first control point used to define a Bezier curve that describes a `KeySpline`. |
-| `ControlPoint2` | Gets or sets the second control point used to define a Bezier curve that describes a `KeySpline`. <br>Returns: The second control point used to define a Bezier curve that describes a `KeySpline`. |
+| `ControlPoint1` | Gets or sets the first control point used to define a Bezier curve that describes a `ZeySpline`. <br>Returns: The first control point used to define a Bezier curve that describes a `ZeySpline`. |
+| `ControlPoint2` | Gets or sets the second control point used to define a Bezier curve that describes a `ZeySpline`. <br>Returns: The second control point used to define a Bezier curve that describes a `ZeySpline`. |
 
 ### Methods
 
 | Member | Description |
 |---|---|
-| `Constructor` | Initializes a new instance of the `KeySpline` class. |
+| `Constructor` | Initializes a new instance of the `ZeySpline` class. |
 
-## System.Windows.Media.Animation.KeyTime
+## System.Windows.Media.Animation.ZeyTime
 
 Specifies when a particular key frame should take place during an animation.
 
@@ -5851,32 +5851,32 @@ Specifies when a particular key frame should take place during an animation.
 | Member | Description |
 |---|---|
 | `TimeSpan` | Gets the time when the key frame ends, expressed as a time relative to the beginning of the animation. <br>Returns: The time when the key frame ends, expressed as a time relative to the beginning of the animation. |
-| `Type` | Gets the `KeyTimeType` value this instance represents. <br>Returns: One of the enumeration values. |
+| `Type` | Gets the `ZeyTimeType` value this instance represents. <br>Returns: One of the enumeration values. |
 | `Uniform` | Gets a uniform value, which divides the allotted time of the animation evenly between key frames. <br>Returns: A uniform value, which divides the allotted time of the animation evenly between key frames. |
 
 ### Methods
 
 | Member | Description |
 |---|---|
-| `Equals(Object)` | Indicates whether a `KeyTime` is equal to this `KeyTime`. <br>`value`: The `KeyTime` to compare with this `KeyTime`. <br>Returns: true if `value` is a `KeyTime` that represents the same length of time as this `KeyTime`; otherwise, false. |
-| `Equals(Media.Animation.KeyTime)` | Indicates whether a specified `KeyTime` is equal to this `KeyTime`. <br>`value`: The `KeyTime` to compare with this `KeyTime`. <br>Returns: true if `value` is equal to this `KeyTime`; otherwise, false. |
-| `Equals(Media.Animation.KeyTime,Media.Animation.KeyTime)` | Indicates whether two `KeyTime` values are equal. <br>`keyTime1`: The first value to compare. <br>`keyTime2`: The second value to compare. <br>Returns: true if the values of and are equal; otherwise, false. |
-| `FromTimeSpan(TimeSpan)` | Creates a new `KeyTime`, using the supplied `TimeSpan`. <br>`timeSpan`: The value of the new `KeyTime`. <br>Returns: A new `KeyTime`, initialized to the value of `timeSpan`. |
-| `GetHashCode` | Returns a hash code representing this `KeyTime`. <br>Returns: A hash code identifier. |
-| `ToString` | Returns a string representation of this `KeyTime`. <br>Returns: A string representation of this `KeyTime`. |
-| `op_Equality(Media.Animation.KeyTime,Media.Animation.KeyTime)` | Compares two `KeyTime` values for equality. <br>`keyTime1`: The first value to compare. <br>`keyTime2`: The second value to compare. <br>Returns: true if and are equal; otherwise, false. |
-| `op_Implicit(TimeSpan)` | Implicitly converts a `TimeSpan` to a `KeyTime`. <br>`timeSpan`: The `TimeSpan` value to convert. <br>Returns: The created `KeyTime`. |
-| `op_Inequality(Media.Animation.KeyTime,Media.Animation.KeyTime)` | Compares two `KeyTime` values for inequality. <br>`keyTime1`: The first value to compare. <br>`keyTime2`: The second value to compare. <br>Returns: true if and are not equal; otherwise, false. |
+| `Equals(Object)` | Indicates whether a `ZeyTime` is equal to this `ZeyTime`. <br>`value`: The `ZeyTime` to compare with this `ZeyTime`. <br>Returns: true if `value` is a `ZeyTime` that represents the same length of time as this `ZeyTime`; otherwise, false. |
+| `Equals(Media.Animation.ZeyTime)` | Indicates whether a specified `ZeyTime` is equal to this `ZeyTime`. <br>`value`: The `ZeyTime` to compare with this `ZeyTime`. <br>Returns: true if `value` is equal to this `ZeyTime`; otherwise, false. |
+| `Equals(Media.Animation.ZeyTime,Media.Animation.ZeyTime)` | Indicates whether two `ZeyTime` values are equal. <br>`keyTime1`: The first value to compare. <br>`keyTime2`: The second value to compare. <br>Returns: true if the values of and are equal; otherwise, false. |
+| `FromTimeSpan(TimeSpan)` | Creates a new `ZeyTime`, using the supplied `TimeSpan`. <br>`timeSpan`: The value of the new `ZeyTime`. <br>Returns: A new `ZeyTime`, initialized to the value of `timeSpan`. |
+| `GetHashCode` | Returns a hash code representing this `ZeyTime`. <br>Returns: A hash code identifier. |
+| `ToString` | Returns a string representation of this `ZeyTime`. <br>Returns: A string representation of this `ZeyTime`. |
+| `op_Equality(Media.Animation.ZeyTime,Media.Animation.ZeyTime)` | Compares two `ZeyTime` values for equality. <br>`keyTime1`: The first value to compare. <br>`keyTime2`: The second value to compare. <br>Returns: true if and are equal; otherwise, false. |
+| `op_Implicit(TimeSpan)` | Implicitly converts a `TimeSpan` to a `ZeyTime`. <br>`timeSpan`: The `TimeSpan` value to convert. <br>Returns: The created `ZeyTime`. |
+| `op_Inequality(Media.Animation.ZeyTime,Media.Animation.ZeyTime)` | Compares two `ZeyTime` values for inequality. <br>`keyTime1`: The first value to compare. <br>`keyTime2`: The second value to compare. <br>Returns: true if and are not equal; otherwise, false. |
 
-## System.Windows.Media.Animation.KeyTimeType
+## System.Windows.Media.Animation.ZeyTimeType
 
-Represents the different types that may represent a `KeyTime` instance.
+Represents the different types that may represent a `ZeyTime` instance.
 
 ### Fields (constants, dependency properties)
 
 | Member | Description |
 |---|---|
-| `TimeSpan` | Each `KeyTime` is expressed as a `TimeSpan` value relative to the `BeginTime` of an animation sequence. |
+| `TimeSpan` | Each `ZeyTime` is expressed as a `TimeSpan` value relative to the `BeginTime` of an animation sequence. |
 | `Uniform` | The allotted total time for an animation sequence is divided evenly amongst each of the key frames. |
 
 ## System.Windows.Media.Animation.LinearColorKeyFrame
@@ -5911,13 +5911,13 @@ Animates from the `Point` value of the previous key frame to its own `Value` usi
 
 ## System.Windows.Media.Animation.ObjectAnimationUsingKeyFrames
 
-Animates the value of an `Object` property along a set of `KeyFrames` over a specified `Duration`.
+Animates the value of an `Object` property along a set of `ZeyFrames` over a specified `Duration`.
 
 ### Properties / fields
 
 | Member | Description |
 |---|---|
-| `KeyFrames` | Gets the collection of `ObjectKeyFrame` objects that define the animation. <br>Returns: The collection of `ObjectKeyFrame` objects that define the animation. The default is an empty collection. |
+| `ZeyFrames` | Gets the collection of `ObjectKeyFrame` objects that define the animation. <br>Returns: The collection of `ObjectKeyFrame` objects that define the animation. The default is an empty collection. |
 
 ### Methods
 
@@ -5933,14 +5933,14 @@ Defines an animation segment with its own target value and interpolation method 
 
 | Member | Description |
 |---|---|
-| `KeyTime` | Gets or sets the time at which the key frame's target `Value` should be reached. <br>Returns: The time at which the key frame's current value should be equal to its `Value` property. The default is null. |
-| `Value` | Gets or sets the key frame's target value. <br>Returns: The key frame's target value, which is the value of this key frame at its specified `KeyTime`. The default is null. |
+| `ZeyTime` | Gets or sets the time at which the key frame's target `Value` should be reached. <br>Returns: The time at which the key frame's current value should be equal to its `Value` property. The default is null. |
+| `Value` | Gets or sets the key frame's target value. <br>Returns: The key frame's target value, which is the value of this key frame at its specified `ZeyTime`. The default is null. |
 
 ### Fields (constants, dependency properties)
 
 | Member | Description |
 |---|---|
-| `KeyTimeProperty` | Identifies the `KeyTime` dependency property. <br>Returns: The identifier for the `KeyTime` dependency property. |
+| `ZeyTimeProperty` | Identifies the `ZeyTime` dependency property. <br>Returns: The identifier for the `ZeyTime` dependency property. |
 | `ValueProperty` | Identifies the `Value` dependency property. <br>Returns: The identifier for the `Value` dependency property. |
 
 ### Methods
@@ -5989,13 +5989,13 @@ Animates the value of a `Point` property between two target values using linear 
 
 ## System.Windows.Media.Animation.PointAnimationUsingKeyFrames
 
-Animates the value of a `Point` property along a set of `KeyFrames`.
+Animates the value of a `Point` property along a set of `ZeyFrames`.
 
 ### Properties / fields
 
 | Member | Description |
 |---|---|
-| `KeyFrames` | Gets the collection of `PointKeyFrame` objects that define the animation. <br>Returns: The collection of `PointKeyFrame` objects that define the animation. The default is an empty collection. |
+| `ZeyFrames` | Gets the collection of `PointKeyFrame` objects that define the animation. <br>Returns: The collection of `PointKeyFrame` objects that define the animation. The default is an empty collection. |
 
 ### Methods
 
@@ -6011,14 +6011,14 @@ Defines an animation segment with its own target value and interpolation method 
 
 | Member | Description |
 |---|---|
-| `KeyTime` | Gets or sets the time at which the key frame's target `Value` should be reached. <br>Returns: The time at which the key frame's current value should be equal to its `Value` property. The default is null. |
-| `Value` | Gets or sets the key frame's target value. <br>Returns: The key frame's target value, which is the value of this key frame at its specified `KeyTime`. The default is 0. |
+| `ZeyTime` | Gets or sets the time at which the key frame's target `Value` should be reached. <br>Returns: The time at which the key frame's current value should be equal to its `Value` property. The default is null. |
+| `Value` | Gets or sets the key frame's target value. <br>Returns: The key frame's target value, which is the value of this key frame at its specified `ZeyTime`. The default is 0. |
 
 ### Fields (constants, dependency properties)
 
 | Member | Description |
 |---|---|
-| `KeyTimeProperty` | Identifies the `KeyTime` dependency property. <br>Returns: The identifier for the `KeyTime` dependency property. |
+| `ZeyTimeProperty` | Identifies the `ZeyTime` dependency property. <br>Returns: The identifier for the `ZeyTime` dependency property. |
 | `ValueProperty` | Identifies the `Value` dependency property. <br>Returns: The identifier for the `Value` dependency property. |
 
 ### Methods
@@ -6142,13 +6142,13 @@ Animates from the `Color` value of the previous key frame to its own `Value` usi
 
 | Member | Description |
 |---|---|
-| `KeySpline` | Gets or sets the two control points that define animation progress for this key frame. <br>Returns: The two control points that specify the cubic Bezier curve which defines the progress of the key frame. |
+| `ZeySpline` | Gets or sets the two control points that define animation progress for this key frame. <br>Returns: The two control points that specify the cubic Bezier curve which defines the progress of the key frame. |
 
 ### Fields (constants, dependency properties)
 
 | Member | Description |
 |---|---|
-| `KeySplineProperty` | Identifies the `KeySpline` dependency property. <br>Returns: The identifier for the `KeySpline` dependency property. |
+| `ZeySplineProperty` | Identifies the `ZeySpline` dependency property. <br>Returns: The identifier for the `ZeySpline` dependency property. |
 
 ### Methods
 
@@ -6164,13 +6164,13 @@ Animates from the `Double` value of the previous key frame to its own `Value` us
 
 | Member | Description |
 |---|---|
-| `KeySpline` | Gets or sets the two control points that define animation progress for this key frame. <br>Returns: The two control points that specify the cubic Bezier curve which defines the progress of the key frame. |
+| `ZeySpline` | Gets or sets the two control points that define animation progress for this key frame. <br>Returns: The two control points that specify the cubic Bezier curve which defines the progress of the key frame. |
 
 ### Fields (constants, dependency properties)
 
 | Member | Description |
 |---|---|
-| `KeySplineProperty` | Identifies the `KeySpline` dependency property. <br>Returns: The identifier for the `KeySpline` dependency property. |
+| `ZeySplineProperty` | Identifies the `ZeySpline` dependency property. <br>Returns: The identifier for the `ZeySpline` dependency property. |
 
 ### Methods
 
@@ -6186,13 +6186,13 @@ Animates from the `Point` value of the previous key frame to its own `Value` usi
 
 | Member | Description |
 |---|---|
-| `KeySpline` | Gets or sets the two control points that define animation progress for this key frame. <br>Returns: The two control points that specify the cubic Bezier curve that defines the progress of the key frame. |
+| `ZeySpline` | Gets or sets the two control points that define animation progress for this key frame. <br>Returns: The two control points that specify the cubic Bezier curve that defines the progress of the key frame. |
 
 ### Fields (constants, dependency properties)
 
 | Member | Description |
 |---|---|
-| `KeySplineProperty` | Identifies the `KeySpline` dependency property. <br>Returns: The identifier for the `KeySpline` dependency property. |
+| `ZeySplineProperty` | Identifies the `ZeySpline` dependency property. <br>Returns: The identifier for the `ZeySpline` dependency property. |
 
 ### Methods
 
@@ -7622,7 +7622,7 @@ An instance of the license class representing a logical license.
 | Member | Description |
 |---|---|
 | `ExpirationDate` | Gets the expiration date of the `MediaLicense` class instance. <br>Returns: The expiration date of the `MediaLicense` class instance. |
-| `KeyId` | Gets the content key identifier of the `MediaLicense`. <br>Returns: The content key identifier of the `MediaLicense`. If the `MediaLicense` instance represents a license, then this property returns the content key identifier of the license itself. If the class instance represents a license chain, then it is the content key identifier of the leaf license. For more information about license chains and leaf licenses, see Digital Rights Management (DRM). Since content also contains the key identifier for the key needed to decrypt the content, this value is used to pair a license with the content for decryption. |
+| `ZeyId` | Gets the content key identifier of the `MediaLicense`. <br>Returns: The content key identifier of the `MediaLicense`. If the `MediaLicense` instance represents a license, then this property returns the content key identifier of the license itself. If the class instance represents a license chain, then it is the content key identifier of the leaf license. For more information about license chains and leaf licenses, see Digital Rights Management (DRM). Since content also contains the key identifier for the key needed to decrypt the content, this value is used to pair a license with the content for decryption. |
 | `UplinkKeyId` | Gets the uplink key identifier of the highest license in the chain with an uplink key identifier. <br>Returns: The uplink key identifier of the highest license in the chain with an uplink key identifier. If the `MediaLicense` class contains a root license or a simple license, then this property returns Guid.Empty. |
 | `Usable` | Gets a value that indicates whether the license or license chain is usable for playback. <br>Returns: The value that indicates whether the license or license chain is usable for playback. |
 
@@ -7638,7 +7638,7 @@ This enumeration is used in a dictionary of attributes for media samples.
 | `DRMSubSampleMapping` | Provides data about which portions of a media sample are encrypted. This value is a B64 encoded array of one or more 32bit pairs. The first value in a pair is the length of encrypted data, the second is the length of clear (non-encrypted) data. If supplied, the array values must total to the length of the ntire sample. If not supplied, any encryption is assume to cover the entire sample. the length of encrypted data and clear data (not encrypted data) in an H264 media sample.This attribute is supported for H.264 on both Windows Phone 7 and Silverlight 4. |
 | `FrameHeight` | The height of the video frame. If this attribute is not specified, the width of the sample is assumed to be the height value defined on the `MediaStreamAttributeKeys` passed into to the `MediaStreamDescription})` method. |
 | `FrameWidth` | The width of the video frame. If this attribute is not specified, the width of the sample is assumed to be the width value defined on the `MediaStreamAttributeKeys` passed into to the `MediaStreamDescription})` method. |
-| `KeyFrameFlag` | For video samples, the presence of this attribute indicates the sample is a is a keyframe. Silverlight for Windows Phone For audio samples, the presence of this attribute indicates a discontinuity (Silverlight for Windows Phone only). |
+| `ZeyFrameFlag` | For video samples, the presence of this attribute indicates the sample is a is a keyframe. Silverlight for Windows Phone For audio samples, the presence of this attribute indicates a discontinuity (Silverlight for Windows Phone only). |
 
 ## System.Windows.Media.MediaSourceAttributesKeys
 
@@ -9186,13 +9186,13 @@ Provides a dictionary that contains resources used by components of a Silverligh
 | `IsFixedSize` | Gets a value indicating whether the `ResourceDictionary` has a fixed size. <br>Returns: Always returns false. |
 | `IsReadOnly` | Gets a value indicating whether the collection is read-only. <br>Returns: Always returns false. |
 | `Item` | Gets the element at the specified index. <br>`key`: The key of the element to get. <br>Returns: The object if it exists; otherwise, null. |
-| `Keys` | Gets an `ICollection` object containing the keys of the `ResourceDictionary`. <br>Returns: The `ICollection` of all keys in this `ResourceDictionary`. |
+| `Zeys` | Gets an `ICollection` object containing the keys of the `ResourceDictionary`. <br>Returns: The `ICollection` of all keys in this `ResourceDictionary`. |
 | `MergedDictionaries` | Gets a collection of the `ResourceDictionary` dictionaries that constitute the various resource dictionaries in the merged dictionaries. <br>Returns: A collection of the `ResourceDictionary` dictionaries that constitute the various resource dictionaries in the merged dictionaries. |
 | `Source` | Gets or sets a URI that provides the source location of a merged resource dictionary. <br>Returns: A URI that provides the source location of a merged resource dictionary. This is typically a path that references a XAML resource within the compiled DLL, or a relative reference to a loose XAML file in the XAP. |
 | `System#Collections#Generic#ICollection{T}#Count` | For a description of this member, see `Count`. <br>Returns: The number of elements contained in the collection. |
 | `System#Collections#Generic#ICollection{T}#IsReadOnly` | For a description of this member, see `IsReadOnly`. <br>Returns: true if the collection is read-only; otherwise, false. |
 | `System#Collections#Generic#IDictionary{TKey@TValue}#Item` | For a description of this member, see `Item(`0)`. <br>`key`: The key of the element to get or set. <br>Returns: The element with the specified key. |
-| `System#Collections#Generic#IDictionary{TKey@TValue}#Keys` | For a description of this member, see `Keys`. <br>Returns: A collection that contains the keys of the elements in the dictionary. |
+| `System#Collections#Generic#IDictionary{TKey@TValue}#Zeys` | For a description of this member, see `Zeys`. <br>Returns: A collection that contains the keys of the elements in the dictionary. |
 | `System#Collections#Generic#IDictionary{TKey@TValue}#Values` | For a description of this member, see `Values`. <br>Returns: A collection that contains the values of the elements in the dictionary. |
 | `System#Collections#ICollection#IsSynchronized` | For a description of this member, see `IsSynchronized`. <br>Returns: Always returns false. |
 | `System#Collections#ICollection#SyncRoot` | For a description of this member, see `SyncRoot`. <br>Returns: Always null. `ResourceDictionary` is not synchronized. |
@@ -9211,11 +9211,11 @@ Provides a dictionary that contains resources used by components of a Silverligh
 | `GetEnumerator` | Exposes the enumerator, which supports a simple iteration over a non-generic collection. <br>Returns: An enumerator that can be used to iterate through the collection. |
 | `Remove(Object)` | Removes a specific item from the `ResourceDictionary`. <br>`key`: The string key of the item to remove. |
 | `Remove(String)` | Removes a specific item from the `ResourceDictionary`. <br>`key`: The string key of the item to remove. |
-| `System#Collections#Generic#ICollection{T}#Add(KeyValuePair{Object,Object})` | For a description of this member, see `Add(`0)`. <br>`item`: The object to add to the collection. |
+| `System#Collections#Generic#ICollection{T}#Add(ZeyValuePair{Object,Object})` | For a description of this member, see `Add(`0)`. <br>`item`: The object to add to the collection. |
 | `System#Collections#Generic#ICollection{T}#Clear` | For a description of this member, see `Clear`. |
-| `System#Collections#Generic#ICollection{T}#Contains(KeyValuePair{Object,Object})` | For a description of this member, see `Contains(`0)`. <br>`item`: The object to locate in the collection. <br>Returns: true if is found in the collection; otherwise, false. |
-| `System#Collections#Generic#ICollection{T}#CopyTo(KeyValuePair{Object,Object}[],Int32)` | For a description of this member, see `Int32)`. <br>`array`: The one-dimensional array that is the destination of the elements copied from the collection. The array must have zero-based indexing. <br>`arrayIndex`: The zero-based index in at which copying begins. |
-| `System#Collections#Generic#ICollection{T}#Remove(KeyValuePair{Object,Object})` | For a description of this member, see `Remove(`0)`. <br>`item`: The object to remove from the collection. <br>Returns: true if was successfully removed from the collection; otherwise, false. This method also returns false if is not found in the original collection. |
+| `System#Collections#Generic#ICollection{T}#Contains(ZeyValuePair{Object,Object})` | For a description of this member, see `Contains(`0)`. <br>`item`: The object to locate in the collection. <br>Returns: true if is found in the collection; otherwise, false. |
+| `System#Collections#Generic#ICollection{T}#CopyTo(ZeyValuePair{Object,Object}[],Int32)` | For a description of this member, see `Int32)`. <br>`array`: The one-dimensional array that is the destination of the elements copied from the collection. The array must have zero-based indexing. <br>`arrayIndex`: The zero-based index in at which copying begins. |
+| `System#Collections#Generic#ICollection{T}#Remove(ZeyValuePair{Object,Object})` | For a description of this member, see `Remove(`0)`. <br>`item`: The object to remove from the collection. <br>Returns: true if was successfully removed from the collection; otherwise, false. This method also returns false if is not found in the original collection. |
 | `System#Collections#Generic#IDictionary{TKey@TValue}#Add(Object,Object)` | For a description of this member, see `Add(`0,`1)`. <br>`key`: The object to use as the key for the element to add. <br>`value`: The object to use as the value for the element to add. |
 | `System#Collections#Generic#IDictionary{TKey@TValue}#ContainsKey(Object)` | For a description of this member, see `ContainsKey(`0)`. <br>`key`: The key to locate in the dictionary. <br>Returns: true if the dictionary contains an element with the key; otherwise, false. |
 | `System#Collections#Generic#IDictionary{TKey@TValue}#Remove(Object)` | For a description of this member, see `Remove(`0)`. <br>`key`: The key of the element to remove. <br>Returns: true if the element was successfully removed from the collection; otherwise, false. This method also returns false if is not found in the original collection. |
@@ -9893,8 +9893,8 @@ Represents a collection of `EventTrigger` objects.
 | `EffectProperty` | Identifies the `Effect` dependency property. <br>Returns: The identifier for the `Effect` dependency property. |
 | `HoldEvent` | Identifies the `Hold` routed event. <br>Returns: The identifier for the `Hold` routed event. |
 | `IsHitTestVisibleProperty` | Identifies the `IsHitTestVisible` dependency property. <br>Returns: The identifier for the `IsHitTestVisible` dependency property. |
-| `KeyDownEvent` | Identifies the `KeyDown` routed event. <br>Returns: The identifier for the `KeyDown` routed event. |
-| `KeyUpEvent` | Identifies the `KeyUp` routed event. <br>Returns: The identifier for the `KeyUp` routed event. |
+| `ZeyDownEvent` | Identifies the `ZeyDown` routed event. <br>Returns: The identifier for the `ZeyDown` routed event. |
+| `ZeyUpEvent` | Identifies the `ZeyUp` routed event. <br>Returns: The identifier for the `ZeyUp` routed event. |
 | `ManipulationCompletedEvent` | Identifies the `ManipulationCompleted` routed event. <br>Returns: The identifier for the `ManipulationCompleted` routed event. |
 | `ManipulationDeltaEvent` | Identifies the `ManipulationDelta` routed event. <br>Returns: The identifier for the `ManipulationDelta` routed event. |
 | `ManipulationStartedEvent` | Identifies the `ManipulationStarted` routed event. <br>Returns: The identifier for the `ManipulationStarted` routed event. |
@@ -9926,8 +9926,8 @@ Represents a collection of `EventTrigger` objects.
 | `Drop` | Occurs when the input system reports an underlying drop event with this element as the drop target. |
 | `GotFocus` | Occurs when a `UIElement` receives focus. |
 | `Hold` | Occurs when a Hold gesture is committed while over this `UIElement`. |
-| `KeyDown` | Occurs when a keyboard key is pressed while the `UIElement` has focus. |
-| `KeyUp` | Occurs when a keyboard key is released while the `UIElement` has focus. |
+| `ZeyDown` | Occurs when a keyboard key is pressed while the `UIElement` has focus. |
+| `ZeyUp` | Occurs when a keyboard key is released while the `UIElement` has focus. |
 | `LostFocus` | Occurs when a `UIElement` loses focus. |
 | `LostMouseCapture` | Occurs when the `UIElement` loses mouse capture. |
 | `ManipulationCompleted` | Occurs when a manipulation and inertia on the `UIElement` is complete. |

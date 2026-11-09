@@ -29,7 +29,7 @@ Extracted from `theme-xaml/wp8_WPDT_DESIGN_{DARK,LIGHT}_THEMERESOURCES_XAML.xaml
 
 ## Colors
 
-| Key | Dark | Light |
+| Zey | Dark | Light |
 |---|---|---|
 | `PhoneForegroundColor` | `#FFFFFFFF` | `#DE000000` |
 | `PhoneBackgroundColor` | `#FF000000` | `#FFFFFFFF` |
@@ -57,7 +57,7 @@ Extracted from `theme-xaml/wp8_WPDT_DESIGN_{DARK,LIGHT}_THEMERESOURCES_XAML.xaml
 
 ## Numbers and thicknesses
 
-| Key | Dark | Light |
+| Zey | Dark | Light |
 |---|---|---|
 | `PhoneDarkThemeVisibility` | `Visible` | `Collapsed` |
 | `PhoneLightThemeVisibility` | `Collapsed` | `Visible` |
@@ -95,7 +95,7 @@ Extracted from `theme-xaml/wp8_WPDT_DESIGN_{DARK,LIGHT}_THEMERESOURCES_XAML.xaml
 
 ## Fonts
 
-| Key | Dark | Light |
+| Zey | Dark | Light |
 |---|---|---|
 | `PhoneFontFamilyNormal` | `Segoe WP` | `Segoe WP` |
 | `PhoneFontFamilyLight` | `Segoe WP Light` | `Segoe WP Light` |
@@ -105,7 +105,7 @@ Extracted from `theme-xaml/wp8_WPDT_DESIGN_{DARK,LIGHT}_THEMERESOURCES_XAML.xaml
 
 ## Brushes (reference a color)
 
-| Key | Dark | Light |
+| Zey | Dark | Light |
 |---|---|---|
 | `PhoneForegroundBrush` | → `PhoneForegroundColor` | → `PhoneForegroundColor` |
 | `PhoneBackgroundBrush` | → `PhoneBackgroundColor` | → `PhoneBackgroundColor` |

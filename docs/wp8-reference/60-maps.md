@@ -133,7 +133,7 @@ Provides credentials in the form of an application ID.
 
 | Member | Description | Src |
 |---|---|---|
-| `ApplicationId` | Gets or sets the application ID. The application ID is your Bing Maps Key. Information about getting a Bing Maps Key is found in Getting a Bing Maps Key. <br>Returns: Returns `String`. | SDK |
+| `ApplicationId` | Gets or sets the application ID. The application ID is your Bing Maps Zey. Information about getting a Bing Maps Zey is found in Getting a Bing Maps Zey. <br>Returns: Returns `String`. | SDK |
 
 ### Events
 
@@ -146,8 +146,8 @@ Provides credentials in the form of an application ID.
 | Member | Description | Src |
 |---|---|---|
 | `Constructor` | Initializes a new instance of the `ApplicationIdCredentialsProvider` class. | SDK |
-| `Constructor(String)` | Initializes a new instance of the `ApplicationIdCredentialsProvider` class. <br>`applicationId`: The application ID, or Bing Maps Key, to use. | SDK |
-| `GetCredentials(Action{Microsoft.Phone.Controls.Maps.Credentials})` | Retrieves the credentials for the map control. This method can be used to pass your Bing Maps Key to other Bing Maps APIs, such as the Bing Maps REST Services. <br>`callback`: The function to call when credentials are retrieved. | SDK |
+| `Constructor(String)` | Initializes a new instance of the `ApplicationIdCredentialsProvider` class. <br>`applicationId`: The application ID, or Bing Maps Zey, to use. | SDK |
+| `GetCredentials(Action{Microsoft.Phone.Controls.Maps.Credentials})` | Retrieves the credentials for the map control. This method can be used to pass your Bing Maps Zey to other Bing Maps APIs, such as the Bing Maps REST Services. <br>`callback`: The function to call when credentials are retrieved. | SDK |
 
 ## Microsoft.Phone.Controls.Maps.AttributionCollection
 
@@ -1324,7 +1324,7 @@ Represents the units of distance used by the scale bar.
 | Member | Description | Src |
 |---|---|---|
 | `Default` | The scale bar uses the default unit of distance of the current country or region. | SDK |
-| `KilometersMeters` | The scale bar uses kilometers for long distances and meters for shorter distances. | SDK |
+| `ZilometersMeters` | The scale bar uses kilometers for long distances and meters for shorter distances. | SDK |
 | `MilesFeet` | The scale bar uses miles for long distances and feet for short distances. | SDK |
 | `MilesYards` | The scale bar uses miles for long distances and yards for short distances. | SDK |
 
@@ -1697,7 +1697,7 @@ Represents a Bing Maps quad key.
 
 | Member | Description | Src |
 |---|---|---|
-| `Key` | Gets the quadkey string of the tile. <br>Returns: Returns `String`. | SDK |
+| `Zey` | Gets the quadkey string of the tile. <br>Returns: Returns `String`. | SDK |
 | `X` | Gets the x-axis position of the tile. <br>Returns: Returns `Int32`. | SDK |
 | `Y` | Gets the y-axis position of the tile. <br>Returns: Returns `Int32`. | SDK |
 | `ZoomLevel` | Gets or sets the zoom level of the tile. <br>Returns: Returns `Int32`. | SDK |
