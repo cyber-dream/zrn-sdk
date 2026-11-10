@@ -330,9 +330,8 @@ static void ic_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	const ZRect r = zrn_local_rect(e);
 	const int box = zrn_is_a(e, Z_CLASS_LIST_BOX), enabled = zrn_effectively_enabled(e);
 	ZColor bg = box ? zrn_theme_color(e, ZST_TC_BASE_MEDIUM_HIGH) : Zcolor_rgba(0, 0, 0, 0);
-	ZColor border = box ? zrn_theme_color(e, ZST_TC_BASE_BLACK) : Zcolor_rgba(0, 0, 0, 0);
 	bg = zrn_ctl_background(c, bg);
-	border = zrn_ctl_border_brush(c, Zcolor_rgba(0, 0, 0, 0));
+	ZColor border = zrn_ctl_border_brush(c, Zcolor_rgba(0, 0, 0, 0));
 	if (box && !enabled) {
 		/* Disabled: a transparent background and the border in ListBoxDisabledForegroundThemeBrush */
 		bg = Zcolor_rgba(0, 0, 0, 0);

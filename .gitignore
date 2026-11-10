@@ -7,10 +7,10 @@ Cargo.lock
 # never commit keys
 *.key
 cmake-build-*/
-/zrnui/fonts/Segoe UI.ttf
-/zrnui/fonts/Segoe UI Bold.ttf
-/zrnui/fonts/Segoe UI Bold Italic.ttf
-/zrnui/fonts/Segoe UI Italic.ttf
+# proprietary Segoe files that a developer drops next to the bundled Selawik ones (the font directory)
+/zrnui/fonts/**/Segoe*
+/zrnui/fonts/**/segoe*
+/zrnui/fonts/**/seguisb.ttf
 /zrnui/pkg/
 *.pkg*
 /docs

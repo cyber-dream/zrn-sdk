@@ -405,7 +405,7 @@ void Zroot_update_layout(const Zid root) {
 
 void zrn_paint_element(zrn_element_t* const e, zrn_painter_t* const p, zrn_root_t* const r) {
 	float tx = p->tx, ty = p->ty, alpha = p->alpha;
-	float saved_xf[16];
+	float saved_xf[16] = {};
 	int saved_has_xf = p->has_xf, count, heap, i;
 	if (e->visibility != Z_VISIBLE) return;
 	/* an element is skipped when it is out of view, unless it holds things that may be in view: a zero-sized Canvas whose children overflow */
@@ -413,7 +413,9 @@ void zrn_paint_element(zrn_element_t* const e, zrn_painter_t* const p, zrn_root_
 	p->tx += e->rect.x * p->scale;
 	p->ty += e->rect.y * p->scale;
 	p->alpha *= e->opacity;
-	if (e->transformed) {
+	/* read once: the transform is pushed and popped as a pair, whatever the paint handlers do to the element */
+	const bool b_is_transformed = e->transformed;
+	if (b_is_transformed) {
 		/* the transform of this element, about its centre of projection, under the one of its parent */
 		float own[16];
 		memcpy(saved_xf, p->xf, sizeof saved_xf);
@@ -429,7 +431,7 @@ void zrn_paint_element(zrn_element_t* const e, zrn_painter_t* const p, zrn_root_
 	zrn_ordered_free(list, heap);
 	if (e->cls->paint_over) e->cls->paint_over(e, p);
 	if (e->clip_to_bounds) zrn_pop_clip(p);
-	if (e->transformed) {
+	if (b_is_transformed) {
 		memcpy(p->xf, saved_xf, sizeof saved_xf);
 		p->has_xf = saved_has_xf;
 		p->be->set_transform(p, saved_has_xf ? p->xf : nullptr);

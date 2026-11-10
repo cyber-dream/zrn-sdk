@@ -344,6 +344,7 @@ int zrn_child_index(const zrn_element_t* const parent, const zrn_element_t* cons
 }
 
 void zrn_add_child(zrn_element_t* parent, zrn_element_t* child, int index) {
+	if (!parent || !child) return;
 	for (zrn_element_t* a = parent; a; a = a->parent) {
 		if (a == child) {
 			zrn_error(Z_ERROR_CYCLE, "an element cannot be added under itself");
