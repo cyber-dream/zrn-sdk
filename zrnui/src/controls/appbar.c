@@ -1172,7 +1172,7 @@ static int add_command(const Zid bar, const Zid command, const int secondary) {
 	int* cap = secondary ? &c->secondary_cap : &c->primary_cap;
 	if (*count == *cap) {
 		const int ncap = *cap ? *cap * 2 : 4;
-		zrn_element_t** more = (zrn_element_t**)realloc(*list, (size_t)ncap * sizeof *more);
+		zrn_element_t** more = realloc(*list, (size_t)ncap * sizeof *more);
 		if (!more) {
 			zrn_error(Z_ERROR_OUT_OF_MEMORY, "out of memory");
 			return -1;

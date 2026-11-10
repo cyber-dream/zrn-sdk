@@ -334,7 +334,7 @@ static void toggle_find_radios(zrn_element_t* const e, zrn_element_t*** list, in
 	if (e->cls == &zrn_class_radio_button) {
 		if (*count == *cap) {
 			const int ncap = *cap ? *cap * 2 : 8;
-			zrn_element_t** more = (zrn_element_t**)realloc(*list, (size_t)ncap * sizeof *more);
+			zrn_element_t** more = realloc(*list, (size_t)ncap * sizeof *more);
 			if (!more) return;
 			*list = more;
 			*cap = ncap;

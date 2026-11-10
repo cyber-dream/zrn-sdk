@@ -92,7 +92,7 @@ Zid zrn_handle_alloc(void* const ptr, const int is_root) {
 	} else {
 		if (g_slot_count == g_slot_cap) {
 			const uint32_t cap = g_slot_cap ? g_slot_cap * 2 : 256;
-			zrn_slot_t* slots = (zrn_slot_t*)realloc(g_slots, cap * sizeof *slots);
+			zrn_slot_t* slots = realloc(g_slots, cap * sizeof *slots);
 			if (!slots) return Z_INVALID_ID;
 			memset(slots + g_slot_cap, 0, (cap - g_slot_cap) * sizeof *slots);
 			g_slots = slots;
@@ -114,7 +114,7 @@ void zrn_handle_free(const Zid id) {
 	if (g_slots[index].generation == 0) g_slots[index].generation = 1;
 	if (g_free_count == g_free_cap) {
 		const uint32_t cap = g_free_cap ? g_free_cap * 2 : 64;
-		uint32_t* list = (uint32_t*)realloc(g_free, cap * sizeof *list);
+		uint32_t* list = realloc(g_free, cap * sizeof *list);
 		if (!list) return;
 		g_free = list;
 		g_free_cap = cap;
@@ -130,7 +130,7 @@ void* zrn_handle_get(const Zid id, const int is_root) {
 	return g_slots[index].ptr;
 }
 
-zrn_element_t* zrn_lookup(const Zid id) { return (zrn_element_t*)zrn_handle_get(id, 0); }
+zrn_element_t* zrn_lookup(const Zid id) { return zrn_handle_get(id, 0); }
 
 zrn_element_t* zrn_get(const Zid id, const ZClass cls) {
 	zrn_element_t* const e = zrn_lookup(id);
@@ -354,7 +354,7 @@ void zrn_add_child(zrn_element_t* parent, zrn_element_t* child, int index) {
 	if (child->parent) zrn_remove_child(child->parent, child);
 	if (parent->child_count == parent->child_cap) {
 		const int cap = parent->child_cap ? parent->child_cap * 2 : 4;
-		zrn_element_t** list = (zrn_element_t**)realloc(parent->children, (size_t)cap * sizeof *list);
+		zrn_element_t** list = realloc(parent->children, (size_t)cap * sizeof *list);
 		if (!list) {
 			zrn_error(Z_ERROR_OUT_OF_MEMORY, "out of memory");
 			return;

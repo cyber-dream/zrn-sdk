@@ -493,7 +493,7 @@ int Zpivot_insert_item(Zid pivot, int index, Zid pivot_item) {
 	if (index < 0 || index > p->count) index = p->count;
 	if (p->count == p->cap) {
 		const int cap = p->cap ? p->cap * 2 : 4;
-		zrn_element_t** items = (zrn_element_t**)realloc(p->items, (size_t)cap * sizeof *items);
+		zrn_element_t** items = realloc(p->items, (size_t)cap * sizeof *items);
 		if (!items) {
 			zrn_error(Z_ERROR_OUT_OF_MEMORY, "out of memory");
 			return -1;

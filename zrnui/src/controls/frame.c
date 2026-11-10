@@ -213,7 +213,7 @@ static void collect_rows(zrn_frame_t* const f, const zrn_element_t* const e) {
 	}
 	if (f->row_count == f->row_cap) {
 		const int cap = f->row_cap ? f->row_cap * 2 : 16;
-		Zid* rows = (Zid*)realloc(f->rows, (size_t)cap * sizeof *rows);
+		Zid* rows = realloc(f->rows, (size_t)cap * sizeof *rows);
 		float* ops;
 		if (!rows) return;
 		f->rows = rows;
@@ -467,7 +467,7 @@ int Zframe_navigate(const Zid frame, const ZPageFactory factory, void* const par
 	if (page == Z_INVALID_ID) return false;
 	if (f->current + 1 >= f->capacity) {
 		const int capacity = f->capacity ? f->capacity * 2 : 8;
-		zrn_frame_entry_t* entries = (zrn_frame_entry_t*)realloc(f->entries, (size_t)capacity * sizeof *entries);
+		zrn_frame_entry_t* entries = realloc(f->entries, (size_t)capacity * sizeof *entries);
 		if (!entries) {
 			zrn_error(Z_ERROR_OUT_OF_MEMORY, "out of memory");
 			zrn_destroy(zrn_lookup(page));

@@ -66,7 +66,7 @@ static glyph_entry_t* glyph_slot(const uint32_t cp, const int32_t face_size, con
 		const size_t old_cap = g_glyph_cap;
 		glyph_entry_t* const old = g_glyphs;
 		const size_t new_cap = old_cap ? old_cap * 2 : 1024;
-		glyph_entry_t* fresh = (glyph_entry_t*)calloc(new_cap, sizeof *fresh);
+		glyph_entry_t* fresh = calloc(new_cap, sizeof *fresh);
 		if (fresh) {
 			g_glyph_cap = new_cap;
 			g_glyphs = fresh;
@@ -164,14 +164,14 @@ static float font_content_height(const zrn_font_t font) {
 
 static glyph_entry_t* glyph_bitmap(const uint8_t face, const float device_size, const uint32_t cp) {
 	const int32_t size_key = (int32_t)(device_size * 8.0f + 0.5f);
-	const int32_t key = (int32_t)((size_key << 3) | (face + 1) | 0x40000000);
+	const int32_t key = ((size_key << 3) | (face + 1) | 0x40000000);
 	glyph_entry_t* const g = glyph_slot(cp, key, 1);
 	if (!g->has_bitmap) {
 		FT_Face const ft = face_of(face, cp);
 		g->has_bitmap = 1;
 		if (ft) {
 			const FT_UInt index = FT_Get_Char_Index(ft, cp);
-			FT_Set_Char_Size(ft, 0, (FT_F26Dot6)(device_size * 64.0f + 0.5f), 72, 72);
+			FT_Set_Char_Size(ft, 0, (device_size * 64.0f + 0.5f), 72, 72);
 			if (FT_Load_Glyph(ft, index, FT_LOAD_NO_HINTING | FT_LOAD_RENDER) == 0 && ft->glyph->bitmap.pixel_mode == FT_PIXEL_MODE_GRAY) {
 				const FT_Bitmap* const bm = &ft->glyph->bitmap;
 				unsigned row;
@@ -274,7 +274,7 @@ int zrn_text_index_at(const zrn_font_t font, const char* const s, const int leng
 }
 
 zrn_text_layout_t* zrn_text_layout_new(const zrn_font_t font, const char* const text, const int length, const float max_width, const int wrap, const int max_lines, const float line_height) {
-	zrn_text_layout_t* l = (zrn_text_layout_t*)calloc(1, sizeof *l);
+	zrn_text_layout_t* l = calloc(1, sizeof *l);
 	int cap = 8, i = 0;
 	if (!l) return nullptr;
 	l->font = font;

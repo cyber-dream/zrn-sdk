@@ -79,7 +79,7 @@ static ZDate date_from_days(long z) {
 	return d;
 }
 
-static ZDate today(void) { return date_from_days((long)(time(nullptr) / 86400)); }
+static ZDate today(void) { return date_from_days((time(nullptr) / 86400)); }
 
 static const char* const MONTHS[12] = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
 static const char* const WEEKDAYS[7] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
@@ -443,7 +443,7 @@ int Zlooping_selector_add_item(const Zid looping_selector, const char* const pri
 	if (!s) return -1;
 	if (s->count == s->cap) {
 		const int cap = s->cap ? s->cap * 2 : 8;
-		looping_item_t* items = (looping_item_t*)realloc(s->items, (size_t)cap * sizeof *items);
+		looping_item_t* items = realloc(s->items, (size_t)cap * sizeof *items);
 		if (!items) {
 			zrn_error(Z_ERROR_OUT_OF_MEMORY, "out of memory");
 			return -1;

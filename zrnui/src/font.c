@@ -107,7 +107,7 @@ static zrn_font_entry_t* zrn_entry_add(void) {
 		return entry;
 	}
 	const uint32_t cap = g_font_cap ? g_font_cap * 2 : 256;
-	zrn_font_entry_t* const grown = (zrn_font_entry_t*)realloc(g_fonts, (size_t)cap * sizeof *grown);
+	zrn_font_entry_t* const grown = realloc(g_fonts, (size_t)cap * sizeof *grown);
 	if (!grown) {
 		zrn_error(Z_ERROR_OUT_OF_MEMORY, "out of memory");
 		return nullptr;
@@ -293,7 +293,7 @@ static FT_Face zrn_find_fallback(const uint8_t face, const uint32_t cp) {
 		int32_t best_score = 0;
 		for (uint32_t i = 0; i < g_font_count; i++) {
 			zrn_font_entry_t* const entry = &g_fonts[i];
-			const bool b_is_candidate = !entry->b_is_bundled && !entry->b_is_failed && entry->charset && FcCharSetHasChar((const FcCharSet*)entry->charset, cp);
+			const bool b_is_candidate = !entry->b_is_bundled && !entry->b_is_failed && entry->charset && FcCharSetHasChar(entry->charset, cp);
 			if (!b_is_candidate) continue;
 			/* an already opened font wins a tie, so that the text does not open a new font for every glyph */
 			const int32_t score = abs(entry->weight - weight) + (entry->b_is_upright ? 0 : 1000) + (entry->b_is_mono ? 500 : 0) - (entry->face ? 1 : 0);

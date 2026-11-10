@@ -102,7 +102,7 @@ static float rrect_distance(const rrect_shape_t* const s, const float x, const f
 }
 
 static float rrect_coverage(const void* const shape, const float x, const float y) {
-	return zrn_clampf(0.5f - rrect_distance((const rrect_shape_t*)shape, x, y), 0.0f, 1.0f);
+	return zrn_clampf(0.5f - rrect_distance(shape, x, y), 0.0f, 1.0f);
 }
 
 static void sw_fill_rrect(zrn_painter_t* const p, const ZRect r, const ZCornerRadius radius, const ZColor c) {
@@ -134,7 +134,7 @@ typedef struct ring_shape {
 } ring_shape_t;
 
 static float ellipse_coverage(const void* const shape, const float x, const float y) {
-	const ring_shape_t* s = (const ring_shape_t*)shape;
+	const ring_shape_t* s = shape;
 	float nx = (x - s->cx) / s->rx, ny = (y - s->cy) / s->ry;
 	float len = sqrtf(nx * nx + ny * ny);
 	const float r = zrn_minf(s->rx, s->ry);

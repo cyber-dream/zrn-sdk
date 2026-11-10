@@ -273,7 +273,7 @@ static int make_context(zrn_gl_t* const gl) {
 static void gl_free(zrn_gl_t* gl);
 
 zrn_gl_t* zrn_gl_create_offscreen(const int width, const int height) {
-	zrn_gl_t* gl = (zrn_gl_t*)calloc(1, sizeof *gl);
+	zrn_gl_t* gl = calloc(1, sizeof *gl);
 	const EGLint pb[] = { EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE };
 	if (!gl) return nullptr;
 	gl->offscreen = 1;
@@ -638,7 +638,7 @@ static GLuint image_texture(zrn_gl_t* const gl, const zrn_image_t* const image) 
 	if (im->gl_owner == gl) return im->gl_texture;
 	if (gl->image_count == gl->image_cap) {
 		const int cap = gl->image_cap ? gl->image_cap * 2 : 16;
-		zrn_image_t** images = (zrn_image_t**)realloc(gl->images, (size_t)cap * sizeof *images);
+		zrn_image_t** images = realloc(gl->images, (size_t)cap * sizeof *images);
 		if (!images) return 0;
 		gl->images = images;
 		gl->image_cap = cap;

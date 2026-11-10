@@ -12,7 +12,7 @@
 static zrn_root_t* get_root(const Zid id) { return zrn_root_lookup(id); }
 
 static const zrn_res_def_t* def_of(const ZThemeResource key) {
-	return BUILTIN_KEY(key) ? &zrn_res_table[(int)key - (int)Z_RES_FIRST_] : nullptr;
+	return BUILTIN_KEY(key) ? &zrn_res_table[key - (int)Z_RES_FIRST_] : nullptr;
 }
 
 static const zrn_res_override_t* find_override(const zrn_root_t* const r, const ZThemeResource key) {
@@ -170,7 +170,7 @@ static zrn_res_override_t* override_slot(zrn_root_t* const r, const ZThemeResour
 	if (!o) {
 		if (r->override_count == r->override_cap) {
 			const int cap = r->override_cap ? r->override_cap * 2 : 8;
-			zrn_res_override_t* grown = (zrn_res_override_t*)realloc(r->overrides, (size_t)cap * sizeof *grown);
+			zrn_res_override_t* grown = realloc(r->overrides, (size_t)cap * sizeof *grown);
 			if (!grown) {
 				zrn_error(Z_ERROR_OUT_OF_MEMORY, "out of memory");
 				return nullptr;
@@ -347,7 +347,7 @@ int zrn_bind(zrn_element_t* const e, const zrn_bind_prop_t prop, const ZThemeRes
 	for (int i = 0; i < e->binding_count; i++) if (e->bindings[i].prop == prop) b = &e->bindings[i];
 	if (!b) {
 		/* grown one by one: an element binds a few properties at most */
-		zrn_binding_t* grown = (zrn_binding_t*)realloc(e->bindings, (size_t)(e->binding_count + 1) * sizeof *grown);
+		zrn_binding_t* grown = realloc(e->bindings, (size_t)(e->binding_count + 1) * sizeof *grown);
 		if (!grown) {
 			zrn_error(Z_ERROR_OUT_OF_MEMORY, "out of memory");
 			return false;
