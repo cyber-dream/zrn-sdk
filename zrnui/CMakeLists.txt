@@ -127,6 +127,10 @@ target_compile_definitions(zrnui PRIVATE ZRNUI_THEME_FILE="${ZRNUI_THEME_FILE}")
 
 if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
 	target_compile_options(zrnui PRIVATE -Wall -Wextra -Wno-unused-parameter)
+	# C23 allows `const auto`; GCC still warns that the storage class specifier is not first
+	if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+		target_compile_options(zrnui PRIVATE -Wno-old-style-declaration)
+	endif()
 	if(ZRNUI_WARNINGS_AS_ERRORS)
 		target_compile_options(zrnui PRIVATE -Werror)
 	endif()
