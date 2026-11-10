@@ -162,9 +162,8 @@ static float item_cell_height(const zrn_looping_selector_t* const s) {
 
 static float item_cell_width(const zrn_looping_selector_t* const s) {
 	float w = 0;
-	int i;
 	if (s->item_width > 0) return s->item_width;
-	for (i = 0; i < s->count; i++) {
+	for (int i = 0; i < s->count; i++) {
 		const looping_item_t* it = &s->items[i];
 		const float a = zrn_text_width(primary_font(s), it->primary, (int)strlen(it->primary)), b = it->secondary ? zrn_text_width(secondary_font(), it->secondary, (int)strlen(it->secondary)) : 0;
 		w = zrn_maxf(w, zrn_maxf(a, b));
@@ -194,9 +193,7 @@ static void ls_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	for (j = -half; j <= half; j++) {
 		int k = base + j, idx;
 		float top, alpha;
-		ZRect box;
 		int selected;
-		const looping_item_t* it;
 		if (!s->should_loop && (k < 0 || k >= n)) continue;
 		idx = wrap_index(k, n);
 		top = center + ((float)k - s->pos) * ch - ch * 0.5f;
@@ -204,8 +201,8 @@ static void ls_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 		selected = idx == s->selected;
 		alpha = selected ? 1.0f : s->expand;
 		if (alpha <= 0.001f) continue;
-		it = &s->items[idx];
-		box = zrn_rect(ITEM_MARGIN, top + ITEM_MARGIN, w - 2 * ITEM_MARGIN, ch - 2 * ITEM_MARGIN);
+		const looping_item_t* it = &s->items[idx];
+		ZRect box = zrn_rect(ITEM_MARGIN, top + ITEM_MARGIN, w - 2 * ITEM_MARGIN, ch - 2 * ITEM_MARGIN);
 		{
 			const ZColor text = selected ? over : zrn_color_alpha(low, alpha), line = zrn_color_alpha(low, alpha);
 			/* the StackPanel sits at the bottom of the box (VerticalContentAlignment Bottom) */
@@ -324,9 +321,8 @@ static void ls_release(zrn_looping_selector_t* const s) {
 
 /* One item up or down, from the keys and the wheel. */
 static void ls_step(zrn_looping_selector_t* const s, const int direction) {
-	int target;
 	if (s->count == 0) return;
-	target = (int)floorf(s->pos + 0.5f) + direction;
+	int target = (int)floorf(s->pos + 0.5f) + direction;
 	if (!s->should_loop) target = zrn_mini(zrn_maxi(target, 0), s->count - 1);
 	ls_set_expand(s, 1);
 	ls_snap_to(s, target);
@@ -415,8 +411,7 @@ static void ls_init(zrn_element_t* const e) {
 }
 
 static void ls_clear(zrn_looping_selector_t* const s) {
-	int i;
-	for (i = 0; i < s->count; i++) {
+	for (int i = 0; i < s->count; i++) {
 		free(s->items[i].primary);
 		free(s->items[i].secondary);
 	}
@@ -445,7 +440,6 @@ static zrn_looping_selector_t* get_ls(const Zid id) { return LS(zrn_get(id, Z_CL
 
 int Zlooping_selector_add_item(const Zid looping_selector, const char* const primary_text, const char* const secondary_text) {
 	zrn_looping_selector_t* const s = get_ls(looping_selector);
-	looping_item_t* it;
 	if (!s) return -1;
 	if (s->count == s->cap) {
 		const int cap = s->cap ? s->cap * 2 : 8;
@@ -457,7 +451,7 @@ int Zlooping_selector_add_item(const Zid looping_selector, const char* const pri
 		s->items = items;
 		s->cap = cap;
 	}
-	it = &s->items[s->count];
+	looping_item_t* it = &s->items[s->count];
 	it->primary = zrn_strdup(primary_text ? primary_text : "");
 	it->secondary = secondary_text && *secondary_text ? zrn_strdup(secondary_text) : nullptr;
 	if (it->secondary) s->any_secondary = 1;
@@ -495,10 +489,9 @@ const char* Zlooping_selector_get_item_secondary_text(const Zid looping_selector
 
 void Zlooping_selector_set_selected_index(Zid looping_selector, int index) {
 	zrn_looping_selector_t* const s = get_ls(looping_selector);
-	int changed;
 	if (!s || s->count == 0) return;
 	index = zrn_mini(zrn_maxi(index, 0), s->count - 1);
-	changed = index != s->selected;
+	int changed = index != s->selected;
 	s->selected = index;
 	s->pos = (float)index;
 	s->inertia = s->settling = 0;
@@ -610,9 +603,8 @@ static int selector_index(zrn_element_t* sel) { return sel ? LS(sel)->selected :
 
 static void selector_fill(const zrn_element_t* const sel, const int count, const char* (*text)(int index, char* const buf, void* data), void* const data) {
 	char buf[32];
-	int i;
 	Zlooping_selector_clear_items(sel->id);
-	for (i = 0; i < count; i++) {
+	for (int i = 0; i < count; i++) {
 		const char* secondary = text(i, buf, data);
 		Zlooping_selector_add_item(sel->id, buf, secondary);
 	}
@@ -789,7 +781,6 @@ static void picker_flyout_init(zrn_element_t* const e) {
 	const auto f = PF(e);
 	zrn_element_t* const presenter = f->base.popup && f->base.popup->child_count ? f->base.popup->children[0] : nullptr;
 	Zid grid, inner, title, bar;
-	int i;
 	f->base.placement = Z_FLYOUT_PLACEMENT_FULL;
 	f->base.on_show = flyout_on_show;
 	f->base.on_hide = flyout_on_hide;
@@ -816,7 +807,7 @@ static void picker_flyout_init(zrn_element_t* const e) {
 	Zgrid_add_column(inner, Z_GRID_AUTO, 0);
 	Zgrid_add_column(inner, Z_GRID_AUTO, 0);
 	Zgrid_add_column(inner, Z_GRID_STAR, 1);
-	for (i = 0; i < 3; i++) {
+	for (int i = 0; i < 3; i++) {
 		const Zid sel = Zlooping_selector_create();
 		Zgrid_place(inner, sel, i + 1, 0);
 		f->selector[i] = zrn_lookup(sel);
@@ -848,11 +839,10 @@ zrn_class_t zrn_class_picker_flyout_base = {
 static void date_flyout_init(zrn_element_t* const e) {
 	const auto f = PF(e);
 	const ZDate t = today();
-	int i;
 	f->date = t;
 	f->min_year = t.year - 100;
 	f->max_year = t.year + 100;
-	for (i = 0; i < 3; i++) {
+	for (int i = 0; i < 3; i++) {
 		if (!f->selector[i]) return;
 		LS(f->selector[i])->reserve_secondary = 1;
 		set_handler(f->selector[i], Z_EVENT_SELECTION_CHANGED, date_selector_changed, (void*)(uintptr_t)e->id);
@@ -864,10 +854,9 @@ static void date_flyout_init(zrn_element_t* const e) {
 
 static void time_flyout_init(zrn_element_t* const e) {
 	const auto f = PF(e);
-	int i;
 	f->time.hour = 0;
 	f->time.minute = 0;
-	for (i = 0; i < 3; i++) {
+	for (int i = 0; i < 3; i++) {
 		if (!f->selector[i]) return;
 		/* TimePickerFlyoutPresenter's item: one 43 px line, margin 0.8,-5, the weight of the presenter */
 		LS(f->selector[i])->primary_size = 43.0f;

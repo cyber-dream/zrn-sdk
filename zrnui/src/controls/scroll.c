@@ -76,13 +76,11 @@ static ZSize sv_arrange(zrn_element_t* const e, const ZSize final) {
 
 static void sv_paint_over(zrn_element_t* const e, zrn_painter_t* const p) {
 	const zrn_scroll_viewer_t* const s = SV(e);
-	ZColor color;
 	double mx, my;
-	float alpha;
 	const int always_v = s->v_visibility == Z_SCROLLBAR_VISIBLE, always_h = s->h_visibility == Z_SCROLLBAR_VISIBLE;
 	sv_limits(s, &mx, &my);
-	alpha = zrn_clampf(s->bar_visible / 250.0f, 0, 1);
-	color = zrn_theme_color(e, ZST_TC_DISABLED);
+	float alpha = zrn_clampf(s->bar_visible / 250.0f, 0, 1);
+	ZColor color = zrn_theme_color(e, ZST_TC_DISABLED);
 	if (s->show_v && (alpha > 0 || always_v)) {
 		const float length = e->rect.height - (s->show_h ? 7.0f : 0);
 		const float thumb = zrn_clampf((float)(s->viewport_h / s->extent_h) * length, zrn_minf(72.0f, length), length);

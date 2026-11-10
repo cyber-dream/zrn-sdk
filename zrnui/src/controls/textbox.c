@@ -70,12 +70,11 @@ static const char* tbx_display(const zrn_text_box_t* const b, int* const length,
 	{
 		char bullet[4];
 		int bl = zrn_utf8_encode(bullet_char(b), bullet), count = 0, i = 0;
-		char* out;
 		while (i < b->length_bytes) {
 			i = zrn_utf8_next(b->text, b->length_bytes, i);
 			count++;
 		}
-		out = (char*)malloc((size_t)count * (size_t)bl + 1);
+		char* out = (char*)malloc((size_t)count * (size_t)bl + 1);
 		if (!out) {
 			*length = 0;
 			return "";
@@ -134,8 +133,7 @@ static zrn_text_layout_t* tbx_layout(const zrn_text_box_t* const b, const char* 
 
 /* The line and the x of a display index. */
 static void caret_position(const zrn_text_layout_t* const l, const int index, int* const line, float* const x) {
-	int i;
-	for (i = 0; i < l->line_count; i++) {
+	for (int i = 0; i < l->line_count; i++) {
 		const zrn_line_t* ln = &l->lines[i];
 		const int next_start = i + 1 < l->line_count ? l->lines[i + 1].start : 0x7fffffff;
 		if (index <= ln->end || index < next_start || i == l->line_count - 1) {
@@ -151,10 +149,9 @@ static void caret_position(const zrn_text_layout_t* const l, const int index, in
 
 static int index_at(const zrn_text_layout_t* const l, const float x, const float y) {
 	int line = l->line_height > 0 ? (int)floorf(y / l->line_height) : 0;
-	const zrn_line_t* ln;
 	if (line < 0) line = 0;
 	if (line >= l->line_count) line = l->line_count - 1;
-	ln = &l->lines[line];
+	const zrn_line_t* ln = &l->lines[line];
 	return ln->start + zrn_text_index_at(l->font, l->text + ln->start, ln->end - ln->start, x);
 }
 

@@ -21,8 +21,7 @@ static void panel_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 static ZSize panel_measure(zrn_element_t* e, const ZSize available) { return zrn_measure_children_max(e, available); }
 
 static ZSize panel_arrange(zrn_element_t* const e, const ZSize final) {
-	int i;
-	for (i = 0; i < e->child_count; i++) zrn_arrange(e->children[i], zrn_rect(0, 0, final.width, final.height));
+	for (int i = 0; i < e->child_count; i++) zrn_arrange(e->children[i], zrn_rect(0, 0, final.width, final.height));
 	return final;
 }
 
@@ -204,13 +203,11 @@ static ZSize wrap_flow(zrn_element_t* const e, const float limit, const int plac
 		}
 		if (!c || (pos > 0 && pos + along > limit + 0.01f)) {
 			if (place) {
-				int j;
 				float p2 = 0;
-				for (j = line_start; j < i; j++) {
+				for (int j = line_start; j < i; j++) {
 					zrn_element_t* d = e->children[j];
-					ZSize ds;
 					if (d->visibility == Z_COLLAPSED) continue;
-					ds = wrap_item_size(w, d);
+					ZSize ds = wrap_item_size(w, d);
 					if (horizontal) {
 						zrn_arrange(d, zrn_rect(p2, offset, ds.width, line_extent));
 						p2 += ds.width;
@@ -235,8 +232,7 @@ static ZSize wrap_flow(zrn_element_t* const e, const float limit, const int plac
 
 static ZSize wrap_measure(zrn_element_t* const e, const ZSize available) {
 	const zrn_wrap_panel_t* const w = ZST_AS(zrn_wrap_panel_t, e);
-	int i;
-	for (i = 0; i < e->child_count; i++) {
+	for (int i = 0; i < e->child_count; i++) {
 		const ZSize s = zrn_size(w->item_width != Z_AUTO ? w->item_width : available.width, w->item_height != Z_AUTO ? w->item_height : available.height);
 		zrn_measure(e->children[i], s);
 	}
@@ -295,11 +291,10 @@ static int wg_is_header(const zrn_element_t* c) { return zrn_is_a(c, Z_CLASS_LIS
 /* The size of a cell: ItemWidth by ItemHeight, or the size of the first item for what is not set. Measures that item. */
 static void wg_cell(zrn_element_t* const e, const ZSize room, float* const cw, float* const ch) {
 	const zrn_items_wrap_grid_t* g = WG(e);
-	int i;
 	*cw = g->item_width != Z_AUTO ? g->item_width : 0;
 	*ch = g->item_height != Z_AUTO ? g->item_height : 0;
 	if (g->item_width != Z_AUTO && g->item_height != Z_AUTO) return;
-	for (i = 0; i < e->child_count; i++) {
+	for (int i = 0; i < e->child_count; i++) {
 		zrn_element_t* const c = e->children[i];
 		if (c->visibility == Z_COLLAPSED || wg_is_header(c)) continue;
 		zrn_measure(c, zrn_size(g->item_width != Z_AUTO ? g->item_width : room.width, g->item_height != Z_AUTO ? g->item_height : room.height));
@@ -442,9 +437,8 @@ float Zitems_wrap_grid_get_item_height(Zid grid) { const zrn_items_wrap_grid_t* 
  * ============================================================================ */
 
 static int grid_add_def(zrn_grid_def_t** list, int* const count, const ZGridUnitType unit, const float value) {
-	zrn_grid_def_t* more;
 	if (*count >= 256) return -1;
-	more = (zrn_grid_def_t*)realloc(*list, (size_t)(*count + 1) * sizeof **list);
+	zrn_grid_def_t* more = (zrn_grid_def_t*)realloc(*list, (size_t)(*count + 1) * sizeof **list);
 	if (!more) return -1;
 	*list = more;
 	more[*count].unit = unit;
@@ -491,8 +485,7 @@ typedef struct grid_cell {
 /* How much room a measured child may take along an axis: the sizes it spans, infinite if it spans an auto or an unresolved star. */
 static float cell_room(const zrn_grid_def_t* const defs, const int first, const int last, const int resolved) {
 	float sum = 0;
-	int i;
-	for (i = first; i <= last; i++) {
+	for (int i = first; i <= last; i++) {
 		if (defs[i].unit == Z_GRID_AUTO) return Z_INFINITE;
 		if (defs[i].unit == Z_GRID_STAR && !resolved) return Z_INFINITE;
 		sum += defs[i].size;
@@ -541,9 +534,8 @@ static void grid_resolve_star(zrn_grid_def_t* defs, int count, const float avail
 		}
 		if (w <= 0) break;
 		for (i = 0; i < count; i++) {
-			float s;
 			if (defs[i].unit != Z_GRID_STAR || frozen[i]) continue;
-			s = share_total * defs[i].value / w;
+			float s = share_total * defs[i].value / w;
 			if (s < defs[i].min) { defs[i].size = defs[i].min; frozen[i] = 1; changed = 1; }
 			else if (s > defs[i].max) { defs[i].size = defs[i].max; frozen[i] = 1; changed = 1; }
 			else defs[i].size = s;
@@ -577,8 +569,7 @@ static void grid_classify(zrn_element_t* const child, const grid_axis_t* const c
 }
 
 static void grid_clamp_auto(const grid_axis_t* const axis) {
-	int i;
-	for (i = 0; i < axis->count; i++) if (axis->defs[i].unit == Z_GRID_AUTO) axis->defs[i].size = zrn_clampf(axis->defs[i].size, axis->defs[i].min, axis->defs[i].max);
+	for (int i = 0; i < axis->count; i++) if (axis->defs[i].unit == Z_GRID_AUTO) axis->defs[i].size = zrn_clampf(axis->defs[i].size, axis->defs[i].min, axis->defs[i].max);
 }
 
 static ZSize grid_measure(zrn_element_t* const e, const ZSize available) {
@@ -686,18 +677,16 @@ Zid Zgrid_create(void) {
 
 int Zgrid_add_column(const Zid grid, const ZGridUnitType unit, const float value) {
 	zrn_element_t* const e = zrn_get(grid, Z_CLASS_GRID);
-	int index;
 	if (!e) return -1;
-	index = grid_add_def(&ZST_AS(zrn_grid_t, e)->columns, &ZST_AS(zrn_grid_t, e)->column_count, unit, value);
+	int index = grid_add_def(&ZST_AS(zrn_grid_t, e)->columns, &ZST_AS(zrn_grid_t, e)->column_count, unit, value);
 	zrn_changed_layout(e);
 	return index;
 }
 
 int Zgrid_add_row(const Zid grid, const ZGridUnitType unit, const float value) {
 	zrn_element_t* const e = zrn_get(grid, Z_CLASS_GRID);
-	int index;
 	if (!e) return -1;
-	index = grid_add_def(&ZST_AS(zrn_grid_t, e)->rows, &ZST_AS(zrn_grid_t, e)->row_count, unit, value);
+	int index = grid_add_def(&ZST_AS(zrn_grid_t, e)->rows, &ZST_AS(zrn_grid_t, e)->row_count, unit, value);
 	zrn_changed_layout(e);
 	return index;
 }
@@ -767,15 +756,13 @@ Zid Zgrid_place(const Zid grid, const Zid child, const int column, const int row
  * ============================================================================ */
 
 static ZSize canvas_measure(zrn_element_t* const e, const ZSize available) {
-	int i;
 	ZST_UNUSED(available);
-	for (i = 0; i < e->child_count; i++) zrn_measure(e->children[i], zrn_size(Z_INFINITE, Z_INFINITE));
+	for (int i = 0; i < e->child_count; i++) zrn_measure(e->children[i], zrn_size(Z_INFINITE, Z_INFINITE));
 	return zrn_size(0, 0);
 }
 
 static ZSize canvas_arrange(zrn_element_t* const e, const ZSize final) {
-	int i;
-	for (i = 0; i < e->child_count; i++) {
+	for (int i = 0; i < e->child_count; i++) {
 		zrn_element_t* const c = e->children[i];
 		const float x = c->canvas_left == Z_AUTO ? 0 : c->canvas_left, y = c->canvas_top == Z_AUTO ? 0 : c->canvas_top;
 		zrn_arrange(c, zrn_rect(x, y, c->desired.width, c->desired.height));
@@ -961,9 +948,8 @@ static void viewbox_scale(const zrn_viewbox_t* const v, const ZSize content, con
 static ZSize viewbox_measure(zrn_element_t* const e, const ZSize available) {
 	const auto v = ZST_AS(zrn_viewbox_t, e);
 	float sx, sy;
-	zrn_element_t* c;
 	if (!e->child_count) return zrn_size(0, 0);
-	c = e->children[0];
+	zrn_element_t* c = e->children[0];
 	zrn_measure(c, zrn_size(Z_INFINITE, Z_INFINITE));
 	viewbox_scale(v, c->desired, available, &sx, &sy);
 	return zrn_size(c->desired.width * sx, c->desired.height * sy);
@@ -971,9 +957,8 @@ static ZSize viewbox_measure(zrn_element_t* const e, const ZSize available) {
 
 static ZSize viewbox_arrange(zrn_element_t* const e, const ZSize final) {
 	const auto v = ZST_AS(zrn_viewbox_t, e);
-	zrn_element_t* c;
 	if (!e->child_count) return final;
-	c = e->children[0];
+	zrn_element_t* c = e->children[0];
 	c->is_popup_child = 1;
 	zrn_arrange(c, zrn_rect(0, 0, c->desired.width, c->desired.height));
 	viewbox_scale(v, c->desired, final, &v->scale_x, &v->scale_y);
@@ -982,10 +967,9 @@ static ZSize viewbox_arrange(zrn_element_t* const e, const ZSize final) {
 
 static void viewbox_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	const auto v = ZST_AS(zrn_viewbox_t, e);
-	zrn_element_t* c;
 	float scale = p->scale, tx = p->tx, ty = p->ty, w, h;
 	if (!e->child_count) return;
-	c = e->children[0];
+	zrn_element_t* c = e->children[0];
 	w = c->desired.width * v->scale_x;
 	h = c->desired.height * v->scale_y;
 	p->tx += (e->rect.width - w) * 0.5f * scale;

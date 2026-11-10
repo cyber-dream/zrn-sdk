@@ -28,13 +28,12 @@ static zrn_font_t header_font(void) { const zrn_font_t f = { Z_FONT_NORMAL, HEAD
 static zrn_element_t* make_drop_down(zrn_element_t* const owner, zrn_element_t* const content, const ZColor background, const ZColor border_brush) {
 	zrn_element_t* const border = zrn_create(Z_CLASS_BORDER);
 	zrn_element_t* const popup = zrn_create(Z_CLASS_POPUP);
-	zrn_border_t* b;
 	if (!border || !popup) {
 		if (border) zrn_destroy(border);
 		if (popup) zrn_destroy(popup);
 		return nullptr;
 	}
-	b = ZST_AS(zrn_border_t, border);
+	zrn_border_t* b = ZST_AS(zrn_border_t, border);
 	b->background = background;
 	b->has_background = 1;
 	b->border_brush = border_brush;
@@ -228,7 +227,6 @@ static void combo_init(zrn_element_t* const e) {
 	zrn_items_control_t* const o = &c->base;
 	zrn_element_t* const scroll = zrn_create(Z_CLASS_SCROLL_VIEWER);
 	zrn_element_t* const host = zrn_create(Z_CLASS_VIRTUALIZING_STACK_PANEL);
-	zrn_element_t* popup;
 	/* ComboBox: ContentControlFontSize, HorizontalContentAlignment Left, Margin 0 */
 	o->base.font_size = ZST_81_FONT_CONTENT;
 	c->max_drop_down_height = Z_INFINITE;
@@ -236,7 +234,7 @@ static void combo_init(zrn_element_t* const e) {
 	if (!scroll || !host) return;
 	if (o->host) zrn_destroy(o->host);
 	zrn_content_set(ZST_AS(zrn_content_control_t, scroll), host);
-	popup = make_drop_down(e, scroll, zrn_theme_color(e, ZST_TC_BASE_WHITE), zrn_theme_color(e, ZST_TC_ACCENT));
+	zrn_element_t* popup = make_drop_down(e, scroll, zrn_theme_color(e, ZST_TC_BASE_WHITE), zrn_theme_color(e, ZST_TC_ACCENT));
 	if (!popup) return;
 	popup->handlers[Z_EVENT_POPUP_CLOSED - Z_EVENT_CLICK].callback = combo_popup_closed;
 	popup->handlers[Z_EVENT_POPUP_CLOSED - Z_EVENT_CLICK].user_data = c;
@@ -375,9 +373,8 @@ static void asb_choose(zrn_auto_suggest_box_t* const a, const int index) {
 	const zrn_element_t* const e = &a->base.base.base;
 	const Zid id = e->id;
 	zrn_element_t* const item = zrn_ic_item(&a->base, index);
-	char* text;
 	if (!item) return;
-	text = zrn_strdup(zrn_container_text(item));
+	char* text = zrn_strdup(zrn_container_text(item));
 	if (!text) return;
 	if (!asb_set_open(a, 0) || !zrn_lookup(id)) goto done;
 	if (a->on_suggestion_chosen) {
@@ -405,12 +402,10 @@ static void asb_suggestion_tapped(const Zid list, const int index, void* const u
 static void asb_text_changed(const Zid sender, void* const user) {
 	const Zid id = (Zid)(uintptr_t)user;
 	zrn_element_t* const e = zrn_lookup(id);
-	zrn_text_box_t* tb;
-	zrn_auto_suggest_box_t* a;
 	ZAutoSuggestionBoxTextChangeReason reason;
 	if (!e) return;
-	a = ASB(e);
-	tb = ZST_AS(zrn_text_box_t, zrn_lookup(sender));
+	zrn_auto_suggest_box_t* a = ASB(e);
+	zrn_text_box_t* tb = ZST_AS(zrn_text_box_t, zrn_lookup(sender));
 	if (!tb) return;
 	reason = tb->from_user ? Z_SUGGEST_USER_INPUT : (a->reason_set ? a->reason : Z_SUGGEST_PROGRAMMATIC_CHANGE);
 	if (reason == Z_SUGGEST_USER_INPUT) asb_set_highlight(a, -1);
@@ -429,13 +424,11 @@ static void asb_lost_focus(const Zid sender, void* const user) {
 /* The keys the text box leaves to the suggestions. */
 static int asb_key(zrn_text_box_t* const b, zrn_input_t* const in) {
 	zrn_element_t* const e = b->base.base.parent;
-	zrn_auto_suggest_box_t* a;
 	Zid id;
-	int n;
 	if (!e || !zrn_is_a(e, Z_CLASS_AUTO_SUGGEST_BOX)) return 0;
-	a = ASB(e);
+	zrn_auto_suggest_box_t* a = ASB(e);
 	id = e->id;
-	n = zrn_ic_count(&a->base);
+	int n = zrn_ic_count(&a->base);
 	switch (in->key) {
 		case Z_KEY_DOWN:
 		case Z_KEY_UP:
@@ -493,7 +486,6 @@ static void asb_init(zrn_element_t* const e) {
 	zrn_items_control_t* const o = &a->base;
 	zrn_element_t* const tb = zrn_create(Z_CLASS_TEXT_BOX);
 	zrn_element_t* const list = zrn_create(Z_CLASS_LIST_VIEW);
-	zrn_element_t* popup;
 	/* the style: Margin TextControlMarginThemeThickness 0,9.5; the TextBox inside has none; MaxSuggestionListHeight is not given */
 	e->margin = Zthickness(0, ZST_81_TOUCH_OVERHANG, 0, ZST_81_TOUCH_OVERHANG);
 	e->valign = Z_VALIGN_TOP;
@@ -519,7 +511,7 @@ static void asb_init(zrn_element_t* const e) {
 	ZST_AS(zrn_list_view_base_t, list)->on_item_click = asb_suggestion_tapped;
 	ZST_AS(zrn_list_view_base_t, list)->on_item_click_data = a;
 	zrn_ic_set_sel_mode(IC(list), ZST_SEL_NONE);
-	popup = make_drop_down(e, list, zrn_theme_color(e, ZST_TC_BASE_WHITE), zrn_theme_color(e, ZST_TC_ACCENT));
+	zrn_element_t* popup = make_drop_down(e, list, zrn_theme_color(e, ZST_TC_BASE_WHITE), zrn_theme_color(e, ZST_TC_ACCENT));
 	if (!popup) return;
 	popup->handlers[Z_EVENT_POPUP_CLOSED - Z_EVENT_CLICK].callback = asb_popup_closed;
 	popup->handlers[Z_EVENT_POPUP_CLOSED - Z_EVENT_CLICK].user_data = a;
@@ -556,11 +548,10 @@ static zrn_auto_suggest_box_t* get_asb(const Zid id) { return ASB(zrn_get(id, Z_
 
 void Zauto_suggest_box_set_items(const Zid box, const char* const* items, const int count) {
 	zrn_auto_suggest_box_t* const a = get_asb(box);
-	int i;
 	if (!a || !a->base.host) return;
 	zrn_clear_children(a->base.host);
 	a->highlight = -1;
-	for (i = 0; items && i < count; i++) zrn_ic_add(&a->base, nullptr, items[i] ? items[i] : "");
+	for (int i = 0; items && i < count; i++) zrn_ic_add(&a->base, nullptr, items[i] ? items[i] : "");
 	/* the suggestions of what the user typed show under the box he types in */
 	asb_set_open(a, zrn_ic_count(&a->base) > 0 && asb_text_focused(a));
 }

@@ -26,11 +26,9 @@ static constexpr float TILT_OUT_MS = 160.0f;
 static float ease_emphasized(const float t) {
 	const float x1 = 0.2f, y1 = 0.8f, x2 = 0.2f, y2 = 1.0f;
 	float s = t, u;
-	int i;
-	for (i = 0; i < 8; i++) {
-		float dx;
+	for (int i = 0; i < 8; i++) {
 		u = 1 - s;
-		dx = 3 * u * u * x1 + 6 * u * s * (x2 - x1) + 3 * s * s * (1 - x2);
+		float dx = 3 * u * u * x1 + 6 * u * s * (x2 - x1) + 3 * s * s * (1 - x2);
 		if (fabsf(dx) < 1e-5f) break;
 		s -= (3 * u * u * s * x1 + 3 * u * s * s * x2 + s * s * s - t) / dx;
 		s = zrn_clampf(s, 0, 1);
@@ -197,9 +195,8 @@ int zrn_animations_enabled(const zrn_root_t* const r) {
 
 void Zelement_animate(const Zid element, const ZAnimatedProperty property, const float to, const float duration_ms, const ZEasing easing, const float delay_ms) {
 	zrn_element_t* const e = zrn_get(element, Z_CLASS_ELEMENT);
-	float* slot;
 	if (!e || property < 0 || property >= Z_PROP_LAST_) return;
-	slot = property_slot(e, property);
+	float* slot = property_slot(e, property);
 	if (e->tweens) e->tweens->p[property].active = 0;
 	if (!e->root || !zrn_animations_enabled(e->root) || (duration_ms <= 0 && delay_ms <= 0)) {
 		property_set(e, property, to);
@@ -224,22 +221,19 @@ void Zelement_animate(const Zid element, const ZAnimatedProperty property, const
 
 int Zelement_is_animating(const Zid element) {
 	zrn_element_t* const e = zrn_get(element, Z_CLASS_ELEMENT);
-	int i;
 	if (!e || !e->tweens) return false;
-	for (i = 0; i < Z_PROP_LAST_; i++) if (e->tweens->p[i].active) return true;
+	for (int i = 0; i < Z_PROP_LAST_; i++) if (e->tweens->p[i].active) return true;
 	return false;
 }
 
 void zrn_tweens_tick(zrn_element_t* const e) {
 	int i, any = 0;
-	float now;
 	if (!e->tweens) return;
-	now = e->root ? (float)e->root->time_ms : 1e30f;
+	float now = e->root ? (float)e->root->time_ms : 1e30f;
 	for (i = 0; i < Z_PROP_LAST_; i++) {
 		zrn_tween_t* const t = e->tweens;
-		float u;
 		if (!t->p[i].active) continue;
-		u = now - t->p[i].start - t->p[i].delay;
+		float u = now - t->p[i].start - t->p[i].delay;
 		if (u < 0) { any = 1; continue; }
 		if (t->p[i].duration <= 0 || u >= t->p[i].duration) {
 			t->p[i].active = 0;
@@ -264,9 +258,8 @@ void zrn_tweens_free(zrn_element_t* const e) {
 
 static void tilt_aim(zrn_root_t* const r, const float x, const float y) {
 	zrn_element_t* const e = r->tilt_element;
-	ZPoint c;
 	if (!e || e->rect.width <= 0 || e->rect.height <= 0) return;
-	c = zrn_to_root(e, (ZPoint){ e->rect.width * 0.5f, e->rect.height * 0.5f });
+	ZPoint c = zrn_to_root(e, (ZPoint){ e->rect.width * 0.5f, e->rect.height * 0.5f });
 	r->tilt_fx = zrn_clampf((x - c.x) / (e->rect.width * 0.5f), -1, 1);
 	r->tilt_fy = zrn_clampf((y - c.y) / (e->rect.height * 0.5f), -1, 1);
 }

@@ -129,7 +129,6 @@ zrn_image_t* zrn_image_load_png(const char* const path) {
 	png_bytep* volatile rows = nullptr;
 	zrn_image_t* volatile image = nullptr;
 	volatile int w, h;
-	int y;
 	uint8_t* volatile pixels = nullptr;
 	if (!f) return nullptr;
 	png = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
@@ -159,7 +158,7 @@ zrn_image_t* zrn_image_load_png(const char* const path) {
 	pixels = (uint8_t*)malloc((size_t)w * (size_t)h * 4);
 	rows = (png_bytep*)malloc((size_t)h * sizeof *rows);
 	if (!pixels || !rows) goto done;
-	for (y = 0; y < h; y++) rows[y] = pixels + (size_t)y * (size_t)w * 4;
+	for (int y = 0; y < h; y++) rows[y] = pixels + (size_t)y * (size_t)w * 4;
 	png_read_image(png, rows);
 	image = zrn_image_from_rgba(w, h, pixels);
 done:

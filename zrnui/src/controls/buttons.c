@@ -331,7 +331,6 @@ const char* Zhyperlink_button_get_uri(const Zid button) {
  * ============================================================================ */
 
 static void toggle_find_radios(zrn_element_t* const e, zrn_element_t*** list, int* const count, int* const cap) {
-	int i;
 	if (e->cls == &zrn_class_radio_button) {
 		if (*count == *cap) {
 			const int ncap = *cap ? *cap * 2 : 8;
@@ -342,7 +341,7 @@ static void toggle_find_radios(zrn_element_t* const e, zrn_element_t*** list, in
 		}
 		(*list)[(*count)++] = e;
 	}
-	for (i = 0; i < e->child_count; i++) toggle_find_radios(e->children[i], list, count, cap);
+	for (int i = 0; i < e->child_count; i++) toggle_find_radios(e->children[i], list, count, cap);
 }
 
 /* Checking a radio button unchecks the others of its group: same GroupName, or, with none, the same parent.
@@ -549,8 +548,7 @@ static void checkbox_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 		/* Path "M0,123 L39,93 L124,164 L256,18 L295,49 L124,240 z", Stretch Fill into 18.5 x 17 at the center of the box */
 		static const float path[12] = { 0, 123, 39, 93, 124, 164, 256, 18, 295, 49, 124, 240 };
 		float pts[12];
-		int i;
-		for (i = 0; i < 6; i++) {
+		for (int i = 0; i < 6; i++) {
 			pts[i * 2] = box.x + (BOX - CHECK_MARK_W) * 0.5f + path[i * 2] / 295.0f * CHECK_MARK_W;
 			pts[i * 2 + 1] = box.y + (BOX - CHECK_MARK_H) * 0.5f + (path[i * 2 + 1] - 18.0f) / 222.0f * CHECK_MARK_H;
 		}
@@ -671,7 +669,6 @@ static void ts_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	const int enabled = zrn_effectively_enabled(e);
 	ZColor foreground = zrn_theme_color(e, ZST_TC_FOREGROUND), text_color, outline, curtain, knob_fill;
 	ZRect outer, inner, curtain_rect;
-	float knob_x;
 	const char* content = t->is_on ? t->on_content : t->off_content;
 	ts_geometry(e, &g);
 	if (t->base.set_flags & ZST_C_FOREGROUND) foreground = t->base.foreground;
@@ -698,7 +695,7 @@ static void ts_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	if (curtain_w > inner.width) curtain_w = inner.width;
 	curtain_rect = zrn_rect(inner.x, inner.y, curtain_w, inner.height);
 	if (curtain_rect.width > 0) zrn_fill_rect(p, curtain_rect, curtain);
-	knob_x = g.box.x + TS_KNOB_TRAVEL * t->knob;
+	float knob_x = g.box.x + TS_KNOB_TRAVEL * t->knob;
 	/* SwitchKnob: Fill is the foreground, the 2.5 px Stroke (inside its bounds) the background of the page */
 	zrn_fill_rect(p, zrn_rect(knob_x, g.box.y, TS_KNOB_W, TS_SWITCH_H), zrn_theme_color(e, ZST_TC_BACKGROUND));
 	zrn_fill_rect(p, zrn_rect(knob_x + TS_OUTLINE, g.box.y + TS_OUTLINE, TS_KNOB_W - 2 * TS_OUTLINE, TS_SWITCH_H - 2 * TS_OUTLINE), knob_fill);
@@ -751,9 +748,8 @@ static void ts_tick(zrn_element_t* const e, const float dt) {
 static int ts_on_knob(const zrn_element_t* const e, const float x, const float y) {
 	const zrn_toggle_switch_t* t = TSW((zrn_element_t*)e);
 	ts_geometry_t g;
-	float kx;
 	ts_geometry(e, &g);
-	kx = g.box.x + TS_KNOB_TRAVEL * t->knob;
+	float kx = g.box.x + TS_KNOB_TRAVEL * t->knob;
 	return x >= kx - 13.5f && x < kx + TS_KNOB_W + 13.5f && y >= g.box.y - 15.5f && y < g.box.y + TS_SWITCH_H + 6.5f;
 }
 

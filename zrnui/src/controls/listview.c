@@ -181,10 +181,9 @@ static void set_part(zrn_list_view_base_t* const l, const int footer, const char
 	}
 	if (!o->presenter) return;
 	if (!holder) {
-		zrn_control_t* c;
 		holder = zrn_create(Z_CLASS_CONTENT_CONTROL);
 		if (!holder) return;
-		c = ZST_AS(zrn_control_t, holder);
+		zrn_control_t* c = ZST_AS(zrn_control_t, holder);
 		c->font_size = ZST_81_FONT_CONTENT;
 		c->h_content = Z_HALIGN_STRETCH;
 		c->v_content = Z_VALIGN_TOP;

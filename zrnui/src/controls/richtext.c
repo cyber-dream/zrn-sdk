@@ -41,8 +41,7 @@ static void rtb_apply(const zrn_rich_text_block_t* const r, const zrn_element_t*
 }
 
 static void rtb_apply_all(zrn_rich_text_block_t* const r) {
-	int i;
-	for (i = 0; i < r->base.child_count; i++) rtb_apply(r, r->base.children[i]);
+	for (int i = 0; i < r->base.child_count; i++) rtb_apply(r, r->base.children[i]);
 	zrn_invalidate_deep(&r->base);
 	zrn_changed_layout(&r->base);
 }
@@ -50,8 +49,7 @@ static void rtb_apply_all(zrn_rich_text_block_t* const r) {
 static ZSize rtb_measure(zrn_element_t* const e, const ZSize available) {
 	const auto r = RTB(e);
 	float pad_h = zrn_thickness_h(r->padding), w = 0, h = zrn_thickness_v(r->padding);
-	int i;
-	for (i = 0; i < e->child_count; i++) {
+	for (int i = 0; i < e->child_count; i++) {
 		zrn_element_t* const p = e->children[i];
 		zrn_measure(p, zrn_size(zrn_maxf(0, available.width - pad_h), Z_INFINITE));
 		w = zrn_maxf(w, p->desired.width);
@@ -63,8 +61,7 @@ static ZSize rtb_measure(zrn_element_t* const e, const ZSize available) {
 static ZSize rtb_arrange(zrn_element_t* const e, const ZSize final) {
 	const zrn_rich_text_block_t* const r = RTB(e);
 	float y = r->padding.top;
-	int i;
-	for (i = 0; i < e->child_count; i++) {
+	for (int i = 0; i < e->child_count; i++) {
 		zrn_element_t* p = e->children[i];
 		zrn_arrange(p, zrn_rect(r->padding.left, y, zrn_maxf(0, final.width - zrn_thickness_h(r->padding)), p->desired.height));
 		y += p->desired.height;
@@ -95,11 +92,9 @@ static zrn_rich_text_block_t* get_rtb(const Zid id) { return RTB(zrn_get(id, Z_C
 
 int Zrich_text_block_add_paragraph(const Zid rich_text_block, const char* const text) {
 	zrn_rich_text_block_t* const r = get_rtb(rich_text_block);
-	Zid tb;
-	zrn_element_t* p;
 	if (!r) return -1;
-	tb = Ztext_block_create(text ? text : "");
-	p = zrn_lookup(tb);
+	Zid tb = Ztext_block_create(text ? text : "");
+	zrn_element_t* p = zrn_lookup(tb);
 	if (!p) return -1;
 	rtb_apply(r, p);
 	zrn_add_child(&r->base, p, -1);

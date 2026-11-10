@@ -31,8 +31,7 @@ static constexpr float EARMARK = 34.0f;
 static int is_header_item(const zrn_element_t* e) { return zrn_is_a(e, Z_CLASS_LIST_VIEW_BASE_HEADER_ITEM); }
 
 zrn_items_control_t* zrn_item_owner(zrn_element_t* const item) {
-	zrn_element_t* a;
-	for (a = item->parent; a; a = a->parent) if (zrn_is_a(a, Z_CLASS_ITEMS_CONTROL)) return IC(a);
+	for (zrn_element_t* a = item->parent; a; a = a->parent) if (zrn_is_a(a, Z_CLASS_ITEMS_CONTROL)) return IC(a);
 	return nullptr;
 }
 
@@ -156,8 +155,7 @@ static void check_glyph(zrn_painter_t* const p, const float x, const float y, co
 	/* Path "M0,123 L39,93 L124,164 L256,18 L295,49 L124,240 z", Stretch Fill */
 	static const float path[12] = { 0, 123, 39, 93, 124, 164, 256, 18, 295, 49, 124, 240 };
 	float pts[12];
-	int i;
-	for (i = 0; i < 6; i++) {
+	for (int i = 0; i < 6; i++) {
 		pts[i * 2] = x + path[i * 2] / 295.0f * w;
 		pts[i * 2 + 1] = y + (path[i * 2 + 1] - 18.0f) / 222.0f * h;
 	}
@@ -198,9 +196,8 @@ static void item_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 /** What a tap on a container does, by the control it is in. */
 static void item_tapped(zrn_element_t* const e) {
 	zrn_items_control_t* const o = zrn_item_owner(e);
-	int index;
 	if (!o || e->parent != o->host) return;
-	index = zrn_ic_index_of(o, e);
+	int index = zrn_ic_index_of(o, e);
 	if (index < 0) return;
 	o->focus_visible = 0;
 	if (zrn_is_a(&o->base.base, Z_CLASS_COMBO_BOX)) zrn_combo_item_tapped(o, index);
@@ -420,9 +417,8 @@ zrn_element_t* zrn_ic_add(zrn_items_control_t* const o, zrn_element_t* const ite
 /* OBSOLETE DEPRECATED TODO delete this method, add text_block like other widgets*/
 Zid Zitems_control_add_text(const Zid items_control, const char* const text) {
 	zrn_items_control_t* const o = get_ic(items_control);
-	zrn_element_t* c;
 	if (!o) return Z_INVALID_ID;
-	c = zrn_ic_add(o, nullptr, text ? text : "");
+	zrn_element_t* c = zrn_ic_add(o, nullptr, text ? text : "");
 	return c ? c->id : Z_INVALID_ID;
 }
 
@@ -536,8 +532,7 @@ static void ic_sync_scroll(const zrn_items_control_t* const o) {
 }
 
 void zrn_items_panel_changed(zrn_element_t* const panel) {
-	zrn_element_t* a;
-	for (a = panel->parent; a; a = a->parent) {
+	for (zrn_element_t* a = panel->parent; a; a = a->parent) {
 		if (zrn_is_a(a, Z_CLASS_ITEMS_CONTROL) && IC(a)->host == panel) {
 			ic_sync_scroll(IC(a));
 			return;
@@ -598,7 +593,6 @@ void zrn_ic_scroll_into_view(zrn_items_control_t* const o, const int index, cons
 	zrn_element_t* const item = zrn_ic_item(o, index);
 	zrn_element_t* content;
 	ZPoint at, origin;
-	int sideways;
 	double start, end, offset, view;
 	if (!item || !o->scroll || !o->base.base.root) return;
 	Zroot_update_layout(o->base.base.root->id);
@@ -606,7 +600,7 @@ void zrn_ic_scroll_into_view(zrn_items_control_t* const o, const int index, cons
 	if (!content) return;
 	at = zrn_to_root(item, (ZPoint){ 0, 0 });
 	origin = zrn_to_root(content, (ZPoint){ 0, 0 });
-	sideways = panel_scrolls_sideways(o->host);
+	int sideways = panel_scrolls_sideways(o->host);
 	if (sideways) {
 		start = at.x - origin.x;
 		end = start + item->rect.width;
@@ -729,10 +723,9 @@ Zid Zselector_get_selected_container(const Zid selector) {
 
 void Zselector_item_set_is_selected(Zid selector_item, int is_selected) {
 	zrn_element_t* const e = zrn_get(selector_item, Z_CLASS_SELECTOR_ITEM);
-	zrn_items_control_t* o;
 	if (!e) return;
 	is_selected = is_selected != 0;
-	o = zrn_item_owner(e);
+	zrn_items_control_t* o = zrn_item_owner(e);
 	if (!o || e->parent != o->host || !is_selector(o)) {
 		item_set_selected(e, is_selected);
 		return;

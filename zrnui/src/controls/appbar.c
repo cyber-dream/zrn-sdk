@@ -118,9 +118,8 @@ static void sh_poly(shape_t* const h, const float* const xy, const int n, const 
 
 static void sh_fill(const shape_t* h, const float* xy, int n) {
 	float pts[48];
-	int i;
 	if (n > 24) n = 24;
-	for (i = 0; i < n; i++) {
+	for (int i = 0; i < n; i++) {
 		pts[2 * i] = sx(h, xy[2 * i]);
 		pts[2 * i + 1] = sy(h, xy[2 * i + 1]);
 	}
@@ -141,8 +140,7 @@ static void sh_ring(const shape_t* const h, const float x, const float y, const 
 
 static void sh_star(shape_t* const h, const int outline) {
 	float xy[20];
-	int i;
-	for (i = 0; i < 10; i++) {
+	for (int i = 0; i < 10; i++) {
 		const float a = -ZST_PI * 0.5f + (float)i * ZST_PI / 5.0f, r = (i & 1) ? 4.2f : 9.0f;
 		xy[2 * i] = 10.0f + r * cosf(a);
 		xy[2 * i + 1] = 10.5f + r * sinf(a);
@@ -220,10 +218,9 @@ static void draw_symbol(zrn_painter_t* const p, const ZSymbol symbol, const ZRec
 		}
 		case Z_SYMBOL_FIND: sh_ring(&h, 8, 8, 5.5f, 2); sh_line(&h, 12, 12, 17, 17); break;
 		case Z_SYMBOL_SETTING: {
-			int i;
 			sh_ring(&h, 10, 10, 6.0f, 2);
 			sh_ring(&h, 10, 10, 2.5f, 2);
-			for (i = 0; i < 8; i++) {
+			for (int i = 0; i < 8; i++) {
 				const float a = (float)i * ZST_PI / 4.0f;
 				sh_line(&h, 10.0f + 6.5f * cosf(a), 10.0f + 6.5f * sinf(a), 10.0f + 9.0f * cosf(a), 10.0f + 9.0f * sinf(a));
 			}
@@ -500,9 +497,8 @@ Zid Zpath_icon_create(const char* const data) {
 
 int Zbitmap_icon_set_uri_source(const Zid bitmap_icon, const char* const png_path) {
 	zrn_icon_t* i = get_icon(bitmap_icon, Z_CLASS_BITMAP_ICON);
-	zrn_image_t* image;
 	if (!i || !png_path) return false;
-	image = zrn_image_load_png(png_path);
+	zrn_image_t* image = zrn_image_load_png(png_path);
 	if (!image) {
 		zrn_error(Z_ERROR_IO, "cannot read the PNG \"%s\"", png_path);
 		return false;
@@ -546,12 +542,10 @@ static float item_top(const zrn_element_t* e) { return zrn_is_a(e, Z_CLASS_APP_B
 
 static float label_height(zrn_element_t* const e) {
 	const zrn_app_bar_item_t* it = item_of(e);
-	zrn_text_layout_t* l;
-	float h;
 	if (!it->label || !*it->label) return 0;
-	l = zrn_text_layout_new(label_font(e), it->label, (int)strlen(it->label), ITEM_LABEL_WIDTH, 1, 0, 0);
+	zrn_text_layout_t* l = zrn_text_layout_new(label_font(e), it->label, (int)strlen(it->label), ITEM_LABEL_WIDTH, 1, 0, 0);
 	if (!l) return 0;
-	h = l->height;
+	float h = l->height;
 	zrn_text_layout_free(l);
 	return h;
 }
@@ -867,12 +861,11 @@ static void bar_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	const ZColor border = zrn_ctl_border_brush(c, zrn_theme_color(e, ZST_TC_BACKGROUND));
 	const ZColor fg = zrn_ctl_foreground(c);
 	const float cx = e->rect.width - ELLIPSIS_WIDTH * 0.5f, cy = ellipsis_y(e, bar_row_top(e));
-	int i;
 	zrn_fill_rect(p, r, bar_background(e));
 	/* AppBarBorderThemeBrush, 1.5 px, on the edge toward the content */
 	if (BAR(e)->on_top) zrn_fill_rect(p, zrn_rect(0, r.height - BAR_BORDER, r.width, BAR_BORDER), border);
 	else zrn_fill_rect(p, zrn_rect(0, 0, r.width, BAR_BORDER), border);
-	for (i = -1; i <= 1; i++) zrn_fill_ellipse(p, zrn_rect(cx + (float)i * ELLIPSIS_STEP - ELLIPSIS_DOT * 0.5f, cy - ELLIPSIS_DOT * 0.5f, ELLIPSIS_DOT, ELLIPSIS_DOT), fg);
+	for (int i = -1; i <= 1; i++) zrn_fill_ellipse(p, zrn_rect(cx + (float)i * ELLIPSIS_STEP - ELLIPSIS_DOT * 0.5f, cy - ELLIPSIS_DOT * 0.5f, ELLIPSIS_DOT, ELLIPSIS_DOT), fg);
 }
 
 static int bar_hit_ellipsis(zrn_element_t* const e, const float x, const float y) {
@@ -907,8 +900,7 @@ static int bar_input(zrn_element_t* const e, zrn_input_t* const in) {
 void zrn_app_bar_item_clicked(zrn_element_t* const item) {
 	/* a secondary command was chosen: the menu goes */
 	if (zrn_is_a(item, Z_CLASS_APP_BAR_BUTTON) && item_of(item)->overflow) {
-		zrn_element_t* p;
-		for (p = item->parent; p; p = p->parent) {
+		for (zrn_element_t* p = item->parent; p; p = p->parent) {
 			if (zrn_is_a(p, Z_CLASS_APP_BAR)) {
 				Zapp_bar_set_is_open(p->id, false);
 				return;
@@ -955,14 +947,12 @@ static zrn_app_bar_t* get_bar(const Zid id) { return BAR(zrn_get(id, Z_CLASS_APP
 
 void Zapp_bar_set_is_open(Zid app_bar, int is_open) {
 	zrn_app_bar_t* b = get_bar(app_bar);
-	zrn_element_t* e;
-	float goal;
 	if (!b) return;
-	e = &b->base.base.base;
+	zrn_element_t* e = &b->base.base.base;
 	is_open = is_open != 0;
 	if (b->is_open == is_open) return;
 	b->is_open = is_open;
-	goal = is_open ? 1.0f : 0.0f;
+	float goal = is_open ? 1.0f : 0.0f;
 	if (e->root) {
 		if (is_open) e->root->open_bar = e;
 		else if (e->root->open_bar == e) e->root->open_bar = nullptr;
@@ -1026,8 +1016,7 @@ void Zapp_bar_on_closed(const Zid app_bar, const ZRoutedCallback callback, void*
  * ============================================================================ */
 
 static void list_remove(zrn_element_t*** list, int* const count, const zrn_element_t* const child) {
-	int i;
-	for (i = 0; i < *count; i++) {
+	for (int i = 0; i < *count; i++) {
 		if ((*list)[i] == child) {
 			memmove(*list + i, *list + i + 1, (size_t)(*count - i - 1) * sizeof **list);
 			(*count)--;
@@ -1052,10 +1041,9 @@ static void command_bar_destroy(zrn_element_t* const e) {
 
 /* The labels show as soon as the bar starts to open and go when it has closed. */
 static void bar_sync_compact(zrn_element_t* const e) {
-	zrn_command_bar_t* c;
 	int compact, i;
 	if (!zrn_is_a(e, Z_CLASS_COMMAND_BAR)) return;
-	c = CBAR(e);
+	zrn_command_bar_t* c = CBAR(e);
 	compact = !(c->base.is_open || c->base.open_t > 0);
 	for (i = 0; i < c->primary_count; i++) {
 		zrn_element_t* b = c->primary[i];
@@ -1073,8 +1061,7 @@ static void bar_sync_compact(zrn_element_t* const e) {
 /* The row of the primary commands, as tall as the tallest: closed (no labels) or open. */
 static float command_row_height(const zrn_command_bar_t* const c, const int open) {
 	float h = BAR_ROW;
-	int i;
-	for (i = 0; i < c->primary_count; i++) {
+	for (int i = 0; i < c->primary_count; i++) {
 		zrn_element_t* b = c->primary[i];
 		if (zrn_is_a(b, Z_CLASS_APP_BAR_BUTTON) || zrn_is_a(b, Z_CLASS_APP_BAR_TOGGLE_BUTTON)) h = zrn_maxf(h, item_height(b, !open));
 	}
@@ -1083,9 +1070,8 @@ static float command_row_height(const zrn_command_bar_t* const c, const int open
 
 static float secondary_height(const zrn_command_bar_t* const c) {
 	float h = 0;
-	int i;
 	if (c->secondary_count == 0) return 0;
-	for (i = 0; i < c->secondary_count; i++) h += c->secondary[i]->desired.height;
+	for (int i = 0; i < c->secondary_count; i++) h += c->secondary[i]->desired.height;
 	return ROW_TOP + h;
 }
 
@@ -1172,9 +1158,6 @@ static int is_command(const zrn_element_t* const e) {
 static int add_command(const Zid bar, const Zid command, const int secondary) {
 	zrn_command_bar_t* c = get_command_bar(bar);
 	zrn_element_t* cmd = command != Z_INVALID_ID ? zrn_get(command, Z_CLASS_ELEMENT) : nullptr;
-	zrn_element_t*** list;
-	int* count;
-	int* cap;
 	if (!c || !cmd) return -1;
 	if (!is_command(cmd)) {
 		zrn_error(Z_ERROR_WRONG_CLASS, "a command is an AppBarButton, an AppBarToggleButton or an AppBarSeparator, not a %s", cmd->cls->name);
@@ -1184,9 +1167,9 @@ static int add_command(const Zid bar, const Zid command, const int secondary) {
 		zrn_error(Z_ERROR_HAS_PARENT, "the command already has a parent");
 		return -1;
 	}
-	list = secondary ? &c->secondary : &c->primary;
-	count = secondary ? &c->secondary_count : &c->primary_count;
-	cap = secondary ? &c->secondary_cap : &c->primary_cap;
+	zrn_element_t*** list = secondary ? &c->secondary : &c->primary;
+	int* count = secondary ? &c->secondary_count : &c->primary_count;
+	int* cap = secondary ? &c->secondary_cap : &c->primary_cap;
 	if (*count == *cap) {
 		const int ncap = *cap ? *cap * 2 : 4;
 		zrn_element_t** more = (zrn_element_t**)realloc(*list, (size_t)ncap * sizeof *more);

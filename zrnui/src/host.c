@@ -34,8 +34,7 @@ void zrn_root_register_popup(zrn_root_t* const r, zrn_element_t* const popup) {
 }
 
 void zrn_root_unregister_popup(zrn_root_t* const r, const zrn_element_t* const popup) {
-	int i;
-	for (i = 0; i < r->popup_count; i++) {
+	for (int i = 0; i < r->popup_count; i++) {
 		if (r->popups[i] == popup) {
 			memmove(r->popups + i, r->popups + i + 1, (size_t)(r->popup_count - i - 1) * sizeof *r->popups);
 			r->popup_count--;
@@ -46,11 +45,10 @@ void zrn_root_unregister_popup(zrn_root_t* const r, const zrn_element_t* const p
 }
 
 void zrn_root_attach(zrn_root_t* const r, zrn_element_t* const e) {
-	int i;
 	e->root = r;
 	zrn_bindings_apply(e);
 	if (e->cls == &zrn_class_popup && ZST_AS(zrn_popup_t, e)->is_open) zrn_root_register_popup(r, e);
-	for (i = 0; i < e->child_count; i++) zrn_root_attach(r, e->children[i]);
+	for (int i = 0; i < e->child_count; i++) zrn_root_attach(r, e->children[i]);
 	zrn_raise(e, Z_EVENT_LOADED);
 }
 
@@ -68,8 +66,7 @@ void zrn_element_forget(zrn_element_t* const e) {
 }
 
 void zrn_root_detach(zrn_element_t* const e) {
-	int i;
-	for (i = 0; i < e->child_count; i++) zrn_root_detach(e->children[i]);
+	for (int i = 0; i < e->child_count; i++) zrn_root_detach(e->children[i]);
 	if (e->root) {
 		zrn_root_t* const r = e->root;
 		zrn_element_forget(e);
@@ -138,7 +135,6 @@ Zid Zroot_get_pointer_over(const Zid root) {
 }
 
 static void collect_tab_stops(zrn_element_t* const e, zrn_element_t*** list, int* const count, int* const cap) {
-	int i;
 	if (e->visibility != Z_VISIBLE || !e->enabled) return;
 	/* what a popup holds is a tab stop only while it is open, and then the list of the root has it */
 	if (e->cls == &zrn_class_popup) return;
@@ -152,7 +148,7 @@ static void collect_tab_stops(zrn_element_t* const e, zrn_element_t*** list, int
 		}
 		(*list)[(*count)++] = e;
 	}
-	for (i = 0; i < e->child_count; i++) collect_tab_stops(e->children[i], list, count, cap);
+	for (int i = 0; i < e->child_count; i++) collect_tab_stops(e->children[i], list, count, cap);
 }
 
 void Zroot_move_focus(const Zid root, const int forward) {
@@ -289,11 +285,9 @@ void zrn_root_set_density(const Zid root, const float density) {
 
 void Zroot_set_theme(const Zid root, const ZTheme theme) {
 	zrn_root_t* const r = get_root(root);
-	ZColor bg;
-	int has;
 	if (!r) return;
-	bg = r->theme.background;
-	has = r->theme.has_background;
+	ZColor bg = r->theme.background;
+	int has = r->theme.has_background;
 	if (!zrn_animations_enabled(r)) {
 		/* instant, as before: no cross-fade when animations are off */
 		zrn_theme_init(&r->theme, theme, r->theme.accent);
@@ -349,9 +343,8 @@ void Zroot_set_background(const Zid root, const ZColor color) {
  * ============================================================================ */
 
 static void layout_popups(const zrn_root_t* const r) {
-	int i;
 	const float lw = (float)r->width / r->ui, lh = (float)r->height / r->ui;
-	for (i = 0; i < r->popup_count; i++) {
+	for (int i = 0; i < r->popup_count; i++) {
 		const zrn_popup_t* const popup = ZST_AS(zrn_popup_t, r->popups[i]);
 		zrn_element_t* const child = popup->base.child_count ? popup->base.children[0] : nullptr;
 		ZPoint origin, pos;
@@ -416,7 +409,6 @@ void zrn_paint_element(zrn_element_t* const e, zrn_painter_t* const p, zrn_root_
 	float tx = p->tx, ty = p->ty, alpha = p->alpha;
 	float saved_xf[16];
 	int saved_has_xf = p->has_xf, count, heap, i;
-	zrn_element_t** list;
 	if (e->visibility != Z_VISIBLE) return;
 	/* an element is skipped when it is out of view, unless it holds things that may be in view: a zero-sized Canvas whose children overflow */
 	if (zrn_clipped_out(p, e->rect) && (e->clip_to_bounds || e->child_count == 0)) return;
@@ -434,7 +426,7 @@ void zrn_paint_element(zrn_element_t* const e, zrn_painter_t* const p, zrn_root_
 	}
 	if (e->clip_to_bounds) zrn_push_clip(p, zrn_local_rect(e));
 	if (e->cls->paint) e->cls->paint(e, p);
-	list = zrn_ordered(e, &count, &heap);
+	zrn_element_t** list = zrn_ordered(e, &count, &heap);
 	for (i = 0; i < count; i++) if (!list[i]->is_popup_child) zrn_paint_element(list[i], p, r);
 	zrn_ordered_free(list, heap);
 	if (e->cls->paint_over) e->cls->paint_over(e, p);
@@ -451,10 +443,9 @@ void zrn_paint_element(zrn_element_t* const e, zrn_painter_t* const p, zrn_root_
 
 static void paint_tooltip(const zrn_root_t* const r, zrn_painter_t* const p) {
 	const zrn_font_t font = { Z_FONT_NORMAL, ZST_FONT_SMALL, 0 };
-	zrn_text_layout_t* l;
 	float w, h, x, y;
 	if (!r->tooltip_target || !r->tooltip_target->tooltip || r->tooltip_timer < 500.0f) return;
-	l = zrn_text_layout_new(font, r->tooltip_target->tooltip, (int)strlen(r->tooltip_target->tooltip), 300.0f, 1, 0, 0);
+	zrn_text_layout_t* l = zrn_text_layout_new(font, r->tooltip_target->tooltip, (int)strlen(r->tooltip_target->tooltip), 300.0f, 1, 0, 0);
 	if (!l) return;
 	w = l->width + 16;
 	h = l->height + 12;
@@ -469,12 +460,11 @@ static void paint_tooltip(const zrn_root_t* const r, zrn_painter_t* const p) {
 }
 
 int zrn_root_paint(zrn_root_t* const r, zrn_painter_t* const p) {
-	int i;
 	if (r->layout_dirty || r->first_frame) Zroot_update_layout(r->id);
 	if (!(r->paint_dirty || r->first_frame)) return false;
 	zrn_paint_clear(p, r->theme.has_background ? r->theme.background : r->theme.colors[ZST_TC_BACKGROUND]);
 	if (r->visual) zrn_paint_element(r->visual, p, r);
-	for (i = 0; i < r->popup_count; i++) {
+	for (int i = 0; i < r->popup_count; i++) {
 		zrn_element_t* const popup = r->popups[i];
 		const ZPoint origin = zrn_to_root(popup, (ZPoint){ 0, 0 });
 		if (!popup->child_count) continue;
@@ -587,10 +577,9 @@ const char* Zroot_get_renderer_name(const Zid root) {
  * ============================================================================ */
 
 static void ticZ_tree(zrn_element_t* const e, const float dt) {
-	int i;
 	if (e->tweens) zrn_tweens_tick(e);
 	if (e->wants_tick && e->cls->tick) e->cls->tick(e, dt);
-	for (i = 0; i < e->child_count; i++) ticZ_tree(e->children[i], dt);
+	for (int i = 0; i < e->child_count; i++) ticZ_tree(e->children[i], dt);
 }
 
 /* ZRNUI_ANIMATION_SPEED: a float multiplier for every animation (0.5 = half speed,
@@ -601,12 +590,11 @@ static ZColor zrn_lerp_color(const ZColor a, const ZColor b, const float t) {
 }
 
 static void zrn_theme_lerp(zrn_theme_t* const out, const zrn_theme_t* const a, const zrn_theme_t* const b, const float t) {
-	int i;
 	out->theme = t >= 0.5f ? b->theme : a->theme;
 	out->accent = zrn_lerp_color(a->accent, b->accent, t);
 	out->background = zrn_lerp_color(a->background, b->background, t);
 	out->has_background = b->has_background;
-	for (i = 0; i < ZST_TC_COUNT; i++) out->colors[i] = zrn_lerp_color(a->colors[i], b->colors[i], t);
+	for (int i = 0; i < ZST_TC_COUNT; i++) out->colors[i] = zrn_lerp_color(a->colors[i], b->colors[i], t);
 }
 
 static float zrn_animation_speed(void) {
@@ -621,10 +609,9 @@ static float zrn_animation_speed(void) {
 }
 void Zroot_tick(const Zid root, const float delta_ms) {
 	zrn_root_t* const r = get_root(root);
-	float speed;
 	if (!r) return;
 	r->time_ms += delta_ms;
-	speed = zrn_animation_speed();
+	float speed = zrn_animation_speed();
 	/* cross-fade of the theme: the displayed theme moves from theme_from to theme_target */
 	if (r->theme_transitioning) {
 		r->theme_t += (delta_ms * speed) / 250.0f;
@@ -676,17 +663,15 @@ int zrn_dispatch(zrn_element_t* const e, zrn_input_t* const in) {
 }
 
 static zrn_element_t* pick(const zrn_root_t* const r, const float x, const float y) {
-	int i;
-	for (i = r->popup_count - 1; i >= 0; i--) {
+	for (int i = r->popup_count - 1; i >= 0; i--) {
 		zrn_element_t* const popup = r->popups[i];
 		zrn_element_t* const child = popup->child_count ? popup->children[0] : nullptr;
 		ZPoint origin, q;
-		zrn_element_t* hit;
 		if (!child) continue;
 		origin = zrn_to_root(popup, (ZPoint){ 0, 0 });
 		q.x = x - origin.x - child->rect.x;
 		q.y = y - origin.y - child->rect.y;
-		hit = zrn_hit_test(child, q);
+		zrn_element_t* hit = zrn_hit_test(child, q);
 		if (hit) return hit;
 		/* a modal popup is all there is to reach under it */
 		if (ZST_AS(zrn_popup_t, popup)->modal) return nullptr;
@@ -717,15 +702,13 @@ static int close_outside(const zrn_root_t* const r, const zrn_element_t* const t
 }
 
 static int in_a_popup(const zrn_root_t* const r, const zrn_element_t* const e) {
-	int i;
-	for (i = 0; i < r->popup_count; i++) if (e && is_inside(e, r->popups[i])) return 1;
+	for (int i = 0; i < r->popup_count; i++) if (e && is_inside(e, r->popups[i])) return 1;
 	return 0;
 }
 
 /* The Back button and Escape: the topmost thing that can be dismissed closes, and nothing else happens. */
 int zrn_root_dismiss_top(zrn_root_t* const r) {
-	int i;
-	for (i = r->popup_count - 1; i >= 0; i--) {
+	for (int i = r->popup_count - 1; i >= 0; i--) {
 		const auto popup = ZST_AS(zrn_popup_t, r->popups[i]);
 		/* a modal popup (a ContentDialog) closes as if it were told to hide; a popup that stays open is the program's own */
 		if (popup->stays_open && !popup->modal) continue;
@@ -784,12 +767,11 @@ static void preview(const zrn_element_t* const target, const zrn_input_type_t ty
 	int n = zrn_chain(target, ids, 64), i;
 	for (i = 0; i < n; i++) {
 		zrn_input_t in;
-		ZPoint q;
 		zrn_element_t* const a = zrn_lookup(ids[i]);
 		if (!a) return;
 		if (!a->observes_pointer || !a->enabled || !a->cls->input) continue;
 		memset(&in, 0, sizeof in);
-		q = zrn_from_root(a, (ZPoint){ x, y });
+		ZPoint q = zrn_from_root(a, (ZPoint){ x, y });
 		in.type = type;
 		in.x = q.x;
 		in.y = q.y;
@@ -802,8 +784,6 @@ static void preview(const zrn_element_t* const target, const zrn_input_type_t ty
 
 int Zroot_inject_pointer(const Zid root, const ZPointerEvent event, float x, float y) {
 	zrn_root_t* r = get_root(root);
-	zrn_element_t* target;
-	Zid tid;
 	zrn_input_t in;
 	int handled = 0;
 	if (!r) return false;
@@ -820,8 +800,8 @@ int Zroot_inject_pointer(const Zid root, const ZPointerEvent event, float x, flo
 		update_hover(r, nullptr, x, y);
 		return false;
 	}
-	target = r->capture ? r->capture : pick(r, x, y);
-	tid = target ? target->id : Z_INVALID_ID;
+	zrn_element_t* target = r->capture ? r->capture : pick(r, x, y);
+	Zid tid = target ? target->id : Z_INVALID_ID;
 	if (event == Z_POINTER_MOVE) {
 		zrn_element_t* hit = r->capture ? pick(r, x, y) : target;
 		zrn_element_t* owner = tooltip_owner(hit);
@@ -842,7 +822,6 @@ int Zroot_inject_pointer(const Zid root, const ZPointerEvent event, float x, flo
 		return handled;
 	}
 	if (event == Z_POINTER_DOWN) {
-		zrn_element_t* f;
 		r->tooltip_timer = 0;
 		r->tooltip_target = nullptr;
 		if (!r->capture && r->open_bar && !ZST_AS(zrn_app_bar_t, r->open_bar)->is_sticky && !is_inside(target, r->open_bar) && !in_a_popup(r, target)) {
@@ -857,7 +836,7 @@ int Zroot_inject_pointer(const Zid root, const ZPointerEvent event, float x, flo
 		update_hover(r, target, x, y);
 		target = RELOOK(tid);
 		if (tid != Z_INVALID_ID && !target) return true;
-		for (f = target; f; f = f->parent) {
+		for (zrn_element_t* f = target; f; f = f->parent) {
 			if (f->focusable && zrn_effectively_enabled(f)) {
 				zrn_set_focus(r, f);
 				break;
@@ -869,8 +848,7 @@ int Zroot_inject_pointer(const Zid root, const ZPointerEvent event, float x, flo
 		target = RELOOK(tid);
 		in.type = ZST_IN_POINTER_DOWN;
 		{
-			zrn_element_t* f2;
-			for (f2 = target; f2; f2 = f2->parent) {
+			for (zrn_element_t* f2 = target; f2; f2 = f2->parent) {
 				if (f2->tilt && zrn_effectively_enabled(f2)) {
 					zrn_tilt_press(r, f2, x, y);
 					break;
@@ -890,10 +868,9 @@ int Zroot_inject_pointer(const Zid root, const ZPointerEvent event, float x, flo
 
 int Zroot_inject_wheel(const Zid root, const float delta) {
 	zrn_root_t* const r = get_root(root);
-	zrn_element_t* target;
 	zrn_input_t in;
 	if (!r) return false;
-	target = pick(r, r->pointer_x, r->pointer_y);
+	zrn_element_t* target = pick(r, r->pointer_x, r->pointer_y);
 	if (!target) return false;
 	memset(&in, 0, sizeof in);
 	in.type = ZST_IN_WHEEL;

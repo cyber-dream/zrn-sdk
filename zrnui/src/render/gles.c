@@ -311,14 +311,13 @@ void zrn_gl_destroy(zrn_gl_t* gl) { gl_free(gl); }
 
 void zrn_gl_forget_image(zrn_image_t* const image) {
 	const auto gl = (zrn_gl_t*)image->gl_owner;
-	int i;
 	if (!gl) return;
 	eglMakeCurrent(gl->display, gl->surface, gl->surface, gl->context);
 	{
 		const GLuint t = image->gl_texture;
 		glDeleteTextures(1, &t);
 	}
-	for (i = 0; i < gl->image_count; i++) {
+	for (int i = 0; i < gl->image_count; i++) {
 		if (gl->images[i] == image) {
 			gl->images[i] = gl->images[--gl->image_count];
 			break;
@@ -494,8 +493,7 @@ static void gl_fill_polygon(zrn_painter_t* const p, const float* const xy, const
 	if (n == 3) {
 		float* const o = reserve(p, 0);
 		const auto gl = (zrn_gl_t*)p->backend_data;
-		int v;
-		for (v = 0; v < 6; v++) put(o + v * FLOATS, pts[idx[v % 3]][0], pts[idx[v % 3]][1], 0, 0, 0, 0, NO_RADII, 0, MODE_SOLID, c, p->alpha, 0, 0);
+		for (int v = 0; v < 6; v++) put(o + v * FLOATS, pts[idx[v % 3]][0], pts[idx[v % 3]][1], 0, 0, 0, 0, NO_RADII, 0, MODE_SOLID, c, p->alpha, 0, 0);
 		gl->quads++;
 	}
 }
@@ -503,10 +501,8 @@ static void gl_fill_polygon(zrn_painter_t* const p, const float* const xy, const
 static void gl_draw_line(zrn_painter_t* const p, const float x0, const float y0, const float x1, const float y1, const float thickness, const ZColor c) {
 	float ax = dx(p, x0), ay = dy(p, y0), bx = dx(p, x1), by = dy(p, y1);
 	float lx = bx - ax, ly = by - ay, len = sqrtf(lx * lx + ly * ly), h = thickness * p->scale * 0.5f, ux, uy, nx, ny, mx, my, e;
-	float* o;
 	const auto gl = (zrn_gl_t*)p->backend_data;
 	float corners[4][2];
-	int i;
 	const int order[6] = { 0, 1, 2, 0, 2, 3 };
 	if (len <= 0.0001f) return;
 	ux = lx / len; uy = ly / len; nx = -uy; ny = ux;
@@ -516,8 +512,8 @@ static void gl_draw_line(zrn_painter_t* const p, const float x0, const float y0,
 	corners[1][0] = bx + ux * e + nx * (h + e); corners[1][1] = by + uy * e + ny * (h + e);
 	corners[2][0] = bx + ux * e - nx * (h + e); corners[2][1] = by + uy * e - ny * (h + e);
 	corners[3][0] = ax - ux * e - nx * (h + e); corners[3][1] = ay - uy * e - ny * (h + e);
-	o = reserve(p, 0);
-	for (i = 0; i < 6; i++) {
+	float* o = reserve(p, 0);
+	for (int i = 0; i < 6; i++) {
 		float x = corners[order[i]][0], y = corners[order[i]][1];
 		put(o + i * FLOATS, x, y, (x - mx) * ux + (y - my) * uy, (x - mx) * nx + (y - my) * ny, len * 0.5f, h, NO_RADII, 0, MODE_RRECT, c, p->alpha, 0, 0);
 	}
@@ -526,9 +522,8 @@ static void gl_draw_line(zrn_painter_t* const p, const float x0, const float y0,
 
 /* The atlas slot of a glyph bitmap, uploading it the first time. */
 static atlas_slot_t* atlas_find(zrn_gl_t* const gl, const uint8_t* const alpha, const int w, const int h) {
-	size_t i;
 	atlas_slot_t* s;
-	for (i = 0; i < gl->slot_count; i++) {
+	for (size_t i = 0; i < gl->slot_count; i++) {
 		s = &gl->slots[i];
 		if (s->key == alpha && s->w == w && s->h == h) return s;
 	}
@@ -557,10 +552,9 @@ static atlas_slot_t* atlas_find(zrn_gl_t* const gl, const uint8_t* const alpha, 
 
 static void gl_blit_alpha(zrn_painter_t* const p, const int x, const int y, const int w, const int h, const uint8_t* const alpha, const int stride, const ZColor c) {
 	const auto gl = (zrn_gl_t*)p->backend_data;
-	atlas_slot_t* s;
 	const float inv = 1.0f / (float)ATLAS_SIZE;
 	if (w <= 0 || h <= 0 || stride != w) return;
-	s = atlas_find(gl, alpha, w, h);
+	atlas_slot_t* s = atlas_find(gl, alpha, w, h);
 	if (!s) {
 		/* the atlas is full: start it again */
 		flush(gl);
@@ -601,11 +595,10 @@ static GLuint image_texture(zrn_gl_t* const gl, const zrn_image_t* const image) 
 static void gl_draw_image(zrn_painter_t* const p, const zrn_image_t* const image, const ZRect dest, const ZRect source) {
 	const auto gl = (zrn_gl_t*)p->backend_data;
 	const float x0 = dx(p, dest.x), y0 = dy(p, dest.y), x1 = dx(p, dest.x + dest.width), y1 = dy(p, dest.y + dest.height);
-	GLuint t;
 	const ZColor white = { 1, 1, 1, 1 };
 	if (!image || x1 <= x0 || y1 <= y0) return;
 	flush(gl);
-	t = image_texture(gl, image);
+	GLuint t = image_texture(gl, image);
 	if (!t) return;
 	quad(p, t, x0, y0, x1, y1, 0, 0, 0, 0, NO_RADII, 0, MODE_IMAGE, white,
 		source.x / (float)image->width, source.y / (float)image->height,
@@ -687,15 +680,13 @@ void zrn_gl_swap(zrn_gl_t* const gl) {
 }
 
 int zrn_gl_read(zrn_gl_t* const gl, uint8_t* const rgba, const int width, const int height) {
-	int y;
-	uint8_t* row;
 	glBindFramebuffer(GL_FRAMEBUFFER, gl->offscreen ? gl->fbo : 0); /* the window swaps through the default framebuffer */
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
 	/* GL's rows run bottom to top */
-	row = (uint8_t*)malloc((size_t)width * 4);
+	uint8_t* row = (uint8_t*)malloc((size_t)width * 4);
 	if (!row) return 0;
-	for (y = 0; y < height / 2; y++) {
+	for (int y = 0; y < height / 2; y++) {
 		uint8_t* const a = rgba + (size_t)y * (size_t)width * 4;
 		uint8_t* const b = rgba + (size_t)(height - 1 - y) * (size_t)width * 4;
 		memcpy(row, a, (size_t)width * 4);

@@ -81,8 +81,7 @@ static void buffer_release(void* data, struct wl_buffer* b) { (void)b; ((buffer_
 static const struct wl_buffer_listener buffer_listener = { .release = buffer_release };
 
 static void buffers_free(window_t* const w) {
-	int i;
-	for (i = 0; i < 2; i++) {
+	for (int i = 0; i < 2; i++) {
 		if (w->buffers[i].buffer) wl_buffer_destroy(w->buffers[i].buffer);
 		if (w->buffers[i].data) munmap(w->buffers[i].data, w->buffers[i].size);
 		memset(&w->buffers[i], 0, sizeof w->buffers[i]);
@@ -90,20 +89,17 @@ static void buffers_free(window_t* const w) {
 }
 
 static int buffers_make(window_t* const w, const int pw, const int ph) {
-	int i;
 	const size_t size = (size_t)pw * (size_t)ph * 4;
 	buffers_free(w);
-	for (i = 0; i < 2; i++) {
-		struct wl_shm_pool* pool;
+	for (int i = 0; i < 2; i++) {
 		const int fd = memfd_create("zrnui", MFD_CLOEXEC);
-		void* data;
 		if (fd < 0 || ftruncate(fd, (off_t)size) < 0) {
 			if (fd >= 0) close(fd);
 			return 0;
 		}
-		data = mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+		void* data = mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 		if (data == MAP_FAILED) { close(fd); return 0; }
-		pool = wl_shm_create_pool(w->shm, fd, (int32_t)size);
+		struct wl_shm_pool* pool = wl_shm_create_pool(w->shm, fd, (int32_t)size);
 		w->buffers[i].buffer = wl_shm_pool_create_buffer(pool, 0, pw, ph, pw * 4, WL_SHM_FORMAT_ARGB8888);
 		wl_buffer_add_listener(w->buffers[i].buffer, &buffer_listener, &w->buffers[i]);
 		wl_shm_pool_destroy(pool);
@@ -314,10 +310,9 @@ static const struct wl_touch_listener touch_listener = {
 
 static void kb_keymap(void* const d, struct wl_keyboard* k, const uint32_t format, const int32_t fd, const uint32_t size) {
 	auto w = (window_t*)d;
-	char* map;
 	(void)k;
 	if (format != WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1) { close(fd); return; }
-	map = (char*)mmap(nullptr, size, PROT_READ, MAP_PRIVATE, fd, 0);
+	char* map = (char*)mmap(nullptr, size, PROT_READ, MAP_PRIVATE, fd, 0);
 	close(fd);
 	if (map == MAP_FAILED) return;
 	if (w->xkb_state) xkb_state_unref(w->xkb_state);

@@ -55,9 +55,8 @@ static zrn_text_layout_t* tb_layout(zrn_text_block_t* const t, const float width
 
 static ZSize tb_measure(zrn_element_t* const e, const ZSize available) {
 	const auto t = ZST_AS(zrn_text_block_t, e);
-	zrn_text_layout_t* l;
 	tb_drop_layout(t);
-	l = tb_layout(t, available.width);
+	zrn_text_layout_t* l = tb_layout(t, available.width);
 	if (!l) return zrn_size(0, 0);
 	/* an empty text still takes a line, as in Silverlight */
 	return zrn_size(l->width, l->height);
@@ -65,12 +64,10 @@ static ZSize tb_measure(zrn_element_t* const e, const ZSize available) {
 
 static void tb_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	const auto t = ZST_AS(zrn_text_block_t, e);
-	zrn_text_layout_t* l;
-	ZColor c;
 	if (!t->text || !*t->text) return;
-	l = tb_layout(t, e->rect.width);
+	zrn_text_layout_t* l = tb_layout(t, e->rect.width);
 	if (!l) return;
-	c = tb_foreground(t);
+	ZColor c = tb_foreground(t);
 	if (!zrn_effectively_enabled(e)) c = zrn_theme_color(e, ZST_TC_DISABLED);
 	zrn_draw_text(p, l, 0, 0, e->rect.width, t->alignment, t->trimming, c);
 }
@@ -233,11 +230,9 @@ static ZSize image_measure(zrn_element_t* const e, const ZSize available) {
 
 static void image_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	const zrn_image_element_t* const im = ZST_AS(zrn_image_element_t, e);
-	ZSize full;
-	ZRect dest;
 	if (!im->image) return;
-	full = image_fit(im, zrn_size(e->rect.width, e->rect.height));
-	dest = zrn_rect((e->rect.width - full.width) * 0.5f, (e->rect.height - full.height) * 0.5f, full.width, full.height);
+	ZSize full = image_fit(im, zrn_size(e->rect.width, e->rect.height));
+	ZRect dest = zrn_rect((e->rect.width - full.width) * 0.5f, (e->rect.height - full.height) * 0.5f, full.width, full.height);
 	if (im->stretch == Z_STRETCH_FILL) dest = zrn_local_rect(e);
 	zrn_push_clip(p, zrn_local_rect(e));
 	zrn_draw_image(p, im->image, dest, zrn_rect(0, 0, (float)im->image->width, (float)im->image->height));

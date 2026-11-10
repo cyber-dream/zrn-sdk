@@ -87,8 +87,7 @@ static float header_slot(const zrn_pivot_t* const p, const int i) {
 
 static float strip_length(const zrn_pivot_t* const p) {
 	float l = 0;
-	int i;
-	for (i = 0; i < p->count; i++) l += header_slot(p, i);
+	for (int i = 0; i < p->count; i++) l += header_slot(p, i);
 	return l;
 }
 
@@ -111,8 +110,7 @@ static float strip_shift(const zrn_pivot_t* const p, const float offset) {
 	f = offset - (float)a;
 	i = wrap_index(a, n);
 	{
-		int k;
-		for (k = 0; k < i; k++) c += header_slot(p, k);
+		for (int k = 0; k < i; k++) c += header_slot(p, k);
 	}
 	return c + f * header_slot(p, i) + (float)(a - i) / (float)n * strip_length(p);
 }
@@ -175,8 +173,7 @@ static ZSize pivot_measure(zrn_element_t* const e, const ZSize available) {
 	const float w = available.width < Z_INFINITE * 0.5f ? available.width : 480.0f;
 	const float h = available.height < Z_INFINITE * 0.5f ? available.height : 800.0f;
 	const float top = items_top(p);
-	int i;
-	for (i = 0; i < p->count; i++) zrn_measure(p->items[i], zrn_size(w, zrn_maxf(0, h - top)));
+	for (int i = 0; i < p->count; i++) zrn_measure(p->items[i], zrn_size(w, zrn_maxf(0, h - top)));
 	return zrn_size(w, h);
 }
 
@@ -398,8 +395,7 @@ static void pivot_destroy(zrn_element_t* const e) {
 
 static void pivot_child_removed(zrn_element_t* const e, zrn_element_t* const child) {
 	const auto p = PIVOT(e);
-	int i;
-	for (i = 0; i < p->count; i++) {
+	for (int i = 0; i < p->count; i++) {
 		if (p->items[i] != child) continue;
 		memmove(&p->items[i], &p->items[i + 1], (size_t)(p->count - i - 1) * sizeof *p->items);
 		p->count--;

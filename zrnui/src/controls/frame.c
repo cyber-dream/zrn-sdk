@@ -97,9 +97,8 @@ ZNavigationCacheMode Zpage_get_navigation_cache_mode(const Zid page) {
 static void page_set_bar(const Zid page, const Zid bar, const int top) {
 	zrn_element_t* const e = zrn_get(page, Z_CLASS_PAGE);
 	zrn_element_t* const b = bar != Z_INVALID_ID ? zrn_get(bar, Z_CLASS_APP_BAR) : nullptr;
-	zrn_element_t** slot;
 	if (!e || (bar != Z_INVALID_ID && !b)) return;
-	slot = top ? &PAGE(e)->top_bar : &PAGE(e)->bottom_bar;
+	zrn_element_t** slot = top ? &PAGE(e)->top_bar : &PAGE(e)->bottom_bar;
 	zrn_set_only_child(e, slot, b);
 	if (b && *slot == b) {
 		b->zindex = 1;
@@ -159,8 +158,7 @@ static void frame_init(zrn_element_t* const e) {
 
 /* The pages kept alive for the entries from `first` on go with them. */
 static void drop_cached(const zrn_frame_t* const f, const int first) {
-	int i;
-	for (i = first; i < f->count; i++) {
+	for (int i = first; i < f->count; i++) {
 		zrn_element_t* const page = f->entries[i].cached != Z_INVALID_ID ? zrn_lookup(f->entries[i].cached) : nullptr;
 		f->entries[i].cached = Z_INVALID_ID;
 		if (page && !page->parent) zrn_destroy(page);
@@ -236,8 +234,7 @@ static void rows_of(zrn_frame_t* const f, zrn_element_t* const page) {
 
 /* The rows back as they were. */
 static void rows_reset(zrn_frame_t* const f) {
-	int i;
-	for (i = 0; i < f->row_count; i++) {
+	for (int i = 0; i < f->row_count; i++) {
 		zrn_element_t* const row = zrn_lookup(f->rows[i]);
 		if (!row) continue;
 		row->rot_x = row->rot_y = 0;
@@ -388,9 +385,8 @@ static void start_intro(zrn_frame_t* const f, const int direction) {
 }
 
 void zrn_root_start_intro(zrn_root_t* const r) {
-	zrn_frame_t* f;
 	if (!r || !r->visual || !zrn_is_a(r->visual, Z_CLASS_FRAME)) return;
-	f = FRAME(r->visual);
+	zrn_frame_t* f = FRAME(r->visual);
 	if (f->intro_pending && f->phase == 0 && zrn_animations_enabled(r)) start_intro(f, 1);
 }
 
@@ -439,9 +435,8 @@ static void show(zrn_frame_t* f, const Zid frame_id, const Zid page_id, void* pa
 /* Builds the page of an entry; Z_INVALID_ID, and the page destroyed, when it is not a Page. */
 static Zid build(const Zid frame_id, const zrn_frame_entry_t entry) {
 	const Zid page = entry.factory(frame_id, entry.parameter);
-	zrn_element_t* e;
 	if (page == Z_INVALID_ID) return Z_INVALID_ID;
-	e = zrn_lookup(page);
+	zrn_element_t* e = zrn_lookup(page);
 	if (!e) return Z_INVALID_ID;
 	if (!zrn_is_a(e, Z_CLASS_PAGE) || e->parent) {
 		zrn_error(Z_ERROR_WRONG_CLASS, "a page factory must return a new Page");
@@ -493,13 +488,12 @@ int Zframe_navigate(const Zid frame, const ZPageFactory factory, void* const par
 
 static int move(const Zid id, const int step) {
 	zrn_frame_t* f = get_frame(id);
-	int target;
 	Zid page;
 	if (!f || f->navigating) return false;
 	finish(f, id);
 	f = get_frame(id);
 	if (!f) return false;
-	target = f->current + step;
+	int target = f->current + step;
 	if (target < 0 || target >= f->count) return false;
 	f->navigating = 1;
 	if (f->entries[target].cached != Z_INVALID_ID && zrn_lookup(f->entries[target].cached)) {

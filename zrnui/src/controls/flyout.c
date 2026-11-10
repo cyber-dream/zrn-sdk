@@ -101,10 +101,9 @@ void zrn_flyout_show_at(zrn_element_t* flyout, zrn_element_t* target) {
 	auto f = FB(flyout);
 	zrn_popup_t* popup;
 	zrn_element_t* presenter;
-	zrn_root_t* r;
 	const Zid id = flyout->id, target_id = target->id;
 	if (!f->popup || !(presenter = presenter_of(f))) return;
-	r = target->root;
+	zrn_root_t* r = target->root;
 	if (!r) {
 		zrn_error(Z_ERROR_INVALID_ARGUMENT, "a flyout is shown at an element that is in a tree with a root");
 		return;
@@ -206,9 +205,8 @@ void Zflyout_base_on_closed(const Zid flyout, const ZRoutedCallback callback, vo
 void Zbutton_set_flyout(const Zid button, const Zid flyout) {
 	zrn_element_t* const b = zrn_get(button, Z_CLASS_BUTTON);
 	zrn_element_t* const f = flyout != Z_INVALID_ID ? zrn_get(flyout, Z_CLASS_FLYOUT_BASE) : nullptr;
-	zrn_button_base_t* bb;
 	if (!b || (flyout != Z_INVALID_ID && !f)) return;
-	bb = ZST_AS(zrn_button_base_t, b);
+	zrn_button_base_t* bb = ZST_AS(zrn_button_base_t, b);
 	if (f && f->parent) {
 		zrn_error(Z_ERROR_HAS_PARENT, "the flyout is attached to another button already");
 		return;
@@ -244,10 +242,9 @@ Zid Zflyout_create(void) {
 void Zflyout_set_content(const Zid flyout, const Zid content) {
 	zrn_element_t* const e = zrn_get(flyout, Z_CLASS_FLYOUT);
 	zrn_element_t* const c = content != Z_INVALID_ID ? zrn_get(content, Z_CLASS_ELEMENT) : nullptr;
-	zrn_element_t* presenter;
 	zrn_element_t* slot;
 	if (!e || (content != Z_INVALID_ID && !c)) return;
-	presenter = presenter_of(FB(e));
+	zrn_element_t* presenter = presenter_of(FB(e));
 	if (!presenter) return;
 	slot = presenter->child_count ? presenter->children[0] : nullptr;
 	zrn_set_only_child(presenter, &slot, c);
@@ -311,7 +308,6 @@ static int item_input(zrn_element_t* e, zrn_input_t* in) {
 		case ZST_IN_POINTER_UP: {
 			const int inside = in->x >= 0 && in->y >= 0 && in->x < e->rect.width && in->y < e->rect.height;
 			const Zid id = e->id;
-			zrn_element_t* p;
 			if (!m->pressed) return 0;
 			m->pressed = 0;
 			if (e->root) zrn_release_capture(e->root, e);
@@ -322,7 +318,7 @@ static int item_input(zrn_element_t* e, zrn_input_t* in) {
 			}
 			if (!zrn_raise(e, Z_EVENT_CLICK)) return 1;
 			e = zrn_lookup(id);
-			for (p = e->parent; p; p = p->parent) {
+			for (zrn_element_t* p = e->parent; p; p = p->parent) {
 				if (p->cls == &zrn_class_popup) {
 					zrn_popup_close(p);
 					break;
@@ -447,9 +443,8 @@ Zid Zmenu_flyout_create(void) {
 int Zmenu_flyout_add_item(const Zid menu_flyout, const Zid item) {
 	zrn_element_t* const e = zrn_get(menu_flyout, Z_CLASS_MENU_FLYOUT);
 	zrn_element_t* const i = item != Z_INVALID_ID ? zrn_get(item, Z_CLASS_MENU_FLYOUT_ITEM_BASE) : nullptr;
-	zrn_element_t* stack;
 	if (!e || !i) return -1;
-	stack = menu_stack(FB(e));
+	zrn_element_t* stack = menu_stack(FB(e));
 	if (!stack || i->parent) {
 		if (i->parent) zrn_error(Z_ERROR_HAS_PARENT, "the item already has a parent");
 		return -1;
@@ -620,9 +615,8 @@ const char* Zcontent_dialog_get_title(const Zid content_dialog) {
 
 static void dialog_set_button_text(const Zid id, const int primary, const char* const text) {
 	zrn_content_dialog_t* const d = get_dialog(id);
-	zrn_element_t* b;
 	if (!d) return;
-	b = primary ? d->button1 : d->button2;
+	zrn_element_t* b = primary ? d->button1 : d->button2;
 	zrn_set_string(primary ? &d->primary_text : &d->secondary_text, text && *text ? text : nullptr);
 	if (!b) return;
 	/* a button with no text is not there */
@@ -714,11 +708,10 @@ static void dialog_finish(zrn_element_t* const e, const ZContentDialogResult res
 static void dialog_button_click(const Zid sender, void* const user_data) {
 	zrn_element_t* const e = zrn_lookup((Zid)(uintptr_t)user_data);
 	zrn_element_t* const b = zrn_lookup(sender);
-	int primary;
 	Zid id;
 	if (!e || !b || !DIALOG(e)->is_open) return;
 	id = e->id;
-	primary = (uintptr_t)b->tag == 1;
+	int primary = (uintptr_t)b->tag == 1;
 	if (!zrn_raise(e, primary ? Z_EVENT_PRIMARY_BUTTON_CLICK : Z_EVENT_SECONDARY_BUTTON_CLICK)) return;
 	dialog_finish(zrn_lookup(id), primary ? Z_CONTENT_DIALOG_RESULT_PRIMARY : Z_CONTENT_DIALOG_RESULT_SECONDARY);
 }

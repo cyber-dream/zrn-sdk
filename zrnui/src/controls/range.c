@@ -91,10 +91,9 @@ static double range_fraction(const zrn_range_base_t* const r) {
 /* A cubic Bezier ZeySpline (0,0)-(x1,y1)-(x2,y2)-(1,1): the y of an x in [0, 1]. */
 static float key_spline(const float x, const float x1, const float y1, const float x2, const float y2) {
 	float lo = 0, hi = 1, t = x;
-	int i;
 	if (x <= 0) return 0;
 	if (x >= 1) return 1;
-	for (i = 0; i < 24; i++) {
+	for (int i = 0; i < 24; i++) {
 		float u = 1 - t, bx = 3 * u * u * t * x1 + 3 * u * t * t * x2 + t * t * t;
 		if (bx < x) lo = t; else hi = t;
 		t = (lo + hi) * 0.5f;
@@ -406,9 +405,8 @@ static void progress_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 		const float pitch = 2 * PB_DOT, t = b->time_ms / 1000.0f, group = 4 * pitch + PB_DOT;
 		const float container = lerp(-group, e->rect.width, b->time_ms / PB_CYCLE_MS);
 		const float y = (e->rect.height - PB_DOT) * 0.5f;
-		int i;
 		zrn_push_clip(p, zrn_local_rect(e));
-		for (i = 0; i < 5; i++) {
+		for (int i = 0; i < 5; i++) {
 			const float u = t - 0.167f * (float)i;
 			if (u < 0 || u >= 3.0f) continue;
 			zrn_fill_rect(p, zrn_rect(container + (float)(4 - i) * pitch + progress_dot_offset(i, t, e->rect.width), y, PB_DOT, PB_DOT), fg);
@@ -504,9 +502,8 @@ static float progress_ring_angle(const float u) {
 	/* the ZeySpline of the segment that ends at a keyframe; linear where the keyframe has none */
 	static const float splines[7][4] = { { 0, 0, 1, 1 }, { 0.02f, 0.33f, 0.38f, 0.77f }, { 0, 0, 1, 1 }, { 0.57f, 0.17f, 0.95f, 0.75f },
 		{ 0, 0.19f, 0.07f, 0.72f }, { 0, 0, 1, 1 }, { 0, 0, 0.95f, 0.37f } };
-	int i;
 	if (u <= 0) return angles[0];
-	for (i = 1; i < 7; i++) {
+	for (int i = 1; i < 7; i++) {
 		if (u < times[i]) {
 			float f = (u - times[i - 1]) / (times[i] - times[i - 1]);
 			const float* k = splines[i];
@@ -522,10 +519,9 @@ static void progress_ring_paint(zrn_element_t* const e, zrn_painter_t* const p) 
 	zrn_control_t* const c = &r->base;
 	const ZColor fg = zrn_ctl_color(c, ZST_C_FOREGROUND, c->foreground, zrn_theme_color(e, ZST_TC_ACCENT));
 	float cx = e->rect.width * 0.5f, cy = e->rect.height * 0.5f, t = r->time_ms / 1000.0f, start = PR_DOT_MARGIN + PR_DOT * 0.5f - PR_SIZE * 0.5f;
-	int i;
 	if (!r->is_active) return;
 	zrn_fill_rect(p, zrn_local_rect(e), zrn_color_alpha(zrn_ctl_background(c, zrn_theme_color(e, ZST_TC_BACKGROUND)), 0.8f));
-	for (i = 0; i < 5; i++) {
+	for (int i = 0; i < 5; i++) {
 		float u = t - 0.167f * (float)i, a, x, y;
 		if (u < 0 || u >= 3.21f) continue;
 		a = (progress_ring_angle(u) - 6.0f * (float)i) * ZST_PI / 180.0f;
@@ -604,9 +600,8 @@ static ZRect scrollbar_thumb(zrn_element_t* const e) {
 	const float length = s->orientation == Z_VERTICAL ? e->rect.height : e->rect.width;
 	const double range = s->base.maximum - s->base.minimum;
 	float thumb = range + s->viewport > 0 ? (float)(s->viewport / (range + s->viewport)) * length : length;
-	float pos;
 	thumb = zrn_clampf(thumb, zrn_minf(72.0f, length), length);
-	pos = range > 0 ? (float)range_fraction(&s->base) * (length - thumb) : 0;
+	float pos = range > 0 ? (float)range_fraction(&s->base) * (length - thumb) : 0;
 	if (s->orientation == Z_VERTICAL) return zrn_rect(1, pos + 1, e->rect.width - 2, thumb - 2);
 	return zrn_rect(pos + 1, 1, thumb - 2, e->rect.height - 2);
 }

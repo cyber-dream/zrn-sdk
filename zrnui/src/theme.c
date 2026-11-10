@@ -182,9 +182,8 @@ read:
 }
 
 static void tables_init(void) {
-	int i;
 	if (g_tables_ready) return;
-	for (i = 0; i < ZST_TC_COUNT; i++) {
+	for (int i = 0; i < ZST_TC_COUNT; i++) {
 		g_dark[i] = g_theme_colors[i].dark;
 		g_light[i] = g_theme_colors[i].light;
 	}
@@ -205,9 +204,8 @@ ZColor zrn_accent_color(const ZAccent accent) {
 
 void zrn_theme_init(zrn_theme_t* const t, const ZTheme theme, const ZColor accent) {
 	const uint32_t* source = theme == Z_THEME_LIGHT ? g_light : g_dark;
-	int i;
 	tables_init();
-	for (i = 0; i < ZST_TC_COUNT; i++) t->colors[i] = Zcolor_argb(source[i]);
+	for (int i = 0; i < ZST_TC_COUNT; i++) t->colors[i] = Zcolor_argb(source[i]);
 	t->theme = theme;
 	t->accent = accent;
 	t->colors[ZST_TC_ACCENT] = accent;

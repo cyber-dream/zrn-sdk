@@ -37,11 +37,9 @@ void Zset_error_callback(const ZErrorCallback callback, void* const user_data) {
 }
 
 char* zrn_strdup(const char* s) {
-	size_t n;
-	char* d;
 	if (!s) s = "";
-	n = strlen(s);
-	d = (char*)malloc(n + 1);
+	size_t n = strlen(s);
+	char* d = (char*)malloc(n + 1);
 	if (d) memcpy(d, s, n + 1);
 	return d;
 }
@@ -245,7 +243,6 @@ static void zrn_run_init(zrn_element_t* const e, const zrn_class_t* const cls) {
 
 zrn_element_t* zrn_create(const ZClass id) {
 	const zrn_class_t* cls = zrn_class_of(id);
-	zrn_element_t* e;
 	if (!cls) {
 		zrn_error(Z_ERROR_INVALID_ARGUMENT, "unknown class 0x%x", (unsigned)id);
 		return nullptr;
@@ -255,7 +252,7 @@ zrn_element_t* zrn_create(const ZClass id) {
 		return nullptr;
 	}
 	zrn_class_resolve(cls);
-	e = (zrn_element_t*)calloc(1, cls->size);
+	zrn_element_t* e = (zrn_element_t*)calloc(1, cls->size);
 	if (!e) {
 		zrn_error(Z_ERROR_OUT_OF_MEMORY, "out of memory");
 		return nullptr;
@@ -276,8 +273,7 @@ zrn_element_t* zrn_create(const ZClass id) {
 }
 
 static void zrn_run_destroy(zrn_element_t* const e) {
-	const zrn_class_t* cls;
-	for (cls = e->cls; cls; cls = cls->base) if (cls->destroy) cls->destroy(e);
+	for (const zrn_class_t* cls = e->cls; cls; cls = cls->base) if (cls->destroy) cls->destroy(e);
 }
 
 void zrn_destroy(zrn_element_t* const e) {
@@ -343,14 +339,12 @@ static void clear_measure_below(zrn_element_t* e);
  * ============================================================================ */
 
 int zrn_child_index(const zrn_element_t* const parent, const zrn_element_t* const child) {
-	int i;
-	for (i = 0; i < parent->child_count; i++) if (parent->children[i] == child) return i;
+	for (int i = 0; i < parent->child_count; i++) if (parent->children[i] == child) return i;
 	return -1;
 }
 
 void zrn_add_child(zrn_element_t* parent, zrn_element_t* child, int index) {
-	zrn_element_t* a;
-	for (a = parent; a; a = a->parent) {
+	for (zrn_element_t* a = parent; a; a = a->parent) {
 		if (a == child) {
 			zrn_error(Z_ERROR_CYCLE, "an element cannot be added under itself");
 			return;
@@ -438,8 +432,7 @@ void zrn_ordered_free(zrn_element_t** list, const int heap) {
  * ============================================================================ */
 
 void zrn_changed_layout(zrn_element_t* const e) {
-	zrn_element_t* a;
-	for (a = e; a; a = a->parent) a->measure_valid = 0;
+	for (zrn_element_t* a = e; a; a = a->parent) a->measure_valid = 0;
 	if (e->root) {
 		e->root->layout_dirty = 1;
 		e->root->paint_dirty = 1;
@@ -447,9 +440,8 @@ void zrn_changed_layout(zrn_element_t* const e) {
 }
 
 static void clear_measure_below(zrn_element_t* const e) {
-	int i;
 	e->measure_valid = 0;
-	for (i = 0; i < e->child_count; i++) clear_measure_below(e->children[i]);
+	for (int i = 0; i < e->child_count; i++) clear_measure_below(e->children[i]);
 }
 
 void zrn_invalidate_deep(zrn_element_t* const e) {
@@ -502,7 +494,6 @@ void zrn_measure(zrn_element_t* const e, const ZSize available) {
 }
 
 void zrn_arrange(zrn_element_t* const e, const ZRect final_rect) {
-	ZSize size;
 	float mh, mv, x, y, w, h;
 	if (e->visibility == Z_COLLAPSED) {
 		e->rect = zrn_rect(final_rect.x, final_rect.y, 0, 0);
@@ -512,7 +503,7 @@ void zrn_arrange(zrn_element_t* const e, const ZRect final_rect) {
 	mv = zrn_thickness_v(e->margin);
 	w = zrn_maxf(0, final_rect.width - mh);
 	h = zrn_maxf(0, final_rect.height - mv);
-	size = zrn_size(w, h);
+	ZSize size = zrn_size(w, h);
 	if (e->halign != Z_HALIGN_STRETCH) size.width = zrn_minf(size.width, zrn_maxf(0, e->desired.width - mh));
 	if (e->valign != Z_VALIGN_STRETCH) size.height = zrn_minf(size.height, zrn_maxf(0, e->desired.height - mv));
 	if (e->width != Z_AUTO) size.width = e->width;
@@ -537,8 +528,7 @@ void zrn_arrange(zrn_element_t* const e, const ZRect final_rect) {
 
 ZSize zrn_measure_children_max(zrn_element_t* const e, const ZSize available) {
 	ZSize m = { 0, 0 };
-	int i;
-	for (i = 0; i < e->child_count; i++) {
+	for (int i = 0; i < e->child_count; i++) {
 		zrn_element_t* c = e->children[i];
 		zrn_measure(c, available);
 		m.width = zrn_maxf(m.width, c->desired.width);
@@ -575,16 +565,14 @@ ZPoint zrn_from_root(const zrn_element_t* e, ZPoint p) {
 
 zrn_element_t* zrn_hit_test(zrn_element_t* const e, const ZPoint p) {
 	int count, heap, i;
-	zrn_element_t** list;
 	if (e->visibility != Z_VISIBLE || !e->hit_visible) return nullptr;
 	if (e->clip_to_bounds && (p.x < 0 || p.y < 0 || p.x >= e->rect.width || p.y >= e->rect.height)) return nullptr;
-	list = zrn_ordered(e, &count, &heap);
+	zrn_element_t** list = zrn_ordered(e, &count, &heap);
 	for (i = count - 1; i >= 0; i--) {
 		zrn_element_t* const c = list[i];
 		const ZPoint q = { p.x - c->rect.x, p.y - c->rect.y };
-		zrn_element_t* hit;
 		if (c->is_popup_child) continue;
-		hit = zrn_hit_test(c, q);
+		zrn_element_t* hit = zrn_hit_test(c, q);
 		if (hit) {
 			zrn_ordered_free(list, heap);
 			return hit;
@@ -632,20 +620,17 @@ void Zelement_on(const Zid element, const ZEvent event, const ZRoutedCallback ca
  * ============================================================================ */
 
 ZColor zrn_inherited_foreground(const zrn_element_t* const e) {
-	const zrn_element_t* p;
-	for (p = e->parent; p; p = p->parent) if (p->cls->content_foreground) return p->cls->content_foreground((zrn_element_t*)p);
+	for (const zrn_element_t* p = e->parent; p; p = p->parent) if (p->cls->content_foreground) return p->cls->content_foreground((zrn_element_t*)p);
 	return zrn_theme_color(e, ZST_TC_FOREGROUND);
 }
 
 float zrn_inherited_font_size(const zrn_element_t* const e) {
-	const zrn_element_t* p;
-	for (p = e->parent; p; p = p->parent) if (p->cls->content_font_size) return p->cls->content_font_size((zrn_element_t*)p);
+	for (const zrn_element_t* p = e->parent; p; p = p->parent) if (p->cls->content_font_size) return p->cls->content_font_size((zrn_element_t*)p);
 	return ZST_FONT_NORMAL;
 }
 
 ZFontFamily zrn_inherited_font_family(const zrn_element_t* const e) {
-	const zrn_element_t* p;
-	for (p = e->parent; p; p = p->parent) if (p->cls->content_font_family) return p->cls->content_font_family((zrn_element_t*)p);
+	for (const zrn_element_t* p = e->parent; p; p = p->parent) if (p->cls->content_font_family) return p->cls->content_font_family((zrn_element_t*)p);
 	return Z_FONT_NORMAL;
 }
 
@@ -731,9 +716,8 @@ const char* Zelement_get_name(const Zid element) {
 }
 
 static zrn_element_t* find_name(zrn_element_t* const e, const char* const name) {
-	int i;
 	if (e->name && strcmp(e->name, name) == 0) return e;
-	for (i = 0; i < e->child_count; i++) {
+	for (int i = 0; i < e->child_count; i++) {
 		zrn_element_t* const f = find_name(e->children[i], name);
 		if (f) return f;
 	}
@@ -892,8 +876,7 @@ int Zelement_focus(const Zid element) {
 	zrn_set_focus(e->root, e);
 	/* an element that hands the keyboard on to a part of its own (AutoSuggestBox) has taken it */
 	{
-		const zrn_element_t* f;
-		for (f = e->root->focus; f; f = f->parent) if (f == e) return true;
+		for (const zrn_element_t* f = e->root->focus; f; f = f->parent) if (f == e) return true;
 	}
 	return false;
 }

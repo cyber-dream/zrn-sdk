@@ -133,9 +133,8 @@ static ZRect section_header_rect(zrn_element_t* const e) {
 
 static void section_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	const zrn_hub_section_t* const s = SECTION(e);
-	ZRect r;
 	if (!s->header || !*s->header) return;
-	r = section_header_rect(e);
+	ZRect r = section_header_rect(e);
 	zrn_draw_string(p, section_font(), s->header, (int)strlen(s->header), r.x, r.y, zrn_ctl_foreground(&s->base.base));
 }
 
@@ -152,13 +151,11 @@ static int section_input(zrn_element_t* const e, zrn_input_t* const in) {
 		return 1;
 	case ZST_IN_POINTER_UP: {
 		const Zid id = e->id;
-		int inside;
-		zrn_hub_t* h;
 		if (!s->pressed) return 0;
 		s->pressed = 0;
 		if (e->root) zrn_release_capture(e->root, e);
-		inside = point_in(section_header_rect(e), in->x, in->y);
-		h = hub_of(e);
+		int inside = point_in(section_header_rect(e), in->x, in->y);
+		zrn_hub_t* h = hub_of(e);
 		if (inside && h && h->header_click) {
 			const Zid hub_id = h->base.base.id;
 			const ZHubSectionHeaderClickCallback cb = h->header_click;
@@ -225,11 +222,10 @@ static void view_range(const zrn_hub_t* const h, int* const first, int* const co
 /* The scroller moved: the sections in view may be others. */
 static void hub_scrolled(const Zid scroll, const ZScrollEventType type, const double value, void* const user_data) {
 	zrn_element_t* const e = zrn_lookup((Zid)(uintptr_t)user_data);
-	zrn_hub_t* h;
 	int first, count;
 	ZST_UNUSED(scroll); ZST_UNUSED(type); ZST_UNUSED(value);
 	if (!e) return;
-	h = HUB(e);
+	zrn_hub_t* h = HUB(e);
 	view_range(h, &first, &count);
 	if (first == h->view_first && count == h->view_count) {
 		zrn_changed_paint(e);
@@ -405,10 +401,9 @@ Zid Zhub_get_section(const Zid hub, const int index) {
 
 void Zhub_scroll_to_section(const Zid hub, const int index) {
 	zrn_hub_t* const h = get_hub(hub);
-	zrn_element_t* sec;
 	if (!h || index < 0 || index >= section_count(h) || !h->scroll) return;
 	/* what the last layout knows: the margin box of the section at the left edge of the view */
-	sec = h->host->children[index];
+	zrn_element_t* sec = h->host->children[index];
 	if (is_vertical(h)) Zscroll_viewer_scroll_to_vertical_offset(h->scroll->id, sec->rect.y - sec->margin.top);
 	else Zscroll_viewer_scroll_to_horizontal_offset(h->scroll->id, sec->rect.x - sec->margin.left);
 }

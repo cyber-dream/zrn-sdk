@@ -16,9 +16,8 @@ static const zrn_res_def_t* def_of(const ZThemeResource key) {
 }
 
 static const zrn_res_override_t* find_override(const zrn_root_t* const r, const ZThemeResource key) {
-	int i;
 	if (!r) return nullptr;
-	for (i = 0; i < r->override_count; i++) if (r->overrides[i].key == key) return &r->overrides[i];
+	for (int i = 0; i < r->override_count; i++) if (r->overrides[i].key == key) return &r->overrides[i];
 	return nullptr;
 }
 
@@ -158,7 +157,6 @@ ZFontFamily Zroot_get_theme_font_family(const Zid root, const ZThemeResource key
 /* the override slot of a key for a value of a type, made when there is none; NULL when the key cannot take it */
 static zrn_res_override_t* override_slot(zrn_root_t* const r, const ZThemeResource key, const zrn_res_type_t type) {
 	zrn_res_override_t* o = nullptr;
-	int i;
 	if (BUILTIN_KEY(key)) {
 		if (def_of(key)->type != type) {
 			zrn_error(Z_ERROR_INVALID_ARGUMENT, "resource %s is not of that type", def_of(key)->name);
@@ -168,7 +166,7 @@ static zrn_res_override_t* override_slot(zrn_root_t* const r, const ZThemeResour
 		zrn_error(Z_ERROR_INVALID_ARGUMENT, "invalid resource key 0x%X", (unsigned)key);
 		return nullptr;
 	}
-	for (i = 0; i < r->override_count; i++) if (r->overrides[i].key == key) o = &r->overrides[i];
+	for (int i = 0; i < r->override_count; i++) if (r->overrides[i].key == key) o = &r->overrides[i];
 	if (!o) {
 		if (r->override_count == r->override_cap) {
 			const int cap = r->override_cap ? r->override_cap * 2 : 8;
@@ -209,9 +207,8 @@ RES_SET(Zroot_set_resource_font_family, ZFontFamily, ZST_RT_FONT_FAMILY, o->v.i 
 
 void Zroot_clear_resource(const Zid root, const ZThemeResource key) {
 	zrn_root_t* const r = get_root(root);
-	int i;
 	if (!r) return;
-	for (i = 0; i < r->override_count; i++) {
+	for (int i = 0; i < r->override_count; i++) {
 		if (r->overrides[i].key != key) continue;
 		r->overrides[i] = r->overrides[--r->override_count];
 		zrn_root_resources_changed(r);
@@ -337,7 +334,6 @@ static void apply_binding(zrn_element_t* const e, const zrn_binding_t* const b) 
 
 int zrn_bind(zrn_element_t* const e, const zrn_bind_prop_t prop, const ZThemeResource key) {
 	zrn_binding_t* b = nullptr;
-	int i;
 	if (!e) return false;
 	if (BUILTIN_KEY(key)) {
 		if (def_of(key)->type != prop_type(prop)) {
@@ -348,7 +344,7 @@ int zrn_bind(zrn_element_t* const e, const zrn_bind_prop_t prop, const ZThemeRes
 		zrn_error(Z_ERROR_INVALID_ARGUMENT, "invalid resource key 0x%X", (unsigned)key);
 		return false;
 	}
-	for (i = 0; i < e->binding_count; i++) if (e->bindings[i].prop == prop) b = &e->bindings[i];
+	for (int i = 0; i < e->binding_count; i++) if (e->bindings[i].prop == prop) b = &e->bindings[i];
 	if (!b) {
 		/* grown one by one: an element binds a few properties at most */
 		zrn_binding_t* grown = (zrn_binding_t*)realloc(e->bindings, (size_t)(e->binding_count + 1) * sizeof *grown);
@@ -366,9 +362,8 @@ int zrn_bind(zrn_element_t* const e, const zrn_bind_prop_t prop, const ZThemeRes
 }
 
 void zrn_unbind(zrn_element_t* const e, const zrn_bind_prop_t prop) {
-	int i;
 	if (!e || !e->binding_count) return;
-	for (i = 0; i < e->binding_count; i++) {
+	for (int i = 0; i < e->binding_count; i++) {
 		if (e->bindings[i].prop != prop) continue;
 		e->bindings[i] = e->bindings[--e->binding_count];
 		if (!e->binding_count) {
@@ -380,9 +375,8 @@ void zrn_unbind(zrn_element_t* const e, const zrn_bind_prop_t prop) {
 }
 
 void zrn_bindings_apply(zrn_element_t* const e) {
-	int i;
 	/* applying changes no list: a copy is not needed, but the count is read each time */
-	for (i = 0; i < e->binding_count; i++) apply_binding(e, &e->bindings[i]);
+	for (int i = 0; i < e->binding_count; i++) apply_binding(e, &e->bindings[i]);
 }
 
 void zrn_bindings_free(zrn_element_t* const e) {
@@ -392,18 +386,16 @@ void zrn_bindings_free(zrn_element_t* const e) {
 }
 
 static void apply_tree(zrn_element_t* const e) {
-	int i;
 	if (!e) return;
 	zrn_bindings_apply(e);
-	for (i = 0; i < e->child_count; i++) apply_tree(e->children[i]);
+	for (int i = 0; i < e->child_count; i++) apply_tree(e->children[i]);
 }
 
 void zrn_root_resources_changed(zrn_root_t* const r) {
-	int i;
 	/* the popups that are open may be in no tree of the root's own: they are listed apart */
 	apply_tree(r->visual);
 	apply_tree(r->overlay);
-	for (i = 0; i < r->popup_count; i++) apply_tree(r->popups[i]);
+	for (int i = 0; i < r->popup_count; i++) apply_tree(r->popups[i]);
 	r->paint_dirty = 1;
 }
 

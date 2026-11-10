@@ -217,8 +217,7 @@ static void sw_fill_polygon(zrn_painter_t* const p, const float* const xy, const
 		}
 		{
 			uint8_t* const row = p->pixels + (size_t)y * (size_t)p->stride;
-			int x;
-			for (x = 0; x < width; x++) if (cover[x] > 0.0f) blend(row + (x0 + x) * 4, c, cover[x], p->alpha);
+			for (int x = 0; x < width; x++) if (cover[x] > 0.0f) blend(row + (x0 + x) * 4, c, cover[x], p->alpha);
 		}
 	}
 	free(cover);

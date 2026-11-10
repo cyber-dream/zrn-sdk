@@ -289,14 +289,12 @@ zrn_text_layout_t* zrn_text_layout_new(const zrn_font_t font, const char* const 
 		int line_end = -1, next = -1;
 		zrn_line_t line;
 		for (;;) {
-			uint32_t cp;
-			float a;
 			if (end >= length) { line_end = end; next = length; break; }
-			cp = zrn_utf8_decode(text + end, length - end, &used);
+			uint32_t cp = zrn_utf8_decode(text + end, length - end, &used);
 			if (!used) used = 1;
 			if (cp == '\n') { line_end = end; next = end + 1; break; }
 			if (cp == '\r') { end += used; continue; }
-			a = char_advance(font, cp);
+			float a = char_advance(font, cp);
 			if (wrap && max_width > 0 && pen + a > max_width + 0.01f && end > start) {
 				if (last_space > start) {
 					line_end = last_space;
@@ -375,10 +373,9 @@ void zrn_draw_string(zrn_painter_t* const p, const zrn_font_t font, const char* 
 }
 
 void zrn_draw_text(zrn_painter_t* const p, const zrn_text_layout_t* const l, const float x, const float y, const float width, const ZTextAlignment align, const ZTextTrimming trim, const ZColor c) {
-	int i;
 	/* the glyphs sit in the line box: centered in a custom line height */
 	const float shift = (l->line_height - zrn_font_line_height(l->font)) * 0.5f;
-	for (i = 0; i < l->line_count; i++) {
+	for (int i = 0; i < l->line_count; i++) {
 		const zrn_line_t* line = &l->lines[i];
 		float lx = x, ly = y + (float)i * l->line_height + shift;
 		const int len = line->end - line->start;
