@@ -310,6 +310,14 @@ zrn_gl_t* zrn_gl_create_window(void* const wl_display, void* const wl_surface, c
 	}
 	eglSwapInterval(gl->display, 0);
 	if (!init_gl(gl)) goto fail;
+#ifdef Z_DEBUG
+	{
+		GLint sample_buffers = 0, samples = 0;
+		glGetIntegerv(GL_SAMPLE_BUFFERS, &sample_buffers);
+		glGetIntegerv(GL_SAMPLES, &samples);
+		Z_DEBUG_LOG("window framebuffer: %d sample buffers, %d samples\n", sample_buffers, samples);
+	}
+#endif
 	gl->width = width;
 	gl->height = height;
 	return gl;
