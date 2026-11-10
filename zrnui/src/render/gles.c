@@ -49,6 +49,9 @@ struct zrn_gl {
 	struct wl_egl_window* wl_window;
 #endif
 	GLuint program, atlas, fbo, fbo_texture;
+	/** The samples of the off-screen framebuffer (GL_EXT_multisampled_render_to_texture), 0 when it has none. */
+	GLsizei fbo_samples;
+	PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEEXTPROC fbo_multisample;
 	GLint loc_size, loc_xf, loc_tex;
 	int width, height;
 	float* verts;
@@ -152,17 +155,42 @@ static int build_program(zrn_gl_t* const gl) {
  *  EGL
  * ============================================================================ */
 
+static constexpr GLsizei MSAA_SAMPLES = 4;
+
+/* A config with 4x MSAA; a driver without one gets a plain config, so that the GPU renderer still works (without anti-aliased edges). */
 static int choose(zrn_gl_t* const gl, const int window) {
-	const EGLint attribs[] = {
-		EGL_SURFACE_TYPE, window ? EGL_WINDOW_BIT : EGL_PBUFFER_BIT,
+	const EGLint surface_type = window ? EGL_WINDOW_BIT : EGL_PBUFFER_BIT;
+	const EGLint multisampled[] = {
+		EGL_SURFACE_TYPE, surface_type,
 		EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
 		EGL_RED_SIZE, 8, EGL_GREEN_SIZE, 8, EGL_BLUE_SIZE, 8, EGL_ALPHA_SIZE, 8,
-		EGL_SAMPLE_BUFFERS, 1, EGL_SAMPLES, 4, EGL_NONE
+		EGL_SAMPLE_BUFFERS, 1, EGL_SAMPLES, MSAA_SAMPLES, EGL_NONE
+	};
+	const EGLint plain[] = {
+		EGL_SURFACE_TYPE, surface_type,
+		EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+		EGL_RED_SIZE, 8, EGL_GREEN_SIZE, 8, EGL_BLUE_SIZE, 8, EGL_ALPHA_SIZE, 8, EGL_NONE
 	};
 	EGLint n = 0;
-	if (eglChooseConfig(gl->display, attribs, &gl->config, 1, &n) && n > 0) return 1;
-	zrn_error(Z_ERROR_IO, "MSAA (4x) not available");
+	if (eglChooseConfig(gl->display, multisampled, &gl->config, 1, &n) && n > 0) return 1;
+	Z_DEBUG_LOG("no 4x MSAA config: the edges are not anti-aliased\n");
+	if (eglChooseConfig(gl->display, plain, &gl->config, 1, &n) && n > 0) return 1;
+	zrn_error(Z_ERROR_IO, "no usable EGL config");
 	return 0;
+}
+
+/* The off-screen framebuffer is a texture, which has no samples of its own: where the driver can multisample a texture
+ * attachment (GL_EXT_multisampled_render_to_texture, resolved when the frame ends) the framebuffer gets the samples. */
+static void find_framebuffer_multisample(zrn_gl_t* const gl) {
+	const char* const extensions = (const char*)glGetString(GL_EXTENSIONS);
+	gl->fbo_samples = 0;
+	gl->fbo_multisample = nullptr;
+	if (!extensions || !strstr(extensions, "GL_EXT_multisampled_render_to_texture")) return;
+	gl->fbo_multisample = (PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEEXTPROC)eglGetProcAddress("glFramebufferTexture2DMultisampleEXT");
+	if (!gl->fbo_multisample) return;
+	GLint most = 0;
+	glGetIntegerv(GL_MAX_SAMPLES_EXT, &most);
+	gl->fbo_samples = most < MSAA_SAMPLES ? most : MSAA_SAMPLES;
 }
 
 static int init_gl(zrn_gl_t* const gl) {
@@ -180,6 +208,38 @@ static int init_gl(zrn_gl_t* const gl) {
 	return 1;
 }
 
+/* Roots share the EGLDisplay of a platform: it is terminated when the last of them lets it go, not by the first that is destroyed. */
+typedef struct display_use {
+	EGLDisplay display;
+	int users;
+} display_use_t;
+
+static display_use_t g_displays[8];
+
+static void display_acquire(const EGLDisplay display) {
+	display_use_t* free_slot = nullptr;
+	for (size_t i = 0; i < sizeof g_displays / sizeof g_displays[0]; i++) {
+		if (g_displays[i].display == display && g_displays[i].users > 0) {
+			g_displays[i].users++;
+			return;
+		}
+		if (g_displays[i].users == 0 && !free_slot) free_slot = &g_displays[i];
+	}
+	if (!free_slot) return;
+	free_slot->display = display;
+	free_slot->users = 1;
+}
+
+/* Terminates the display when nobody else uses it. A display that was never counted (the table was full) is terminated as before. */
+static void display_release(const EGLDisplay display) {
+	for (size_t i = 0; i < sizeof g_displays / sizeof g_displays[0]; i++) {
+		if (g_displays[i].display != display || g_displays[i].users == 0) continue;
+		if (--g_displays[i].users > 0) return;
+		break;
+	}
+	eglTerminate(display);
+}
+
 static int open_display(zrn_gl_t* const gl, const EGLenum platform, void* const native) {
 	EGLint major, minor;
 	const PFNEGLGETPLATFORMDISPLAYEXTPROC get_platform = (PFNEGLGETPLATFORMDISPLAYEXTPROC)eglGetProcAddress("eglGetPlatformDisplayEXT");
@@ -190,8 +250,11 @@ static int open_display(zrn_gl_t* const gl, const EGLenum platform, void* const 
 		zrn_error(Z_ERROR_IO, "no EGL display");
 		return 0;
 	}
+	display_acquire(gl->display);
 	if (!eglBindAPI(EGL_OPENGL_ES_API)) {
 		zrn_error(Z_ERROR_IO, "no OpenGL ES");
+		display_release(gl->display);
+		gl->display = EGL_NO_DISPLAY;
 		return 0;
 	}
 	return 1;
@@ -222,6 +285,7 @@ zrn_gl_t* zrn_gl_create_offscreen(const int width, const int height) {
 		goto fail;
 	}
 	if (!init_gl(gl)) goto fail;
+	find_framebuffer_multisample(gl);
 	glGenTextures(1, &gl->fbo_texture);
 	glGenFramebuffers(1, &gl->fbo);
 	zrn_gl_resize(gl, width, height);
@@ -267,7 +331,8 @@ void zrn_gl_resize(zrn_gl_t* const gl, const int width, const int height) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glBindFramebuffer(GL_FRAMEBUFFER, gl->fbo);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gl->fbo_texture, 0);
+		if (gl->fbo_samples > 0) gl->fbo_multisample(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gl->fbo_texture, 0, gl->fbo_samples);
+		else glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gl->fbo_texture, 0);
 	}
 #ifdef ZRNUI_HAVE_WAYLAND
 	else if (gl->wl_window) wl_egl_window_resize(gl->wl_window, width, height, 0, 0);
@@ -296,7 +361,7 @@ static void gl_free(zrn_gl_t* const gl) {
 	if (gl->display != EGL_NO_DISPLAY) {
 		if (gl->surface != EGL_NO_SURFACE && gl->surface) eglDestroySurface(gl->display, gl->surface);
 		if (gl->context != EGL_NO_CONTEXT && gl->context) eglDestroyContext(gl->display, gl->context);
-		eglTerminate(gl->display);
+		display_release(gl->display);
 	}
 #ifdef ZRNUI_HAVE_WAYLAND
 	if (gl->wl_window) wl_egl_window_destroy(gl->wl_window);

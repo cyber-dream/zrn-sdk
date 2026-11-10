@@ -56,6 +56,51 @@ static void compare(const char* name, ZFrame a, ZFrame b, double* mean, double* 
 	printf("  %s: mean difference %.3f / 255, %.3f%% of the pixels differ a lot\n", name, *mean, *bad * 100.0);
 }
 
+/* The edge of a filled triangle is not covered by the anti-aliasing of the fragment shader (rects and rounded rects are), so the
+ * pixels between the shape and the background exist only when the framebuffer itself is multisampled. */
+static void test_msaa_edges(void) {
+	const Zid root = zst_test_root(100, 100);
+	Zroot_set_renderer(root, Z_RENDERER_GPU);
+	const Zid stack = Zstack_panel_create(Z_VERTICAL);
+	Zroot_set_visual(root, stack);
+	const Zid icon = Zpanel_add(stack, Zpath_icon_create("M 0,0 L 90,0 L 31,71 Z"));
+	Zelement_set_width(icon, 90);
+	Zelement_set_height(icon, 80);
+	ZFrame frame;
+	if (!Zroot_render(root, &frame)) {
+		printf("  no GPU renderer: the MSAA check is skipped\n");
+		Zroot_destroy(root);
+		return;
+	}
+	/* the inside of the triangle and the background, read from the picture; the edge is what lies between the two */
+	const uint8_t* const inside = frame.pixels + (size_t)10 * (size_t)frame.stride + (size_t)10 * 4;
+	const uint8_t* const outside = frame.pixels + (size_t)95 * (size_t)frame.stride + (size_t)95 * 4;
+	const int inside_luma = (inside[0] + inside[1] + inside[2]) / 3;
+	const int outside_luma = (outside[0] + outside[1] + outside[2]) / 3;
+	const int low = inside_luma < outside_luma ? inside_luma : outside_luma;
+	const int high = inside_luma < outside_luma ? outside_luma : inside_luma;
+	bool b_seen[256] = {};
+	int mixed = 0;
+	for (int y = 0; y < frame.height; y++) {
+		for (int x = 0; x < frame.width; x++) {
+			const uint8_t* const px = frame.pixels + (size_t)y * (size_t)frame.stride + (size_t)x * 4;
+			const int luma = (px[0] + px[1] + px[2]) / 3;
+			if (luma > low + 6 && luma < high - 6) {
+				mixed++;
+				b_seen[luma] = true;
+			}
+		}
+	}
+	printf("  inside luma %d, outside luma %d\n", inside_luma, outside_luma);
+	CHECK(high - low > 40);
+	int levels = 0;
+	for (int i = 0; i < 256; i++) levels += b_seen[i] ? 1 : 0;
+	printf("  triangle edge: %d mixed pixels, %d distinct levels\n", mixed, levels);
+	CHECK(mixed > 40);
+	CHECK(levels >= 3);
+	Zroot_destroy(root);
+}
+
 int main(void) {
 	Zid soft, gpu;
 	ZFrame fs, fg;
@@ -77,6 +122,7 @@ int main(void) {
 		return 0;
 	}
 	CHECK_STR(Zroot_get_renderer_name(gpu), "gles2");
+	RUN(test_msaa_edges);
 	compare("controls", fs, fg, &mean, &bad);
 	CHECK(mean < 6.0);
 	CHECK(bad < 0.02);
