@@ -106,9 +106,9 @@ static void test_content(void) {
 static void test_toggle_states_and_events(void) {
 	Zid cb = Zcheck_box_create("x");
 	g_count = 0;
-	Zelement_on(cb, Z_EVENT_CHECKED, on_event, NULL);
-	Zelement_on(cb, Z_EVENT_UNCHECKED, on_event, NULL);
-	Zelement_on(cb, Z_EVENT_INDETERMINATE, on_event, NULL);
+	Zelement_on(cb, Z_EVENT_CHECKED, on_event, nullptr);
+	Zelement_on(cb, Z_EVENT_UNCHECKED, on_event, nullptr);
+	Zelement_on(cb, Z_EVENT_INDETERMINATE, on_event, nullptr);
 	CHECK(!Ztoggle_button_get_is_checked(cb));
 	Ztoggle_button_set_is_checked(cb, true);
 	CHECK(Ztoggle_button_get_is_checked(cb) && g_count == 1);
@@ -123,10 +123,10 @@ static void test_toggle_states_and_events(void) {
 
 static void test_radio_groups(void) {
 	Zid p = Zstack_panel_create(Z_VERTICAL), q = Zstack_panel_create(Z_VERTICAL);
-	Zid a = Zpanel_add(p, Zradio_button_create("a", NULL)), b = Zpanel_add(p, Zradio_button_create("b", NULL));
-	Zid c = Zpanel_add(q, Zradio_button_create("c", NULL));
+	Zid a = Zpanel_add(p, Zradio_button_create("a", nullptr)), b = Zpanel_add(p, Zradio_button_create("b", nullptr));
+	Zid c = Zpanel_add(q, Zradio_button_create("c", nullptr));
 	Zid g1 = Zpanel_add(p, Zradio_button_create("g1", "x")), g2 = Zpanel_add(q, Zradio_button_create("g2", "x"));
-	Zid root = Zroot_create(100, 100), top = Zstack_panel_create(Z_VERTICAL);
+	Zid root = zst_test_root(100, 100), top = Zstack_panel_create(Z_VERTICAL);
 	Zpanel_add(top, p);
 	Zpanel_add(top, q);
 	Zroot_set_visual(root, top);
@@ -150,7 +150,7 @@ static void test_range(void) {
 	g_count = 0;
 	CHECK(Zrange_base_get_maximum(sl) == 100 && Zrange_base_get_minimum(sl) == 0); /* 8.1 slider defaults */
 	CHECK(Zrange_base_get_maximum(pb) == 100);
-	Zrange_base_on_value_changed(sl, on_value, NULL);
+	Zrange_base_on_value_changed(sl, on_value, nullptr);
 	Zrange_base_set_value(sl, 4);
 	CHECK(g_count == 1 && g_old == 0 && g_new == 4);
 	Zrange_base_set_value(sl, 4);
@@ -168,7 +168,7 @@ static void test_range(void) {
 static void test_items_and_selection(void) {
 	Zid lb = Zlist_box_create(), c1, c2;
 	g_count = 0;
-	Zelement_on(lb, Z_EVENT_SELECTION_CHANGED, on_event, NULL);
+	Zelement_on(lb, Z_EVENT_SELECTION_CHANGED, on_event, nullptr);
 	c1 = Zitems_control_add_text(lb, "one");
 	c2 = Zitems_control_add_text(lb, "two");
 	Zitems_control_add_text(lb, "three");
@@ -214,14 +214,14 @@ static void test_multiple_selection(void) {
 	CHECK(!Zselector_item_get_is_selected(a) && Zselector_item_get_is_selected(c));
 	CHECK(Zselector_get_selected_index(lb) == 2);
 	Zlist_box_select_all(lb);
-	CHECK(Zlist_box_get_selected_indices(lb, NULL, 0) == 3);
+	CHECK(Zlist_box_get_selected_indices(lb, nullptr, 0) == 3);
 	Zelement_destroy(lb);
 }
 
 static void test_text_box(void) {
 	Zid tb = Ztext_box_create("hello");
 	g_count = 0;
-	Zelement_on(tb, Z_EVENT_TEXT_CHANGED, on_event, NULL);
+	Zelement_on(tb, Z_EVENT_TEXT_CHANGED, on_event, nullptr);
 	CHECK_STR(Ztext_box_get_text(tb), "hello");
 	Ztext_box_set_text(tb, "hello");
 	CHECK(g_count == 0);
@@ -237,7 +237,7 @@ static void test_text_box(void) {
 }
 
 static void test_theme_colors(void) {
-	Zid root = Zroot_create(100, 100);
+	Zid root = zst_test_root(100, 100);
 	ZColor c = Zroot_get_theme_color(root, Z_RES_PHONE_FOREGROUND_COLOR);
 	CHECK(c.r == 1 && c.g == 1 && c.b == 1 && c.a == 1);
 	Zroot_set_theme(root, Z_THEME_LIGHT);
@@ -287,7 +287,7 @@ static void test_toggle_switch_api(void) {
 	CHECK_STR(Ztoggle_switch_get_header(sw), "");
 	CHECK_STR(Ztoggle_switch_get_on_content(sw), "On");
 	CHECK_STR(Ztoggle_switch_get_off_content(sw), "Off");
-	Ztoggle_switch_on_toggled(sw, on_event, NULL);
+	Ztoggle_switch_on_toggled(sw, on_event, nullptr);
 	Ztoggle_switch_set_is_on(sw, true);
 	CHECK(Ztoggle_switch_get_is_on(sw) && g_count == 1);
 	Ztoggle_switch_set_is_on(sw, true);
@@ -300,7 +300,7 @@ static void test_toggle_switch_api(void) {
 	CHECK_STR(Ztoggle_switch_get_header(sw), "Wi-Fi");
 	CHECK_STR(Ztoggle_switch_get_on_content(sw), "Connected");
 	CHECK_STR(Ztoggle_switch_get_off_content(sw), "Disconnected");
-	Ztoggle_switch_set_header(sw, NULL);
+	Ztoggle_switch_set_header(sw, nullptr);
 	CHECK_STR(Ztoggle_switch_get_header(sw), "");
 	Zelement_destroy(sw);
 }
@@ -341,7 +341,7 @@ static void test_81_properties(void) {
 	Ztext_box_set_header(tb, "Query");
 	CHECK_STR(Ztext_box_get_placeholder_text(tb), "Search");
 	CHECK_STR(Ztext_box_get_header(tb), "Query");
-	Ztext_box_set_placeholder_text(tb, NULL);
+	Ztext_box_set_placeholder_text(tb, nullptr);
 	CHECK_STR(Ztext_box_get_placeholder_text(tb), "");
 	Ztext_box_set_is_read_only(tb, true);
 	Ztext_box_set_max_length(tb, 7);
@@ -362,8 +362,8 @@ static void test_81_properties(void) {
 
 /* the sizes the 8.1 styles give: MinWidth/MinHeight, touch overhangs, the rows of the templates */
 static void test_81_default_sizes(void) {
-	Zid root = Zroot_create(480, 800), stack = Zstack_panel_create(Z_VERTICAL);
-	Zid b = Zpanel_add(stack, Zbutton_create("OK")), cb = Zpanel_add(stack, Zcheck_box_create("c")), rb = Zpanel_add(stack, Zradio_button_create("r", NULL));
+	Zid root = zst_test_root(480, 800), stack = Zstack_panel_create(Z_VERTICAL);
+	Zid b = Zpanel_add(stack, Zbutton_create("OK")), cb = Zpanel_add(stack, Zcheck_box_create("c")), rb = Zpanel_add(stack, Zradio_button_create("r", nullptr));
 	Zid link = Zpanel_add(stack, Zhyperlink_button_create("link")), tb = Zpanel_add(stack, Ztext_box_create("t")), sl = Zpanel_add(stack, Zslider_create(Z_HORIZONTAL));
 	Zid pb = Zpanel_add(stack, Zprogress_bar_create()), sw = Zpanel_add(stack, Ztoggle_switch_create()), ring = Zpanel_add(stack, Zprogress_ring_create());
 	Zid tbh = Zpanel_add(stack, Ztext_box_create("h"));
@@ -393,7 +393,7 @@ static void test_81_default_sizes(void) {
 
 int main(void) {
 	CHECK(Zinit());
-	Zset_error_callback(quiet_errors, NULL); /* the tests provoke errors on purpose */
+	Zset_error_callback(quiet_errors, nullptr); /* the tests provoke errors on purpose */
 	RUN(test_hierarchy);
 	RUN(test_handles_are_checked);
 	RUN(test_tree_ownership);

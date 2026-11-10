@@ -92,7 +92,7 @@ static int ini_color(const char* s, uint32_t* out) {
 	int digits = 0;
 	if (*s == '#') s++;
 	while (s[digits]) {
-		char c = s[digits];
+		const char c = s[digits];
 		int d = c >= '0' && c <= '9' ? c - '0' : c >= 'a' && c <= 'f' ? c - 'a' + 10 : c >= 'A' && c <= 'F' ? c - 'A' + 10 : -1;
 		if (d < 0) return 0;
 		v = v * 16 + (uint32_t)d;
@@ -104,7 +104,7 @@ static int ini_color(const char* s, uint32_t* out) {
 	return 1;
 }
 
-static void ini_assign(const char* section, const char* key, uint32_t v) {
+static void ini_assign(const char* const section, const char* const key, const uint32_t v) {
 	size_t i;
 	if (strcmp(section, "accent") == 0) {
 		for (i = 0; i < sizeof g_accents / sizeof g_accents[0]; i++)
@@ -129,7 +129,7 @@ static void ini_apply(void) {
 	char section[sizeof line] = "";
 	if (!path || !*path) {
 		/* beside the binary first (a phone has no build tree), then the compiled path */
-		ssize_t n = readlink("/proc/self/exe", beside, sizeof beside - 1);
+		const ssize_t n = readlink("/proc/self/exe", beside, sizeof beside - 1);
 		if (n > 0) {
 			beside[n] = 0;
 			slash = strrchr(beside, '/');
@@ -154,7 +154,7 @@ read:
 		while (*p == ' ' || *p == '\t') p++;
 		if (*p == ';' || *p == '#' || *p == 0 || *p == '\n' || *p == '\r') continue; /* a comment or an empty line */
 		if (*p == '[') {
-			char* close = strchr(p, ']');
+			char* const close = strchr(p, ']');
 			if (!close) continue;
 			if ((size_t)(close - p - 1) < sizeof section - 1) {
 				memcpy(section, p + 1, (size_t)(close - p - 1));
@@ -194,14 +194,17 @@ static void tables_init(void) {
 	g_tables_ready = 1;
 }
 
-ZColor zrn_accent_color(ZAccent accent) {
+/** Forgets the tables read from theme.ini: the next use reads the file again (the fuzzers change it between runs). */
+void zrn_theme_reset(void) { g_tables_ready = 0; }
+
+ZColor zrn_accent_color(const ZAccent accent) {
 	unsigned index = (unsigned)accent - (unsigned)Z_ACCENT_LIME;
 	if (index >= sizeof g_accents / sizeof g_accents[0]) index = 5; /* Cobalt */
 	tables_init();
 	return Zcolor_argb(g_accents[index]);
 }
 
-void zrn_theme_init(zrn_theme_t* t, ZTheme theme, ZColor accent) {
+void zrn_theme_init(zrn_theme_t* const t, const ZTheme theme, const ZColor accent) {
 	const uint32_t* source = theme == Z_THEME_LIGHT ? g_light : g_dark;
 	int i;
 	tables_init();

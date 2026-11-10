@@ -26,12 +26,13 @@ to a parent element.
 
 ## Fonts
 
-Font search order:
-1. Exact Segoe files in `ZRNUI_FONT_DIR` / `$ZRNUI_FONT_DIR`.
-2. System Segoe via fontconfig.
-3. Stand-in files in the same directory.
+At `Zinit` the font directory (`Zset_font_directory`, `$ZRNUI_FONT_DIR`, then `ZRNUI_FONT_DIR`) and all system
+fonts (fontconfig, optional) are registered. The five faces are resolved from that registry in this order:
+1. Exact Segoe files in the font directory.
+2. System Segoe ("Segoe WP", then "Segoe UI"), nearest weight.
+3. Stand-in files in the font directory (Segoe Regular/Bold, then the bundled Selawik).
 
-Bundled Selawik fonts are used as stand-ins.
+A code point a face lacks is drawn with the best system font that has it (upright, proportional, nearest weight).
 
 ## Navigation
 

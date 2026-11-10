@@ -28,9 +28,9 @@
 #include <wayland-egl.h>
 #endif
 
-#define FLOATS 18               /* x y  lx ly  hx hy  r0 r1 r2 r3  aux mode  r g b a  u v */
-#define MAX_QUADS 4096
-#define ATLAS_SIZE 2048
+static constexpr int FLOATS = 18; /* x y  lx ly  hx hy  r0 r1 r2 r3  aux mode  r g b a  u v */
+static constexpr int MAX_QUADS = 4096;
+static constexpr int ATLAS_SIZE = 2048;
 
 enum { MODE_SOLID = 0, MODE_RRECT, MODE_ELLIPSE, MODE_RING, MODE_GLYPH, MODE_IMAGE };
 
@@ -103,15 +103,15 @@ static const char* FRAGMENT_SHADER =
 	"  gl_FragColor = vec4(v_color.rgb, v_color.a * cov);\n"
 	"}\n";
 
-static GLuint compile(GLenum type, const char* source) {
-	GLuint s = glCreateShader(type);
+static GLuint compile(const GLenum type, const char* const source) {
+	const GLuint s = glCreateShader(type);
 	GLint ok = 0;
-	glShaderSource(s, 1, &source, NULL);
+	glShaderSource(s, 1, &source, nullptr);
 	glCompileShader(s);
 	glGetShaderiv(s, GL_COMPILE_STATUS, &ok);
 	if (!ok) {
 		char log[512];
-		glGetShaderInfoLog(s, sizeof log, NULL, log);
+		glGetShaderInfoLog(s, sizeof log, nullptr, log);
 		zrn_error(Z_ERROR_IO, "OpenGL shader: %s", log);
 		glDeleteShader(s);
 		return 0;
@@ -119,7 +119,7 @@ static GLuint compile(GLenum type, const char* source) {
 	return s;
 }
 
-static int build_program(zrn_gl_t* gl) {
+static int build_program(zrn_gl_t* const gl) {
 	GLuint vs = compile(GL_VERTEX_SHADER, VERTEX_SHADER), fs = compile(GL_FRAGMENT_SHADER, FRAGMENT_SHADER);
 	GLint ok = 0;
 	if (!vs || !fs) return 0;
@@ -152,7 +152,7 @@ static int build_program(zrn_gl_t* gl) {
  *  EGL
  * ============================================================================ */
 
-static int choose(zrn_gl_t* gl, int window) {
+static int choose(zrn_gl_t* const gl, const int window) {
 	const EGLint attribs[] = {
 		EGL_SURFACE_TYPE, window ? EGL_WINDOW_BIT : EGL_PBUFFER_BIT,
 		EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
@@ -165,14 +165,14 @@ static int choose(zrn_gl_t* gl, int window) {
 	return 0;
 }
 
-static int init_gl(zrn_gl_t* gl) {
+static int init_gl(zrn_gl_t* const gl) {
 	if (!build_program(gl)) return 0;
 	gl->verts = (float*)malloc((size_t)MAX_QUADS * 6 * FLOATS * sizeof(float));
 	if (!gl->verts) return 0;
 	glGenTextures(1, &gl->atlas);
 	glBindTexture(GL_TEXTURE_2D, gl->atlas);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, ATLAS_SIZE, ATLAS_SIZE, 0, GL_ALPHA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, ATLAS_SIZE, ATLAS_SIZE, 0, GL_ALPHA, GL_UNSIGNED_BYTE, nullptr);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -180,11 +180,11 @@ static int init_gl(zrn_gl_t* gl) {
 	return 1;
 }
 
-static int open_display(zrn_gl_t* gl, EGLenum platform, void* native) {
+static int open_display(zrn_gl_t* const gl, const EGLenum platform, void* const native) {
 	EGLint major, minor;
-	PFNEGLGETPLATFORMDISPLAYEXTPROC get_platform = (PFNEGLGETPLATFORMDISPLAYEXTPROC)eglGetProcAddress("eglGetPlatformDisplayEXT");
+	const PFNEGLGETPLATFORMDISPLAYEXTPROC get_platform = (PFNEGLGETPLATFORMDISPLAYEXTPROC)eglGetProcAddress("eglGetPlatformDisplayEXT");
 	gl->display = EGL_NO_DISPLAY;
-	if (get_platform && platform) gl->display = get_platform(platform, native, NULL);
+	if (get_platform && platform) gl->display = get_platform(platform, native, nullptr);
 	if (gl->display == EGL_NO_DISPLAY && !platform) gl->display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 	if (gl->display == EGL_NO_DISPLAY || !eglInitialize(gl->display, &major, &minor)) {
 		zrn_error(Z_ERROR_IO, "no EGL display");
@@ -197,7 +197,7 @@ static int open_display(zrn_gl_t* gl, EGLenum platform, void* native) {
 	return 1;
 }
 
-static int make_context(zrn_gl_t* gl) {
+static int make_context(zrn_gl_t* const gl) {
 	const EGLint ctx_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 	gl->context = eglCreateContext(gl->display, gl->config, EGL_NO_CONTEXT, ctx_attribs);
 	if (gl->context == EGL_NO_CONTEXT) {
@@ -209,12 +209,12 @@ static int make_context(zrn_gl_t* gl) {
 
 static void gl_free(zrn_gl_t* gl);
 
-zrn_gl_t* zrn_gl_create_offscreen(int width, int height) {
+zrn_gl_t* zrn_gl_create_offscreen(const int width, const int height) {
 	zrn_gl_t* gl = (zrn_gl_t*)calloc(1, sizeof *gl);
 	const EGLint pb[] = { EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE };
-	if (!gl) return NULL;
+	if (!gl) return nullptr;
 	gl->offscreen = 1;
-	if (!open_display(gl, EGL_PLATFORM_SURFACELESS_MESA, NULL) && !open_display(gl, 0, NULL)) goto fail;
+	if (!open_display(gl, EGL_PLATFORM_SURFACELESS_MESA, nullptr) && !open_display(gl, 0, nullptr)) goto fail;
 	if (!choose(gl, 0) || !make_context(gl)) goto fail;
 	gl->surface = eglCreatePbufferSurface(gl->display, gl->config, pb);
 	if (gl->surface == EGL_NO_SURFACE || !eglMakeCurrent(gl->display, gl->surface, gl->surface, gl->context)) {
@@ -228,18 +228,18 @@ zrn_gl_t* zrn_gl_create_offscreen(int width, int height) {
 	return gl;
 fail:
 	gl_free(gl);
-	return NULL;
+	return nullptr;
 }
 
-zrn_gl_t* zrn_gl_create_window(void* wl_display, void* wl_surface, int width, int height) {
+zrn_gl_t* zrn_gl_create_window(void* const wl_display, void* const wl_surface, const int width, const int height) {
 #ifdef ZRNUI_HAVE_WAYLAND
 	zrn_gl_t* gl = (zrn_gl_t*)calloc(1, sizeof *gl);
-	if (!gl) return NULL;
+	if (!gl) return nullptr;
 	if (!open_display(gl, EGL_PLATFORM_WAYLAND_KHR, wl_display)) goto fail;
 	if (!choose(gl, 1) || !make_context(gl)) goto fail;
 	gl->wl_window = wl_egl_window_create((struct wl_surface*)wl_surface, width, height);
 	if (!gl->wl_window) goto fail;
-	gl->surface = eglCreateWindowSurface(gl->display, gl->config, (EGLNativeWindowType)gl->wl_window, NULL);
+	gl->surface = eglCreateWindowSurface(gl->display, gl->config, (EGLNativeWindowType)gl->wl_window, nullptr);
 	if (gl->surface == EGL_NO_SURFACE || !eglMakeCurrent(gl->display, gl->surface, gl->surface, gl->context)) {
 		zrn_error(Z_ERROR_IO, "cannot make the OpenGL context current");
 		goto fail;
@@ -251,19 +251,19 @@ zrn_gl_t* zrn_gl_create_window(void* wl_display, void* wl_surface, int width, in
 	return gl;
 fail:
 	gl_free(gl);
-	return NULL;
+	return nullptr;
 #else
 	(void)wl_display; (void)wl_surface; (void)width; (void)height;
-	return NULL;
+	return nullptr;
 #endif
 }
 
-void zrn_gl_resize(zrn_gl_t* gl, int width, int height) {
+void zrn_gl_resize(zrn_gl_t* const gl, const int width, const int height) {
 	if (!gl) return;
 	if (gl->offscreen) {
 		eglMakeCurrent(gl->display, gl->surface, gl->surface, gl->context);
 		glBindTexture(GL_TEXTURE_2D, gl->fbo_texture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glBindFramebuffer(GL_FRAMEBUFFER, gl->fbo);
@@ -276,16 +276,16 @@ void zrn_gl_resize(zrn_gl_t* gl, int width, int height) {
 	gl->height = height;
 }
 
-static void gl_free(zrn_gl_t* gl) {
+static void gl_free(zrn_gl_t* const gl) {
 	int i;
 	if (!gl) return;
 	if (gl->display != EGL_NO_DISPLAY && gl->context != EGL_NO_CONTEXT) {
 		eglMakeCurrent(gl->display, gl->surface, gl->surface, gl->context);
 		for (i = 0; i < gl->image_count; i++) {
-			GLuint t = gl->images[i]->gl_texture;
+			const GLuint t = gl->images[i]->gl_texture;
 			glDeleteTextures(1, &t);
 			gl->images[i]->gl_texture = 0;
-			gl->images[i]->gl_owner = NULL;
+			gl->images[i]->gl_owner = nullptr;
 		}
 		if (gl->program) glDeleteProgram(gl->program);
 		if (gl->atlas) glDeleteTextures(1, &gl->atlas);
@@ -309,13 +309,13 @@ static void gl_free(zrn_gl_t* gl) {
 
 void zrn_gl_destroy(zrn_gl_t* gl) { gl_free(gl); }
 
-void zrn_gl_forget_image(zrn_image_t* image) {
-	zrn_gl_t* gl = (zrn_gl_t*)image->gl_owner;
+void zrn_gl_forget_image(zrn_image_t* const image) {
+	const auto gl = (zrn_gl_t*)image->gl_owner;
 	int i;
 	if (!gl) return;
 	eglMakeCurrent(gl->display, gl->surface, gl->surface, gl->context);
 	{
-		GLuint t = image->gl_texture;
+		const GLuint t = image->gl_texture;
 		glDeleteTextures(1, &t);
 	}
 	for (i = 0; i < gl->image_count; i++) {
@@ -325,7 +325,7 @@ void zrn_gl_forget_image(zrn_image_t* image) {
 		}
 	}
 	image->gl_texture = 0;
-	image->gl_owner = NULL;
+	image->gl_owner = nullptr;
 }
 
 
@@ -333,7 +333,7 @@ void zrn_gl_forget_image(zrn_image_t* image) {
  *  batching
  * ============================================================================ */
 
-static void flush(zrn_gl_t* gl) {
+static void flush(zrn_gl_t* const gl) {
 	static const GLsizei stride = FLOATS * sizeof(float);
 	const float* v = gl->verts;
 	if (!gl->quads) return;
@@ -357,8 +357,8 @@ static void flush(zrn_gl_t* gl) {
 }
 
 /* Gets the batch ready for a draw with this clip and texture: a change of either draws what is waiting. */
-static float* reserve(zrn_painter_t* p, GLuint texture) {
-	zrn_gl_t* gl = (zrn_gl_t*)p->backend_data;
+static float* reserve(zrn_painter_t* const p, const GLuint texture) {
+	const auto gl = (zrn_gl_t*)p->backend_data;
 	if (gl->quads >= MAX_QUADS || (gl->quads && gl->batch_texture != texture)) flush(gl);
 	if (gl->quads && memcmp(gl->batch_clip, p->clip, sizeof p->clip) != 0) flush(gl);
 	if (!gl->batch_clip_set || memcmp(gl->batch_clip, p->clip, sizeof p->clip) != 0) {
@@ -375,7 +375,7 @@ typedef struct corner {
 	float x, y, u, v;
 } corner_t;
 
-static void put(float* out, float x, float y, float lx, float ly, float hx, float hy, const float radii[4], float aux, float mode, ZColor c, float alpha, float u, float v) {
+static void put(float* const out, const float x, const float y, const float lx, const float ly, const float hx, const float hy, const float radii[4], const float aux, const float mode, const ZColor c, const float alpha, const float u, const float v) {
 	out[0] = x; out[1] = y; out[2] = lx; out[3] = ly; out[4] = hx; out[5] = hy;
 	out[6] = radii[0]; out[7] = radii[1]; out[8] = radii[2]; out[9] = radii[3];
 	out[10] = aux; out[11] = mode;
@@ -386,9 +386,9 @@ static void put(float* out, float x, float y, float lx, float ly, float hx, floa
 /* A device rectangle [x0,x1] x [y0,y1] whose local coordinates are centred on (cx, cy). */
 static void quad(zrn_painter_t* p, GLuint texture, float x0, float y0, float x1, float y1, float cx, float cy, float hx, float hy,
 		const float radii[4], float aux, float mode, ZColor c, float u0, float v0, float u1, float v1) {
-	float* o = reserve(p, texture);
-	zrn_gl_t* gl = (zrn_gl_t*)p->backend_data;
-	float a = p->alpha;
+	float* const o = reserve(p, texture);
+	const auto gl = (zrn_gl_t*)p->backend_data;
+	const float a = p->alpha;
 #define V(i, X, Y, U, V_) put(o + (i) * FLOATS, X, Y, (X) - cx, (Y) - cy, hx, hy, radii, aux, mode, c, a, U, V_)
 	V(0, x0, y0, u0, v0); V(1, x1, y0, u1, v0); V(2, x1, y1, u1, v1);
 	V(3, x0, y0, u0, v0); V(4, x1, y1, u1, v1); V(5, x0, y1, u0, v1);
@@ -406,8 +406,8 @@ static inline float dy(const zrn_painter_t* p, float y) { return p->ty + y * p->
  *  the backend
  * ============================================================================ */
 
-static void gl_paint_clear(zrn_painter_t* p, ZColor c) {
-	zrn_gl_t* gl = (zrn_gl_t*)p->backend_data;
+static void gl_paint_clear(zrn_painter_t* const p, const ZColor c) {
+	const auto gl = (zrn_gl_t*)p->backend_data;
 	flush(gl);
 	glDisable(GL_SCISSOR_TEST);
 	gl->batch_clip_set = 0;
@@ -415,7 +415,7 @@ static void gl_paint_clear(zrn_painter_t* p, ZColor c) {
 	glClear(GL_COLOR_BUFFER_BIT);
 }
 
-static void gl_fill_rect(zrn_painter_t* p, ZRect r, ZColor c) {
+static void gl_fill_rect(zrn_painter_t* const p, const ZRect r, const ZColor c) {
 	/* edges on whole device pixels, as the software painter does */
 	float x0 = floorf(dx(p, r.x) + 0.5f), y0 = floorf(dy(p, r.y) + 0.5f);
 	float x1 = floorf(dx(p, r.x + r.width) + 0.5f), y1 = floorf(dy(p, r.y + r.height) + 0.5f);
@@ -423,7 +423,7 @@ static void gl_fill_rect(zrn_painter_t* p, ZRect r, ZColor c) {
 	quad(p, 0, x0, y0, x1, y1, 0, 0, 0, 0, NO_RADII, 0, MODE_SOLID, c, 0, 0, 0, 0);
 }
 
-static void gl_fill_rrect(zrn_painter_t* p, ZRect r, ZCornerRadius radius, ZColor c) {
+static void gl_fill_rrect(zrn_painter_t* const p, const ZRect r, const ZCornerRadius radius, const ZColor c) {
 	float x0, y0, x1, y1, rad[4];
 	if (radius.top_left <= 0 && radius.top_right <= 0 && radius.bottom_right <= 0 && radius.bottom_left <= 0) {
 		gl_fill_rect(p, r, c);
@@ -435,7 +435,7 @@ static void gl_fill_rrect(zrn_painter_t* p, ZRect r, ZCornerRadius radius, ZColo
 	quad(p, 0, x0 - 1, y0 - 1, x1 + 1, y1 + 1, (x0 + x1) * 0.5f, (y0 + y1) * 0.5f, (x1 - x0) * 0.5f, (y1 - y0) * 0.5f, rad, 0, MODE_RRECT, c, 0, 0, 0, 0);
 }
 
-static void ellipse_quad(zrn_painter_t* p, ZRect r, float stroke, ZColor c) {
+static void ellipse_quad(zrn_painter_t* const p, const ZRect r, const float stroke, const ZColor c) {
 	float x0 = dx(p, r.x), y0 = dy(p, r.y), x1 = dx(p, r.x + r.width), y1 = dy(p, r.y + r.height);
 	float rx = zrn_maxf((x1 - x0) * 0.5f, 0.01f), ry = zrn_maxf((y1 - y0) * 0.5f, 0.01f);
 	quad(p, 0, x0 - 1, y0 - 1, x1 + 1, y1 + 1, (x0 + x1) * 0.5f, (y0 + y1) * 0.5f, rx, ry, NO_RADII, stroke, stroke > 0 ? MODE_RING : MODE_ELLIPSE, c, 0, 0, 0, 0);
@@ -445,7 +445,7 @@ static void gl_fill_ellipse(zrn_painter_t* p, ZRect r, ZColor c) { ellipse_quad(
 static void gl_stroke_ellipse(zrn_painter_t* p, ZRect r, float thickness, ZColor c) { ellipse_quad(p, r, thickness * p->scale, c); }
 
 /* A polygon by ear clipping, in device pixels: the fill of a simple polygon, convex or not. */
-static void gl_fill_polygon(zrn_painter_t* p, const float* xy, int count, ZColor c) {
+static void gl_fill_polygon(zrn_painter_t* const p, const float* const xy, const int count, const ZColor c) {
 	float pts[64][2];
 	int idx[64], n = count, i, guard = 0;
 	float area = 0;
@@ -479,8 +479,8 @@ static void gl_fill_polygon(zrn_painter_t* p, const float* xy, int count, ZColor
 		if (ear < 0) ear = 0;
 		{
 			int a = idx[(ear + n - 1) % n], b = idx[ear], cc = idx[(ear + 1) % n];
-			float* o = reserve(p, 0);
-			zrn_gl_t* gl = (zrn_gl_t*)p->backend_data;
+			float* const o = reserve(p, 0);
+			const auto gl = (zrn_gl_t*)p->backend_data;
 			int v;
 			const int vs[3] = { a, b, cc };
 			for (v = 0; v < 3; v++) put(o + v * FLOATS, pts[vs[v]][0], pts[vs[v]][1], 0, 0, 0, 0, NO_RADII, 0, MODE_SOLID, c, p->alpha, 0, 0);
@@ -492,19 +492,19 @@ static void gl_fill_polygon(zrn_painter_t* p, const float* xy, int count, ZColor
 		n--;
 	}
 	if (n == 3) {
-		float* o = reserve(p, 0);
-		zrn_gl_t* gl = (zrn_gl_t*)p->backend_data;
+		float* const o = reserve(p, 0);
+		const auto gl = (zrn_gl_t*)p->backend_data;
 		int v;
 		for (v = 0; v < 6; v++) put(o + v * FLOATS, pts[idx[v % 3]][0], pts[idx[v % 3]][1], 0, 0, 0, 0, NO_RADII, 0, MODE_SOLID, c, p->alpha, 0, 0);
 		gl->quads++;
 	}
 }
 
-static void gl_draw_line(zrn_painter_t* p, float x0, float y0, float x1, float y1, float thickness, ZColor c) {
+static void gl_draw_line(zrn_painter_t* const p, const float x0, const float y0, const float x1, const float y1, const float thickness, const ZColor c) {
 	float ax = dx(p, x0), ay = dy(p, y0), bx = dx(p, x1), by = dy(p, y1);
 	float lx = bx - ax, ly = by - ay, len = sqrtf(lx * lx + ly * ly), h = thickness * p->scale * 0.5f, ux, uy, nx, ny, mx, my, e;
 	float* o;
-	zrn_gl_t* gl = (zrn_gl_t*)p->backend_data;
+	const auto gl = (zrn_gl_t*)p->backend_data;
 	float corners[4][2];
 	int i;
 	const int order[6] = { 0, 1, 2, 0, 2, 3 };
@@ -525,7 +525,7 @@ static void gl_draw_line(zrn_painter_t* p, float x0, float y0, float x1, float y
 }
 
 /* The atlas slot of a glyph bitmap, uploading it the first time. */
-static atlas_slot_t* atlas_find(zrn_gl_t* gl, const uint8_t* alpha, int w, int h) {
+static atlas_slot_t* atlas_find(zrn_gl_t* const gl, const uint8_t* const alpha, const int w, const int h) {
 	size_t i;
 	atlas_slot_t* s;
 	for (i = 0; i < gl->slot_count; i++) {
@@ -537,11 +537,11 @@ static atlas_slot_t* atlas_find(zrn_gl_t* gl, const uint8_t* alpha, int w, int h
 		gl->shelf_y += gl->shelf_h + 1;
 		gl->shelf_h = 0;
 	}
-	if (gl->shelf_y + h + 1 > ATLAS_SIZE) return NULL;
+	if (gl->shelf_y + h + 1 > ATLAS_SIZE) return nullptr;
 	if (gl->slot_count == gl->slot_cap) {
-		size_t cap = gl->slot_cap ? gl->slot_cap * 2 : 512;
+		const size_t cap = gl->slot_cap ? gl->slot_cap * 2 : 512;
 		atlas_slot_t* slots = (atlas_slot_t*)realloc(gl->slots, cap * sizeof *slots);
-		if (!slots) return NULL;
+		if (!slots) return nullptr;
 		gl->slots = slots;
 		gl->slot_cap = cap;
 	}
@@ -555,10 +555,10 @@ static atlas_slot_t* atlas_find(zrn_gl_t* gl, const uint8_t* alpha, int w, int h
 	return s;
 }
 
-static void gl_blit_alpha(zrn_painter_t* p, int x, int y, int w, int h, const uint8_t* alpha, int stride, ZColor c) {
-	zrn_gl_t* gl = (zrn_gl_t*)p->backend_data;
+static void gl_blit_alpha(zrn_painter_t* const p, const int x, const int y, const int w, const int h, const uint8_t* const alpha, const int stride, const ZColor c) {
+	const auto gl = (zrn_gl_t*)p->backend_data;
 	atlas_slot_t* s;
-	float inv = 1.0f / (float)ATLAS_SIZE;
+	const float inv = 1.0f / (float)ATLAS_SIZE;
 	if (w <= 0 || h <= 0 || stride != w) return;
 	s = atlas_find(gl, alpha, w, h);
 	if (!s) {
@@ -573,12 +573,12 @@ static void gl_blit_alpha(zrn_painter_t* p, int x, int y, int w, int h, const ui
 		(float)s->x * inv, (float)s->y * inv, (float)(s->x + w) * inv, (float)(s->y + h) * inv);
 }
 
-static GLuint image_texture(zrn_gl_t* gl, const zrn_image_t* image) {
-	zrn_image_t* im = (zrn_image_t*)image;
+static GLuint image_texture(zrn_gl_t* const gl, const zrn_image_t* const image) {
+	const auto im = (zrn_image_t*)image;
 	GLuint t;
 	if (im->gl_owner == gl) return im->gl_texture;
 	if (gl->image_count == gl->image_cap) {
-		int cap = gl->image_cap ? gl->image_cap * 2 : 16;
+		const int cap = gl->image_cap ? gl->image_cap * 2 : 16;
 		zrn_image_t** images = (zrn_image_t**)realloc(gl->images, (size_t)cap * sizeof *images);
 		if (!images) return 0;
 		gl->images = images;
@@ -598,11 +598,11 @@ static GLuint image_texture(zrn_gl_t* gl, const zrn_image_t* image) {
 	return t;
 }
 
-static void gl_draw_image(zrn_painter_t* p, const zrn_image_t* image, ZRect dest, ZRect source) {
-	zrn_gl_t* gl = (zrn_gl_t*)p->backend_data;
+static void gl_draw_image(zrn_painter_t* const p, const zrn_image_t* const image, const ZRect dest, const ZRect source) {
+	const auto gl = (zrn_gl_t*)p->backend_data;
 	float x0 = dx(p, dest.x), y0 = dy(p, dest.y), x1 = dx(p, dest.x + dest.width), y1 = dy(p, dest.y + dest.height);
 	GLuint t;
-	ZColor white = { 1, 1, 1, 1 };
+	const ZColor white = { 1, 1, 1, 1 };
 	if (!image || x1 <= x0 || y1 <= y0) return;
 	flush(gl);
 	t = image_texture(gl, image);
@@ -614,8 +614,8 @@ static void gl_draw_image(zrn_painter_t* p, const zrn_image_t* image, ZRect dest
 }
 
 /* An affine transform of device pixels (z toward the viewer), seen from an eye a 34 degree field of view away: the matrix of the shader has the perspective in it. */
-static void gl_set_transform(zrn_painter_t* p, const float* m) {
-	zrn_gl_t* gl = (zrn_gl_t*)p->backend_data;
+static void gl_set_transform(zrn_painter_t* const p, const float* const m) {
+	const auto gl = (zrn_gl_t*)p->backend_data;
 	float persp[16], eye = ((float)gl->height * 0.5f) / tanf(17.0f * ZST_PI / 180.0f);
 	flush(gl);
 	if (!m) {
@@ -650,7 +650,7 @@ const zrn_backend_t zrn_backend_gles = {
  *  a frame
  * ============================================================================ */
 
-void zrn_gl_begin(zrn_gl_t* gl, zrn_painter_t* p, int width, int height, float scale) {
+void zrn_gl_begin(zrn_gl_t* const gl, zrn_painter_t* const p, const int width, const int height, const float scale) {
 	eglMakeCurrent(gl->display, gl->surface, gl->surface, gl->context);
 	if (width != gl->width || height != gl->height) zrn_gl_resize(gl, width, height);
 	if (gl->offscreen) glBindFramebuffer(GL_FRAMEBUFFER, gl->fbo);
@@ -676,17 +676,17 @@ void zrn_gl_begin(zrn_gl_t* gl, zrn_painter_t* p, int width, int height, float s
 	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
 }
 
-void zrn_gl_end(zrn_gl_t* gl, int swap) {
+void zrn_gl_end(zrn_gl_t* const gl, const int swap) {
 	flush(gl);
 	glDisable(GL_SCISSOR_TEST);
 	if (swap && !gl->offscreen) eglSwapBuffers(gl->display, gl->surface);
 }
 
-void zrn_gl_swap(zrn_gl_t* gl) {
+void zrn_gl_swap(zrn_gl_t* const gl) {
 	if (gl && !gl->offscreen) eglSwapBuffers(gl->display, gl->surface);
 }
 
-int zrn_gl_read(zrn_gl_t* gl, uint8_t* rgba, int width, int height) {
+int zrn_gl_read(zrn_gl_t* const gl, uint8_t* const rgba, const int width, const int height) {
 	int y;
 	uint8_t* row;
 	glBindFramebuffer(GL_FRAMEBUFFER, gl->offscreen ? gl->fbo : 0); /* the window swaps through the default framebuffer */
@@ -696,8 +696,8 @@ int zrn_gl_read(zrn_gl_t* gl, uint8_t* rgba, int width, int height) {
 	row = (uint8_t*)malloc((size_t)width * 4);
 	if (!row) return 0;
 	for (y = 0; y < height / 2; y++) {
-		uint8_t* a = rgba + (size_t)y * (size_t)width * 4;
-		uint8_t* b = rgba + (size_t)(height - 1 - y) * (size_t)width * 4;
+		uint8_t* const a = rgba + (size_t)y * (size_t)width * 4;
+		uint8_t* const b = rgba + (size_t)(height - 1 - y) * (size_t)width * 4;
 		memcpy(row, a, (size_t)width * 4);
 		memcpy(a, b, (size_t)width * 4);
 		memcpy(b, row, (size_t)width * 4);
@@ -710,10 +710,10 @@ int zrn_gl_available(void) { return 1; }
 
 #else /* no OpenGL ES at build time */
 
-zrn_gl_t* zrn_gl_create_offscreen(int width, int height) { (void)width; (void)height; return NULL; }
-zrn_gl_t* zrn_gl_create_window(void* wl_display, void* wl_surface, int width, int height) {
+zrn_gl_t* zrn_gl_create_offscreen(int width, int height) { (void)width; (void)height; return nullptr; }
+zrn_gl_t* zrn_gl_create_window(void* const wl_display, void* const wl_surface, const int width, const int height) {
 	(void)wl_display; (void)wl_surface; (void)width; (void)height;
-	return NULL;
+	return nullptr;
 }
 void zrn_gl_resize(zrn_gl_t* gl, int width, int height) { (void)gl; (void)width; (void)height; }
 void zrn_gl_destroy(zrn_gl_t* gl) { (void)gl; }

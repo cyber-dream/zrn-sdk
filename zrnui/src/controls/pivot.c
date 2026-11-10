@@ -20,16 +20,16 @@
 
 /* themeresources.xaml: PivotHeaderItem*, PivotItemMargin, PivotPortraitThemePadding; TextStyleLargeFontSize for the title */
 #define TITLE_FONT ZST_81_FONT_LARGE
-#define TITLE_X 19.0f
-#define TITLE_TOP 38.0f
-#define HEADER_MARGIN_LEFT 16.0f
-#define HEADER_MARGIN_TOP (-6.5f)
-#define HEADER_TEXT_X 19.0f
-#define ITEM_MARGIN_LEFT 19.0f
-#define ITEM_MARGIN_TOP 22.5f
-#define ITEM_MARGIN_RIGHT 19.0f
-#define SLIDE_MS 300.0f
-#define DRAG_START 12.0f
+static constexpr float TITLE_X = 19.0f;
+static constexpr float TITLE_TOP = 38.0f;
+static constexpr float HEADER_MARGIN_LEFT = 16.0f;
+static constexpr float HEADER_MARGIN_TOP = (-6.5f);
+static constexpr float HEADER_TEXT_X = 19.0f;
+static constexpr float ITEM_MARGIN_LEFT = 19.0f;
+static constexpr float ITEM_MARGIN_TOP = 22.5f;
+static constexpr float ITEM_MARGIN_RIGHT = 19.0f;
+static constexpr float SLIDE_MS = 300.0f;
+static constexpr float DRAG_START = 12.0f;
 
 typedef struct zrn_pivot_item {
 	zrn_content_control_t base;
@@ -60,7 +60,7 @@ typedef struct zrn_pivot {
 #define PITEM(e) ZST_AS(zrn_pivot_item_t, e)
 
 /** PivotHeaderItemFontFamily, FontSize and CharacterSpacing of the theme resources of the root (an override applies). */
-static zrn_font_t header_font(const zrn_pivot_t* p) {
+static zrn_font_t header_font(const zrn_pivot_t* const p) {
 	const zrn_root_t* r = ((const zrn_element_t*)p)->root;
 	zrn_font_t f = { Z_FONT_SEMILIGHT, 57.0f, -25 };
 	zrn_res_font_family(r, Z_RES_PIVOT_HEADER_ITEM_FONT_FAMILY, &f.family);
@@ -74,36 +74,36 @@ static zrn_font_t title_font(void) {
 	return f;
 }
 
-static const char* item_header(const zrn_pivot_t* p, int i) {
+static const char* item_header(const zrn_pivot_t* const p, const int i) {
 	const char* h = PITEM(p->items[i])->header;
 	return h ? h : "";
 }
 
 /** The width a header takes in the strip: its text and the 16 px of its margin. */
-static float header_slot(const zrn_pivot_t* p, int i) {
+static float header_slot(const zrn_pivot_t* const p, const int i) {
 	const char* h = item_header(p, i);
 	return zrn_text_width(header_font(p), h, (int)strlen(h)) + HEADER_MARGIN_LEFT;
 }
 
-static float strip_length(const zrn_pivot_t* p) {
+static float strip_length(const zrn_pivot_t* const p) {
 	float l = 0;
 	int i;
 	for (i = 0; i < p->count; i++) l += header_slot(p, i);
 	return l;
 }
 
-static int wrap_index(int index, int n) {
+static int wrap_index(const int index, const int n) {
 	int m = n > 0 ? index % n : 0;
 	return m < 0 ? m + n : m;
 }
 
 /** `d` brought into [-n/2, n/2], a tie going forward. */
-static float wrap_distance(float d, int n) {
+static float wrap_distance(const float d, const int n) {
 	return d - (float)n * ceilf(d / (float)n - 0.5f);
 }
 
 /** How far the strip has gone round for a place between pages: the distance of the chosen header from the start of the ring. */
-static float strip_shift(const zrn_pivot_t* p, float offset) {
+static float strip_shift(const zrn_pivot_t* const p, const float offset) {
 	int a, i, n = p->count;
 	float c = 0, f;
 	if (n < 2) return 0;
@@ -117,7 +117,7 @@ static float strip_shift(const zrn_pivot_t* p, float offset) {
 	return c + f * header_slot(p, i) + (float)((a - i) / n) * strip_length(p);
 }
 
-static float title_height(const zrn_pivot_t* p) {
+static float title_height(const zrn_pivot_t* const p) {
 	return p->title && *p->title ? zrn_font_line_height(title_font()) : 0;
 }
 
@@ -132,7 +132,7 @@ typedef struct header_place {
 	float x, width, near;
 } header_place_t;
 
-static int header_places(const zrn_pivot_t* p, header_place_t* out, int max, float view_width) {
+static int header_places(const zrn_pivot_t* const p, header_place_t* const out, const int max, const float view_width) {
 	int count = 0, i, m, n = p->count;
 	float shift, ring;
 	if (n == 0) return 0;
@@ -149,7 +149,7 @@ static int header_places(const zrn_pivot_t* p, header_place_t* out, int max, flo
 		float c = 0;
 		for (i = 0; i < n; i++) {
 			float slot = header_slot(p, i), x = HEADER_TEXT_X + c + (float)m * ring - shift;
-			float r = (float)(i + m * n) - p->offset;
+			const float r = (float)(i + m * n) - p->offset;
 			c += slot;
 			/* the header before the chosen one is not seen at rest: its text ends where the margin of the strip starts */
 			if (x >= view_width || x + slot - HEADER_MARGIN_LEFT <= HEADER_TEXT_X - HEADER_MARGIN_LEFT + 0.5f) continue;
@@ -164,29 +164,29 @@ static int header_places(const zrn_pivot_t* p, header_place_t* out, int max, flo
 	return count;
 }
 
-#define MAX_PLACES 64
+static constexpr int MAX_PLACES = 64;
 
-static ZRect header_rect_of(const header_place_t* h, const zrn_pivot_t* p) {
+static ZRect header_rect_of(const header_place_t* const h, const zrn_pivot_t* const p) {
 	return zrn_rect(h->x, strip_top(p), h->width, strip_height(p));
 }
 
-static ZSize pivot_measure(zrn_element_t* e, ZSize available) {
-	zrn_pivot_t* p = PIVOT(e);
-	float w = available.width < Z_INFINITE * 0.5f ? available.width : 480.0f;
-	float h = available.height < Z_INFINITE * 0.5f ? available.height : 800.0f;
-	float top = items_top(p);
+static ZSize pivot_measure(zrn_element_t* const e, const ZSize available) {
+	zrn_pivot_t* const p = PIVOT(e);
+	const float w = available.width < Z_INFINITE * 0.5f ? available.width : 480.0f;
+	const float h = available.height < Z_INFINITE * 0.5f ? available.height : 800.0f;
+	const float top = items_top(p);
 	int i;
 	for (i = 0; i < p->count; i++) zrn_measure(p->items[i], zrn_size(w, zrn_maxf(0, h - top)));
 	return zrn_size(w, h);
 }
 
-static ZSize pivot_arrange(zrn_element_t* e, ZSize final) {
-	zrn_pivot_t* p = PIVOT(e);
-	float top = items_top(p);
+static ZSize pivot_arrange(zrn_element_t* const e, const ZSize final) {
+	zrn_pivot_t* const p = PIVOT(e);
+	const float top = items_top(p);
 	int i, n = p->count;
 	for (i = 0; i < n; i++) {
-		zrn_element_t* it = p->items[i];
-		float d = wrap_distance((float)i - p->offset, n);
+		zrn_element_t* const it = p->items[i];
+		const float d = wrap_distance((float)i - p->offset, n);
 		/* a page is in view while the strip is less than a page away from it */
 		it->visibility = fabsf(d) < 1.0f ? Z_VISIBLE : Z_COLLAPSED;
 		it->hit_visible = fabsf(d) < 0.5f || (n == 1);
@@ -195,23 +195,23 @@ static ZSize pivot_arrange(zrn_element_t* e, ZSize final) {
 	return final;
 }
 
-static void pivot_paint(zrn_element_t* e, zrn_painter_t* painter) {
-	zrn_pivot_t* p = PIVOT(e);
-	ZColor fg = zrn_ctl_foreground(&p->base), off = zrn_theme_color(e, ZST_TC_PHONE_DISABLED);
+static void pivot_paint(zrn_element_t* const e, zrn_painter_t* const painter) {
+	zrn_pivot_t* const p = PIVOT(e);
+	const ZColor fg = zrn_ctl_foreground(&p->base), off = zrn_theme_color(e, ZST_TC_PHONE_DISABLED);
 	header_place_t places[MAX_PLACES];
 	int i, n = header_places(p, places, MAX_PLACES, e->rect.width);
 	if (p->title && *p->title) zrn_draw_string(painter, title_font(), p->title, (int)strlen(p->title), TITLE_X, TITLE_TOP, fg);
 	for (i = 0; i < n; i++) {
 		const char* h = item_header(p, places[i].item);
-		float t = places[i].near;
-		ZColor c = { off.r + (fg.r - off.r) * t, off.g + (fg.g - off.g) * t, off.b + (fg.b - off.b) * t, off.a + (fg.a - off.a) * t };
+		const float t = places[i].near;
+		const ZColor c = { off.r + (fg.r - off.r) * t, off.g + (fg.g - off.g) * t, off.b + (fg.b - off.b) * t, off.a + (fg.a - off.a) * t };
 		/* the margin top of -6.5 pulls the text up by as much as the padding pushes the box down: it starts where the strip does */
 		zrn_draw_string(painter, header_font(p), h, (int)strlen(h), places[i].x, strip_top(p) + HEADER_MARGIN_TOP, c);
 	}
 }
 
-static void pivot_loaded_now(zrn_pivot_t* p) {
-	zrn_element_t* e = &p->base.base;
+static void pivot_loaded_now(zrn_pivot_t* const p) {
+	zrn_element_t* const e = &p->base.base;
 	Zid id = e->id, item;
 	if (!p->loaded_pending) return;
 	p->loaded_pending = 0;
@@ -223,8 +223,8 @@ static void pivot_loaded_now(zrn_pivot_t* p) {
 /* The strip goes to a place on the ring; the item is the chosen one from here. */
 static void pivot_go(zrn_pivot_t* p, float to, int animate) {
 	zrn_element_t* e = &p->base.base;
-	Zid id = e->id;
-	int n = p->count, index = wrap_index((int)floorf(to + 0.5f), n), changed = index != p->selected;
+	const Zid id = e->id;
+	const int n = p->count, index = wrap_index((int)floorf(to + 0.5f), n), changed = index != p->selected;
 	p->selected = index;
 	p->from = p->offset;
 	p->to = to;
@@ -257,8 +257,8 @@ static void pivot_select(zrn_pivot_t* p, int index, int animate) {
 	pivot_go(p, p->offset + wrap_distance((float)index - p->offset, p->count), animate);
 }
 
-static void pivot_tick(zrn_element_t* e, float dt) {
-	zrn_pivot_t* p = PIVOT(e);
+static void pivot_tick(zrn_element_t* const e, const float dt) {
+	zrn_pivot_t* const p = PIVOT(e);
 	if (!p->sliding) {
 		if (!p->dragging) e->wants_tick = 0;
 		return;
@@ -276,18 +276,18 @@ static void pivot_tick(zrn_element_t* e, float dt) {
 	zrn_changed_arrange(e);
 }
 
-static int header_at(const zrn_pivot_t* p, float x, float y, float view_width) {
+static int header_at(const zrn_pivot_t* const p, const float x, const float y, const float view_width) {
 	header_place_t places[MAX_PLACES];
 	int i, n = header_places(p, places, MAX_PLACES, view_width);
 	for (i = 0; i < n; i++) {
-		ZRect r = header_rect_of(&places[i], p);
+		const ZRect r = header_rect_of(&places[i], p);
 		if (x >= r.x - HEADER_MARGIN_LEFT && x < r.x + r.width && y >= r.y + HEADER_MARGIN_TOP && y < r.y + r.height) return places[i].item;
 	}
 	return -1;
 }
 
 /* The finger lets go: to the next page when it went a fifth of a page or flicked, else back. */
-static void pivot_release(zrn_pivot_t* p, float width) {
+static void pivot_release(zrn_pivot_t* const p, const float width) {
 	float dx = (p->offset - (float)p->selected) * -width;
 	float target = (float)p->selected;
 	if (dx < -width * 0.2f || p->velocity < -0.4f) target += 1.0f;
@@ -296,18 +296,18 @@ static void pivot_release(zrn_pivot_t* p, float width) {
 	pivot_go(p, target, 1);
 }
 
-static void pivot_begin_drag(zrn_pivot_t* p) {
-	zrn_element_t* e = &p->base.base;
+static void pivot_begin_drag(zrn_pivot_t* const p) {
+	zrn_element_t* const e = &p->base.base;
 	p->dragging = 1;
 	p->sliding = 0;
 	if (e->root) zrn_set_capture(e->root, e);
 	e->wants_tick = 1;
 }
 
-static int pivot_input(zrn_element_t* e, zrn_input_t* in) {
-	zrn_pivot_t* p = PIVOT(e);
-	float width = e->rect.width > 0 ? e->rect.width : 1;
-	int can_drag = p->count >= 2 && !p->is_locked;
+static int pivot_input(zrn_element_t* const e, zrn_input_t* const in) {
+	zrn_pivot_t* const p = PIVOT(e);
+	const float width = e->rect.width > 0 ? e->rect.width : 1;
+	const int can_drag = p->count >= 2 && !p->is_locked;
 	switch (in->type) {
 	case ZST_IN_PREVIEW_DOWN:
 		p->pressed = 1;
@@ -319,7 +319,7 @@ static int pivot_input(zrn_element_t* e, zrn_input_t* in) {
 	case ZST_IN_PREVIEW_MOVE:
 		if (!p->pressed || p->dragging || !e->root || e->root->capture == e || !can_drag) return 0;
 		{
-			float dx = in->x - p->press_x, dy = in->y - p->press_y, before = p->last_x;
+			const float dx = in->x - p->press_x, dy = in->y - p->press_y, before = p->last_x;
 			p->last_x = in->x;
 			if (fabsf(dx) > DRAG_START && fabsf(dx) > fabsf(dy)) {
 				/* a horizontal drag is the pivot's, whoever had the pointer loses it; its first move is the step from the last one */
@@ -341,7 +341,7 @@ static int pivot_input(zrn_element_t* e, zrn_input_t* in) {
 	case ZST_IN_POINTER_MOVE:
 		if (!p->pressed) return 0;
 		if (!p->dragging) {
-			float dx = in->x - p->press_x, dy = in->y - p->press_y, before = p->last_x;
+			const float dx = in->x - p->press_x, dy = in->y - p->press_y, before = p->last_x;
 			p->last_x = in->x;
 			if (fabsf(dx) <= DRAG_START || fabsf(dx) <= fabsf(dy) || !can_drag) return 1;
 			/* the move came up from an element that has the pointer: the drag is the pivot's from here, with the pointer */
@@ -349,7 +349,7 @@ static int pivot_input(zrn_element_t* e, zrn_input_t* in) {
 			p->last_x = before;
 		}
 		{
-			float dx = in->x - p->press_x;
+			const float dx = in->x - p->press_x;
 			/* a page of rubber on each side: past it the next page would be the one chosen */
 			p->offset = zrn_clampf((float)p->selected - dx / width, (float)p->selected - 1.0f, (float)p->selected + 1.0f);
 			p->velocity = p->velocity * 0.5f + ((in->x - p->last_x) / 16.0f) * 0.5f;
@@ -358,15 +358,15 @@ static int pivot_input(zrn_element_t* e, zrn_input_t* in) {
 		}
 		return 1;
 	case ZST_IN_POINTER_UP: {
-		int was_dragging = p->dragging, tap = p->pressed && !p->dragging;
-		float x = in->x, y = in->y;
+		const int was_dragging = p->dragging, tap = p->pressed && !p->dragging;
+		const float x = in->x, y = in->y;
 		p->pressed = 0;
 		p->dragging = 0;
 		if (e->root) zrn_release_capture(e->root, e);
 		if (was_dragging) {
 			pivot_release(p, width);
 		} else if (tap && !p->is_locked) {
-			int h = header_at(p, x, y, e->rect.width);
+			const int h = header_at(p, x, y, e->rect.width);
 			if (h >= 0) pivot_select(p, h, 1);
 		}
 		return 1;
@@ -383,21 +383,21 @@ static int pivot_input(zrn_element_t* e, zrn_input_t* in) {
 	}
 }
 
-static void pivot_init(zrn_element_t* e) {
+static void pivot_init(zrn_element_t* const e) {
 	e->focusable = 0;
 	e->observes_pointer = 1;
 	e->clip_to_bounds = 1;
 }
 
-static void pivot_destroy(zrn_element_t* e) {
+static void pivot_destroy(zrn_element_t* const e) {
 	free(PIVOT(e)->items);
-	PIVOT(e)->items = NULL;
+	PIVOT(e)->items = nullptr;
 	free(PIVOT(e)->title);
-	PIVOT(e)->title = NULL;
+	PIVOT(e)->title = nullptr;
 }
 
-static void pivot_child_removed(zrn_element_t* e, zrn_element_t* child) {
-	zrn_pivot_t* p = PIVOT(e);
+static void pivot_child_removed(zrn_element_t* const e, zrn_element_t* const child) {
+	zrn_pivot_t* const p = PIVOT(e);
 	int i;
 	for (i = 0; i < p->count; i++) {
 		if (p->items[i] != child) continue;
@@ -424,8 +424,8 @@ zrn_class_t zrn_class_pivot = {
  *  PivotItem
  * ============================================================================ */
 
-static void pivot_item_init(zrn_element_t* e) {
-	zrn_control_t* c = ZST_AS(zrn_control_t, e);
+static void pivot_item_init(zrn_element_t* const e) {
+	zrn_control_t* const c = ZST_AS(zrn_control_t, e);
 	/* PivotItem: Margin 19,22.5,19,0 (PivotItemMargin), the content stretches */
 	e->margin = Zthickness(ITEM_MARGIN_LEFT, ITEM_MARGIN_TOP, ITEM_MARGIN_RIGHT, 0);
 	c->h_content = Z_HALIGN_STRETCH;
@@ -433,9 +433,9 @@ static void pivot_item_init(zrn_element_t* e) {
 	e->focusable = 0;
 }
 
-static void pivot_item_destroy(zrn_element_t* e) {
+static void pivot_item_destroy(zrn_element_t* const e) {
 	free(PITEM(e)->header);
-	PITEM(e)->header = NULL;
+	PITEM(e)->header = nullptr;
 }
 
 zrn_class_t zrn_class_pivot_item = {
@@ -443,22 +443,22 @@ zrn_class_t zrn_class_pivot_item = {
 	.init = pivot_item_init, .destroy = pivot_item_destroy
 };
 
-Zid Zpivot_item_create(const char* header) {
-	zrn_element_t* e = zrn_create(Z_CLASS_PIVOT_ITEM);
+Zid Zpivot_item_create(const char* const header) {
+	zrn_element_t* const e = zrn_create(Z_CLASS_PIVOT_ITEM);
 	if (!e) return Z_INVALID_ID;
 	zrn_set_string(&PITEM(e)->header, header ? header : "");
 	return e->id;
 }
 
-void Zpivot_item_set_header(Zid id, const char* header) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_PIVOT_ITEM);
+void Zpivot_item_set_header(const Zid id, const char* const header) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_PIVOT_ITEM);
 	if (!e) return;
 	zrn_set_string(&PITEM(e)->header, header ? header : "");
 	if (e->parent) zrn_changed_layout(e->parent);
 }
 
-const char* Zpivot_item_get_header(Zid id) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_PIVOT_ITEM);
+const char* Zpivot_item_get_header(const Zid id) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_PIVOT_ITEM);
 	return e && PITEM(e)->header ? PITEM(e)->header : "";
 }
 
@@ -468,27 +468,27 @@ const char* Zpivot_item_get_header(Zid id) {
  * ============================================================================ */
 
 Zid Zpivot_create(void) {
-	zrn_element_t* e = zrn_create(Z_CLASS_PIVOT);
+	zrn_element_t* const e = zrn_create(Z_CLASS_PIVOT);
 	return e ? e->id : Z_INVALID_ID;
 }
 
 static zrn_pivot_t* get_pivot(Zid id) { return PIVOT(zrn_get(id, Z_CLASS_PIVOT)); }
 
-void Zpivot_set_title(Zid id, const char* title) {
-	zrn_pivot_t* p = get_pivot(id);
+void Zpivot_set_title(const Zid id, const char* const title) {
+	zrn_pivot_t* const p = get_pivot(id);
 	if (!p) return;
 	zrn_set_string(&p->title, title ? title : "");
 	zrn_changed_layout(&p->base.base);
 }
 
-const char* Zpivot_get_title(Zid id) {
-	zrn_pivot_t* p = get_pivot(id);
+const char* Zpivot_get_title(const Zid id) {
+	zrn_pivot_t* const p = get_pivot(id);
 	return p && p->title ? p->title : "";
 }
 
 int Zpivot_insert_item(Zid id, int index, Zid item) {
-	zrn_pivot_t* p = get_pivot(id);
-	zrn_element_t* c = item != Z_INVALID_ID ? zrn_get(item, Z_CLASS_PIVOT_ITEM) : NULL;
+	zrn_pivot_t* const p = get_pivot(id);
+	zrn_element_t* const c = item != Z_INVALID_ID ? zrn_get(item, Z_CLASS_PIVOT_ITEM) : nullptr;
 	if (!p || !c) return -1;
 	if (c->parent) {
 		zrn_error(Z_ERROR_HAS_PARENT, "the PivotItem is in a pivot already");
@@ -496,7 +496,7 @@ int Zpivot_insert_item(Zid id, int index, Zid item) {
 	}
 	if (index < 0 || index > p->count) index = p->count;
 	if (p->count == p->cap) {
-		int cap = p->cap ? p->cap * 2 : 4;
+		const int cap = p->cap ? p->cap * 2 : 4;
 		zrn_element_t** items = (zrn_element_t**)realloc(p->items, (size_t)cap * sizeof *items);
 		if (!items) {
 			zrn_error(Z_ERROR_OUT_OF_MEMORY, "out of memory");
@@ -516,88 +516,88 @@ int Zpivot_insert_item(Zid id, int index, Zid item) {
 	return index;
 }
 
-int Zpivot_add_item(Zid id, Zid item) {
-	zrn_pivot_t* p = get_pivot(id);
+int Zpivot_add_item(const Zid id, const Zid item) {
+	zrn_pivot_t* const p = get_pivot(id);
 	return p ? Zpivot_insert_item(id, p->count, item) : -1;
 }
 
-void Zpivot_remove_item_at(Zid id, int index) {
-	zrn_pivot_t* p = get_pivot(id);
+void Zpivot_remove_item_at(const Zid id, const int index) {
+	zrn_pivot_t* const p = get_pivot(id);
 	if (!p || index < 0 || index >= p->count) return;
 	zrn_destroy(p->items[index]);
 }
 
-void Zpivot_clear_items(Zid id) {
-	zrn_pivot_t* p = get_pivot(id);
+void Zpivot_clear_items(const Zid id) {
+	zrn_pivot_t* const p = get_pivot(id);
 	while (p && p->count > 0) zrn_destroy(p->items[p->count - 1]);
 }
 
-int Zpivot_get_item_count(Zid id) {
-	zrn_pivot_t* p = get_pivot(id);
+int Zpivot_get_item_count(const Zid id) {
+	zrn_pivot_t* const p = get_pivot(id);
 	return p ? p->count : 0;
 }
 
-Zid Zpivot_get_item(Zid id, int index) {
-	zrn_pivot_t* p = get_pivot(id);
+Zid Zpivot_get_item(const Zid id, const int index) {
+	zrn_pivot_t* const p = get_pivot(id);
 	return p && index >= 0 && index < p->count ? p->items[index]->id : Z_INVALID_ID;
 }
 
-Zid Zpivot_get_selected_item(Zid id) {
-	zrn_pivot_t* p = get_pivot(id);
+Zid Zpivot_get_selected_item(const Zid id) {
+	zrn_pivot_t* const p = get_pivot(id);
 	return p && p->count > 0 ? p->items[p->selected]->id : Z_INVALID_ID;
 }
 
-void Zpivot_set_selected_index(Zid id, int index) {
-	zrn_pivot_t* p = get_pivot(id);
+void Zpivot_set_selected_index(const Zid id, const int index) {
+	zrn_pivot_t* const p = get_pivot(id);
 	if (p) pivot_select(p, index, 1);
 }
 
-int Zpivot_get_selected_index(Zid id) {
-	zrn_pivot_t* p = get_pivot(id);
+int Zpivot_get_selected_index(const Zid id) {
+	zrn_pivot_t* const p = get_pivot(id);
 	return p && p->count > 0 ? p->selected : -1;
 }
 
-void Zpivot_set_is_locked(Zid id, int is_locked) {
-	zrn_pivot_t* p = get_pivot(id);
+void Zpivot_set_is_locked(const Zid id, const int is_locked) {
+	zrn_pivot_t* const p = get_pivot(id);
 	if (!p) return;
 	p->is_locked = is_locked != 0;
 	zrn_changed_arrange(&p->base.base);
 }
 
-int Zpivot_get_is_locked(Zid id) {
-	zrn_pivot_t* p = get_pivot(id);
+int Zpivot_get_is_locked(const Zid id) {
+	zrn_pivot_t* const p = get_pivot(id);
 	return p ? p->is_locked : 0;
 }
 
-ZRect Zpivot_get_header_rect(Zid id, int index) {
-	zrn_pivot_t* p = get_pivot(id);
+ZRect Zpivot_get_header_rect(const Zid id, const int index) {
+	zrn_pivot_t* const p = get_pivot(id);
 	header_place_t places[MAX_PLACES];
 	int i, n;
-	ZRect none = { 0, 0, 0, 0 };
+	const ZRect none = { 0, 0, 0, 0 };
 	if (!p || index < 0 || index >= p->count) return none;
 	n = header_places(p, places, MAX_PLACES, p->base.base.rect.width);
 	for (i = 0; i < n; i++) {
 		if (places[i].item == index) {
-			ZRect r = header_rect_of(&places[i], p);
+			const ZRect r = header_rect_of(&places[i], p);
 			return r;
 		}
 	}
 	return none;
 }
 
-void Zpivot_on_selection_changed(Zid id, ZRoutedCallback callback, void* user_data) {
+void Zpivot_on_selection_changed(const Zid id, const ZRoutedCallback callback, void* const user_data) {
 	if (get_pivot(id)) Zelement_on(id, Z_EVENT_SELECTION_CHANGED, callback, user_data);
 }
 
-void Zpivot_on_pivot_item_loading(Zid id, ZPivotItemCallback callback, void* user_data) {
-	zrn_pivot_t* p = get_pivot(id);
+void Zpivot_on_pivot_item_loading(const Zid id, const ZPivotItemCallback callback, void* const user_data) {
+	zrn_pivot_t* const p = get_pivot(id);
 	if (!p) return;
 	p->loading = callback;
 	p->loading_data = user_data;
 }
 
-void Zpivot_on_pivot_item_loaded(Zid id, ZPivotItemCallback callback, void* user_data) {
-	zrn_pivot_t* p = get_pivot(id);
+void Zpivot_on_pivot_item_loaded(const Zid id, const ZPivotItemCallback callback, void* const user_data) {
+	zrn_pivot_t* const p = get_pivot(id);
 	if (!p) return;
 	p->loaded = callback;
 	p->loaded_data = user_data;

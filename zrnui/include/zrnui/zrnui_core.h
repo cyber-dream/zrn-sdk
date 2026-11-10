@@ -555,16 +555,19 @@ typedef enum ZAccent {
 } ZAccent;
 
 /**
- * The debug overlay of Zroot_set_debug: a bit field. Z_DEBUG_BOUNDS outlines
- * the arranged rect of every element; Z_DEBUG_LABELS also writes the class
- * (and the Name) of each over its outline. The names live in zrnui_host.h.
- * TODO compile only with ZRN_DEBUG define
+ * Z_DEBUG is defined for a debug build (CMake defines it for CMAKE_BUILD_TYPE=Debug or -DZRNUI_DEBUG=ON, on
+ * the zrnui target and so on every target that links it). All the debug features of the library and of the
+ * programs that use it are compiled under it; without it they are not in the binary.
+ * Z_DEBUG_ONLY(code) is the code in a debug build and nothing otherwise; Z_DEBUG_LOG(...) prints a line to stderr.
  */
-enum {
-	Z_DEBUG_OFF = 0,
-	Z_DEBUG_BOUNDS = 1,
-	Z_DEBUG_LABELS = 1 | 2
-};
+#ifdef Z_DEBUG
+	#include <stdio.h>
+	#define Z_DEBUG_ONLY(code) code
+	#define Z_DEBUG_LOG(...) (void)fprintf(stderr, "zrnui: " __VA_ARGS__)
+#else
+	#define Z_DEBUG_ONLY(code)
+	#define Z_DEBUG_LOG(...) ((void)0)
+#endif
 
 /**
  * Every class of the library. Zelement_get_class returns the class of an

@@ -11,4 +11,10 @@ cmake-build-*/
 /zrnui/fonts/Segoe UI Bold.ttf
 /zrnui/fonts/Segoe UI Bold Italic.ttf
 /zrnui/fonts/Segoe UI Italic.ttf
-/docs/
+/zrnui/pkg/
+*.pkg*
+/docs
+/zrnui/tests/CMakeFiles/
+/zrnui/tests/Makefile
+/zrnui/tests/cmake_install.cmake
+/zrnui/tests/CTestTestfile.cmake

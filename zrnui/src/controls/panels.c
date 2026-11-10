@@ -13,14 +13,14 @@
 
 static int panel_hit_self(zrn_element_t* e) { return ZST_AS(zrn_panel_t, e)->has_background; }
 
-static void panel_paint(zrn_element_t* e, zrn_painter_t* p) {
-	zrn_panel_t* panel = ZST_AS(zrn_panel_t, e);
+static void panel_paint(zrn_element_t* const e, zrn_painter_t* const p) {
+	zrn_panel_t* const panel = ZST_AS(zrn_panel_t, e);
 	if (panel->has_background) zrn_fill_rect(p, zrn_local_rect(e), panel->background);
 }
 
 static ZSize panel_measure(zrn_element_t* e, ZSize available) { return zrn_measure_children_max(e, available); }
 
-static ZSize panel_arrange(zrn_element_t* e, ZSize final) {
+static ZSize panel_arrange(zrn_element_t* const e, const ZSize final) {
 	int i;
 	for (i = 0; i < e->child_count; i++) zrn_arrange(e->children[i], zrn_rect(0, 0, final.width, final.height));
 	return final;
@@ -35,44 +35,44 @@ static zrn_element_t* get_panel(Zid id) { return zrn_get(id, Z_CLASS_PANEL); }
 
 Zid Zpanel_add(Zid panel, Zid child) { return Zpanel_insert(panel, -1, child); }
 
-Zid Zpanel_insert(Zid panel, int index, Zid child) {
-	zrn_element_t* p = get_panel(panel);
-	zrn_element_t* c = zrn_get(child, Z_CLASS_ELEMENT);
+Zid Zpanel_insert(const Zid panel, const int index, const Zid child) {
+	zrn_element_t* const p = get_panel(panel);
+	zrn_element_t* const c = zrn_get(child, Z_CLASS_ELEMENT);
 	if (!p || !c) return Z_INVALID_ID;
 	zrn_add_child(p, c, index);
 	return c->parent == p ? child : Z_INVALID_ID;
 }
 
-void Zpanel_remove(Zid panel, Zid child) {
-	zrn_element_t* p = get_panel(panel);
+void Zpanel_remove(const Zid panel, const Zid child) {
+	zrn_element_t* const p = get_panel(panel);
 	zrn_element_t* c = zrn_get(child, Z_CLASS_ELEMENT);
 	if (p && c && c->parent == p) zrn_remove_child(p, c);
 }
 
-void Zpanel_clear(Zid panel) {
-	zrn_element_t* p = get_panel(panel);
+void Zpanel_clear(const Zid panel) {
+	zrn_element_t* const p = get_panel(panel);
 	if (p) zrn_clear_children(p);
 }
 
-int Zpanel_get_count(Zid panel) {
-	zrn_element_t* p = get_panel(panel);
+int Zpanel_get_count(const Zid panel) {
+	zrn_element_t* const p = get_panel(panel);
 	return p ? p->child_count : 0;
 }
 
-Zid Zpanel_get_child(Zid panel, int index) {
-	zrn_element_t* p = get_panel(panel);
+Zid Zpanel_get_child(const Zid panel, const int index) {
+	zrn_element_t* const p = get_panel(panel);
 	return p && index >= 0 && index < p->child_count ? p->children[index]->id : Z_INVALID_ID;
 }
 
-void Zpanel_set_background(Zid panel, ZColor color) {
-	zrn_element_t* p = get_panel(panel);
+void Zpanel_set_background(const Zid panel, const ZColor color) {
+	zrn_element_t* const p = get_panel(panel);
 	if (!p) return;
 	ZST_AS(zrn_panel_t, p)->background = color;
 	ZST_AS(zrn_panel_t, p)->has_background = 1;
 	zrn_changed_paint(p);
 }
 
-void Zpanel_set_zindex(Zid child, int zindex) {
+void Zpanel_set_zindex(const Zid child, const int zindex) {
 	zrn_element_t* c = zrn_get(child, Z_CLASS_ELEMENT);
 	if (!c) return;
 	c->zindex = zindex;
@@ -84,8 +84,8 @@ void Zpanel_set_zindex(Zid child, int zindex) {
  *  StackPanel
  * ============================================================================ */
 
-static ZSize stack_measure(zrn_element_t* e, ZSize available) {
-	zrn_stack_panel_t* s = ZST_AS(zrn_stack_panel_t, e);
+static ZSize stack_measure(zrn_element_t* const e, const ZSize available) {
+	zrn_stack_panel_t* const s = ZST_AS(zrn_stack_panel_t, e);
 	ZSize total = { 0, 0 };
 	int i, vertical = s->orientation == Z_VERTICAL;
 	for (i = 0; i < e->child_count; i++) {
@@ -103,8 +103,8 @@ static ZSize stack_measure(zrn_element_t* e, ZSize available) {
 	return total;
 }
 
-static ZSize stack_arrange(zrn_element_t* e, ZSize final) {
-	zrn_stack_panel_t* s = ZST_AS(zrn_stack_panel_t, e);
+static ZSize stack_arrange(zrn_element_t* const e, const ZSize final) {
+	zrn_stack_panel_t* const s = ZST_AS(zrn_stack_panel_t, e);
 	float pos = 0;
 	int i, vertical = s->orientation == Z_VERTICAL;
 	for (i = 0; i < e->child_count; i++) {
@@ -142,35 +142,35 @@ zrn_class_t zrn_class_items_stack_panel = {
 	.init = items_stack_init
 };
 
-Zid Zitems_stack_panel_create(ZOrientation orientation) {
-	zrn_element_t* e = zrn_create(Z_CLASS_ITEMS_STACK_PANEL);
+Zid Zitems_stack_panel_create(const ZOrientation orientation) {
+	zrn_element_t* const e = zrn_create(Z_CLASS_ITEMS_STACK_PANEL);
 	if (!e) return Z_INVALID_ID;
 	ZST_AS(zrn_stack_panel_t, e)->orientation = orientation;
 	return e->id;
 }
 
 Zid Zstack_panel_create(const ZOrientation orientation) {
-	zrn_element_t* e = zrn_create(Z_CLASS_STACK_PANEL);
+	zrn_element_t* const e = zrn_create(Z_CLASS_STACK_PANEL);
 	if (!e) return Z_INVALID_ID;
 	ZST_AS(zrn_stack_panel_t, e)->orientation = orientation;
 	return e->id;
 }
 
 Zid Zvirtualizing_stack_panel_create(void) {
-	zrn_element_t* e = zrn_create(Z_CLASS_VIRTUALIZING_STACK_PANEL);
+	zrn_element_t* const e = zrn_create(Z_CLASS_VIRTUALIZING_STACK_PANEL);
 	return e ? e->id : Z_INVALID_ID;
 }
 
-void Zstack_panel_set_orientation(Zid id, ZOrientation orientation) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_STACK_PANEL);
+void Zstack_panel_set_orientation(const Zid id, const ZOrientation orientation) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_STACK_PANEL);
 	if (!e) return;
 	ZST_AS(zrn_stack_panel_t, e)->orientation = orientation;
 	zrn_changed_layout(e);
 	zrn_items_panel_changed(e);
 }
 
-ZOrientation Zstack_panel_get_orientation(Zid id) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_STACK_PANEL);
+ZOrientation Zstack_panel_get_orientation(const Zid id) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_STACK_PANEL);
 	return e ? ZST_AS(zrn_stack_panel_t, e)->orientation : Z_VERTICAL;
 }
 
@@ -179,12 +179,12 @@ ZOrientation Zstack_panel_get_orientation(Zid id) {
  *  WrapPanel
  * ============================================================================ */
 
-static ZSize wrap_item_size(const zrn_wrap_panel_t* w, const zrn_element_t* c) {
+static ZSize wrap_item_size(const zrn_wrap_panel_t* const w, const zrn_element_t* const c) {
 	return zrn_size(w->item_width != Z_AUTO ? w->item_width : c->desired.width, w->item_height != Z_AUTO ? w->item_height : c->desired.height);
 }
 
 /* Lays the children out in lines no longer than `limit`; when `place` the children are arranged. Returns the extent. */
-static ZSize wrap_flow(zrn_element_t* e, float limit, int place) {
+static ZSize wrap_flow(zrn_element_t* const e, const float limit, const int place) {
 	zrn_wrap_panel_t* w = ZST_AS(zrn_wrap_panel_t, e);
 	int horizontal = w->orientation == Z_HORIZONTAL, i;
 	float pos = 0, line_extent = 0, offset = 0, max_pos = 0;
@@ -192,7 +192,7 @@ static ZSize wrap_flow(zrn_element_t* e, float limit, int place) {
 	for (i = 0; i <= e->child_count; i++) {
 		ZSize s = { 0, 0 };
 		float along, across;
-		zrn_element_t* c = i < e->child_count ? e->children[i] : NULL;
+		zrn_element_t* c = i < e->child_count ? e->children[i] : nullptr;
 		if (c) {
 			if (c->visibility == Z_COLLAPSED) continue;
 			s = wrap_item_size(w, c);
@@ -233,8 +233,8 @@ static ZSize wrap_flow(zrn_element_t* e, float limit, int place) {
 	return horizontal ? zrn_size(max_pos, offset) : zrn_size(offset, max_pos);
 }
 
-static ZSize wrap_measure(zrn_element_t* e, ZSize available) {
-	zrn_wrap_panel_t* w = ZST_AS(zrn_wrap_panel_t, e);
+static ZSize wrap_measure(zrn_element_t* const e, const ZSize available) {
+	zrn_wrap_panel_t* const w = ZST_AS(zrn_wrap_panel_t, e);
 	int i;
 	for (i = 0; i < e->child_count; i++) {
 		ZSize s = zrn_size(w->item_width != Z_AUTO ? w->item_width : available.width, w->item_height != Z_AUTO ? w->item_height : available.height);
@@ -243,14 +243,14 @@ static ZSize wrap_measure(zrn_element_t* e, ZSize available) {
 	return wrap_flow(e, w->orientation == Z_HORIZONTAL ? available.width : available.height, 0);
 }
 
-static ZSize wrap_arrange(zrn_element_t* e, ZSize final) {
-	zrn_wrap_panel_t* w = ZST_AS(zrn_wrap_panel_t, e);
+static ZSize wrap_arrange(zrn_element_t* const e, const ZSize final) {
+	zrn_wrap_panel_t* const w = ZST_AS(zrn_wrap_panel_t, e);
 	wrap_flow(e, w->orientation == Z_HORIZONTAL ? final.width : final.height, 1);
 	return final;
 }
 
-static void wrap_init(zrn_element_t* e) {
-	zrn_wrap_panel_t* w = ZST_AS(zrn_wrap_panel_t, e);
+static void wrap_init(zrn_element_t* const e) {
+	zrn_wrap_panel_t* const w = ZST_AS(zrn_wrap_panel_t, e);
 	w->orientation = Z_HORIZONTAL;
 	w->item_width = Z_AUTO;
 	w->item_height = Z_AUTO;
@@ -261,22 +261,22 @@ zrn_class_t zrn_class_wrap_panel = {
 	.init = wrap_init, .measure = wrap_measure, .arrange = wrap_arrange
 };
 
-Zid Zwrap_panel_create(ZOrientation orientation) {
-	zrn_element_t* e = zrn_create(Z_CLASS_WRAP_PANEL);
+Zid Zwrap_panel_create(const ZOrientation orientation) {
+	zrn_element_t* const e = zrn_create(Z_CLASS_WRAP_PANEL);
 	if (!e) return Z_INVALID_ID;
 	ZST_AS(zrn_wrap_panel_t, e)->orientation = orientation;
 	return e->id;
 }
 
-void Zwrap_panel_set_orientation(Zid id, ZOrientation orientation) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_WRAP_PANEL);
+void Zwrap_panel_set_orientation(const Zid id, const ZOrientation orientation) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_WRAP_PANEL);
 	if (!e) return;
 	ZST_AS(zrn_wrap_panel_t, e)->orientation = orientation;
 	zrn_changed_layout(e);
 }
 
-void Zwrap_panel_set_item_size(Zid id, float item_width, float item_height) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_WRAP_PANEL);
+void Zwrap_panel_set_item_size(const Zid id, const float item_width, const float item_height) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_WRAP_PANEL);
 	if (!e) return;
 	ZST_AS(zrn_wrap_panel_t, e)->item_width = item_width;
 	ZST_AS(zrn_wrap_panel_t, e)->item_height = item_height;
@@ -293,14 +293,14 @@ void Zwrap_panel_set_item_size(Zid id, float item_width, float item_height) {
 static int wg_is_header(const zrn_element_t* c) { return zrn_is_a(c, Z_CLASS_LIST_VIEW_BASE_HEADER_ITEM); }
 
 /* The size of a cell: ItemWidth by ItemHeight, or the size of the first item for what is not set. Measures that item. */
-static void wg_cell(zrn_element_t* e, ZSize room, float* cw, float* ch) {
+static void wg_cell(zrn_element_t* const e, const ZSize room, float* const cw, float* const ch) {
 	zrn_items_wrap_grid_t* g = WG(e);
 	int i;
 	*cw = g->item_width != Z_AUTO ? g->item_width : 0;
 	*ch = g->item_height != Z_AUTO ? g->item_height : 0;
 	if (g->item_width != Z_AUTO && g->item_height != Z_AUTO) return;
 	for (i = 0; i < e->child_count; i++) {
-		zrn_element_t* c = e->children[i];
+		zrn_element_t* const c = e->children[i];
 		if (c->visibility == Z_COLLAPSED || wg_is_header(c)) continue;
 		zrn_measure(c, zrn_size(g->item_width != Z_AUTO ? g->item_width : room.width, g->item_height != Z_AUTO ? g->item_height : room.height));
 		if (g->item_width == Z_AUTO) *cw = c->desired.width;
@@ -309,7 +309,7 @@ static void wg_cell(zrn_element_t* e, ZSize room, float* cw, float* ch) {
 	}
 }
 
-static int wg_per_line(const zrn_items_wrap_grid_t* g, float along_room, float cell_along) {
+static int wg_per_line(const zrn_items_wrap_grid_t* const g, const float along_room, const float cell_along) {
 	int n = 0x7fffffff;
 	if (cell_along > 0 && along_room < Z_INFINITE * 0.5f) n = zrn_maxi(1, (int)floorf((along_room + 0.01f) / cell_along));
 	if (g->max_rows_or_columns > 0) n = zrn_mini(n, g->max_rows_or_columns);
@@ -317,7 +317,7 @@ static int wg_per_line(const zrn_items_wrap_grid_t* g, float along_room, float c
 }
 
 /* Puts the cells in lines along the orientation. Returns the size taken; with `place` the items are arranged. */
-static ZSize wg_flow(zrn_element_t* e, float along_room, float cw, float ch, int per_line, int place) {
+static ZSize wg_flow(zrn_element_t* const e, const float along_room, const float cw, const float ch, const int per_line, const int place) {
 	zrn_items_wrap_grid_t* g = WG(e);
 	int horizontal = g->orientation == Z_HORIZONTAL, in_line = 0, i;
 	float cell_along = horizontal ? cw : ch, cell_across = horizontal ? ch : cw;
@@ -343,7 +343,7 @@ static ZSize wg_flow(zrn_element_t* e, float along_room, float cw, float ch, int
 			in_line = 0;
 		}
 		if (place) {
-			float along = (float)in_line * cell_along;
+			const float along = (float)in_line * cell_along;
 			zrn_arrange(c, horizontal ? zrn_rect(along, across, cw, ch) : zrn_rect(across, along, cw, ch));
 		}
 		in_line++;
@@ -355,31 +355,31 @@ static ZSize wg_flow(zrn_element_t* e, float along_room, float cw, float ch, int
 	return horizontal ? zrn_size(max_along, across) : zrn_size(across, max_along);
 }
 
-static ZSize wg_measure(zrn_element_t* e, ZSize available) {
-	zrn_items_wrap_grid_t* g = WG(e);
+static ZSize wg_measure(zrn_element_t* const e, const ZSize available) {
+	zrn_items_wrap_grid_t* const g = WG(e);
 	int horizontal = g->orientation == Z_HORIZONTAL, per_line, i;
 	float cw, ch, along = horizontal ? available.width : available.height;
 	wg_cell(e, available, &cw, &ch);
 	per_line = wg_per_line(g, along, horizontal ? cw : ch);
 	for (i = 0; i < e->child_count; i++) {
-		zrn_element_t* c = e->children[i];
+		zrn_element_t* const c = e->children[i];
 		if (wg_is_header(c)) zrn_measure(c, horizontal ? zrn_size(zrn_minf(available.width, Z_INFINITE * 0.5f), Z_INFINITE) : zrn_size(Z_INFINITE, available.height));
 		else zrn_measure(c, zrn_size(cw, ch));
 	}
 	return wg_flow(e, along, cw, ch, per_line, 0);
 }
 
-static ZSize wg_arrange(zrn_element_t* e, ZSize final) {
-	zrn_items_wrap_grid_t* g = WG(e);
-	int horizontal = g->orientation == Z_HORIZONTAL;
+static ZSize wg_arrange(zrn_element_t* const e, const ZSize final) {
+	zrn_items_wrap_grid_t* const g = WG(e);
+	const int horizontal = g->orientation == Z_HORIZONTAL;
 	float cw, ch, along = horizontal ? final.width : final.height;
 	wg_cell(e, final, &cw, &ch);
 	wg_flow(e, along, cw, ch, wg_per_line(g, along, horizontal ? cw : ch), 1);
 	return final;
 }
 
-static void wg_init(zrn_element_t* e) {
-	zrn_items_wrap_grid_t* g = WG(e);
+static void wg_init(zrn_element_t* const e) {
+	zrn_items_wrap_grid_t* const g = WG(e);
 	g->orientation = Z_HORIZONTAL;
 	g->max_rows_or_columns = -1;
 	g->item_width = Z_AUTO;
@@ -391,8 +391,8 @@ zrn_class_t zrn_class_items_wrap_grid = {
 	.init = wg_init, .measure = wg_measure, .arrange = wg_arrange
 };
 
-Zid Zitems_wrap_grid_create(ZOrientation orientation) {
-	zrn_element_t* e = zrn_create(Z_CLASS_ITEMS_WRAP_GRID);
+Zid Zitems_wrap_grid_create(const ZOrientation orientation) {
+	zrn_element_t* const e = zrn_create(Z_CLASS_ITEMS_WRAP_GRID);
 	if (!e) return Z_INVALID_ID;
 	WG(e)->orientation = orientation;
 	return e->id;
@@ -400,8 +400,8 @@ Zid Zitems_wrap_grid_create(ZOrientation orientation) {
 
 static zrn_items_wrap_grid_t* get_wg(Zid id) { return WG(zrn_get(id, Z_CLASS_ITEMS_WRAP_GRID)); }
 
-void Zitems_wrap_grid_set_orientation(Zid id, ZOrientation orientation) {
-	zrn_items_wrap_grid_t* g = get_wg(id);
+void Zitems_wrap_grid_set_orientation(const Zid id, const ZOrientation orientation) {
+	zrn_items_wrap_grid_t* const g = get_wg(id);
 	if (!g) return;
 	g->orientation = orientation;
 	zrn_changed_layout(&g->base.base);
@@ -410,8 +410,8 @@ void Zitems_wrap_grid_set_orientation(Zid id, ZOrientation orientation) {
 
 ZOrientation Zitems_wrap_grid_get_orientation(Zid id) { zrn_items_wrap_grid_t* g = get_wg(id); return g ? g->orientation : Z_HORIZONTAL; }
 
-void Zitems_wrap_grid_set_maximum_rows_or_columns(Zid id, int maximum) {
-	zrn_items_wrap_grid_t* g = get_wg(id);
+void Zitems_wrap_grid_set_maximum_rows_or_columns(const Zid id, const int maximum) {
+	zrn_items_wrap_grid_t* const g = get_wg(id);
 	if (!g) return;
 	g->max_rows_or_columns = maximum > 0 ? maximum : -1;
 	zrn_changed_layout(&g->base.base);
@@ -419,15 +419,15 @@ void Zitems_wrap_grid_set_maximum_rows_or_columns(Zid id, int maximum) {
 
 int Zitems_wrap_grid_get_maximum_rows_or_columns(Zid id) { zrn_items_wrap_grid_t* g = get_wg(id); return g ? g->max_rows_or_columns : -1; }
 
-void Zitems_wrap_grid_set_item_width(Zid id, float item_width) {
-	zrn_items_wrap_grid_t* g = get_wg(id);
+void Zitems_wrap_grid_set_item_width(const Zid id, const float item_width) {
+	zrn_items_wrap_grid_t* const g = get_wg(id);
 	if (!g) return;
 	g->item_width = item_width;
 	zrn_changed_layout(&g->base.base);
 }
 
-void Zitems_wrap_grid_set_item_height(Zid id, float item_height) {
-	zrn_items_wrap_grid_t* g = get_wg(id);
+void Zitems_wrap_grid_set_item_height(const Zid id, const float item_height) {
+	zrn_items_wrap_grid_t* const g = get_wg(id);
 	if (!g) return;
 	g->item_height = item_height;
 	zrn_changed_layout(&g->base.base);
@@ -441,7 +441,7 @@ float Zitems_wrap_grid_get_item_height(Zid id) { zrn_items_wrap_grid_t* g = get_
  *  Grid
  * ============================================================================ */
 
-static int grid_add_def(zrn_grid_def_t** list, int* count, ZGridUnitType unit, float value) {
+static int grid_add_def(zrn_grid_def_t** list, int* const count, const ZGridUnitType unit, const float value) {
 	zrn_grid_def_t* more;
 	if (*count >= 256) return -1;
 	more = (zrn_grid_def_t*)realloc(*list, (size_t)(*count + 1) * sizeof **list);
@@ -462,7 +462,7 @@ typedef struct grid_axis {
 	zrn_grid_def_t implicit_def;
 } grid_axis_t;
 
-static void grid_axis_get(zrn_grid_def_t* defs, int count, grid_axis_t* axis) {
+static void grid_axis_get(zrn_grid_def_t* const defs, const int count, grid_axis_t* const axis) {
 	if (count > 0) {
 		axis->defs = defs;
 		axis->count = count;
@@ -477,7 +477,7 @@ static void grid_axis_get(zrn_grid_def_t* defs, int count, grid_axis_t* axis) {
 	}
 }
 
-static void span_range(int index, int span, int count, int* first, int* last) {
+static void span_range(const int index, const int span, const int count, int* const first, int* const last) {
 	*first = zrn_maxi(0, zrn_mini(index, count - 1));
 	*last = zrn_mini(count - 1, *first + zrn_maxi(1, span) - 1);
 }
@@ -489,7 +489,7 @@ typedef struct grid_cell {
 } grid_cell_t;
 
 /* How much room a measured child may take along an axis: the sizes it spans, infinite if it spans an auto or an unresolved star. */
-static float cell_room(const zrn_grid_def_t* defs, int first, int last, int resolved) {
+static float cell_room(const zrn_grid_def_t* const defs, const int first, const int last, const int resolved) {
 	float sum = 0;
 	int i;
 	for (i = first; i <= last; i++) {
@@ -500,7 +500,7 @@ static float cell_room(const zrn_grid_def_t* defs, int first, int last, int reso
 	return sum;
 }
 
-static void grid_learn(zrn_grid_def_t* defs, int first, int last, float need) {
+static void grid_learn(zrn_grid_def_t* const defs, const int first, const int last, const float need) {
 	/* a child that spans one definition gives it its size; over several, the missing room goes to the last auto one */
 	float have = 0;
 	int i, target = -1;
@@ -552,7 +552,7 @@ static void grid_resolve_star(zrn_grid_def_t* defs, int count, float available, 
 	}
 }
 
-static void grid_prepare(zrn_grid_t* g, grid_axis_t* cols, grid_axis_t* rows) {
+static void grid_prepare(zrn_grid_t* const g, grid_axis_t* const cols, grid_axis_t* const rows) {
 	int i;
 	grid_axis_get(g->columns, g->column_count, cols);
 	grid_axis_get(g->rows, g->row_count, rows);
@@ -560,7 +560,7 @@ static void grid_prepare(zrn_grid_t* g, grid_axis_t* cols, grid_axis_t* rows) {
 	for (i = 0; i < rows->count; i++) rows->defs[i].size = rows->defs[i].unit == Z_GRID_PIXEL ? zrn_clampf(rows->defs[i].value, rows->defs[i].min, rows->defs[i].max) : 0;
 }
 
-static void grid_classify(zrn_element_t* child, const grid_axis_t* cols, const grid_axis_t* rows, grid_cell_t* cell) {
+static void grid_classify(zrn_element_t* const child, const grid_axis_t* const cols, const grid_axis_t* const rows, grid_cell_t* const cell) {
 	int i;
 	cell->child = child;
 	span_range(child->grid_column, child->grid_column_span, cols->count, &cell->c0, &cell->c1);
@@ -576,16 +576,16 @@ static void grid_classify(zrn_element_t* child, const grid_axis_t* cols, const g
 	}
 }
 
-static void grid_clamp_auto(grid_axis_t* axis) {
+static void grid_clamp_auto(grid_axis_t* const axis) {
 	int i;
 	for (i = 0; i < axis->count; i++) if (axis->defs[i].unit == Z_GRID_AUTO) axis->defs[i].size = zrn_clampf(axis->defs[i].size, axis->defs[i].min, axis->defs[i].max);
 }
 
-static ZSize grid_measure(zrn_element_t* e, ZSize available) {
+static ZSize grid_measure(zrn_element_t* const e, const ZSize available) {
 	zrn_grid_t* g = ZST_AS(zrn_grid_t, e);
 	grid_axis_t cols, rows;
-	grid_cell_t* cells = NULL;
-	float col_content[256] = { 0 }, row_content[256] = { 0 };
+	grid_cell_t* cells = nullptr;
+	float col_content[256] = {}, row_content[256] = {};
 	int n = 0, i, group;
 	ZSize result = { 0, 0 };
 	int inf_w = available.width >= Z_INFINITE * 0.5f, inf_h = available.height >= Z_INFINITE * 0.5f;
@@ -635,16 +635,16 @@ static ZSize grid_measure(zrn_element_t* e, ZSize available) {
 	return result;
 }
 
-static ZSize grid_arrange(zrn_element_t* e, ZSize final) {
-	zrn_grid_t* g = ZST_AS(zrn_grid_t, e);
+static ZSize grid_arrange(zrn_element_t* const e, const ZSize final) {
+	zrn_grid_t* const g = ZST_AS(zrn_grid_t, e);
 	grid_axis_t cols, rows;
-	float content_cols[256] = { 0 }, content_rows[256] = { 0 }, col_pos[257], row_pos[257];
+	float content_cols[256] = {}, content_rows[256] = {}, col_pos[257], row_pos[257];
 	int i;
 	grid_prepare(g, &cols, &rows);
 	/* auto sizes are the ones of the last Measure: recompute them from the children */
 	for (i = 0; i < e->child_count; i++) {
 		grid_cell_t cell;
-		zrn_element_t* c = e->children[i];
+		zrn_element_t* const c = e->children[i];
 		if (c->visibility == Z_COLLAPSED) continue;
 		grid_classify(c, &cols, &rows, &cell);
 		if (!cell.star_col) grid_learn(cols.defs, cell.c0, cell.c1, c->desired.width);
@@ -659,7 +659,7 @@ static ZSize grid_arrange(zrn_element_t* e, ZSize final) {
 	for (i = 0; i < rows.count && i < 256; i++) row_pos[i + 1] = row_pos[i] + rows.defs[i].size;
 	for (i = 0; i < e->child_count; i++) {
 		grid_cell_t cell;
-		zrn_element_t* c = e->children[i];
+		zrn_element_t* const c = e->children[i];
 		if (c->visibility == Z_COLLAPSED) continue;
 		grid_classify(c, &cols, &rows, &cell);
 		zrn_arrange(c, zrn_rect(col_pos[cell.c0], row_pos[cell.r0], col_pos[cell.c1 + 1] - col_pos[cell.c0], row_pos[cell.r1 + 1] - row_pos[cell.r0]));
@@ -668,8 +668,8 @@ static ZSize grid_arrange(zrn_element_t* e, ZSize final) {
 	return final;
 }
 
-static void grid_destroy(zrn_element_t* e) {
-	zrn_grid_t* g = ZST_AS(zrn_grid_t, e);
+static void grid_destroy(zrn_element_t* const e) {
+	zrn_grid_t* const g = ZST_AS(zrn_grid_t, e);
 	free(g->columns);
 	free(g->rows);
 }
@@ -680,12 +680,12 @@ zrn_class_t zrn_class_grid = {
 };
 
 Zid Zgrid_create(void) {
-	zrn_element_t* e = zrn_create(Z_CLASS_GRID);
+	zrn_element_t* const e = zrn_create(Z_CLASS_GRID);
 	return e ? e->id : Z_INVALID_ID;
 }
 
-int Zgrid_add_column(Zid id, ZGridUnitType unit, float value) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_GRID);
+int Zgrid_add_column(const Zid id, const ZGridUnitType unit, const float value) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_GRID);
 	int index;
 	if (!e) return -1;
 	index = grid_add_def(&ZST_AS(zrn_grid_t, e)->columns, &ZST_AS(zrn_grid_t, e)->column_count, unit, value);
@@ -693,8 +693,8 @@ int Zgrid_add_column(Zid id, ZGridUnitType unit, float value) {
 	return index;
 }
 
-int Zgrid_add_row(Zid id, ZGridUnitType unit, float value) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_GRID);
+int Zgrid_add_row(const Zid id, const ZGridUnitType unit, const float value) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_GRID);
 	int index;
 	if (!e) return -1;
 	index = grid_add_def(&ZST_AS(zrn_grid_t, e)->rows, &ZST_AS(zrn_grid_t, e)->row_count, unit, value);
@@ -702,18 +702,18 @@ int Zgrid_add_row(Zid id, ZGridUnitType unit, float value) {
 	return index;
 }
 
-void Zgrid_set_column_limits(Zid id, int column, float min_width, float max_width) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_GRID);
-	zrn_grid_t* g = ZST_AS(zrn_grid_t, e);
+void Zgrid_set_column_limits(const Zid id, const int column, const float min_width, const float max_width) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_GRID);
+	zrn_grid_t* const g = ZST_AS(zrn_grid_t, e);
 	if (!e || column < 0 || column >= g->column_count) return;
 	g->columns[column].min = min_width;
 	g->columns[column].max = max_width;
 	zrn_changed_layout(e);
 }
 
-void Zgrid_set_row_limits(Zid id, int row, float min_height, float max_height) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_GRID);
-	zrn_grid_t* g = ZST_AS(zrn_grid_t, e);
+void Zgrid_set_row_limits(const Zid id, const int row, const float min_height, const float max_height) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_GRID);
+	zrn_grid_t* const g = ZST_AS(zrn_grid_t, e);
 	if (!e || row < 0 || row >= g->row_count) return;
 	g->rows[row].min = min_height;
 	g->rows[row].max = max_height;
@@ -723,17 +723,17 @@ void Zgrid_set_row_limits(Zid id, int row, float min_height, float max_height) {
 int Zgrid_get_column_count(Zid id) { zrn_element_t* e = zrn_get(id, Z_CLASS_GRID); return e ? ZST_AS(zrn_grid_t, e)->column_count : 0; }
 int Zgrid_get_row_count(Zid id) { zrn_element_t* e = zrn_get(id, Z_CLASS_GRID); return e ? ZST_AS(zrn_grid_t, e)->row_count : 0; }
 
-float Zgrid_get_column_width(Zid id, int column) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_GRID);
-	zrn_grid_t* g = ZST_AS(zrn_grid_t, e);
+float Zgrid_get_column_width(const Zid id, const int column) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_GRID);
+	zrn_grid_t* const g = ZST_AS(zrn_grid_t, e);
 	if (!e) return 0;
 	if (g->column_count == 0) return column == 0 ? e->rect.width : 0;
 	return column >= 0 && column < g->column_count ? g->columns[column].size : 0;
 }
 
-float Zgrid_get_row_height(Zid id, int row) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_GRID);
-	zrn_grid_t* g = ZST_AS(zrn_grid_t, e);
+float Zgrid_get_row_height(const Zid id, const int row) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_GRID);
+	zrn_grid_t* const g = ZST_AS(zrn_grid_t, e);
 	if (!e) return 0;
 	if (g->row_count == 0) return row == 0 ? e->rect.height : 0;
 	return row >= 0 && row < g->row_count ? g->rows[row].size : 0;
@@ -755,7 +755,7 @@ ATTACHED(Zgrid_set_column_span, grid_column_span, 1)
 int Zgrid_get_row(Zid id) { zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->grid_row : 0; }
 int Zgrid_get_column(Zid id) { zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->grid_column : 0; }
 
-Zid Zgrid_place(Zid grid, Zid child, int column, int row) {
+Zid Zgrid_place(const Zid grid, const Zid child, const int column, const int row) {
 	Zgrid_set_column(child, column);
 	Zgrid_set_row(child, row);
 	return Zpanel_add(grid, child);
@@ -766,17 +766,17 @@ Zid Zgrid_place(Zid grid, Zid child, int column, int row) {
  *  Canvas
  * ============================================================================ */
 
-static ZSize canvas_measure(zrn_element_t* e, ZSize available) {
+static ZSize canvas_measure(zrn_element_t* const e, const ZSize available) {
 	int i;
 	ZST_UNUSED(available);
 	for (i = 0; i < e->child_count; i++) zrn_measure(e->children[i], zrn_size(Z_INFINITE, Z_INFINITE));
 	return zrn_size(0, 0);
 }
 
-static ZSize canvas_arrange(zrn_element_t* e, ZSize final) {
+static ZSize canvas_arrange(zrn_element_t* const e, const ZSize final) {
 	int i;
 	for (i = 0; i < e->child_count; i++) {
-		zrn_element_t* c = e->children[i];
+		zrn_element_t* const c = e->children[i];
 		float x = c->canvas_left == Z_AUTO ? 0 : c->canvas_left, y = c->canvas_top == Z_AUTO ? 0 : c->canvas_top;
 		zrn_arrange(c, zrn_rect(x, y, c->desired.width, c->desired.height));
 	}
@@ -789,25 +789,25 @@ zrn_class_t zrn_class_canvas = {
 };
 
 Zid Zcanvas_create(void) {
-	zrn_element_t* e = zrn_create(Z_CLASS_CANVAS);
+	zrn_element_t* const e = zrn_create(Z_CLASS_CANVAS);
 	return e ? e->id : Z_INVALID_ID;
 }
 
-void Zcanvas_set_left(Zid id, float left) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT);
+void Zcanvas_set_left(const Zid id, const float left) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
 	if (!e) return;
 	e->canvas_left = left;
 	if (e->parent) zrn_changed_layout(e->parent);
 }
 
-void Zcanvas_set_top(Zid id, float top) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT);
+void Zcanvas_set_top(const Zid id, const float top) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
 	if (!e) return;
 	e->canvas_top = top;
 	if (e->parent) zrn_changed_layout(e->parent);
 }
 
-Zid Zcanvas_place(Zid canvas, Zid child, float left, float top) {
+Zid Zcanvas_place(const Zid canvas, const Zid child, const float left, const float top) {
 	Zcanvas_set_left(child, left);
 	Zcanvas_set_top(child, top);
 	return Zpanel_add(canvas, child);
@@ -818,7 +818,7 @@ Zid Zcanvas_place(Zid canvas, Zid child, float left, float top) {
  *  Border
  * ============================================================================ */
 
-static ZThickness border_inset(const zrn_border_t* b) {
+static ZThickness border_inset(const zrn_border_t* const b) {
 	ZThickness t;
 	t.left = b->border_thickness.left + b->padding.left;
 	t.top = b->border_thickness.top + b->padding.top;
@@ -827,9 +827,9 @@ static ZThickness border_inset(const zrn_border_t* b) {
 	return t;
 }
 
-static ZSize border_measure(zrn_element_t* e, ZSize available) {
-	zrn_border_t* b = ZST_AS(zrn_border_t, e);
-	ZThickness inset = border_inset(b);
+static ZSize border_measure(zrn_element_t* const e, const ZSize available) {
+	zrn_border_t* const b = ZST_AS(zrn_border_t, e);
+	const ZThickness inset = border_inset(b);
 	ZSize content = { 0, 0 };
 	if (e->child_count > 0) {
 		zrn_measure(e->children[0], zrn_size(zrn_maxf(0, available.width - zrn_thickness_h(inset)), zrn_maxf(0, available.height - zrn_thickness_v(inset))));
@@ -838,25 +838,25 @@ static ZSize border_measure(zrn_element_t* e, ZSize available) {
 	return zrn_size(content.width + zrn_thickness_h(inset), content.height + zrn_thickness_v(inset));
 }
 
-static ZSize border_arrange(zrn_element_t* e, ZSize final) {
-	zrn_border_t* b = ZST_AS(zrn_border_t, e);
-	ZThickness inset = border_inset(b);
+static ZSize border_arrange(zrn_element_t* const e, const ZSize final) {
+	zrn_border_t* const b = ZST_AS(zrn_border_t, e);
+	const ZThickness inset = border_inset(b);
 	if (e->child_count > 0) zrn_arrange(e->children[0], zrn_rect(inset.left, inset.top, zrn_maxf(0, final.width - zrn_thickness_h(inset)), zrn_maxf(0, final.height - zrn_thickness_v(inset))));
 	return final;
 }
 
-static int border_has_radius(const zrn_border_t* b) {
+static int border_has_radius(const zrn_border_t* const b) {
 	return b->corner_radius.top_left > 0 || b->corner_radius.top_right > 0 || b->corner_radius.bottom_right > 0 || b->corner_radius.bottom_left > 0;
 }
 
-static void border_paint(zrn_element_t* e, zrn_painter_t* p) {
-	zrn_border_t* b = ZST_AS(zrn_border_t, e);
-	ZRect r = zrn_local_rect(e);
+static void border_paint(zrn_element_t* const e, zrn_painter_t* const p) {
+	zrn_border_t* const b = ZST_AS(zrn_border_t, e);
+	const ZRect r = zrn_local_rect(e);
 	if (border_has_radius(b)) {
 		if (b->has_border_brush) zrn_fill_rrect(p, r, b->corner_radius, b->border_brush);
 		if (b->has_background) {
-			ZRect inner = zrn_rect(r.x + b->border_thickness.left, r.y + b->border_thickness.top, r.width - zrn_thickness_h(b->border_thickness), r.height - zrn_thickness_v(b->border_thickness));
-			ZCornerRadius ir = { zrn_maxf(0, b->corner_radius.top_left - b->border_thickness.left), zrn_maxf(0, b->corner_radius.top_right - b->border_thickness.right), zrn_maxf(0, b->corner_radius.bottom_right - b->border_thickness.right), zrn_maxf(0, b->corner_radius.bottom_left - b->border_thickness.left) };
+			const ZRect inner = zrn_rect(r.x + b->border_thickness.left, r.y + b->border_thickness.top, r.width - zrn_thickness_h(b->border_thickness), r.height - zrn_thickness_v(b->border_thickness));
+			const ZCornerRadius ir = { zrn_maxf(0, b->corner_radius.top_left - b->border_thickness.left), zrn_maxf(0, b->corner_radius.top_right - b->border_thickness.right), zrn_maxf(0, b->corner_radius.bottom_right - b->border_thickness.right), zrn_maxf(0, b->corner_radius.bottom_left - b->border_thickness.left) };
 			zrn_fill_rrect(p, inner, ir, b->background);
 		}
 		return;
@@ -865,8 +865,8 @@ static void border_paint(zrn_element_t* e, zrn_painter_t* p) {
 	if (b->has_border_brush) zrn_stroke_rect(p, r, b->border_thickness, b->border_brush);
 }
 
-static int border_hit_self(zrn_element_t* e) {
-	zrn_border_t* b = ZST_AS(zrn_border_t, e);
+static int border_hit_self(zrn_element_t* const e) {
+	zrn_border_t* const b = ZST_AS(zrn_border_t, e);
 	return b->has_background || b->has_border_brush;
 }
 
@@ -879,26 +879,26 @@ zrn_class_t zrn_class_border = {
 };
 
 Zid Zborder_create(void) {
-	zrn_element_t* e = zrn_create(Z_CLASS_BORDER);
+	zrn_element_t* const e = zrn_create(Z_CLASS_BORDER);
 	return e ? e->id : Z_INVALID_ID;
 }
 
-void Zborder_set_child(Zid id, Zid child) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_BORDER);
-	zrn_element_t* c = child != Z_INVALID_ID ? zrn_get(child, Z_CLASS_ELEMENT) : NULL;
+void Zborder_set_child(const Zid id, const Zid child) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_BORDER);
+	zrn_element_t* const c = child != Z_INVALID_ID ? zrn_get(child, Z_CLASS_ELEMENT) : nullptr;
 	zrn_element_t* slot;
 	if (!e || (child != Z_INVALID_ID && !c)) return;
-	slot = e->child_count ? e->children[0] : NULL;
+	slot = e->child_count ? e->children[0] : nullptr;
 	zrn_set_only_child(e, &slot, c);
 }
 
-Zid Zborder_get_child(Zid id) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_BORDER);
+Zid Zborder_get_child(const Zid id) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_BORDER);
 	return e && e->child_count ? e->children[0]->id : Z_INVALID_ID;
 }
 
-void Zborder_set_background(Zid id, ZColor color) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_BORDER);
+void Zborder_set_background(const Zid id, const ZColor color) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_BORDER);
 	if (!e) return;
 	zrn_unbind(e, ZST_BP_BORDER_BACKGROUND);
 	ZST_AS(zrn_border_t, e)->background = color;
@@ -906,8 +906,8 @@ void Zborder_set_background(Zid id, ZColor color) {
 	zrn_changed_paint(e);
 }
 
-void Zborder_set_border_brush(Zid id, ZColor color) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_BORDER);
+void Zborder_set_border_brush(const Zid id, const ZColor color) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_BORDER);
 	if (!e) return;
 	zrn_unbind(e, ZST_BP_BORDER_BORDER_BRUSH);
 	ZST_AS(zrn_border_t, e)->border_brush = color;
@@ -915,23 +915,23 @@ void Zborder_set_border_brush(Zid id, ZColor color) {
 	zrn_changed_paint(e);
 }
 
-void Zborder_set_border_thickness(Zid id, ZThickness thickness) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_BORDER);
+void Zborder_set_border_thickness(const Zid id, const ZThickness thickness) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_BORDER);
 	if (!e) return;
 	zrn_unbind(e, ZST_BP_BORDER_BORDER_THICKNESS);
 	ZST_AS(zrn_border_t, e)->border_thickness = thickness;
 	zrn_changed_layout(e);
 }
 
-void Zborder_set_corner_radius(Zid id, ZCornerRadius radius) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_BORDER);
+void Zborder_set_corner_radius(const Zid id, const ZCornerRadius radius) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_BORDER);
 	if (!e) return;
 	ZST_AS(zrn_border_t, e)->corner_radius = radius;
 	zrn_changed_paint(e);
 }
 
-void Zborder_set_padding(Zid id, ZThickness padding) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_BORDER);
+void Zborder_set_padding(const Zid id, const ZThickness padding) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_BORDER);
 	if (!e) return;
 	zrn_unbind(e, ZST_BP_BORDER_PADDING);
 	ZST_AS(zrn_border_t, e)->padding = padding;
@@ -945,7 +945,7 @@ void Zborder_set_padding(Zid id, ZThickness padding) {
  *  not hit tested: a Viewbox shows, it does not interact.
  * ============================================================================ */
 
-static void viewbox_scale(zrn_viewbox_t* v, ZSize content, ZSize room, float* sx, float* sy) {
+static void viewbox_scale(zrn_viewbox_t* const v, const ZSize content, const ZSize room, float* const sx, float* const sy) {
 	*sx = *sy = 1.0f;
 	if (v->stretch == Z_STRETCH_NONE || content.width <= 0 || content.height <= 0) return;
 	if (room.width < Z_INFINITE * 0.5f) *sx = room.width / content.width;
@@ -958,8 +958,8 @@ static void viewbox_scale(zrn_viewbox_t* v, ZSize content, ZSize room, float* sx
 	else if (v->direction == Z_STRETCH_DOWN_ONLY) { *sx = zrn_minf(*sx, 1); *sy = zrn_minf(*sy, 1); }
 }
 
-static ZSize viewbox_measure(zrn_element_t* e, ZSize available) {
-	zrn_viewbox_t* v = ZST_AS(zrn_viewbox_t, e);
+static ZSize viewbox_measure(zrn_element_t* const e, const ZSize available) {
+	zrn_viewbox_t* const v = ZST_AS(zrn_viewbox_t, e);
 	float sx, sy;
 	zrn_element_t* c;
 	if (!e->child_count) return zrn_size(0, 0);
@@ -969,8 +969,8 @@ static ZSize viewbox_measure(zrn_element_t* e, ZSize available) {
 	return zrn_size(c->desired.width * sx, c->desired.height * sy);
 }
 
-static ZSize viewbox_arrange(zrn_element_t* e, ZSize final) {
-	zrn_viewbox_t* v = ZST_AS(zrn_viewbox_t, e);
+static ZSize viewbox_arrange(zrn_element_t* const e, const ZSize final) {
+	zrn_viewbox_t* const v = ZST_AS(zrn_viewbox_t, e);
 	zrn_element_t* c;
 	if (!e->child_count) return final;
 	c = e->children[0];
@@ -980,8 +980,8 @@ static ZSize viewbox_arrange(zrn_element_t* e, ZSize final) {
 	return final;
 }
 
-static void viewbox_paint(zrn_element_t* e, zrn_painter_t* p) {
-	zrn_viewbox_t* v = ZST_AS(zrn_viewbox_t, e);
+static void viewbox_paint(zrn_element_t* const e, zrn_painter_t* const p) {
+	zrn_viewbox_t* const v = ZST_AS(zrn_viewbox_t, e);
 	zrn_element_t* c;
 	float scale = p->scale, tx = p->tx, ty = p->ty, w, h;
 	if (!e->child_count) return;
@@ -997,8 +997,8 @@ static void viewbox_paint(zrn_element_t* e, zrn_painter_t* p) {
 	p->ty = ty;
 }
 
-static void viewbox_init(zrn_element_t* e) {
-	zrn_viewbox_t* v = ZST_AS(zrn_viewbox_t, e);
+static void viewbox_init(zrn_element_t* const e) {
+	zrn_viewbox_t* const v = ZST_AS(zrn_viewbox_t, e);
 	v->stretch = Z_STRETCH_UNIFORM;
 	v->direction = Z_STRETCH_BOTH;
 	v->scale_x = v->scale_y = 1.0f;
@@ -1010,28 +1010,28 @@ zrn_class_t zrn_class_viewbox = {
 };
 
 Zid Zviewbox_create(void) {
-	zrn_element_t* e = zrn_create(Z_CLASS_VIEWBOX);
+	zrn_element_t* const e = zrn_create(Z_CLASS_VIEWBOX);
 	return e ? e->id : Z_INVALID_ID;
 }
 
-void Zviewbox_set_child(Zid id, Zid child) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_VIEWBOX);
-	zrn_element_t* c = child != Z_INVALID_ID ? zrn_get(child, Z_CLASS_ELEMENT) : NULL;
+void Zviewbox_set_child(const Zid id, const Zid child) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_VIEWBOX);
+	zrn_element_t* const c = child != Z_INVALID_ID ? zrn_get(child, Z_CLASS_ELEMENT) : nullptr;
 	zrn_element_t* slot;
 	if (!e || (child != Z_INVALID_ID && !c)) return;
-	slot = e->child_count ? e->children[0] : NULL;
+	slot = e->child_count ? e->children[0] : nullptr;
 	zrn_set_only_child(e, &slot, c);
 }
 
-void Zviewbox_set_stretch(Zid id, ZStretch stretch) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_VIEWBOX);
+void Zviewbox_set_stretch(const Zid id, const ZStretch stretch) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_VIEWBOX);
 	if (!e) return;
 	ZST_AS(zrn_viewbox_t, e)->stretch = stretch;
 	zrn_changed_layout(e);
 }
 
-void Zviewbox_set_stretch_direction(Zid id, ZStretchDirection direction) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_VIEWBOX);
+void Zviewbox_set_stretch_direction(const Zid id, const ZStretchDirection direction) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_VIEWBOX);
 	if (!e) return;
 	ZST_AS(zrn_viewbox_t, e)->direction = direction;
 	zrn_changed_layout(e);

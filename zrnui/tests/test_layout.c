@@ -13,7 +13,7 @@ static Zid box(float w, float h) {
 }
 
 static Zid host(Zid visual, int w, int h) {
-	Zid root = Zroot_create(w, h);
+	Zid root = zst_test_root(w, h);
 	Zroot_set_visual(root, visual);
 	Zroot_update_layout(root);
 	return root;

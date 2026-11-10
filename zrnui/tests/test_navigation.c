@@ -23,10 +23,10 @@ static Zid page_a(Zid frame, void* param) {
 	b = Zpanel_add(stack, Zbutton_create("to B"));
 	Zelement_set_vertical_alignment(b, Z_VALIGN_TOP);
 	Zelement_set_name(b, "go");
-	Zbutton_on_click(b, go_b_click, NULL);
+	Zbutton_on_click(b, go_b_click, nullptr);
 	Zpage_set_content(page, stack);
-	Zpage_on_navigated_to(page, to_a, NULL);
-	Zpage_on_navigated_from(page, from_a, NULL);
+	Zpage_on_navigated_to(page, to_a, nullptr);
+	Zpage_on_navigated_from(page, from_a, nullptr);
 	return page;
 }
 
@@ -34,7 +34,7 @@ static Zid page_b(Zid frame, void* param) {
 	Zid page = Zpage_create();
 	(void)frame; (void)param;
 	Zpage_set_content(page, Ztext_block_create("B"));
-	Zpage_on_navigated_to(page, to_b, NULL);
+	Zpage_on_navigated_to(page, to_b, nullptr);
 	return page;
 }
 
@@ -54,7 +54,7 @@ static void go_b_click(Zid sender, void* u) {
 }
 
 static void setup(void) {
-	g_root = Zroot_create(480, 800);
+	g_root = zst_test_root(480, 800);
 	g_frame = Zframe_create();
 	Zroot_set_visual(g_root, g_frame);
 	g_log[0] = 0;
@@ -65,7 +65,7 @@ static void test_navigate_and_back(void) {
 	setup();
 	CHECK(Zframe_get_page(g_frame) == Z_INVALID_ID);
 	CHECK(!Zframe_can_go_back(g_frame));
-	CHECK(Zframe_navigate(g_frame, page_a, NULL));
+	CHECK(Zframe_navigate(g_frame, page_a, nullptr));
 	a = Zframe_get_page(g_frame);
 	CHECK(a != Z_INVALID_ID && Zelement_is_a(a, Z_CLASS_PAGE));
 	CHECK(Zpage_get_frame(a) == g_frame);
@@ -74,7 +74,7 @@ static void test_navigate_and_back(void) {
 	b = Zframe_get_page(g_frame);
 	CHECK(b != a);
 	CHECK(Zframe_can_go_back(g_frame) && Zframe_get_back_stack_depth(g_frame) == 1);
-	CHECK(Zframe_navigate(g_frame, page_c, NULL));
+	CHECK(Zframe_navigate(g_frame, page_c, nullptr));
 	c = Zframe_get_page(g_frame);
 	CHECK(Zframe_get_back_stack_depth(g_frame) == 2);
 	/* the old page is destroyed when the frame leaves it: its Zid no longer names a Page */
@@ -83,14 +83,14 @@ static void test_navigate_and_back(void) {
 	CHECK(Zframe_go_back(g_frame));
 	/* B is built again from its entry, with its own parameter */
 	CHECK(Zframe_get_page(g_frame) != c);
-	CHECK(strstr(g_log, "toBp1 toBp1") != NULL);
+	CHECK(strstr(g_log, "toBp1 toBp1") != nullptr);
 	CHECK(Zframe_can_go_forward(g_frame));
 	CHECK(Zframe_go_back(g_frame));
 	CHECK(!Zframe_can_go_back(g_frame));
 	CHECK(!Zframe_go_back(g_frame));
 	CHECK(Zframe_go_forward(g_frame));
 	/* a new Navigate drops the pages ahead */
-	CHECK(Zframe_navigate(g_frame, page_c, NULL));
+	CHECK(Zframe_navigate(g_frame, page_c, nullptr));
 	CHECK(!Zframe_can_go_forward(g_frame));
 	Zroot_destroy(g_root);
 }
@@ -99,7 +99,7 @@ static void test_safe_area(void) {
 	Zid page;
 	ZRect r;
 	setup();
-	Zframe_navigate(g_frame, page_a, NULL);
+	Zframe_navigate(g_frame, page_a, nullptr);
 	Zroot_update_layout(g_root);
 	page = Zframe_get_page(g_frame);
 	r = Zelement_get_bounds(page);
@@ -115,11 +115,11 @@ static void test_safe_area(void) {
 static void test_refusal(void) {
 	Zid shown;
 	setup();
-	CHECK(Zframe_navigate(g_frame, page_a, NULL));
+	CHECK(Zframe_navigate(g_frame, page_a, nullptr));
 	shown = Zframe_get_page(g_frame);
-	CHECK(!Zframe_navigate(g_frame, refuse, NULL));
-	CHECK(!Zframe_navigate(g_frame, not_a_page, NULL));
-	CHECK(!Zframe_navigate(g_frame, NULL, NULL));
+	CHECK(!Zframe_navigate(g_frame, refuse, nullptr));
+	CHECK(!Zframe_navigate(g_frame, not_a_page, nullptr));
+	CHECK(!Zframe_navigate(g_frame, nullptr, nullptr));
 	CHECK(Zframe_get_page(g_frame) == shown);
 	CHECK(Zframe_get_back_stack_depth(g_frame) == 0);
 	Zroot_destroy(g_root);
@@ -127,8 +127,8 @@ static void test_refusal(void) {
 
 static void test_callback_order(void) {
 	setup();
-	Zelement_on(g_frame, Z_EVENT_NAVIGATED, on_navigated, NULL);
-	Zframe_navigate(g_frame, page_a, NULL);
+	Zelement_on(g_frame, Z_EVENT_NAVIGATED, on_navigated, nullptr);
+	Zframe_navigate(g_frame, page_a, nullptr);
 	CHECK(strcmp(g_log, "toA nav ") == 0);
 	g_log[0] = 0;
 	Zframe_navigate(g_frame, page_b, "x");
@@ -139,19 +139,19 @@ static void test_callback_order(void) {
 static void test_back_button(void) {
 	setup();
 	CHECK(!Zroot_back(g_root));
-	Zframe_navigate(g_frame, page_a, NULL);
+	Zframe_navigate(g_frame, page_a, nullptr);
 	CHECK(!Zroot_back(g_root));
-	Zframe_navigate(g_frame, page_c, NULL);
+	Zframe_navigate(g_frame, page_c, nullptr);
 	CHECK(Zroot_back(g_root));
 	CHECK(!Zroot_back(g_root));
 	/* Escape is Back, and it is handled only when there was a page to go back to */
-	Zframe_navigate(g_frame, page_c, NULL);
+	Zframe_navigate(g_frame, page_c, nullptr);
 	CHECK(Zroot_inject_key(g_root, Z_KEY_ESCAPE, 0, 1));
 	CHECK(!Zroot_inject_key(g_root, Z_KEY_ESCAPE, 0, 1));
 	Zroot_destroy(g_root);
 	{
 		/* with no Frame there is nothing to go back to */
-		Zid root = Zroot_create(480, 800);
+		Zid root = zst_test_root(480, 800);
 		Zroot_set_visual(root, Zstack_panel_create(Z_VERTICAL));
 		CHECK(!Zroot_back(root));
 		Zroot_destroy(root);
@@ -163,7 +163,7 @@ static void test_tap_navigates_away(void) {
 	Zid button;
 	ZPoint p;
 	setup();
-	Zframe_navigate(g_frame, page_a, NULL);
+	Zframe_navigate(g_frame, page_a, nullptr);
 	Zroot_update_layout(g_root);
 	button = Zelement_find_name(Zframe_get_page(g_frame), "go");
 	CHECK(button != Z_INVALID_ID);
@@ -171,8 +171,8 @@ static void test_tap_navigates_away(void) {
 	Zroot_inject_pointer(g_root, Z_POINTER_MOVE, p.x, p.y);
 	Zroot_inject_pointer(g_root, Z_POINTER_DOWN, p.x, p.y);
 	Zroot_inject_pointer(g_root, Z_POINTER_UP, p.x, p.y);
-	CHECK(strstr(g_log, "fromA toB!") != NULL);
-	CHECK(strstr(g_log, "(returned)") != NULL);
+	CHECK(strstr(g_log, "fromA toB!") != nullptr);
+	CHECK(strstr(g_log, "(returned)") != nullptr);
 	CHECK(Zframe_get_back_stack_depth(g_frame) == 1);
 	/* the new page draws and takes input */
 	Zroot_update_layout(g_root);

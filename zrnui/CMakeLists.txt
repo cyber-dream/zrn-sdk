@@ -11,6 +11,13 @@ endif()
 
 option(ZRNUI_BUILD_SHARED "Build zrnui as a shared library" OFF)
 option(ZRNUI_BUILD_TESTS "Build the tests" ${ZRNUI_IS_TOP_LEVEL})
+# Z_DEBUG switches the debug features on, in the library and in every target that links it
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+	set(ZRNUI_DEBUG_DEFAULT ON)
+else()
+	set(ZRNUI_DEBUG_DEFAULT OFF)
+endif()
+option(ZRNUI_DEBUG "Define Z_DEBUG: build the debug features" ${ZRNUI_DEBUG_DEFAULT})
 option(ZRNUI_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
 
 set(CMAKE_C_STANDARD 23)
@@ -25,7 +32,6 @@ pkg_check_modules(FONTCONFIG IMPORTED_TARGET fontconfig)
 
 set(ZRNUI_SOURCES
 	src/core.c
-	src/debug.c
 	src/anim.c
 	src/theme.c
 	src/theme_resources.c
@@ -82,6 +88,9 @@ else()
 	add_library(zrnui STATIC ${ZRNUI_SOURCES})
 endif()
 add_library(zrnui::zrnui ALIAS zrnui)
+if(ZRNUI_DEBUG)
+	target_compile_definitions(zrnui PUBLIC Z_DEBUG)
+endif()
 
 target_include_directories(zrnui PUBLIC include PRIVATE src)
 target_link_libraries(zrnui PRIVATE PkgConfig::FREETYPE PkgConfig::PNG m)
@@ -107,11 +116,11 @@ else()
 endif()
 
 # the Selawik fonts that stand in for Segoe WP are found here unless Zset_font_directory / $ZRNUI_FONT_DIR says otherwise
-set(ZRNUI_FONT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/fonts" CACHE PATH "Directory containing the bundled Selawik fonts")
+set(ZRNUI_FONT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/fonts/selawik" CACHE PATH "Directory containing the bundled Selawik fonts")
 target_compile_definitions(zrnui PRIVATE ZRNUI_FONT_DIR="${ZRNUI_FONT_DIR}")
 
 # the theme colors: the readable file, overridable with $ZRNUI_THEME
-set(ZRNUI_THEME_FILE "${CMAKE_CURRENT_SOURCE_DIR}/theme.ini" CACHE FILEPATH "Path to the theme.ini file")
+set(ZRNUI_THEME_FILE "${CMAKE_CURRENT_SOURCE_DIR}/theme/theme.ini" CACHE FILEPATH "Path to the theme.ini file")
 target_compile_definitions(zrnui PRIVATE ZRNUI_THEME_FILE="${ZRNUI_THEME_FILE}")
 
 if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
@@ -124,4 +133,17 @@ endif()
 if(ZRNUI_BUILD_TESTS)
 	enable_testing()
 	add_subdirectory(tests)
+endif()
+
+# libFuzzer targets (clang only): cmake -DZRNUI_BUILD_FUZZERS=ON, then run fuzz/fuzz_text etc. on a corpus directory
+option(ZRNUI_BUILD_FUZZERS "Build the libFuzzer targets (needs clang)" OFF)
+if(ZRNUI_BUILD_FUZZERS)
+	add_subdirectory(fuzz)
+endif()
+
+# coverage of the tests: cmake -DZRNUI_COVERAGE=ON, run ctest, then the `coverage` target prints a gcov summary
+option(ZRNUI_COVERAGE "Build with gcov instrumentation" OFF)
+if(ZRNUI_COVERAGE)
+	target_compile_options(zrnui PRIVATE --coverage -O0)
+	target_link_libraries(zrnui PUBLIC --coverage)
 endif()

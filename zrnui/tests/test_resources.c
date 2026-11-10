@@ -32,7 +32,7 @@ static int count_gray(Zid root, int gray) {
 }
 
 static void test_known_values(void) {
-	Zid root = Zroot_create(480, 800);
+	Zid root = zst_test_root(480, 800);
 	ZThickness t;
 	CHECK_NEAR(Zroot_get_theme_double(root, Z_RES_PIVOT_HEADER_ITEM_FONT_SIZE), 57);
 	CHECK(Zroot_get_theme_int(root, Z_RES_PIVOT_HEADER_ITEM_CHARACTER_SPACING) == -25);
@@ -60,7 +60,7 @@ static void test_known_values(void) {
 }
 
 static void test_accent(void) {
-	Zid root = Zroot_create(100, 100);
+	Zid root = zst_test_root(100, 100);
 	ZColor a = Zroot_get_accent_color(root), c;
 	c = Zroot_get_theme_color(root, Z_RES_PHONE_ACCENT_BRUSH);
 	CHECK(near_color(c, a));
@@ -84,7 +84,7 @@ static void test_accent(void) {
 }
 
 static void test_override_and_clear(void) {
-	Zid root = Zroot_create(100, 100);
+	Zid root = zst_test_root(100, 100);
 	ZThickness t = Zthickness(1, 2, 3, 4);
 	CHECK(Zroot_set_resource_double(root, Z_RES_PIVOT_HEADER_ITEM_FONT_SIZE, 30));
 	CHECK_NEAR(Zroot_get_theme_double(root, Z_RES_PIVOT_HEADER_ITEM_FONT_SIZE), 30);
@@ -112,7 +112,7 @@ static void test_override_and_clear(void) {
 	CHECK(Zroot_get_theme_int(root, Z_RES_PIVOT_HEADER_ITEM_CHARACTER_SPACING) == -5);
 	/* the root of another is not touched */
 	{
-		Zid other = Zroot_create(100, 100);
+		Zid other = zst_test_root(100, 100);
 		CHECK_NEAR(Zroot_get_theme_double(other, Z_RES_PIVOT_HEADER_ITEM_FONT_SIZE), 57);
 		CHECK(Zroot_get_theme_int(other, Z_RES_PIVOT_HEADER_ITEM_CHARACTER_SPACING) == -25);
 		Zroot_destroy(other);
@@ -121,7 +121,7 @@ static void test_override_and_clear(void) {
 }
 
 static void test_user_keys(void) {
-	Zid root = Zroot_create(100, 100);
+	Zid root = zst_test_root(100, 100);
 	ZThemeResource k1 = (ZThemeResource)(Z_RES_USER_BASE + 1), k2 = (ZThemeResource)(Z_RES_USER_BASE + 2), far = (ZThemeResource)(Z_RES_USER_BASE + 100000);
 	int i;
 	CHECK(Zroot_get_theme_int(root, k1) == 0);
@@ -147,7 +147,7 @@ static void test_user_keys(void) {
 }
 
 static void test_invalid(void) {
-	Zid root = Zroot_create(100, 100);
+	Zid root = zst_test_root(100, 100);
 	ZColor c;
 	CHECK(!Zroot_set_resource_double(root, Z_RES_NONE, 1));
 	CHECK(!Zroot_set_resource_double(root, Z_RES_LAST_, 1));
@@ -196,7 +196,7 @@ static void test_invalid(void) {
 }
 
 static void test_bindings(void) {
-	Zid root = Zroot_create(200, 200);
+	Zid root = zst_test_root(200, 200);
 	Zid button = Zbutton_create("b"), tb = Ztext_block_create("M");
 	ZThemeResource user = (ZThemeResource)(Z_RES_USER_BASE + 7);
 	ZThickness t;
@@ -272,7 +272,7 @@ static void test_bindings(void) {
 }
 
 static void test_bound_accent_and_border(void) {
-	Zid root = Zroot_create(100, 100);
+	Zid root = zst_test_root(100, 100);
 	Zid border = Zborder_create();
 	int r, g, b;
 	Zelement_set_width(border, 100);
@@ -302,7 +302,7 @@ static void test_bound_accent_and_border(void) {
 
 static void test_destroy_paths(void) {
 	/* bound elements destroyed before and with the root, a theme change in between */
-	Zid root = Zroot_create(100, 100);
+	Zid root = zst_test_root(100, 100);
 	Zid panel = Zstack_panel_create(Z_VERTICAL);
 	Zid a = Ztext_block_create("a"), b = Ztext_block_create("b"), c = Ztext_block_create("c");
 	Zpanel_add(panel, a);
@@ -319,7 +319,7 @@ static void test_destroy_paths(void) {
 	Zpanel_remove(panel, c); /* out of the tree, alive: no longer followed, applied again when it is back */
 	Zroot_set_theme(root, Z_THEME_DARK);
 	Zpanel_add(panel, c);
-	Zroot_render(root, NULL);
+	Zroot_render(root, nullptr);
 	Zelement_destroy(c);
 	Zroot_destroy(root); /* with a and the panel */
 }
@@ -349,7 +349,7 @@ static void test_tables_agree(void) {
 		{ Z_RES_PHONE_TEXT_MID_COLOR, ZST_TC_TEXT_MID }, { Z_RES_PHONE_TEXT_LOW_COLOR, ZST_TC_TEXT_LOW },
 		{ Z_RES_CONTENT_DIALOG_DIMMING_COLOR, ZST_TC_CONTENT_DIALOG_DIMMING }
 	};
-	Zid root = Zroot_create(100, 100);
+	Zid root = zst_test_root(100, 100);
 	int theme, accent, i;
 	for (theme = 0; theme < 2; theme++) {
 		for (accent = 0; accent < 2; accent++) {
@@ -370,7 +370,7 @@ static void test_tables_agree(void) {
 
 int main(void) {
 	CHECK(Zinit());
-	Zset_error_callback(quiet_errors, NULL); /* the tests provoke errors on purpose */
+	Zset_error_callback(quiet_errors, nullptr); /* the tests provoke errors on purpose */
 	RUN(test_known_values);
 	RUN(test_accent);
 	RUN(test_override_and_clear);

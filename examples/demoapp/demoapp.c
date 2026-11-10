@@ -5,7 +5,7 @@
 #include "pages/main.h"
 
 
-int main(void) {
+int main() {
     /* TODO describe an error */
     if (!Zinit())
         return 1;

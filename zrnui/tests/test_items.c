@@ -32,7 +32,7 @@ static void run(Zid root, float ms) {
 }
 
 static Zid make_root(Zid visual, ZAnimations animations) {
-	Zid root = Zroot_create(480, 800);
+	Zid root = zst_test_root(480, 800);
 	Zroot_set_renderer(root, Z_RENDERER_SOFTWARE);
 	Zroot_set_animations(root, animations);
 	Zroot_set_visual(root, visual);
@@ -87,10 +87,10 @@ static void test_classes(void) {
 	CHECK_STR(Zelement_get_class_name(item), "ListViewItem");
 	CHECK_STR(Zelement_get_class_name(Zitems_control_get_items_panel(lv)), "ItemsStackPanel");
 	CHECK_STR(Zelement_get_class_name(Zitems_control_get_items_panel(gv)), "ItemsWrapGrid");
-	Zset_error_callback(quiet, NULL);
+	Zset_error_callback(quiet, nullptr);
 	CHECK(Zelement_create(Z_CLASS_LIST_VIEW_BASE) == Z_INVALID_ID); /* abstract */
 	CHECK(Zelement_create(Z_CLASS_SELECTOR_ITEM) == Z_INVALID_ID);
-	Zset_error_callback(NULL, NULL);
+	Zset_error_callback(nullptr, nullptr);
 	CHECK(Zelement_is_a(Zelement_create(Z_CLASS_GRID_VIEW_HEADER_ITEM), Z_CLASS_LIST_VIEW_BASE_HEADER_ITEM));
 	Zelement_destroy(lv);
 	Zelement_destroy(gv);
@@ -111,7 +111,7 @@ static void test_list_view_single_selection(void) {
 	root = make_root(lv, Z_ANIMATIONS_OFF);
 	CHECK(Zlist_view_get_selection_mode(lv) == Z_LIST_VIEW_SELECTION_SINGLE);
 	g_changes = 0;
-	Zelement_on(lv, Z_EVENT_SELECTION_CHANGED, on_change, NULL);
+	Zelement_on(lv, Z_EVENT_SELECTION_CHANGED, on_change, nullptr);
 	tap(root, center(Zitems_control_get_container(lv, 2)));
 	CHECK(Zselector_get_selected_index(lv) == 2 && g_changes == 1);
 	CHECK(Zselector_item_get_is_selected(Zitems_control_get_container(lv, 2)));
@@ -128,7 +128,7 @@ static void test_list_view_single_selection(void) {
 	CHECK(Zselector_get_selected_index(lv) == -1 && g_changes == 4);
 	/* select all is for the multiple modes */
 	Zlist_view_select_all(lv);
-	CHECK(Zlist_view_get_selected_indices(lv, NULL, 0) == 0);
+	CHECK(Zlist_view_get_selected_indices(lv, nullptr, 0) == 0);
 	/* an index past the end selects nothing */
 	Zselector_set_selected_index(lv, 99);
 	CHECK(Zselector_get_selected_index(lv) == -1);
@@ -141,8 +141,8 @@ static void test_list_view_none_and_item_click(void) {
 	root = make_root(lv, Z_ANIMATIONS_OFF);
 	g_changes = g_clicks = 0;
 	g_clicked = -1;
-	Zelement_on(lv, Z_EVENT_SELECTION_CHANGED, on_change, NULL);
-	Zlist_view_on_item_click(lv, on_item_click, NULL);
+	Zelement_on(lv, Z_EVENT_SELECTION_CHANGED, on_change, nullptr);
+	Zlist_view_on_item_click(lv, on_item_click, nullptr);
 	/* IsItemClickEnabled is off at first: a tap selects and nothing is clicked */
 	CHECK(!Zlist_view_get_is_item_click_enabled(lv));
 	tap(root, center(Zitems_control_get_container(lv, 1)));
@@ -170,7 +170,7 @@ static void test_list_view_none_and_item_click(void) {
 		Zroot_inject_pointer(root, Z_POINTER_UP, 470, 790);
 		CHECK(g_clicks == 2);
 	}
-	Zlist_view_on_item_click(lv, NULL, NULL);
+	Zlist_view_on_item_click(lv, nullptr, nullptr);
 	tap(root, center(Zitems_control_get_container(lv, 0)));
 	CHECK(g_clicks == 2);
 	Zroot_destroy(root);
@@ -183,7 +183,7 @@ static void test_list_view_multiple_and_extended(void) {
 	Zlist_view_set_selection_mode(lv, Z_LIST_VIEW_SELECTION_MULTIPLE);
 	root = make_root(lv, Z_ANIMATIONS_OFF);
 	g_changes = 0;
-	Zelement_on(lv, Z_EVENT_SELECTION_CHANGED, on_change, NULL);
+	Zelement_on(lv, Z_EVENT_SELECTION_CHANGED, on_change, nullptr);
 	tap(root, center(Zitems_control_get_container(lv, 1)));
 	tap(root, center(Zitems_control_get_container(lv, 3)));
 	CHECK(Zlist_view_get_selected_indices(lv, indices, 8) == 2 && indices[0] == 1 && indices[1] == 3 && g_changes == 2);
@@ -191,13 +191,13 @@ static void test_list_view_multiple_and_extended(void) {
 	tap(root, center(Zitems_control_get_container(lv, 1)));
 	CHECK(Zlist_view_get_selected_indices(lv, indices, 8) == 1 && indices[0] == 3 && g_changes == 3);
 	Zlist_view_select_all(lv);
-	CHECK(Zlist_view_get_selected_indices(lv, NULL, 0) == 6);
+	CHECK(Zlist_view_get_selected_indices(lv, nullptr, 0) == 6);
 	/* the keyboard: Ctrl+A on a view that has it */
 	Zselector_set_selected_index(lv, -1);
-	CHECK(Zlist_view_get_selected_indices(lv, NULL, 0) == 0);
+	CHECK(Zlist_view_get_selected_indices(lv, nullptr, 0) == 0);
 	Zelement_focus(lv);
 	key(root, Z_KEY_A, Z_MOD_CTRL);
-	CHECK(Zlist_view_get_selected_indices(lv, NULL, 0) == 6);
+	CHECK(Zlist_view_get_selected_indices(lv, nullptr, 0) == 6);
 	/* Extended: a tap selects that item alone */
 	Zlist_view_set_selection_mode(lv, Z_LIST_VIEW_SELECTION_EXTENDED);
 	tap(root, center(Zitems_control_get_container(lv, 2)));
@@ -205,7 +205,7 @@ static void test_list_view_multiple_and_extended(void) {
 	/* back to Single keeps one */
 	Zlist_view_select_all(lv);
 	Zlist_view_set_selection_mode(lv, Z_LIST_VIEW_SELECTION_SINGLE);
-	CHECK(Zlist_view_get_selected_indices(lv, NULL, 0) == 1);
+	CHECK(Zlist_view_get_selected_indices(lv, nullptr, 0) == 1);
 	Zroot_destroy(root);
 }
 
@@ -276,13 +276,13 @@ static void test_list_view_header_footer_and_scroll(void) {
 		ZPoint p = Zelement_to_root(Zitems_control_get_container(lv, 0), (ZPoint){ 0, 0 });
 		CHECK(p.y >= Zelement_get_bounds(header).height);
 	}
-	Zlist_view_set_header(lv, NULL);
+	Zlist_view_set_header(lv, nullptr);
 	Zlist_view_set_footer_content(lv, Z_INVALID_ID);
 	Zroot_update_layout(root);
 	CHECK_NEAR(Zscroll_viewer_get_extent_height(sv), extent_without);
 	/* a drag scrolls and selects nothing, the wheel scrolls, ScrollIntoView brings the item */
 	g_changes = 0;
-	Zelement_on(lv, Z_EVENT_SELECTION_CHANGED, on_change, NULL);
+	Zelement_on(lv, Z_EVENT_SELECTION_CHANGED, on_change, nullptr);
 	{
 		ZPoint p = center(Zitems_control_get_container(lv, 10));
 		Zroot_inject_pointer(root, Z_POINTER_MOVE, p.x, p.y);
@@ -321,8 +321,8 @@ static void test_list_view_keyboard(void) {
 	Zlist_view_set_is_item_click_enabled(lv, true);
 	root = make_root(lv, Z_ANIMATIONS_OFF);
 	g_changes = g_clicks = 0;
-	Zelement_on(lv, Z_EVENT_SELECTION_CHANGED, on_change, NULL);
-	Zlist_view_on_item_click(lv, on_item_click, NULL);
+	Zelement_on(lv, Z_EVENT_SELECTION_CHANGED, on_change, nullptr);
+	Zlist_view_on_item_click(lv, on_item_click, nullptr);
 	/* a touch gives the list the keyboard; Down selects the first item */
 	tap(root, center(Zitems_control_get_container(lv, 4)));
 	CHECK(Zroot_get_focus(root) == lv && Zselector_get_selected_index(lv) == 4);
@@ -347,7 +347,7 @@ static void test_list_view_keyboard(void) {
 	Zlist_view_set_selection_mode(lv, Z_LIST_VIEW_SELECTION_MULTIPLE);
 	Zselector_set_selected_index(lv, -1);
 	key(root, Z_KEY_HOME, 0);
-	CHECK(Zlist_view_get_selected_indices(lv, NULL, 0) == 0);
+	CHECK(Zlist_view_get_selected_indices(lv, nullptr, 0) == 0);
 	key(root, Z_KEY_SPACE, 0);
 	key(root, Z_KEY_DOWN, 0);
 	key(root, Z_KEY_DOWN, 0);
@@ -387,7 +387,7 @@ static void test_items_panels_and_groups(void) {
 	CHECK(Zitems_control_index_from_container(lv, h2) == -1);
 	root = make_root(lv, Z_ANIMATIONS_OFF);
 	g_changes = 0;
-	Zelement_on(lv, Z_EVENT_SELECTION_CHANGED, on_change, NULL);
+	Zelement_on(lv, Z_EVENT_SELECTION_CHANGED, on_change, nullptr);
 	tap(root, center(Zitems_control_get_container(lv, 2)));
 	CHECK(Zselector_get_selected_index(lv) == 2);
 	/* a tap on a header selects nothing */
@@ -521,7 +521,7 @@ static void test_list_box_modes_and_look(void) {
 	fill(lb, 4);
 	root = make_root(lb, Z_ANIMATIONS_OFF);
 	g_changes = 0;
-	Zelement_on(lb, Z_EVENT_SELECTION_CHANGED, on_change, NULL);
+	Zelement_on(lb, Z_EVENT_SELECTION_CHANGED, on_change, nullptr);
 	CHECK(Zlist_box_get_selection_mode(lb) == Z_SELECTION_SINGLE);
 	/* the box is PhoneBaseMediumHigh, 80% white: grey on the black page; a selected row is the accent */
 	{
@@ -645,7 +645,7 @@ static void test_combo_box_8_1(void) {
 	/* a header, the 9.5 of the touch target, a 38.5 outline, 9.5 */
 	CHECK(Zelement_get_bounds(cb).height > 57.5 + 10);
 	/* with a header off, the control is 57.5 high, like a Button */
-	Zcombo_box_set_header(cb, NULL);
+	Zcombo_box_set_header(cb, nullptr);
 	Zroot_update_layout(root);
 	CHECK_NEAR(Zelement_get_bounds(cb).height, 57.5);
 	{
@@ -740,9 +740,9 @@ static void test_combo_box_events(void) {
 	fill(cb, 3);
 	root = make_root(stack, Z_ANIMATIONS_OFF);
 	g_opened = g_closed = g_changes = 0;
-	Zelement_on(cb, Z_EVENT_DROP_DOWN_OPENED, on_opened, NULL);
-	Zelement_on(cb, Z_EVENT_DROP_DOWN_CLOSED, on_closed, NULL);
-	Zelement_on(cb, Z_EVENT_SELECTION_CHANGED, on_change, NULL);
+	Zelement_on(cb, Z_EVENT_DROP_DOWN_OPENED, on_opened, nullptr);
+	Zelement_on(cb, Z_EVENT_DROP_DOWN_CLOSED, on_closed, nullptr);
+	Zelement_on(cb, Z_EVENT_SELECTION_CHANGED, on_change, nullptr);
 	tap(root, center(cb));
 	CHECK(g_opened == 1 && g_closed == 0);
 	Zroot_update_layout(root);
@@ -783,7 +783,7 @@ static void test_flip_view(void) {
 	CHECK(Zselector_get_selected_index(fv) == 0);
 	root = make_root(fv, Z_ANIMATIONS_OFF);
 	g_changes = 0;
-	Zelement_on(fv, Z_EVENT_SELECTION_CHANGED, on_change, NULL);
+	Zelement_on(fv, Z_EVENT_SELECTION_CHANGED, on_change, nullptr);
 	CHECK(Zelement_is_a(Zitems_control_get_container(fv, 0), Z_CLASS_FLIP_VIEW_ITEM));
 	{
 		/* the pages are the size of the view less the 2.5 margin, one page apart */
@@ -921,9 +921,9 @@ static Zid asb_page(Zid* root) {
 	Zid stack = Zstack_panel_create(Z_VERTICAL), box = Zpanel_add(stack, Zauto_suggest_box_create());
 	Zelement_set_vertical_alignment(box, Z_VALIGN_TOP);
 	Zpanel_add(stack, Zbutton_create("next"));
-	Zauto_suggest_box_on_text_changed(box, asb_changed, NULL);
-	Zauto_suggest_box_on_suggestion_chosen(box, asb_chosen, NULL);
-	Zauto_suggest_box_on_query_submitted(box, asb_query, NULL);
+	Zauto_suggest_box_on_text_changed(box, asb_changed, nullptr);
+	Zauto_suggest_box_on_suggestion_chosen(box, asb_chosen, nullptr);
+	Zauto_suggest_box_on_query_submitted(box, asb_query, nullptr);
 	*root = make_root(stack, Z_ANIMATIONS_OFF);
 	g_reason_count = g_chosen = g_query_count = g_order_count = 0;
 	g_query_chosen = -2;
@@ -1078,8 +1078,8 @@ static void test_semantic_zoom(void) {
 	CHECK(Zsemantic_zoom_get_is_zoomed_in_view_active(sz));
 	CHECK(Zelement_get_visibility(in) == Z_VISIBLE && Zelement_get_visibility(out) == Z_COLLAPSED);
 	CHECK(Zelement_get_bounds(in).width == 480 && Zelement_get_bounds(in).height == 800);
-	Zsemantic_zoom_on_view_change_started(sz, zoom_started, NULL);
-	Zsemantic_zoom_on_view_change_completed(sz, zoom_completed, NULL);
+	Zsemantic_zoom_on_view_change_started(sz, zoom_started, nullptr);
+	Zsemantic_zoom_on_view_change_completed(sz, zoom_completed, nullptr);
 	g_zoom_count = 0;
 	Zsemantic_zoom_toggle_active_view(sz);
 	CHECK(!Zsemantic_zoom_get_is_zoomed_in_view_active(sz));
@@ -1112,24 +1112,24 @@ static void destroy_on_reason(Zid sender, ZAutoSuggestionBoxTextChangeReason rea
 static void destroy_on_zoom(Zid sender, int source, void* user) { (void)source; destroy_self(sender, user); }
 
 static void survives(Zid root) {
-	Zroot_render(root, NULL);
+	Zroot_render(root, nullptr);
 	Zroot_inject_pointer(root, Z_POINTER_MOVE, 100, 100);
 	Zroot_inject_pointer(root, Z_POINTER_UP, 100, 100);
 	Zroot_inject_key(root, Z_KEY_DOWN, 0, 1);
 	Zroot_inject_key(root, Z_KEY_DOWN, 0, 0);
 	Zroot_inject_text(root, "x");
 	Zroot_tick(root, 1000);
-	Zroot_render(root, NULL);
+	Zroot_render(root, nullptr);
 }
 
 static void test_handlers_that_destroy(void) {
-	Zid root = Zroot_create(480, 800), c;
+	Zid root = zst_test_root(480, 800), c;
 	g_nav_root = root;
 	/* ItemClick of a ListView */
 	c = Zlist_view_create();
 	fill(c, 3);
 	Zlist_view_set_is_item_click_enabled(c, true);
-	Zlist_view_on_item_click(c, destroy_on_click, NULL);
+	Zlist_view_on_item_click(c, destroy_on_click, nullptr);
 	Zroot_set_visual(root, c);
 	Zroot_update_layout(root);
 	g_nav = 0;
@@ -1139,7 +1139,7 @@ static void test_handlers_that_destroy(void) {
 	/* SelectionChanged of a ListView and of a GridView */
 	c = Zgrid_view_create();
 	fill(c, 3);
-	Zelement_on(c, Z_EVENT_SELECTION_CHANGED, destroy_self, NULL);
+	Zelement_on(c, Z_EVENT_SELECTION_CHANGED, destroy_self, nullptr);
 	Zroot_set_visual(root, c);
 	Zroot_update_layout(root);
 	g_nav = 0;
@@ -1149,7 +1149,7 @@ static void test_handlers_that_destroy(void) {
 	/* SelectionChanged of a FlipView, from a drag */
 	c = Zflip_view_create();
 	fill(c, 3);
-	Zelement_on(c, Z_EVENT_SELECTION_CHANGED, destroy_self, NULL);
+	Zelement_on(c, Z_EVENT_SELECTION_CHANGED, destroy_self, nullptr);
 	Zroot_set_visual(root, c);
 	Zroot_update_layout(root);
 	g_nav = 0;
@@ -1158,7 +1158,7 @@ static void test_handlers_that_destroy(void) {
 	survives(root);
 	/* SuggestionChosen, and TextChanged of an AutoSuggestBox */
 	c = Zauto_suggest_box_create();
-	Zauto_suggest_box_on_suggestion_chosen(c, destroy_on_chosen, NULL);
+	Zauto_suggest_box_on_suggestion_chosen(c, destroy_on_chosen, nullptr);
 	Zroot_set_visual(root, c);
 	Zroot_update_layout(root);
 	tap(root, center(c));
@@ -1169,7 +1169,7 @@ static void test_handlers_that_destroy(void) {
 	CHECK(g_nav == 1 && !Zelement_is_valid(c));
 	survives(root);
 	c = Zauto_suggest_box_create();
-	Zauto_suggest_box_on_text_changed(c, destroy_on_reason, NULL);
+	Zauto_suggest_box_on_text_changed(c, destroy_on_reason, nullptr);
 	Zroot_set_visual(root, c);
 	Zroot_update_layout(root);
 	tap(root, center(c));
@@ -1180,7 +1180,7 @@ static void test_handlers_that_destroy(void) {
 	/* ViewChangeStarted of a SemanticZoom */
 	c = Zsemantic_zoom_create();
 	Zsemantic_zoom_set_zoomed_in_view(c, Zlist_view_create());
-	Zsemantic_zoom_on_view_change_started(c, destroy_on_zoom, NULL);
+	Zsemantic_zoom_on_view_change_started(c, destroy_on_zoom, nullptr);
 	Zroot_set_visual(root, c);
 	g_nav = 0;
 	Zsemantic_zoom_toggle_active_view(c);
@@ -1190,7 +1190,7 @@ static void test_handlers_that_destroy(void) {
 	c = Zcombo_box_create();
 	fill(c, 3);
 	Zelement_set_vertical_alignment(c, Z_VALIGN_TOP);
-	Zelement_on(c, Z_EVENT_SELECTION_CHANGED, destroy_self, NULL);
+	Zelement_on(c, Z_EVENT_SELECTION_CHANGED, destroy_self, nullptr);
 	Zroot_set_visual(root, c);
 	Zroot_update_layout(root);
 	tap(root, center(c));
@@ -1207,7 +1207,7 @@ static void test_handlers_that_destroy(void) {
 
 static void test_picture(void) {
 	Zid stack = Zstack_panel_create(Z_VERTICAL), lv, gv, cb, box, grid;
-	Zid root = Zroot_create(480, 800);
+	Zid root = zst_test_root(480, 800);
 	char path[512];
 	Zroot_set_renderer(root, Z_RENDERER_SOFTWARE);
 	Zelement_set_margin(stack, Zthickness(12, 0, 12, 0));

@@ -13,21 +13,21 @@
 #define IC(e) ZST_AS(zrn_items_control_t, e)
 #define FV(e) ZST_AS(zrn_flip_view_t, e)
 
-#define FLIP_MARGIN 2.5f
-#define SLIDE_MS 300.0f
-#define DRAG_START 12.0f
+static constexpr float FLIP_MARGIN = 2.5f;
+static constexpr float SLIDE_MS = 300.0f;
+static constexpr float DRAG_START = 12.0f;
 
 static float clampf(float v, float lo, float hi) { return v < lo ? lo : v > hi ? hi : v; }
 
-static ZRect flip_viewport(const zrn_element_t* e) {
+static ZRect flip_viewport(const zrn_element_t* const e) {
 	return zrn_rect(FLIP_MARGIN, FLIP_MARGIN, zrn_maxf(0, e->rect.width - 2 * FLIP_MARGIN), zrn_maxf(0, e->rect.height - 2 * FLIP_MARGIN));
 }
 
-static ZSize flip_measure(zrn_element_t* e, ZSize available) {
-	zrn_items_control_t* o = IC(e);
+static ZSize flip_measure(zrn_element_t* const e, const ZSize available) {
+	zrn_items_control_t* const o = IC(e);
 	float w = available.width < Z_INFINITE * 0.5f ? available.width : 0, h = available.height < Z_INFINITE * 0.5f ? available.height : 0;
 	int i, n = zrn_ic_count(o);
-	float vw = zrn_maxf(0, w - 2 * FLIP_MARGIN), vh = zrn_maxf(0, h - 2 * FLIP_MARGIN);
+	const float vw = zrn_maxf(0, w - 2 * FLIP_MARGIN), vh = zrn_maxf(0, h - 2 * FLIP_MARGIN);
 	for (i = 0; i < n; i++) {
 		zrn_element_t* item = zrn_ic_item(o, i);
 		zrn_measure(item, zrn_size(available.width < Z_INFINITE * 0.5f ? vw : Z_INFINITE, available.height < Z_INFINITE * 0.5f ? vh : Z_INFINITE));
@@ -37,10 +37,10 @@ static ZSize flip_measure(zrn_element_t* e, ZSize available) {
 	return zrn_size(w, h);
 }
 
-static ZSize flip_arrange(zrn_element_t* e, ZSize final) {
-	zrn_flip_view_t* f = FV(e);
+static ZSize flip_arrange(zrn_element_t* const e, const ZSize final) {
+	zrn_flip_view_t* const f = FV(e);
 	zrn_items_control_t* o = &f->base;
-	ZRect view = flip_viewport(e);
+	const ZRect view = flip_viewport(e);
 	int i, n = zrn_ic_count(o);
 	if (!o->host) return final;
 	/* the host is the viewport, clipped; its items are laid out by hand, one page apart */
@@ -50,8 +50,8 @@ static ZSize flip_arrange(zrn_element_t* e, ZSize final) {
 	return final;
 }
 
-static void flip_slide_to(zrn_flip_view_t* f, int index, int animate) {
-	zrn_element_t* e = &f->base.base.base;
+static void flip_slide_to(zrn_flip_view_t* const f, const int index, const int animate) {
+	zrn_element_t* const e = &f->base.base.base;
 	f->from = f->offset;
 	f->to = (float)index;
 	f->elapsed = 0;
@@ -66,15 +66,15 @@ static void flip_slide_to(zrn_flip_view_t* f, int index, int animate) {
 }
 
 /* The selection changed (by the program or by the finger): the pages go to it. */
-void zrn_flip_selected(zrn_items_control_t* o) {
-	zrn_flip_view_t* f = (zrn_flip_view_t*)o;
+void zrn_flip_selected(zrn_items_control_t* const o) {
+	const auto f = (zrn_flip_view_t*)o;
 	if (o->selected_index < 0) return;
 	flip_slide_to(f, o->selected_index, f->user_nav || f->touch_animations_for_all);
 }
 
 /* Items came or went: there is always a selected item when there are any. */
-void zrn_flip_items_changed(zrn_items_control_t* o) {
-	zrn_flip_view_t* f = (zrn_flip_view_t*)o;
+void zrn_flip_items_changed(zrn_items_control_t* const o) {
+	const auto f = (zrn_flip_view_t*)o;
 	int n = zrn_ic_count(o), i, want;
 	if (n == 0) {
 		o->selected_index = -1;
@@ -90,8 +90,8 @@ void zrn_flip_items_changed(zrn_items_control_t* o) {
 	zrn_changed_layout(&o->base.base);
 }
 
-static void flip_tick(zrn_element_t* e, float dt) {
-	zrn_flip_view_t* f = FV(e);
+static void flip_tick(zrn_element_t* const e, const float dt) {
+	zrn_flip_view_t* const f = FV(e);
 	if (!f->sliding) {
 		if (!f->dragging) e->wants_tick = 0;
 		return;
@@ -109,9 +109,9 @@ static void flip_tick(zrn_element_t* e, float dt) {
 
 /* To an item by the user: the slide always runs. */
 static void flip_go(zrn_flip_view_t* f, int index) {
-	zrn_items_control_t* o = &f->base;
-	Zid id = o->base.base.id;
-	int n = zrn_ic_count(o);
+	zrn_items_control_t* const o = &f->base;
+	const Zid id = o->base.base.id;
+	const int n = zrn_ic_count(o);
 	if (n == 0) return;
 	index = zrn_mini(zrn_maxi(index, 0), n - 1);
 	f->user_nav = 1;
@@ -122,8 +122,8 @@ static void flip_go(zrn_flip_view_t* f, int index) {
 }
 
 /* The finger lets go: on the next page when it went a fifth of a page or flicked, else back. */
-static void flip_release(zrn_flip_view_t* f, float width) {
-	zrn_items_control_t* o = &f->base;
+static void flip_release(zrn_flip_view_t* const f, const float width) {
+	zrn_items_control_t* const o = &f->base;
 	float dx = (f->offset - (float)o->selected_index) * -width;
 	int target = o->selected_index;
 	if (dx < -width * 0.2f || f->velocity < -0.4f) target = o->selected_index + 1;
@@ -131,10 +131,10 @@ static void flip_release(zrn_flip_view_t* f, float width) {
 	flip_go(f, target);
 }
 
-static int flip_input(zrn_element_t* e, zrn_input_t* in) {
-	zrn_flip_view_t* f = FV(e);
-	int n = zrn_ic_count(&f->base);
-	float width = e->rect.width - 2 * FLIP_MARGIN > 1 ? e->rect.width - 2 * FLIP_MARGIN : 1;
+static int flip_input(zrn_element_t* const e, zrn_input_t* const in) {
+	zrn_flip_view_t* const f = FV(e);
+	const int n = zrn_ic_count(&f->base);
+	const float width = e->rect.width - 2 * FLIP_MARGIN > 1 ? e->rect.width - 2 * FLIP_MARGIN : 1;
 	switch (in->type) {
 	case ZST_IN_PREVIEW_DOWN:
 		f->pressed = 1;
@@ -146,7 +146,7 @@ static int flip_input(zrn_element_t* e, zrn_input_t* in) {
 	case ZST_IN_PREVIEW_MOVE:
 		if (!f->pressed || f->dragging || !e->root || e->root->capture == e || n < 2) return 0;
 		{
-			float dx = in->x - f->press_x, dy = in->y - f->press_y;
+			const float dx = in->x - f->press_x, dy = in->y - f->press_y;
 			if (fabsf(dx) > DRAG_START && fabsf(dx) > fabsf(dy)) {
 				/* a horizontal drag is the view's, whoever had the pointer loses it */
 				f->dragging = 1;
@@ -183,7 +183,7 @@ static int flip_input(zrn_element_t* e, zrn_input_t* in) {
 		zrn_changed_arrange(e);
 		return 1;
 	case ZST_IN_POINTER_UP: {
-		int was_dragging = f->dragging;
+		const int was_dragging = f->dragging;
 		f->pressed = 0;
 		f->dragging = 0;
 		if (e->root) zrn_release_capture(e->root, e);
@@ -208,10 +208,10 @@ static int flip_input(zrn_element_t* e, zrn_input_t* in) {
 	}
 }
 
-static void flip_init(zrn_element_t* e) {
-	zrn_flip_view_t* f = FV(e);
-	zrn_items_control_t* o = &f->base;
-	zrn_element_t* host = zrn_create(Z_CLASS_STACK_PANEL);
+static void flip_init(zrn_element_t* const e) {
+	zrn_flip_view_t* const f = FV(e);
+	zrn_items_control_t* const o = &f->base;
+	zrn_element_t* const host = zrn_create(Z_CLASS_STACK_PANEL);
 	/* FlipView: IsTabStop False; a touch gives it the keyboard */
 	e->focusable = 1;
 	e->tab_stop = 0;
@@ -219,7 +219,7 @@ static void flip_init(zrn_element_t* e) {
 	e->clip_to_bounds = 1;
 	f->touch_animations_for_all = 1;
 	if (o->host) zrn_destroy(o->host);
-	o->host = NULL;
+	o->host = nullptr;
 	if (!host) return;
 	Zstack_panel_set_orientation(host->id, Z_HORIZONTAL);
 	zrn_add_child(e, host, -1);
@@ -232,17 +232,17 @@ zrn_class_t zrn_class_flip_view = {
 };
 
 Zid Zflip_view_create(void) {
-	zrn_element_t* e = zrn_create(Z_CLASS_FLIP_VIEW);
+	zrn_element_t* const e = zrn_create(Z_CLASS_FLIP_VIEW);
 	return e ? e->id : Z_INVALID_ID;
 }
 
-void Zflip_view_set_use_touch_animations_for_all_navigation(Zid id, int use) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_FLIP_VIEW);
+void Zflip_view_set_use_touch_animations_for_all_navigation(const Zid id, const int use) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_FLIP_VIEW);
 	if (e) FV(e)->touch_animations_for_all = use != 0;
 }
 
-int Zflip_view_get_use_touch_animations_for_all_navigation(Zid id) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_FLIP_VIEW);
+int Zflip_view_get_use_touch_animations_for_all_navigation(const Zid id) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_FLIP_VIEW);
 	return e ? FV(e)->touch_animations_for_all : 0;
 }
 
@@ -263,14 +263,14 @@ typedef struct zrn_semantic_zoom {
 
 static zrn_element_t* sz_active(const zrn_semantic_zoom_t* z) { return z->in_active ? z->zoomed_in : z->zoomed_out; }
 
-static void sz_apply(zrn_semantic_zoom_t* z) {
+static void sz_apply(zrn_semantic_zoom_t* const z) {
 	if (z->zoomed_in) z->zoomed_in->visibility = z->in_active ? Z_VISIBLE : Z_COLLAPSED;
 	if (z->zoomed_out) z->zoomed_out->visibility = z->in_active ? Z_COLLAPSED : Z_VISIBLE;
 	zrn_changed_layout(&z->base.base);
 }
 
-static ZSize sz_measure(zrn_element_t* e, ZSize available) {
-	zrn_element_t* view = sz_active(SZ(e));
+static ZSize sz_measure(zrn_element_t* const e, const ZSize available) {
+	zrn_element_t* const view = sz_active(SZ(e));
 	ZSize s = { 0, 0 };
 	if (view) {
 		zrn_measure(view, available);
@@ -279,20 +279,20 @@ static ZSize sz_measure(zrn_element_t* e, ZSize available) {
 	return s;
 }
 
-static ZSize sz_arrange(zrn_element_t* e, ZSize final) {
-	zrn_semantic_zoom_t* z = SZ(e);
+static ZSize sz_arrange(zrn_element_t* const e, const ZSize final) {
+	zrn_semantic_zoom_t* const z = SZ(e);
 	if (sz_active(z)) zrn_arrange(sz_active(z), zrn_rect(0, 0, final.width, final.height));
 	return final;
 }
 
-static void sz_child_removed(zrn_element_t* e, zrn_element_t* child) {
-	zrn_semantic_zoom_t* z = SZ(e);
-	if (z->zoomed_in == child) z->zoomed_in = NULL;
-	if (z->zoomed_out == child) z->zoomed_out = NULL;
+static void sz_child_removed(zrn_element_t* const e, zrn_element_t* const child) {
+	zrn_semantic_zoom_t* const z = SZ(e);
+	if (z->zoomed_in == child) z->zoomed_in = nullptr;
+	if (z->zoomed_out == child) z->zoomed_out = nullptr;
 }
 
-static void sz_init(zrn_element_t* e) {
-	zrn_semantic_zoom_t* z = SZ(e);
+static void sz_init(zrn_element_t* const e) {
+	zrn_semantic_zoom_t* const z = SZ(e);
 	z->in_active = 1;
 	z->can_change = 1;
 	z->button_enabled = 1;
@@ -305,16 +305,16 @@ zrn_class_t zrn_class_semantic_zoom = {
 };
 
 Zid Zsemantic_zoom_create(void) {
-	zrn_element_t* e = zrn_create(Z_CLASS_SEMANTIC_ZOOM);
+	zrn_element_t* const e = zrn_create(Z_CLASS_SEMANTIC_ZOOM);
 	return e ? e->id : Z_INVALID_ID;
 }
 
 static zrn_semantic_zoom_t* get_sz(Zid id) { return SZ(zrn_get(id, Z_CLASS_SEMANTIC_ZOOM)); }
 
-static void sz_set_view(zrn_semantic_zoom_t* z, zrn_element_t** slot, Zid view) {
-	zrn_element_t* e = &z->base.base;
-	zrn_element_t* v = view != Z_INVALID_ID ? zrn_get(view, Z_CLASS_ELEMENT) : NULL;
-	zrn_element_t* old = *slot;
+static void sz_set_view(zrn_semantic_zoom_t* const z, zrn_element_t** slot, const Zid view) {
+	zrn_element_t* const e = &z->base.base;
+	zrn_element_t* const v = view != Z_INVALID_ID ? zrn_get(view, Z_CLASS_ELEMENT) : nullptr;
+	zrn_element_t* const old = *slot;
 	if (view != Z_INVALID_ID && !v) return;
 	if (old == v) return;
 	*slot = NULL;
@@ -326,20 +326,20 @@ static void sz_set_view(zrn_semantic_zoom_t* z, zrn_element_t** slot, Zid view) 
 	sz_apply(z);
 }
 
-void Zsemantic_zoom_set_zoomed_in_view(Zid id, Zid view) {
-	zrn_semantic_zoom_t* z = get_sz(id);
+void Zsemantic_zoom_set_zoomed_in_view(const Zid id, const Zid view) {
+	zrn_semantic_zoom_t* const z = get_sz(id);
 	if (z) sz_set_view(z, &z->zoomed_in, view);
 }
 
-void Zsemantic_zoom_set_zoomed_out_view(Zid id, Zid view) {
-	zrn_semantic_zoom_t* z = get_sz(id);
+void Zsemantic_zoom_set_zoomed_out_view(const Zid id, const Zid view) {
+	zrn_semantic_zoom_t* const z = get_sz(id);
 	if (z) sz_set_view(z, &z->zoomed_out, view);
 }
 
 static void sz_change(zrn_semantic_zoom_t* z, int zoomed_in_active) {
-	zrn_element_t* e = &z->base.base;
-	Zid id = e->id;
-	int source = z->in_active;
+	zrn_element_t* const e = &z->base.base;
+	const Zid id = e->id;
+	const int source = z->in_active;
 	zoomed_in_active = zoomed_in_active != 0;
 	if (!z->can_change || z->in_active == zoomed_in_active) return;
 	if (z->started) {
@@ -351,40 +351,40 @@ static void sz_change(zrn_semantic_zoom_t* z, int zoomed_in_active) {
 	if (z->completed) z->completed(id, source, z->completed_data);
 }
 
-void Zsemantic_zoom_set_is_zoomed_in_view_active(Zid id, int active) {
-	zrn_semantic_zoom_t* z = get_sz(id);
+void Zsemantic_zoom_set_is_zoomed_in_view_active(const Zid id, const int active) {
+	zrn_semantic_zoom_t* const z = get_sz(id);
 	if (z) sz_change(z, active);
 }
 
-int Zsemantic_zoom_get_is_zoomed_in_view_active(Zid id) {
-	zrn_semantic_zoom_t* z = get_sz(id);
+int Zsemantic_zoom_get_is_zoomed_in_view_active(const Zid id) {
+	zrn_semantic_zoom_t* const z = get_sz(id);
 	return z ? z->in_active : 0;
 }
 
-void Zsemantic_zoom_toggle_active_view(Zid id) {
-	zrn_semantic_zoom_t* z = get_sz(id);
+void Zsemantic_zoom_toggle_active_view(const Zid id) {
+	zrn_semantic_zoom_t* const z = get_sz(id);
 	if (z) sz_change(z, !z->in_active);
 }
 
-void Zsemantic_zoom_set_can_change_views(Zid id, int can_change) {
-	zrn_semantic_zoom_t* z = get_sz(id);
+void Zsemantic_zoom_set_can_change_views(const Zid id, const int can_change) {
+	zrn_semantic_zoom_t* const z = get_sz(id);
 	if (z) z->can_change = can_change != 0;
 }
 
-void Zsemantic_zoom_set_is_zoom_out_button_enabled(Zid id, int enabled) {
-	zrn_semantic_zoom_t* z = get_sz(id);
+void Zsemantic_zoom_set_is_zoom_out_button_enabled(const Zid id, const int enabled) {
+	zrn_semantic_zoom_t* const z = get_sz(id);
 	if (z) z->button_enabled = enabled != 0;
 }
 
-void Zsemantic_zoom_on_view_change_started(Zid id, ZSemanticZoomCallback callback, void* user_data) {
-	zrn_semantic_zoom_t* z = get_sz(id);
+void Zsemantic_zoom_on_view_change_started(const Zid id, const ZSemanticZoomCallback callback, void* const user_data) {
+	zrn_semantic_zoom_t* const z = get_sz(id);
 	if (!z) return;
 	z->started = callback;
 	z->started_data = user_data;
 }
 
-void Zsemantic_zoom_on_view_change_completed(Zid id, ZSemanticZoomCallback callback, void* user_data) {
-	zrn_semantic_zoom_t* z = get_sz(id);
+void Zsemantic_zoom_on_view_change_completed(const Zid id, const ZSemanticZoomCallback callback, void* const user_data) {
+	zrn_semantic_zoom_t* const z = get_sz(id);
 	if (!z) return;
 	z->completed = callback;
 	z->completed_data = user_data;

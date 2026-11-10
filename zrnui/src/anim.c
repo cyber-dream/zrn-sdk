@@ -11,12 +11,11 @@
 
 #include "internal.h"
 
-#define TILT_DEG 14.0f
-#define TILT_LIFT 40.0f
-#define PRESS_SINK 0.045f
-#define TILT_IN_MS 90.0f
-#define TILT_OUT_MS 160.0f
-#define EYE_FOV_DEG 34.0f
+static constexpr float TILT_DEG = 14.0f;
+static constexpr float TILT_LIFT = 40.0f;
+static constexpr float PRESS_SINK = 0.045f;
+static constexpr float TILT_IN_MS = 90.0f;
+static constexpr float TILT_OUT_MS = 160.0f;
 
 
 /* ============================================================================
@@ -24,7 +23,7 @@
  * ============================================================================ */
 
 /* (0.2, 0.8, 0.2, 1) as a cubic Bezier */
-static float ease_emphasized(float t) {
+static float ease_emphasized(const float t) {
 	const float x1 = 0.2f, y1 = 0.8f, x2 = 0.2f, y2 = 1.0f;
 	float s = t, u;
 	int i;
@@ -74,7 +73,7 @@ void zrn_xf_mul(float out[16], const float a[16], const float b[16]) {
 	memcpy(out, r, sizeof r);
 }
 
-static void xf_translate(float out[16], float x, float y, float z) {
+static void xf_translate(float out[16], const float x, const float y, const float z) {
 	float t[16];
 	zrn_xf_identity(t);
 	t[12] = x; t[13] = y; t[14] = z;
@@ -103,15 +102,15 @@ static void xf_rotate_x(float out[16], const float deg) {
 	zrn_xf_mul(out, out, r);
 }
 
-static void xf_scale(float out[16], float s) {
+static void xf_scale(float out[16], const float s) {
 	float r[16];
 	zrn_xf_identity(r);
 	r[0] = r[5] = r[10] = s;
 	zrn_xf_mul(out, out, r);
 }
 
-void zrn_xf_of_element(const zrn_element_t* e, const float ox, const float oy, const float width, const float height, const float scale, float out[16]) {
-	float cx = ox + e->proj_cx * width, cy = oy + e->proj_cy * height;
+void zrn_xf_of_element(const zrn_element_t* const e, const float ox, const float oy, const float width, const float height, const float scale, float out[16]) {
+	const float cx = ox + e->proj_cx * width, cy = oy + e->proj_cy * height;
 	zrn_xf_identity(out);
 	/* applied last to first: the centre to the origin, the rotations, the scale, back, and the slide */
 	xf_translate(out, cx + e->translate_x * scale, cy + e->translate_y * scale, 0);
@@ -121,12 +120,12 @@ void zrn_xf_of_element(const zrn_element_t* e, const float ox, const float oy, c
 	xf_translate(out, -cx, -cy, 0);
 }
 
-void zrn_update_transformed(zrn_element_t* e) {
+void zrn_update_transformed(zrn_element_t* const e) {
 	e->transformed = e->rot_x != 0.0f || e->rot_y != 0.0f || e->render_scale != 1.0f || e->translate_x != 0.0f || e->translate_y != 0.0f;
 }
 
-void Zelement_set_projection(Zid id, float rotation_x, float rotation_y, float center_x, float center_y) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT);
+void Zelement_set_projection(const Zid id, const float rotation_x, const float rotation_y, const float center_x, const float center_y) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
 	if (!e) return;
 	e->rot_x = rotation_x;
 	e->rot_y = rotation_y;
@@ -136,16 +135,16 @@ void Zelement_set_projection(Zid id, float rotation_x, float rotation_y, float c
 	zrn_changed_paint(e);
 }
 
-void Zelement_set_render_scale(Zid id, float scale) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT);
+void Zelement_set_render_scale(const Zid id, const float scale) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
 	if (!e) return;
 	e->render_scale = scale;
 	zrn_update_transformed(e);
 	zrn_changed_paint(e);
 }
 
-void Zelement_set_translate(Zid id, float x, float y) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT);
+void Zelement_set_translate(const Zid id, const float x, const float y) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
 	if (!e) return;
 	e->translate_x = x;
 	e->translate_y = y;
@@ -153,8 +152,8 @@ void Zelement_set_translate(Zid id, float x, float y) {
 	zrn_changed_paint(e);
 }
 
-void Zelement_set_tilt(Zid id, int enabled) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT);
+void Zelement_set_tilt(const Zid id, const int enabled) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
 	if (e) e->tilt = enabled != 0;
 }
 
@@ -163,7 +162,7 @@ void Zelement_set_tilt(Zid id, int enabled) {
  *  Zelement_animate
  * ============================================================================ */
 
-static float* property_slot(zrn_element_t* e, ZAnimatedProperty p) {
+static float* property_slot(zrn_element_t* const e, const ZAnimatedProperty p) {
 	switch (p) {
 	case Z_PROP_OPACITY: return &e->opacity;
 	case Z_PROP_ROTATION_X: return &e->rot_x;
@@ -171,33 +170,33 @@ static float* property_slot(zrn_element_t* e, ZAnimatedProperty p) {
 	case Z_PROP_SCALE: return &e->render_scale;
 	case Z_PROP_TRANSLATE_X: return &e->translate_x;
 	case Z_PROP_TRANSLATE_Y: return &e->translate_y;
-	default: return NULL;
+	default: return nullptr;
 	}
 }
 
-static void property_set(zrn_element_t* e, ZAnimatedProperty p, float v) {
-	float* slot = property_slot(e, p);
+static void property_set(zrn_element_t* const e, const ZAnimatedProperty p, const float v) {
+	float* const slot = property_slot(e, p);
 	if (!slot) return;
 	*slot = v;
 	zrn_update_transformed(e);
 	zrn_changed_paint(e);
 }
 
-float Zelement_get_property(Zid id, ZAnimatedProperty property) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT);
-	float* slot = e ? property_slot(e, property) : NULL;
+float Zelement_get_property(const Zid id, const ZAnimatedProperty property) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
+	float* const slot = e ? property_slot(e, property) : nullptr;
 	return slot ? *slot : 0.0f;
 }
 
-int zrn_animations_enabled(const zrn_root_t* r) {
+int zrn_animations_enabled(const zrn_root_t* const r) {
 	if (!r) return 0;
 	if (r->animations == Z_ANIMATIONS_ON) return 1;
 	if (r->animations == Z_ANIMATIONS_OFF) return 0;
 	return r->renderer == Z_RENDERER_GPU || r->gpu_window;
 }
 
-void Zelement_animate(Zid id, ZAnimatedProperty property, float to, float duration_ms, ZEasing easing, float delay_ms) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT);
+void Zelement_animate(const Zid id, const ZAnimatedProperty property, const float to, const float duration_ms, const ZEasing easing, const float delay_ms) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
 	float* slot;
 	if (!e || property < 0 || property >= Z_PROP_LAST_) return;
 	slot = property_slot(e, property);
@@ -223,21 +222,21 @@ void Zelement_animate(Zid id, ZAnimatedProperty property, float to, float durati
 	zrn_changed_paint(e);
 }
 
-int Zelement_is_animating(Zid id) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT);
+int Zelement_is_animating(const Zid id) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
 	int i;
-	if (!e || !e->tweens) return Z_FALSE;
-	for (i = 0; i < Z_PROP_LAST_; i++) if (e->tweens->p[i].active) return Z_TRUE;
-	return Z_FALSE;
+	if (!e || !e->tweens) return false;
+	for (i = 0; i < Z_PROP_LAST_; i++) if (e->tweens->p[i].active) return true;
+	return false;
 }
 
-void zrn_tweens_tick(zrn_element_t* e) {
+void zrn_tweens_tick(zrn_element_t* const e) {
 	int i, any = 0;
 	float now;
 	if (!e->tweens) return;
 	now = e->root ? (float)e->root->time_ms : 1e30f;
 	for (i = 0; i < Z_PROP_LAST_; i++) {
-		zrn_tween_t* t = e->tweens;
+		zrn_tween_t* const t = e->tweens;
 		float u;
 		if (!t->p[i].active) continue;
 		u = now - t->p[i].start - t->p[i].delay;
@@ -253,9 +252,9 @@ void zrn_tweens_tick(zrn_element_t* e) {
 	if (!any) zrn_tweens_free(e);
 }
 
-void zrn_tweens_free(zrn_element_t* e) {
+void zrn_tweens_free(zrn_element_t* const e) {
 	free(e->tweens);
-	e->tweens = NULL;
+	e->tweens = nullptr;
 }
 
 
@@ -263,8 +262,8 @@ void zrn_tweens_free(zrn_element_t* e) {
  *  tilt
  * ============================================================================ */
 
-static void tilt_aim(zrn_root_t* r, float x, float y) {
-	zrn_element_t* e = r->tilt_element;
+static void tilt_aim(zrn_root_t* const r, const float x, const float y) {
+	zrn_element_t* const e = r->tilt_element;
 	ZPoint c;
 	if (!e || e->rect.width <= 0 || e->rect.height <= 0) return;
 	c = zrn_to_root(e, (ZPoint){ e->rect.width * 0.5f, e->rect.height * 0.5f });
@@ -272,7 +271,7 @@ static void tilt_aim(zrn_root_t* r, float x, float y) {
 	r->tilt_fy = zrn_clampf((y - c.y) / (e->rect.height * 0.5f), -1, 1);
 }
 
-void zrn_tilt_press(zrn_root_t* r, zrn_element_t* e, float x, float y) {
+void zrn_tilt_press(zrn_root_t* const r, zrn_element_t* const e, const float x, const float y) {
 	if (!zrn_animations_enabled(r)) return;
 	if (r->tilt_element && r->tilt_element != e) {
 		r->tilt_element->rot_x = r->tilt_element->rot_y = 0;
@@ -286,16 +285,16 @@ void zrn_tilt_press(zrn_root_t* r, zrn_element_t* e, float x, float y) {
 	tilt_aim(r, x, y);
 }
 
-void zrn_tilt_move(zrn_root_t* r, float x, float y) {
+void zrn_tilt_move(zrn_root_t* const r, const float x, const float y) {
 	if (r->tilt_element && r->tilt_target > 0) tilt_aim(r, x, y);
 }
 
-void zrn_tilt_release(zrn_root_t* r) {
+void zrn_tilt_release(zrn_root_t* const r) {
 	if (r->tilt_element) r->tilt_target = 0;
 }
 
-void zrn_tilt_tick(zrn_root_t* r, float dt) {
-	zrn_element_t* e = r->tilt_element;
+void zrn_tilt_tick(zrn_root_t* const r, const float dt) {
+	zrn_element_t* const e = r->tilt_element;
 	float eased, cap_y, cap_x, deg_y, deg_x;
 	if (!e) return;
 	if (r->tilt_target > r->tilt_amount) r->tilt_amount = zrn_minf(1, r->tilt_amount + dt / TILT_IN_MS);
@@ -315,17 +314,17 @@ void zrn_tilt_tick(zrn_root_t* r, float dt) {
 		e->rot_x = e->rot_y = 0;
 		e->render_scale = 1;
 		zrn_update_transformed(e);
-		r->tilt_element = NULL;
+		r->tilt_element = nullptr;
 	}
 }
 
-void Zroot_set_animations(Zid root, ZAnimations mode) {
-	zrn_root_t* r = zrn_root_lookup(root);
+void Zroot_set_animations(const Zid root, const ZAnimations mode) {
+	zrn_root_t* const r = zrn_root_lookup(root);
 	if (r) r->animations = mode;
 }
 
-ZAnimations Zroot_get_animations(Zid root) {
-	zrn_root_t* r = zrn_root_lookup(root);
+ZAnimations Zroot_get_animations(const Zid root) {
+	zrn_root_t* const r = zrn_root_lookup(root);
 	return r ? r->animations : Z_ANIMATIONS_AUTO;
 }
 

@@ -26,7 +26,7 @@ static void type(Zid root, const char* text) { Zroot_inject_text(root, text); }
 static void key(Zid root, ZKey k, int mods) { Zroot_inject_key(root, k, mods, 1); Zroot_inject_key(root, k, mods, 0); }
 
 static Zid setup(Zid* root, Zid* stack) {
-	*root = Zroot_create(480, 800);
+	*root = zst_test_root(480, 800);
 	*stack = Zstack_panel_create(Z_VERTICAL);
 	Zroot_set_visual(*root, *stack);
 	return *stack;
@@ -37,7 +37,7 @@ static void test_button_click(void) {
 	setup(&root, &stack);
 	b = Zpanel_add(stack, Zbutton_create("OK"));
 	Zelement_set_vertical_alignment(b, Z_VALIGN_TOP);
-	Zbutton_on_click(b, on_click, NULL);
+	Zbutton_on_click(b, on_click, nullptr);
 	Zroot_update_layout(root);
 	g_clicks = 0;
 	tap(root, center(b));
@@ -78,7 +78,7 @@ static void test_keyboard_click_and_focus(void) {
 	setup(&root, &stack);
 	a = Zpanel_add(stack, Zbutton_create("a"));
 	b = Zpanel_add(stack, Zbutton_create("b"));
-	Zbutton_on_click(b, on_click, NULL);
+	Zbutton_on_click(b, on_click, nullptr);
 	Zroot_update_layout(root);
 	g_clicks = 0;
 	/* Tab goes to the first control, then the next */
@@ -106,7 +106,7 @@ static void test_repeat_button(void) {
 	setup(&root, &stack);
 	r = Zpanel_add(stack, Zrepeat_button_create("+"));
 	Zelement_set_vertical_alignment(r, Z_VALIGN_TOP);
-	Zbutton_on_click(r, on_click, NULL);
+	Zbutton_on_click(r, on_click, nullptr);
 	Zrepeat_button_set_delay(r, 500);
 	Zrepeat_button_set_interval(r, 100);
 	CHECK(Zrepeat_button_get_delay(r) == 500 && Zrepeat_button_get_interval(r) == 100);
@@ -130,11 +130,11 @@ static void test_toggle_taps(void) {
 	Zid root, stack, c, r1, r2;
 	setup(&root, &stack);
 	c = Zpanel_add(stack, Zcheck_box_create("c"));
-	r1 = Zpanel_add(stack, Zradio_button_create("1", NULL));
-	r2 = Zpanel_add(stack, Zradio_button_create("2", NULL));
+	r1 = Zpanel_add(stack, Zradio_button_create("1", nullptr));
+	r2 = Zpanel_add(stack, Zradio_button_create("2", nullptr));
 	Zroot_update_layout(root);
 	g_changes = 0;
-	Zelement_on(c, Z_EVENT_CHECKED, on_change, NULL);
+	Zelement_on(c, Z_EVENT_CHECKED, on_change, nullptr);
 	tap(root, center(c));
 	CHECK(Ztoggle_button_get_is_checked(c) && g_changes == 1);
 	tap(root, center(c));
@@ -189,7 +189,7 @@ static void test_text_box_typing(void) {
 	Zelement_set_vertical_alignment(tb, Z_VALIGN_TOP);
 	Zroot_update_layout(root);
 	g_changes = 0;
-	Zelement_on(tb, Z_EVENT_TEXT_CHANGED, on_change, NULL);
+	Zelement_on(tb, Z_EVENT_TEXT_CHANGED, on_change, nullptr);
 	type(root, "ignored"); /* no focus yet */
 	CHECK_STR(Ztext_box_get_text(tb), "");
 	tap(root, center(tb));
@@ -283,7 +283,7 @@ static void test_list_box_tap_and_scroll(void) {
 	}
 	Zroot_update_layout(root);
 	g_changes = 0;
-	Zelement_on(lb, Z_EVENT_SELECTION_CHANGED, on_change, NULL);
+	Zelement_on(lb, Z_EVENT_SELECTION_CHANGED, on_change, nullptr);
 	tap(root, center(Zitems_control_get_container(lb, 2)));
 	CHECK(Zselector_get_selected_index(lb) == 2 && g_changes == 1);
 	/* a vertical drag scrolls, and does not select what the finger started on */
@@ -333,7 +333,7 @@ static void test_button_in_scroll_viewer(void) {
 	for (i = 0; i < 20; i++) Zpanel_add(inner, Zbutton_create("b"));
 	Zscroll_viewer_set_content(sv, inner);
 	b = Zelement_get_child(inner, 0);
-	Zbutton_on_click(b, on_click, NULL);
+	Zbutton_on_click(b, on_click, nullptr);
 	Zroot_update_layout(root);
 	g_clicks = 0;
 	tap(root, center(b));
@@ -362,7 +362,7 @@ static void test_combo_box(void) {
 	Zitems_control_add_text(cb, "blue");
 	Zroot_update_layout(root);
 	g_changes = 0;
-	Zelement_on(cb, Z_EVENT_SELECTION_CHANGED, on_change, NULL);
+	Zelement_on(cb, Z_EVENT_SELECTION_CHANGED, on_change, nullptr);
 	CHECK(!Zcombo_box_get_is_drop_down_open(cb));
 	tap(root, center(cb));
 	CHECK(Zcombo_box_get_is_drop_down_open(cb));
@@ -387,7 +387,7 @@ static void test_combo_box(void) {
 	CHECK(!Zcombo_box_get_is_drop_down_open(cb));
 	/* the drop-down was drawn: the frame differs while open */
 	Zcombo_box_set_is_drop_down_open(cb, true);
-	CHECK(Zroot_render(root, NULL));
+	CHECK(Zroot_render(root, nullptr));
 	Zroot_destroy(root);
 }
 
@@ -415,10 +415,10 @@ static void test_render_is_lazy(void) {
 	Zid root, stack, b;
 	setup(&root, &stack);
 	b = Zpanel_add(stack, Zbutton_create("x"));
-	CHECK(Zroot_render(root, NULL));
-	CHECK(!Zroot_render(root, NULL)); /* nothing changed */
+	CHECK(Zroot_render(root, nullptr));
+	CHECK(!Zroot_render(root, nullptr)); /* nothing changed */
 	Zcontent_control_set_text(b, "y");
-	CHECK(Zroot_render(root, NULL));
+	CHECK(Zroot_render(root, nullptr));
 	Zroot_destroy(root);
 }
 
@@ -452,14 +452,14 @@ static void navigate_value(Zid sender, double a, double b, void* user) { (void)a
 
 /* After the handler ran, the root must still work: lay out, render, take more input. */
 static void survives(Zid root) {
-	Zroot_render(root, NULL);
+	Zroot_render(root, nullptr);
 	Zroot_inject_pointer(root, Z_POINTER_MOVE, 100, 100);
 	Zroot_inject_pointer(root, Z_POINTER_UP, 100, 100);
 	Zroot_inject_key(root, Z_KEY_SPACE, 0, 1);
 	Zroot_inject_key(root, Z_KEY_SPACE, 0, 0);
 	Zroot_inject_text(root, "x");
 	Zroot_tick(root, 1000);
-	Zroot_render(root, NULL);
+	Zroot_render(root, nullptr);
 }
 
 static void test_handlers_that_navigate(void) {
@@ -469,7 +469,7 @@ static void test_handlers_that_navigate(void) {
 
 	/* Click */
 	c = Zpanel_add(stack, Zbutton_create("go"));
-	Zbutton_on_click(c, navigate, NULL);
+	Zbutton_on_click(c, navigate, nullptr);
 	Zroot_update_layout(root);
 	g_nav_count = 0;
 	tap(root, center(c));
@@ -480,8 +480,8 @@ static void test_handlers_that_navigate(void) {
 	stack = Zstack_panel_create(Z_VERTICAL);
 	Zroot_set_visual(root, stack);
 	c = Zpanel_add(stack, Zcheck_box_create("c"));
-	Zelement_on(c, Z_EVENT_CHECKED, navigate, NULL);
-	Zbutton_on_click(c, on_click, NULL);
+	Zelement_on(c, Z_EVENT_CHECKED, navigate, nullptr);
+	Zbutton_on_click(c, on_click, nullptr);
 	Zroot_update_layout(root);
 	g_nav_count = 0;
 	tap(root, center(c));
@@ -491,10 +491,10 @@ static void test_handlers_that_navigate(void) {
 	/* Unchecked of another radio button: its handler runs while the checked one is being set */
 	stack = Zstack_panel_create(Z_VERTICAL);
 	Zroot_set_visual(root, stack);
-	c = Zpanel_add(stack, Zradio_button_create("1", NULL));
-	other = Zpanel_add(stack, Zradio_button_create("2", NULL));
+	c = Zpanel_add(stack, Zradio_button_create("1", nullptr));
+	other = Zpanel_add(stack, Zradio_button_create("2", nullptr));
 	Ztoggle_button_set_is_checked(c, true);
-	Zelement_on(c, Z_EVENT_UNCHECKED, navigate, NULL);
+	Zelement_on(c, Z_EVENT_UNCHECKED, navigate, nullptr);
 	Zroot_update_layout(root);
 	g_nav_count = 0;
 	tap(root, center(other));
@@ -506,7 +506,7 @@ static void test_handlers_that_navigate(void) {
 	Zroot_set_visual(root, stack);
 	c = Zpanel_add(stack, Zlist_box_create());
 	Zitems_control_add_text(c, "a"); Zitems_control_add_text(c, "b");
-	Zelement_on(c, Z_EVENT_SELECTION_CHANGED, navigate, NULL);
+	Zelement_on(c, Z_EVENT_SELECTION_CHANGED, navigate, nullptr);
 	Zroot_update_layout(root);
 	g_nav_count = 0;
 	tap(root, center(Zitems_control_get_container(c, 1)));
@@ -519,7 +519,7 @@ static void test_handlers_that_navigate(void) {
 	c = Zpanel_add(stack, Zcombo_box_create());
 	Zelement_set_vertical_alignment(c, Z_VALIGN_TOP);
 	Zitems_control_add_text(c, "a"); Zitems_control_add_text(c, "b");
-	Zelement_on(c, Z_EVENT_SELECTION_CHANGED, navigate, NULL);
+	Zelement_on(c, Z_EVENT_SELECTION_CHANGED, navigate, nullptr);
 	Zroot_update_layout(root);
 	tap(root, center(c));
 	Zroot_update_layout(root);
@@ -534,7 +534,7 @@ static void test_handlers_that_navigate(void) {
 	c = Zpanel_add(stack, Zcombo_box_create());
 	Zelement_set_vertical_alignment(c, Z_VALIGN_TOP);
 	Zitems_control_add_text(c, "a");
-	Zelement_on(c, Z_EVENT_DROP_DOWN_CLOSED, navigate, NULL);
+	Zelement_on(c, Z_EVENT_DROP_DOWN_CLOSED, navigate, nullptr);
 	Zroot_update_layout(root);
 	tap(root, center(c));
 	g_nav_count = 0;
@@ -546,7 +546,7 @@ static void test_handlers_that_navigate(void) {
 	stack = Zstack_panel_create(Z_VERTICAL);
 	Zroot_set_visual(root, stack);
 	c = Zpanel_add(stack, Zauto_suggest_box_create());
-	Zauto_suggest_box_on_text_changed(c, navigate_reason, NULL);
+	Zauto_suggest_box_on_text_changed(c, navigate_reason, nullptr);
 	Zroot_update_layout(root);
 	tap(root, center(c));
 	g_nav_count = 0;
@@ -556,7 +556,7 @@ static void test_handlers_that_navigate(void) {
 	stack = Zstack_panel_create(Z_VERTICAL);
 	Zroot_set_visual(root, stack);
 	c = Zpanel_add(stack, Ztext_box_create(""));
-	Zelement_on(c, Z_EVENT_TEXT_CHANGED, navigate, NULL);
+	Zelement_on(c, Z_EVENT_TEXT_CHANGED, navigate, nullptr);
 	Zroot_update_layout(root);
 	tap(root, center(c));
 	g_nav_count = 0;
@@ -570,7 +570,7 @@ static void test_handlers_that_navigate(void) {
 	Zroot_set_visual(root, stack);
 	c = Zpanel_add(stack, Zslider_create(Z_HORIZONTAL));
 	Zelement_set_vertical_alignment(c, Z_VALIGN_TOP);
-	Zrange_base_on_value_changed(c, navigate_value, NULL);
+	Zrange_base_on_value_changed(c, navigate_value, nullptr);
 	Zroot_update_layout(root);
 	g_nav_count = 0;
 	Zroot_inject_pointer(root, Z_POINTER_DOWN, 240, 28);
@@ -585,7 +585,7 @@ static void test_handlers_that_navigate(void) {
 	c = Zpanel_add(stack, Zbutton_create("hover"));
 	Zelement_set_vertical_alignment(c, Z_VALIGN_TOP);
 	Zbutton_set_click_mode(c, Z_CLICK_HOVER);
-	Zbutton_on_click(c, navigate, NULL);
+	Zbutton_on_click(c, navigate, nullptr);
 	Zroot_update_layout(root);
 	g_nav_count = 0;
 	Zroot_inject_pointer(root, Z_POINTER_MOVE, center(c).x, center(c).y);
@@ -601,7 +601,7 @@ static void test_toggle_switch_input(void) {
 	setup(&root, &stack);
 	sw = Zpanel_add(stack, Ztoggle_switch_create());
 	Zelement_set_vertical_alignment(sw, Z_VALIGN_TOP);
-	Ztoggle_switch_on_toggled(sw, on_change, NULL);
+	Ztoggle_switch_on_toggled(sw, on_change, nullptr);
 	Zroot_update_layout(root);
 	g_changes = 0;
 	/* the switch is the 77 x 36 box at the right of the control: only a tap on it flips it */

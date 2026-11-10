@@ -57,8 +57,6 @@ typedef struct window {
 	zrn_gl_t* gl;
 	int gl_w, gl_h;
 	int buf_w, buf_h;
-	/** ZRNUI_DUMP: the dump of the ZRNUI_DUMP of each renderer runs once, on the 60th painted frame. */
-	int dumped_sw, frames_sw;
 	Zid root;
 	int scale;    /* the integer buffer scale: the ceiling of fscale while the fractional one goes through the viewport */
 	float fscale; /* the real scale: device pixels per logical pixel, fractional through the viewport */
@@ -83,7 +81,7 @@ static window_t* g_window;
 static void buffer_release(void* data, struct wl_buffer* b) { (void)b; ((buffer_t*)data)->busy = 0; }
 static const struct wl_buffer_listener buffer_listener = { .release = buffer_release };
 
-static void buffers_free(window_t* w) {
+static void buffers_free(window_t* const w) {
 	int i;
 	for (i = 0; i < 2; i++) {
 		if (w->buffers[i].buffer) wl_buffer_destroy(w->buffers[i].buffer);
@@ -92,19 +90,19 @@ static void buffers_free(window_t* w) {
 	}
 }
 
-static int buffers_make(window_t* w, int pw, int ph) {
+static int buffers_make(window_t* const w, const int pw, const int ph) {
 	int i;
-	size_t size = (size_t)pw * (size_t)ph * 4;
+	const size_t size = (size_t)pw * (size_t)ph * 4;
 	buffers_free(w);
 	for (i = 0; i < 2; i++) {
 		struct wl_shm_pool* pool;
-		int fd = memfd_create("zrnui", MFD_CLOEXEC);
+		const int fd = memfd_create("zrnui", MFD_CLOEXEC);
 		void* data;
 		if (fd < 0 || ftruncate(fd, (off_t)size) < 0) {
 			if (fd >= 0) close(fd);
 			return 0;
 		}
-		data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+		data = mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 		if (data == MAP_FAILED) { close(fd); return 0; }
 		pool = wl_shm_create_pool(w->shm, fd, (int32_t)size);
 		w->buffers[i].buffer = wl_shm_pool_create_buffer(pool, 0, pw, ph, pw * 4, WL_SHM_FORMAT_ARGB8888);
@@ -119,37 +117,11 @@ static int buffers_make(window_t* w, int pw, int ph) {
 	return 1;
 }
 
-/** The dump of the env ZRNUI_DUMP: the buffer of the window into a PPM, when ZRNUI_DUMP is set,
- * right after the first painted frame of a size. Half a PPM of the debug harness, in the window.
- * TODO.md: debug only, remove before release. */
-static void window_dump(window_t* w, const uint8_t* p32, int pw, int ph, const char* what, int bgra) {
-	const char* dir = getenv("ZRNUI_DUMP");
-	char file[512];
-	FILE* f;
-	int x, y;
-	if (!dir || !*dir || !p32) return;
-	snprintf(file, sizeof file, "%s/%s", dir, what);
-	f = fopen(file, "wb");
-	if (!f) { zrn_error(Z_ERROR_IO, "ZRNUI_DUMP: cannot open %s", file); return; }
-	fprintf(f, "P6\n%d %d\n255\n", pw, ph);
-	for (y = 0; y < ph; y++)
-		for (x = 0; x < pw; x++) {
-			const uint8_t* px = p32 + ((size_t)y * (size_t)pw + (size_t)x) * 4;
-			fwrite(px + (bgra ? 2 : 0), 1, 1, f); /* the shm buffer is BGRA, the GL one RGBA */
-			fwrite(px + 1, 1, 1, f);
-			fwrite(px + (bgra ? 0 : 2), 1, 1, f);
-		}
-	fclose(f);
-	fprintf(stderr, "zrnui: dumped %s (%dx%d)\n", file, pw, ph);
-}
-
 /* One frame on the GPU: painted only when something changed, then swapped. */
-static void present_gl(window_t* w) {
-	zrn_root_t* r = zrn_root_lookup(w->root);
+static void present_gl(window_t* const w) {
+	zrn_root_t* const r = zrn_root_lookup(w->root);
 	zrn_painter_t p;
-	int pw = (int)(w->width * w->fscale + 0.5f), ph = (int)(w->height * w->fscale + 0.5f);
-	uint8_t* shot;
-	static int frames_gl, dumped_gl;
+	const int pw = (int)(w->width * w->fscale + 0.5f), ph = (int)(w->height * w->fscale + 0.5f);
 	if (!r) return;
 	if (pw != w->gl_w || ph != w->gl_h) {
 		/* the buffer of a new size is blank: draw everything again */
@@ -160,23 +132,15 @@ static void present_gl(window_t* w) {
 	zrn_gl_begin(w->gl, &p, pw, ph, r->scale);
 	(void)zrn_root_paint(r, &p);
 	zrn_gl_end(w->gl, 0);                                    /* flush it, but do not swap yet */
-	if (!dumped_gl && getenv("ZRNUI_DUMP")) {
-		shot = (uint8_t*)malloc((size_t)pw * (size_t)ph * 4);
-		if (shot && zrn_gl_read(w->gl, shot, pw, ph) && ++frames_gl >= 60) {
-			dumped_gl = 1;
-			window_dump(w, shot, pw, ph, "window-gl.ppm", 0);
-		}
-		free(shot);
-	}
 	zrn_gl_swap(w->gl);
 }
 
-static void present(window_t* w) {
+static void present(window_t* const w) {
 	ZFrame f;
 	if (w->gl) { present_gl(w); return; }
-	buffer_t* b = NULL;
+	buffer_t* b = nullptr;
 	int i, x, y;
-	int pw = (int)(w->width * w->fscale + 0.5f), ph = (int)(w->height * w->fscale + 0.5f);
+	const int pw = (int)(w->width * w->fscale + 0.5f), ph = (int)(w->height * w->fscale + 0.5f);
 	if (pw != w->buf_w || ph != w->buf_h) {
 		if (!buffers_make(w, pw, ph)) return;
 		w->buffers[0].busy = w->buffers[1].busy = 0;
@@ -186,7 +150,7 @@ static void present(window_t* w) {
 	if (!Zroot_render(w->root, &f) && !w->configured) return;
 	for (y = 0; y < ph && y < f.height; y++) {
 		const uint8_t* src = f.pixels + (size_t)y * (size_t)f.stride;
-		uint8_t* dst = b->data + (size_t)y * (size_t)pw * 4;
+		uint8_t* const dst = b->data + (size_t)y * (size_t)pw * 4;
 		for (x = 0; x < pw && x < f.width; x++) {
 			dst[x * 4 + 0] = src[x * 4 + 2];
 			dst[x * 4 + 1] = src[x * 4 + 1];
@@ -197,10 +161,6 @@ static void present(window_t* w) {
 	b->busy = 1;
 	wl_surface_attach(w->surface, b->buffer, 0, 0);
 	wl_surface_damage_buffer(w->surface, 0, 0, pw, ph);
-	if (!w->dumped_sw && getenv("ZRNUI_DUMP") && ++w->frames_sw >= 60) {
-		w->dumped_sw = 1;
-		window_dump(w, b->data, pw, ph, "window-sw.ppm", 1);
-	}
 	wl_surface_commit(w->surface);
 }
 
@@ -211,8 +171,8 @@ static void present(window_t* w) {
  * ceiling, a fractional one goes through the viewport (the buffer of the ceiling squeezed
  * into the logical size, the compositor samples it at its own factor); without a viewport
  * only the integer scale works. The scale belongs to the shell: preferred_scale, or ZRNUI_SCALE as a debug override. */
-static void apply_scale(window_t* w, float fscale) {
-	zrn_root_t* r = zrn_root_lookup(w->root);
+static void apply_scale(window_t* const w, const float fscale) {
+	zrn_root_t* const r = zrn_root_lookup(w->root);
 	w->fscale = fscale;
 	w->scale = (int)fscale;
 	if ((float)w->scale < fscale) w->scale++;
@@ -230,15 +190,13 @@ static void apply_scale(window_t* w, float fscale) {
 	if (r) r->paint_dirty = 1; /* the buffers of the new size are blank */
 }
 
-/* ---- xdg-shell ---- */
-
-static float scale_of_env(const char* env) {
-	float f = env && *env ? strtof(env, NULL) : 0.0f;
+static float scale_of_env(const char* const env) {
+	const float f = env && *env ? strtof(env, nullptr) : 0.0f;
 	return f > 0 ? f : 0.0f;
 }
 
-static void preferred_scale(void* d, struct wp_fractional_scale_v1* s, uint32_t scale) {
-	window_t* w = (window_t*)d;
+static void preferred_scale(void* const d, struct wp_fractional_scale_v1* s, const uint32_t scale) {
+	const auto w = (window_t*)d;
 	float f = scale / 120.0f; /* in 1/120 of a scale of 1: 180 is 1.5 */
 	(void)s;
 	w->preferred_scale = scale;
@@ -248,24 +206,13 @@ static void preferred_scale(void* d, struct wp_fractional_scale_v1* s, uint32_t 
 
 static const struct wp_fractional_scale_v1_listener fractional_listener = { preferred_scale };
 
-/* One-time diagnostics of the scale path: what the compositor and the env gave. TODO.md: remove before release. */
-static void scale_report(const window_t* w) {
-	static int done;
-	if (done) return;
-	done = 1;
-	fprintf(stderr, "zrnui: window scale: ui=%.3f density=%.3f buffer_scale=%d viewport=%s env=%s preferred=%.3f buffer=%dx%d logical=%dx%d grid=%dx%d\n",
-		w->ui_scale, w->fscale, w->scale, w->viewport ? "yes" : "no", w->env_scale > 0 ? "set" : "none",
-		w->preferred_scale / 120.0f, (int)(w->width * w->fscale + 0.5f), (int)(w->height * w->fscale + 0.5f), w->width, w->height,
-		(int)(w->width / w->ui_scale + 0.5f), (int)(w->height / w->ui_scale + 0.5f));
-}
-
 /* ---- xdg-shell ---- */
 
 static void wm_ping(void* d, struct xdg_wm_base* b, uint32_t serial) { (void)d; xdg_wm_base_pong(b, serial); }
 static const struct xdg_wm_base_listener wm_base_listener = { .ping = wm_ping };
 
-static void surface_configure(void* d, struct xdg_surface* s, uint32_t serial) {
-	window_t* w = (window_t*)d;
+static void surface_configure(void* const d, struct xdg_surface* s, const uint32_t serial) {
+	const auto w = (window_t*)d;
 	xdg_surface_ack_configure(s, serial);
 	if (w->pending_w > 0 && w->pending_h > 0 && (w->pending_w != w->width || w->pending_h != w->height)) {
 		w->width = w->pending_w;
@@ -276,13 +223,12 @@ static void surface_configure(void* d, struct xdg_surface* s, uint32_t serial) {
 	if (w->viewport) wp_viewport_set_destination(w->viewport, w->width, w->height); /* the logical size of the resize */
 	Zroot_set_scale(w->root, w->ui_scale);
 	zrn_root_set_density(w->root, w->fscale);
-	scale_report(w);
 	present(w);
 }
 static const struct xdg_surface_listener xdg_surface_listener = { .configure = surface_configure };
 
-static void toplevel_configure(void* d, struct xdg_toplevel* t, int32_t w_, int32_t h_, struct wl_array* states) {
-	window_t* w = (window_t*)d;
+static void toplevel_configure(void* const d, struct xdg_toplevel* t, const int32_t w_, const int32_t h_, struct wl_array* states) {
+	const auto w = (window_t*)d;
 	(void)t; (void)states;
 	w->pending_w = w_;
 	w->pending_h = h_;
@@ -292,27 +238,27 @@ static const struct xdg_toplevel_listener toplevel_listener = { .configure = top
 
 /* ---- pointer and touch ---- */
 
-static void ptr_enter(void* d, struct wl_pointer* p, uint32_t s, struct wl_surface* sf, wl_fixed_t x, wl_fixed_t y) {
+static void ptr_enter(void* const d, struct wl_pointer* p, const uint32_t s, struct wl_surface* sf, const wl_fixed_t x, const wl_fixed_t y) {
 	(void)p; (void)s; (void)sf;
 	Zroot_inject_pointer(((window_t*)d)->root, Z_POINTER_MOVE, (float)wl_fixed_to_double(x), (float)wl_fixed_to_double(y));
 }
 static void ptr_leave(void* d, struct wl_pointer* p, uint32_t s, struct wl_surface* sf) { (void)p; (void)s; (void)sf; Zroot_inject_pointer(((window_t*)d)->root, Z_POINTER_LEAVE, 0, 0); }
-static void ptr_motion(void* d, struct wl_pointer* p, uint32_t t, wl_fixed_t x, wl_fixed_t y) {
+static void ptr_motion(void* const d, struct wl_pointer* p, const uint32_t t, const wl_fixed_t x, const wl_fixed_t y) {
 	(void)p; (void)t;
 	Zroot_inject_pointer(((window_t*)d)->root, Z_POINTER_MOVE, (float)wl_fixed_to_double(x), (float)wl_fixed_to_double(y));
 }
 static float g_px, g_py;
-static void ptr_motion_track(void* d, struct wl_pointer* p, uint32_t t, wl_fixed_t x, wl_fixed_t y) {
+static void ptr_motion_track(void* const d, struct wl_pointer* p, const uint32_t t, const wl_fixed_t x, const wl_fixed_t y) {
 	g_px = (float)wl_fixed_to_double(x);
 	g_py = (float)wl_fixed_to_double(y);
 	ptr_motion(d, p, t, x, y);
 }
-static void ptr_button(void* d, struct wl_pointer* p, uint32_t serial, uint32_t t, uint32_t button, uint32_t state) {
+static void ptr_button(void* const d, struct wl_pointer* p, const uint32_t serial, const uint32_t t, const uint32_t button, const uint32_t state) {
 	(void)p; (void)serial; (void)t;
 	if (button != 0x110) return; /* BTN_LEFT */
 	Zroot_inject_pointer(((window_t*)d)->root, state == WL_POINTER_BUTTON_STATE_PRESSED ? Z_POINTER_DOWN : Z_POINTER_UP, g_px, g_py);
 }
-static void ptr_axis(void* d, struct wl_pointer* p, uint32_t t, uint32_t axis, wl_fixed_t v) {
+static void ptr_axis(void* const d, struct wl_pointer* p, const uint32_t t, const uint32_t axis, const wl_fixed_t v) {
 	(void)p; (void)t;
 	if (axis == WL_POINTER_AXIS_VERTICAL_SCROLL) Zroot_inject_wheel(((window_t*)d)->root, (float)-wl_fixed_to_double(v) / 10.0f);
 }
@@ -325,8 +271,8 @@ static const struct wl_pointer_listener pointer_listener = {
 	.frame = ptr_frame, .axis_source = ptr_axis_source, .axis_stop = ptr_axis_stop, .axis_discrete = ptr_axis_discrete
 };
 
-static void touch_down(void* d, struct wl_touch* t, uint32_t serial, uint32_t time, struct wl_surface* s, int32_t id, wl_fixed_t x, wl_fixed_t y) {
-	window_t* w = (window_t*)d;
+static void touch_down(void* const d, struct wl_touch* t, const uint32_t serial, const uint32_t time, struct wl_surface* s, const int32_t id, const wl_fixed_t x, const wl_fixed_t y) {
+	const auto w = (window_t*)d;
 	(void)t; (void)serial; (void)time; (void)s;
 	if (w->touch_id >= 0) return;
 	w->touch_id = id;
@@ -335,16 +281,16 @@ static void touch_down(void* d, struct wl_touch* t, uint32_t serial, uint32_t ti
 	Zroot_inject_pointer(w->root, Z_POINTER_MOVE, g_px, g_py);
 	Zroot_inject_pointer(w->root, Z_POINTER_DOWN, g_px, g_py);
 }
-static void touch_up(void* d, struct wl_touch* t, uint32_t serial, uint32_t time, int32_t id) {
-	window_t* w = (window_t*)d;
+static void touch_up(void* const d, struct wl_touch* t, const uint32_t serial, const uint32_t time, const int32_t id) {
+	const auto w = (window_t*)d;
 	(void)t; (void)serial; (void)time;
 	if (id != w->touch_id) return;
 	w->touch_id = -1;
 	Zroot_inject_pointer(w->root, Z_POINTER_UP, g_px, g_py);
 	Zroot_inject_pointer(w->root, Z_POINTER_LEAVE, 0, 0);
 }
-static void touch_motion(void* d, struct wl_touch* t, uint32_t time, int32_t id, wl_fixed_t x, wl_fixed_t y) {
-	window_t* w = (window_t*)d;
+static void touch_motion(void* const d, struct wl_touch* t, const uint32_t time, const int32_t id, const wl_fixed_t x, const wl_fixed_t y) {
+	const auto w = (window_t*)d;
 	(void)t; (void)time;
 	if (id != w->touch_id) return;
 	g_px = (float)wl_fixed_to_double(x);
@@ -352,7 +298,7 @@ static void touch_motion(void* d, struct wl_touch* t, uint32_t time, int32_t id,
 	Zroot_inject_pointer(w->root, Z_POINTER_MOVE, g_px, g_py);
 }
 static void touch_frame(void* d, struct wl_touch* t) { (void)d; (void)t; }
-static void touch_cancel(void* d, struct wl_touch* t) {
+static void touch_cancel(void* const d, struct wl_touch* t) {
 	window_t* w = (window_t*)d;
 	(void)t;
 	if (w->touch_id >= 0) Zroot_inject_pointer(w->root, Z_POINTER_UP, -1000, -1000);
@@ -367,24 +313,24 @@ static const struct wl_touch_listener touch_listener = {
 
 /* ---- keyboard ---- */
 
-static void kb_keymap(void* d, struct wl_keyboard* k, uint32_t format, int32_t fd, uint32_t size) {
+static void kb_keymap(void* const d, struct wl_keyboard* k, const uint32_t format, const int32_t fd, const uint32_t size) {
 	window_t* w = (window_t*)d;
 	char* map;
 	(void)k;
 	if (format != WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1) { close(fd); return; }
-	map = (char*)mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
+	map = (char*)mmap(nullptr, size, PROT_READ, MAP_PRIVATE, fd, 0);
 	close(fd);
 	if (map == MAP_FAILED) return;
 	if (w->xkb_state) xkb_state_unref(w->xkb_state);
 	if (w->keymap) xkb_keymap_unref(w->keymap);
 	w->keymap = xkb_keymap_new_from_string(w->xkb, map, XKB_KEYMAP_FORMAT_TEXT_V1, XKB_KEYMAP_COMPILE_NO_FLAGS);
 	munmap(map, size);
-	w->xkb_state = w->keymap ? xkb_state_new(w->keymap) : NULL;
+	w->xkb_state = w->keymap ? xkb_state_new(w->keymap) : nullptr;
 }
 static void kb_enter(void* d, struct wl_keyboard* k, uint32_t s, struct wl_surface* sf, struct wl_array* keys) { (void)d; (void)k; (void)s; (void)sf; (void)keys; }
 static void kb_leave(void* d, struct wl_keyboard* k, uint32_t s, struct wl_surface* sf) { (void)k; (void)s; (void)sf; ((window_t*)d)->repeat_key = 0; }
 
-static ZKey map_key(xkb_keysym_t sym, int ctrl) {
+static ZKey map_key(const xkb_keysym_t sym, const int ctrl) {
 	switch (sym) {
 		case XKB_KEY_BackSpace: return Z_KEY_BACKSPACE;
 		case XKB_KEY_Tab: case XKB_KEY_ISO_Left_Tab: return Z_KEY_TAB;
@@ -411,7 +357,7 @@ static ZKey map_key(xkb_keysym_t sym, int ctrl) {
 	return Z_KEY_NONE;
 }
 
-static int modifiers(window_t* w) {
+static int modifiers(window_t* const w) {
 	int m = 0;
 	if (xkb_state_mod_name_is_active(w->xkb_state, XKB_MOD_NAME_SHIFT, XKB_STATE_MODS_EFFECTIVE) > 0) m |= Z_MOD_SHIFT;
 	if (xkb_state_mod_name_is_active(w->xkb_state, XKB_MOD_NAME_CTRL, XKB_STATE_MODS_EFFECTIVE) > 0) m |= Z_MOD_CTRL;
@@ -419,25 +365,25 @@ static int modifiers(window_t* w) {
 	return m;
 }
 
-static void key_press(window_t* w, uint32_t evdev) {
-	xkb_keycode_t code = evdev + 8;
-	xkb_keysym_t sym = xkb_state_key_get_one_sym(w->xkb_state, code);
-	int mods = modifiers(w);
-	ZKey key = map_key(sym, (mods & Z_MOD_CTRL) != 0);
+static void key_press(window_t* const w, const uint32_t evdev) {
+	const xkb_keycode_t code = evdev + 8;
+	const xkb_keysym_t sym = xkb_state_key_get_one_sym(w->xkb_state, code);
+	const int mods = modifiers(w);
+	const ZKey key = map_key(sym, (mods & Z_MOD_CTRL) != 0);
 	if (key != Z_KEY_NONE) {
-		int handled = Zroot_inject_key(w->root, key, mods, 1);
+		const int handled = Zroot_inject_key(w->root, key, mods, 1);
 		/* Back on the first page of a Frame leaves the app, as on Windows Phone */
 		if (key == Z_KEY_ESCAPE && !handled && Zelement_is_a(Zroot_get_visual(w->root), Z_CLASS_FRAME)) w->closed = 1;
 	}
 	if (!(mods & (Z_MOD_CTRL | Z_MOD_ALT))) {
 		char text[16];
-		int n = xkb_state_key_get_utf8(w->xkb_state, code, text, sizeof text);
+		const int n = xkb_state_key_get_utf8(w->xkb_state, code, text, sizeof text);
 		if (n > 0 && (unsigned char)text[0] >= 0x20 && text[0] != 0x7f) Zroot_inject_text(w->root, text);
 	}
 }
 
-static void kb_key(void* d, struct wl_keyboard* k, uint32_t serial, uint32_t time, uint32_t key, uint32_t state) {
-	window_t* w = (window_t*)d;
+static void kb_key(void* const d, struct wl_keyboard* k, const uint32_t serial, const uint32_t time, const uint32_t key, const uint32_t state) {
+	const auto w = (window_t*)d;
 	(void)k; (void)serial; (void)time;
 	if (!w->xkb_state) return;
 	if (state == WL_KEYBOARD_KEY_STATE_PRESSED) {
@@ -448,14 +394,14 @@ static void kb_key(void* d, struct wl_keyboard* k, uint32_t serial, uint32_t tim
 			w->repeating = 0;
 		}
 	} else {
-		xkb_keysym_t sym = xkb_state_key_get_one_sym(w->xkb_state, key + 8);
-		ZKey kk = map_key(sym, 0);
+		const xkb_keysym_t sym = xkb_state_key_get_one_sym(w->xkb_state, key + 8);
+		const ZKey kk = map_key(sym, 0);
 		if (kk != Z_KEY_NONE) Zroot_inject_key(w->root, kk, modifiers(w), 0);
 		if (w->repeat_key == (int)key) w->repeat_key = 0;
 	}
 }
-static void kb_modifiers(void* d, struct wl_keyboard* k, uint32_t serial, uint32_t depressed, uint32_t latched, uint32_t locked, uint32_t group) {
-	window_t* w = (window_t*)d;
+static void kb_modifiers(void* const d, struct wl_keyboard* k, const uint32_t serial, const uint32_t depressed, const uint32_t latched, const uint32_t locked, const uint32_t group) {
+	const auto w = (window_t*)d;
 	(void)k; (void)serial;
 	if (w->xkb_state) xkb_state_update_mask(w->xkb_state, depressed, latched, locked, 0, 0, group);
 }
@@ -466,8 +412,8 @@ static const struct wl_keyboard_listener keyboard_listener = {
 
 /* ---- seat and registry ---- */
 
-static void seat_caps(void* d, struct wl_seat* s, uint32_t caps) {
-	window_t* w = (window_t*)d;
+static void seat_caps(void* const d, struct wl_seat* s, const uint32_t caps) {
+	const auto w = (window_t*)d;
 	if ((caps & WL_SEAT_CAPABILITY_POINTER) && !w->pointer) { w->pointer = wl_seat_get_pointer(s); wl_pointer_add_listener(w->pointer, &pointer_listener, w); }
 	if ((caps & WL_SEAT_CAPABILITY_KEYBOARD) && !w->keyboard) { w->keyboard = wl_seat_get_keyboard(s); wl_keyboard_add_listener(w->keyboard, &keyboard_listener, w); }
 	if ((caps & WL_SEAT_CAPABILITY_TOUCH) && !w->touch) { w->touch = wl_seat_get_touch(s); wl_touch_add_listener(w->touch, &touch_listener, w); }
@@ -475,8 +421,8 @@ static void seat_caps(void* d, struct wl_seat* s, uint32_t caps) {
 static void seat_name(void* d, struct wl_seat* s, const char* n) { (void)d; (void)s; (void)n; }
 static const struct wl_seat_listener seat_listener = { .capabilities = seat_caps, .name = seat_name };
 
-static void reg_global(void* d, struct wl_registry* r, uint32_t name, const char* iface, uint32_t version) {
-	window_t* w = (window_t*)d;
+static void reg_global(void* const d, struct wl_registry* r, const uint32_t name, const char* const iface, const uint32_t version) {
+	const auto w = (window_t*)d;
 	if (!strcmp(iface, wl_compositor_interface.name)) w->compositor = (struct wl_compositor*)wl_registry_bind(r, name, &wl_compositor_interface, version < 4 ? version : 4);
 	else if (!strcmp(iface, wl_shm_interface.name)) w->shm = (struct wl_shm*)wl_registry_bind(r, name, &wl_shm_interface, 1);
 	else if (!strcmp(iface, wp_viewporter_interface.name)) w->viewporter = (struct wp_viewporter*)wl_registry_bind(r, name, &wp_viewporter_interface, 1);
@@ -498,13 +444,13 @@ static double now_ms(void) {
 
 void Zwindow_quit(void) { if (g_window) g_window->closed = 1; }
 
-int Zwindow_run(Zid root, const char* title) {
+int Zwindow_run(const Zid root, const char* const title) {
 	window_t w;
 	const char* scale_env = getenv("ZRNUI_SCALE");
 	double last;
 	int ok;
-	zrn_root_t* r = zrn_root_lookup(root);
-	if (!r) { zrn_error(Z_ERROR_INVALID_ID, "invalid root handle"); return Z_FALSE; }
+	zrn_root_t* const r = zrn_root_lookup(root);
+	if (!r) { zrn_error(Z_ERROR_INVALID_ID, "invalid root handle"); return false; }
 	memset(&w, 0, sizeof w);
 	w.root = root;
 	/* The size of the window is not the business of the app: on a phone it is always fullscreen,
@@ -520,8 +466,8 @@ int Zwindow_run(Zid root, const char* title) {
 	w.scale = (int)w.fscale;
 	if ((float)w.scale < w.fscale) w.scale++;
 	w.ui_scale = w.env_scale > 0 ? w.env_scale : 1.0f;
-	w.display = wl_display_connect(NULL);
-	if (!w.display) { zrn_error(Z_ERROR_IO, "no Wayland display (is WAYLAND_DISPLAY set?)"); return Z_FALSE; }
+	w.display = wl_display_connect(nullptr);
+	if (!w.display) { zrn_error(Z_ERROR_IO, "no Wayland display (is WAYLAND_DISPLAY set?)"); return false; }
 	w.xkb = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
 	w.registry = wl_display_get_registry(w.display);
 	wl_registry_add_listener(w.registry, &registry_listener, &w);
@@ -529,7 +475,7 @@ int Zwindow_run(Zid root, const char* title) {
 	if (!w.compositor || !w.shm || !w.wm_base) {
 		zrn_error(Z_ERROR_IO, "the compositor lacks wl_compositor, wl_shm or xdg_wm_base");
 		wl_display_disconnect(w.display);
-		return Z_FALSE;
+		return false;
 	}
 	g_window = &w;
 	xdg_wm_base_add_listener(w.wm_base, &wm_base_listener, &w);
@@ -560,7 +506,7 @@ int Zwindow_run(Zid root, const char* title) {
 		}
 	}
 	zrn_note_renderer(w.gl ? "gles2" : "software");
-	r->gpu_window = w.gl != NULL;
+	r->gpu_window = w.gl != nullptr;
 	/* a first page that went into the Frame before this window existed swings in now */
 	zrn_root_start_intro(r);
 	last = now_ms();
@@ -589,7 +535,7 @@ int Zwindow_run(Zid root, const char* title) {
 		}
 		if (w.configured) present(&w);
 	}
-	g_window = NULL;
+	g_window = nullptr;
 	buffers_free(&w);
 	if (w.gl) zrn_gl_destroy(w.gl);
 	if (zrn_root_lookup(root)) zrn_root_lookup(root)->gpu_window = 0;
@@ -605,10 +551,10 @@ int Zwindow_run(Zid root, const char* title) {
 
 #else
 
-int Zwindow_run(Zid root, const char* title) {
+int Zwindow_run(const Zid root, const char* const title) {
 	(void)root; (void)title;
 	zrn_error(Z_ERROR_IO, "zrnui was built without Wayland support (wayland-client and xkbcommon were not found)");
-	return Z_FALSE;
+	return false;
 }
 
 void Zwindow_quit(void) {}

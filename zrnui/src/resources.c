@@ -11,39 +11,39 @@
 
 static zrn_root_t* get_root(Zid id) { return zrn_root_lookup(id); }
 
-static const zrn_res_def_t* def_of(ZThemeResource key) {
-	return BUILTIN_KEY(key) ? &zrn_res_table[(int)key - (int)Z_RES_FIRST_] : NULL;
+static const zrn_res_def_t* def_of(const ZThemeResource key) {
+	return BUILTIN_KEY(key) ? &zrn_res_table[(int)key - (int)Z_RES_FIRST_] : nullptr;
 }
 
-static const zrn_res_override_t* find_override(const zrn_root_t* r, ZThemeResource key) {
+static const zrn_res_override_t* find_override(const zrn_root_t* const r, const ZThemeResource key) {
 	int i;
-	if (!r) return NULL;
+	if (!r) return nullptr;
 	for (i = 0; i < r->override_count; i++) if (r->overrides[i].key == key) return &r->overrides[i];
-	return NULL;
+	return nullptr;
 }
 
 static int is_light(const zrn_root_t* r) { return r && r->theme.theme == Z_THEME_LIGHT; }
 
 /* the table value of a key of a type for the theme of the root, or NULL */
-static const zrn_res_value_t* table_value(const zrn_root_t* r, ZThemeResource key, zrn_res_type_t type, int* accent) {
+static const zrn_res_value_t* table_value(const zrn_root_t* const r, const ZThemeResource key, const zrn_res_type_t type, int* const accent) {
 	const zrn_res_def_t* d = def_of(key);
-	int light = is_light(r);
-	if (!d || d->type != type) return NULL;
+	const int light = is_light(r);
+	if (!d || d->type != type) return nullptr;
 	if (accent) *accent = (d->accent & (light ? 2 : 1)) != 0;
 	return light ? &d->light : &d->dark;
 }
 
-int zrn_res_color(const zrn_root_t* r, ZThemeResource key, ZColor* out) {
+int zrn_res_color(const zrn_root_t* const r, const ZThemeResource key, ZColor* const out) {
 	const zrn_res_override_t* o = find_override(r, key);
 	const zrn_res_value_t* v;
 	int accent = 0;
 	if (o) {
-		if (o->type != ZST_RT_COLOR) return Z_FALSE;
+		if (o->type != ZST_RT_COLOR) return false;
 		*out = o->v.color;
-		return Z_TRUE;
+		return true;
 	}
 	v = table_value(r, key, ZST_RT_COLOR, &accent);
-	if (!v) return Z_FALSE;
+	if (!v) return false;
 	if (accent) {
 		ZColor a = r ? r->theme.accent : zrn_accent_color(Z_ACCENT_COBALT);
 		a.a *= (float)(v->argb >> 24) / 255.0f;
@@ -51,63 +51,63 @@ int zrn_res_color(const zrn_root_t* r, ZThemeResource key, ZColor* out) {
 	} else {
 		*out = Zcolor_argb(v->argb);
 	}
-	return Z_TRUE;
+	return true;
 }
 
-int zrn_res_double(const zrn_root_t* r, ZThemeResource key, float* out) {
+int zrn_res_double(const zrn_root_t* const r, const ZThemeResource key, float* const out) {
 	const zrn_res_override_t* o = find_override(r, key);
 	const zrn_res_value_t* v;
 	if (o) {
-		if (o->type != ZST_RT_DOUBLE) return Z_FALSE;
+		if (o->type != ZST_RT_DOUBLE) return false;
 		*out = o->v.d;
-		return Z_TRUE;
+		return true;
 	}
-	v = table_value(r, key, ZST_RT_DOUBLE, NULL);
-	if (!v) return Z_FALSE;
+	v = table_value(r, key, ZST_RT_DOUBLE, nullptr);
+	if (!v) return false;
 	*out = v->f[0];
-	return Z_TRUE;
+	return true;
 }
 
-int zrn_res_int(const zrn_root_t* r, ZThemeResource key, int* out) {
+int zrn_res_int(const zrn_root_t* const r, const ZThemeResource key, int* const out) {
 	const zrn_res_override_t* o = find_override(r, key);
 	const zrn_res_value_t* v;
 	if (o) {
-		if (o->type != ZST_RT_INT) return Z_FALSE;
+		if (o->type != ZST_RT_INT) return false;
 		*out = o->v.i;
-		return Z_TRUE;
+		return true;
 	}
-	v = table_value(r, key, ZST_RT_INT, NULL);
-	if (!v) return Z_FALSE;
+	v = table_value(r, key, ZST_RT_INT, nullptr);
+	if (!v) return false;
 	*out = v->i;
-	return Z_TRUE;
+	return true;
 }
 
-int zrn_res_thickness(const zrn_root_t* r, ZThemeResource key, ZThickness* out) {
+int zrn_res_thickness(const zrn_root_t* const r, const ZThemeResource key, ZThickness* const out) {
 	const zrn_res_override_t* o = find_override(r, key);
 	const zrn_res_value_t* v;
 	if (o) {
-		if (o->type != ZST_RT_THICKNESS) return Z_FALSE;
+		if (o->type != ZST_RT_THICKNESS) return false;
 		*out = o->v.thickness;
-		return Z_TRUE;
+		return true;
 	}
-	v = table_value(r, key, ZST_RT_THICKNESS, NULL);
-	if (!v) return Z_FALSE;
+	v = table_value(r, key, ZST_RT_THICKNESS, nullptr);
+	if (!v) return false;
 	*out = Zthickness(v->f[0], v->f[1], v->f[2], v->f[3]);
-	return Z_TRUE;
+	return true;
 }
 
-int zrn_res_font_family(const zrn_root_t* r, ZThemeResource key, ZFontFamily* out) {
+int zrn_res_font_family(const zrn_root_t* const r, const ZThemeResource key, ZFontFamily* const out) {
 	const zrn_res_override_t* o = find_override(r, key);
 	const zrn_res_value_t* v;
 	if (o) {
-		if (o->type != ZST_RT_FONT_FAMILY) return Z_FALSE;
+		if (o->type != ZST_RT_FONT_FAMILY) return false;
 		*out = (ZFontFamily)o->v.i;
-		return Z_TRUE;
+		return true;
 	}
-	v = table_value(r, key, ZST_RT_FONT_FAMILY, NULL);
-	if (!v) return Z_FALSE;
+	v = table_value(r, key, ZST_RT_FONT_FAMILY, nullptr);
+	if (!v) return false;
 	*out = (ZFontFamily)v->i;
-	return Z_TRUE;
+	return true;
 }
 
 
@@ -115,35 +115,35 @@ int zrn_res_font_family(const zrn_root_t* r, ZThemeResource key, ZFontFamily* ou
  *  public: values
  * ============================================================================ */
 
-ZColor Zroot_get_theme_color(Zid root, ZThemeResource key) {
+ZColor Zroot_get_theme_color(const Zid root, const ZThemeResource key) {
 	ZColor c = Zcolor_rgba(0, 0, 0, 0);
 	zrn_root_t* r = get_root(root);
 	if (r) zrn_res_color(r, key, &c);
 	return c;
 }
 
-float Zroot_get_theme_double(Zid root, ZThemeResource key) {
+float Zroot_get_theme_double(const Zid root, const ZThemeResource key) {
 	float v = 0;
 	zrn_root_t* r = get_root(root);
 	if (r) zrn_res_double(r, key, &v);
 	return v;
 }
 
-int Zroot_get_theme_int(Zid root, ZThemeResource key) {
+int Zroot_get_theme_int(const Zid root, const ZThemeResource key) {
 	int v = 0;
 	zrn_root_t* r = get_root(root);
 	if (r) zrn_res_int(r, key, &v);
 	return v;
 }
 
-ZThickness Zroot_get_theme_thickness(Zid root, ZThemeResource key) {
+ZThickness Zroot_get_theme_thickness(const Zid root, const ZThemeResource key) {
 	ZThickness v = zrn_thickness_zero();
 	zrn_root_t* r = get_root(root);
 	if (r) zrn_res_thickness(r, key, &v);
 	return v;
 }
 
-ZFontFamily Zroot_get_theme_font_family(Zid root, ZThemeResource key) {
+ZFontFamily Zroot_get_theme_font_family(const Zid root, const ZThemeResource key) {
 	ZFontFamily v = Z_FONT_NORMAL;
 	zrn_root_t* r = get_root(root);
 	if (r) zrn_res_font_family(r, key, &v);
@@ -156,26 +156,26 @@ ZFontFamily Zroot_get_theme_font_family(Zid root, ZThemeResource key) {
  * ============================================================================ */
 
 /* the override slot of a key for a value of a type, made when there is none; NULL when the key cannot take it */
-static zrn_res_override_t* override_slot(zrn_root_t* r, ZThemeResource key, zrn_res_type_t type) {
-	zrn_res_override_t* o = NULL;
+static zrn_res_override_t* override_slot(zrn_root_t* const r, const ZThemeResource key, const zrn_res_type_t type) {
+	zrn_res_override_t* o = nullptr;
 	int i;
 	if (BUILTIN_KEY(key)) {
 		if (def_of(key)->type != type) {
 			zrn_error(Z_ERROR_INVALID_ARGUMENT, "resource %s is not of that type", def_of(key)->name);
-			return NULL;
+			return nullptr;
 		}
 	} else if (!USER_KEY(key)) {
 		zrn_error(Z_ERROR_INVALID_ARGUMENT, "invalid resource key 0x%X", (unsigned)key);
-		return NULL;
+		return nullptr;
 	}
 	for (i = 0; i < r->override_count; i++) if (r->overrides[i].key == key) o = &r->overrides[i];
 	if (!o) {
 		if (r->override_count == r->override_cap) {
-			int cap = r->override_cap ? r->override_cap * 2 : 8;
+			const int cap = r->override_cap ? r->override_cap * 2 : 8;
 			zrn_res_override_t* grown = (zrn_res_override_t*)realloc(r->overrides, (size_t)cap * sizeof *grown);
 			if (!grown) {
 				zrn_error(Z_ERROR_OUT_OF_MEMORY, "out of memory");
-				return NULL;
+				return nullptr;
 			}
 			r->overrides = grown;
 			r->override_cap = cap;
@@ -193,12 +193,12 @@ static zrn_res_override_t* override_slot(zrn_root_t* r, ZThemeResource key, zrn_
 	int name(Zid root, ZThemeResource key, ctype value) { \
 		zrn_root_t* r = get_root(root); \
 		zrn_res_override_t* o; \
-		if (!r) return Z_FALSE; \
+		if (!r) return false; \
 		o = override_slot(r, key, rtype); \
-		if (!o) return Z_FALSE; \
+		if (!o) return false; \
 		assign; \
 		zrn_root_resources_changed(r); \
-		return Z_TRUE; \
+		return true; \
 	}
 
 RES_SET(Zroot_set_resource_color, ZColor, ZST_RT_COLOR, o->v.color = value)
@@ -207,8 +207,8 @@ RES_SET(Zroot_set_resource_int, int, ZST_RT_INT, o->v.i = value)
 RES_SET(Zroot_set_resource_thickness, ZThickness, ZST_RT_THICKNESS, o->v.thickness = value)
 RES_SET(Zroot_set_resource_font_family, ZFontFamily, ZST_RT_FONT_FAMILY, o->v.i = (int)value)
 
-void Zroot_clear_resource(Zid root, ZThemeResource key) {
-	zrn_root_t* r = get_root(root);
+void Zroot_clear_resource(const Zid root, const ZThemeResource key) {
+	zrn_root_t* const r = get_root(root);
 	int i;
 	if (!r) return;
 	for (i = 0; i < r->override_count; i++) {
@@ -219,9 +219,9 @@ void Zroot_clear_resource(Zid root, ZThemeResource key) {
 	}
 }
 
-void zrn_root_resources_free(zrn_root_t* r) {
+void zrn_root_resources_free(zrn_root_t* const r) {
 	free(r->overrides);
-	r->overrides = NULL;
+	r->overrides = nullptr;
 	r->override_count = r->override_cap = 0;
 }
 
@@ -230,7 +230,7 @@ void zrn_root_resources_free(zrn_root_t* r) {
  *  bindings
  * ============================================================================ */
 
-static zrn_res_type_t prop_type(zrn_bind_prop_t prop) {
+static zrn_res_type_t prop_type(const zrn_bind_prop_t prop) {
 	switch (prop) {
 		case ZST_BP_ELEMENT_MARGIN:
 		case ZST_BP_CONTROL_BORDER_THICKNESS:
@@ -249,7 +249,7 @@ static zrn_res_type_t prop_type(zrn_bind_prop_t prop) {
 }
 
 /* Resolves a binding and writes the property. A key that has no value (a user key not set) leaves the property as it is. */
-static void apply_binding(zrn_element_t* e, const zrn_binding_t* b) {
+static void apply_binding(zrn_element_t* const e, const zrn_binding_t* const b) {
 	const zrn_root_t* r = e->root;
 	ZColor c = Zcolor_rgba(0, 0, 0, 0);
 	ZThickness t = zrn_thickness_zero();
@@ -267,14 +267,14 @@ static void apply_binding(zrn_element_t* e, const zrn_binding_t* b) {
 			zrn_changed_layout(e);
 			break;
 		case ZST_BP_TEXT_FOREGROUND: {
-			zrn_text_block_t* tb = ZST_AS(zrn_text_block_t, e);
+			zrn_text_block_t* const tb = ZST_AS(zrn_text_block_t, e);
 			tb->foreground = c;
 			tb->set_flags |= ZST_TB_FOREGROUND;
 			zrn_changed_paint(e);
 			break;
 		}
 		case ZST_BP_TEXT_FONT_SIZE: {
-			zrn_text_block_t* tb = ZST_AS(zrn_text_block_t, e);
+			zrn_text_block_t* const tb = ZST_AS(zrn_text_block_t, e);
 			tb->font_size = d;
 			tb->set_flags |= ZST_TB_FONT_SIZE;
 			zrn_changed_layout(e);
@@ -335,18 +335,18 @@ static void apply_binding(zrn_element_t* e, const zrn_binding_t* b) {
 	}
 }
 
-int zrn_bind(zrn_element_t* e, zrn_bind_prop_t prop, ZThemeResource key) {
-	zrn_binding_t* b = NULL;
+int zrn_bind(zrn_element_t* const e, const zrn_bind_prop_t prop, const ZThemeResource key) {
+	zrn_binding_t* b = nullptr;
 	int i;
-	if (!e) return Z_FALSE;
+	if (!e) return false;
 	if (BUILTIN_KEY(key)) {
 		if (def_of(key)->type != prop_type(prop)) {
 			zrn_error(Z_ERROR_INVALID_ARGUMENT, "resource %s is not of the type of the property", def_of(key)->name);
-			return Z_FALSE;
+			return false;
 		}
 	} else if (!USER_KEY(key)) {
 		zrn_error(Z_ERROR_INVALID_ARGUMENT, "invalid resource key 0x%X", (unsigned)key);
-		return Z_FALSE;
+		return false;
 	}
 	for (i = 0; i < e->binding_count; i++) if (e->bindings[i].prop == prop) b = &e->bindings[i];
 	if (!b) {
@@ -354,7 +354,7 @@ int zrn_bind(zrn_element_t* e, zrn_bind_prop_t prop, ZThemeResource key) {
 		zrn_binding_t* grown = (zrn_binding_t*)realloc(e->bindings, (size_t)(e->binding_count + 1) * sizeof *grown);
 		if (!grown) {
 			zrn_error(Z_ERROR_OUT_OF_MEMORY, "out of memory");
-			return Z_FALSE;
+			return false;
 		}
 		e->bindings = grown;
 		b = &e->bindings[e->binding_count++];
@@ -362,10 +362,10 @@ int zrn_bind(zrn_element_t* e, zrn_bind_prop_t prop, ZThemeResource key) {
 	}
 	b->key = key;
 	apply_binding(e, b);
-	return Z_TRUE;
+	return true;
 }
 
-void zrn_unbind(zrn_element_t* e, zrn_bind_prop_t prop) {
+void zrn_unbind(zrn_element_t* const e, const zrn_bind_prop_t prop) {
 	int i;
 	if (!e || !e->binding_count) return;
 	for (i = 0; i < e->binding_count; i++) {
@@ -373,32 +373,32 @@ void zrn_unbind(zrn_element_t* e, zrn_bind_prop_t prop) {
 		e->bindings[i] = e->bindings[--e->binding_count];
 		if (!e->binding_count) {
 			free(e->bindings);
-			e->bindings = NULL;
+			e->bindings = nullptr;
 		}
 		return;
 	}
 }
 
-void zrn_bindings_apply(zrn_element_t* e) {
+void zrn_bindings_apply(zrn_element_t* const e) {
 	int i;
 	/* applying changes no list: a copy is not needed, but the count is read each time */
 	for (i = 0; i < e->binding_count; i++) apply_binding(e, &e->bindings[i]);
 }
 
-void zrn_bindings_free(zrn_element_t* e) {
+void zrn_bindings_free(zrn_element_t* const e) {
 	free(e->bindings);
-	e->bindings = NULL;
+	e->bindings = nullptr;
 	e->binding_count = 0;
 }
 
-static void apply_tree(zrn_element_t* e) {
+static void apply_tree(zrn_element_t* const e) {
 	int i;
 	if (!e) return;
 	zrn_bindings_apply(e);
 	for (i = 0; i < e->child_count; i++) apply_tree(e->children[i]);
 }
 
-void zrn_root_resources_changed(zrn_root_t* r) {
+void zrn_root_resources_changed(zrn_root_t* const r) {
 	int i;
 	/* the popups that are open may be in no tree of the root's own: they are listed apart */
 	apply_tree(r->visual);
@@ -410,7 +410,7 @@ void zrn_root_resources_changed(zrn_root_t* r) {
 #define BIND_FN(name, cls, prop) \
 	int name(Zid id, ZThemeResource key) { \
 		zrn_element_t* e = zrn_get(id, cls); \
-		return e ? zrn_bind(e, prop, key) : Z_FALSE; \
+		return e ? zrn_bind(e, prop, key) : false; \
 	}
 
 BIND_FN(Zelement_bind_margin, Z_CLASS_ELEMENT, ZST_BP_ELEMENT_MARGIN)

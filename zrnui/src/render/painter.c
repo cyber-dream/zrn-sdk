@@ -13,7 +13,7 @@
 
 #include <png.h>
 
-void zrn_painter_init(zrn_painter_t* p, uint8_t* pixels, int width, int height, float scale) {
+void zrn_painter_init(zrn_painter_t* const p, uint8_t* const pixels, const int width, const int height, const float scale) {
 	memset(p, 0, sizeof *p);
 	p->be = &zrn_backend_software;
 	zrn_xf_identity(p->xf);
@@ -32,7 +32,7 @@ void zrn_painter_init(zrn_painter_t* p, uint8_t* pixels, int width, int height, 
 static inline float to_dev_x(const zrn_painter_t* p, float x) { return p->tx + x * p->scale; }
 static inline float to_dev_y(const zrn_painter_t* p, float y) { return p->ty + y * p->scale; }
 
-void zrn_clip_push(zrn_painter_t* p, ZRect r) {
+void zrn_clip_push(zrn_painter_t* const p, const ZRect r) {
 	static int warned = 0;
 	int x0, y0, x1, y1;
 	/* a full stack cannot store the clip, so the push is ignored: the clip stays as it is (a draw may exceed the new clip, which is the lesser evil) and the matching pop restores one level early */
@@ -61,20 +61,20 @@ void zrn_clip_push(zrn_painter_t* p, ZRect r) {
 	if (y1 < p->clip[3]) p->clip[3] = y1;
 }
 
-void zrn_clip_pop(zrn_painter_t* p) {
+void zrn_clip_pop(zrn_painter_t* const p) {
 	if (p->clip_depth <= 0) return;
 	p->clip_depth--;
 	if (p->clip_depth < 32) memcpy(p->clip, p->clip_stack[p->clip_depth], sizeof p->clip);
 }
 
-int zrn_clip_out(const zrn_painter_t* p, ZRect r) {
+int zrn_clip_out(const zrn_painter_t* const p, const ZRect r) {
 	if (p->has_xf) return 0;
-	float x0 = to_dev_x(p, r.x), y0 = to_dev_y(p, r.y);
-	float x1 = to_dev_x(p, r.x + r.width), y1 = to_dev_y(p, r.y + r.height);
+	const float x0 = to_dev_x(p, r.x), y0 = to_dev_y(p, r.y);
+	const float x1 = to_dev_x(p, r.x + r.width), y1 = to_dev_y(p, r.y + r.height);
 	return x1 <= (float)p->clip[0] || y1 <= (float)p->clip[1] || x0 >= (float)p->clip[2] || y0 >= (float)p->clip[3];
 }
 
-void zrn_stroke_rect(zrn_painter_t* p, ZRect r, ZThickness t, ZColor c) {
+void zrn_stroke_rect(zrn_painter_t* const p, const ZRect r, const ZThickness t, const ZColor c) {
 	if (t.top > 0) zrn_fill_rect(p, zrn_rect(r.x, r.y, r.width, t.top), c);
 	if (t.bottom > 0) zrn_fill_rect(p, zrn_rect(r.x, r.y + r.height - t.bottom, r.width, t.bottom), c);
 	if (t.left > 0) zrn_fill_rect(p, zrn_rect(r.x, r.y + t.top, t.left, r.height - t.top - t.bottom), c);
@@ -101,46 +101,46 @@ int zrn_clipped_out(const zrn_painter_t* p, ZRect r) { return p->be->clipped_out
  * ============================================================================ */
 
 
-zrn_image_t* zrn_image_from_rgba(int w, int h, const uint8_t* rgba) {
+zrn_image_t* zrn_image_from_rgba(const int w, const int h, const uint8_t* const rgba) {
 	zrn_image_t* image;
-	if (w <= 0 || h <= 0 || !rgba) return NULL;
+	if (w <= 0 || h <= 0 || !rgba) return nullptr;
 	image = (zrn_image_t*)calloc(1, sizeof *image);
-	if (!image) return NULL;
+	if (!image) return nullptr;
 	image->rgba = (uint8_t*)malloc((size_t)w * (size_t)h * 4);
-	if (!image->rgba) { free(image); return NULL; }
+	if (!image->rgba) { free(image); return nullptr; }
 	memcpy(image->rgba, rgba, (size_t)w * (size_t)h * 4);
 	image->width = w;
 	image->height = h;
 	return image;
 }
 
-void zrn_image_free(zrn_image_t* image) {
+void zrn_image_free(zrn_image_t* const image) {
 	if (image && image->gl_owner) zrn_gl_forget_image(image);
 	if (!image) return;
 	free(image->rgba);
 	free(image);
 }
 
-zrn_image_t* zrn_image_load_png(const char* path) {
+zrn_image_t* zrn_image_load_png(const char* const path) {
 	FILE* f = fopen(path, "rb");
 	png_structp png;
 	png_infop info;
 	/* these live across a longjmp of libpng */
-	png_bytep* volatile rows = NULL;
-	zrn_image_t* volatile image = NULL;
+	png_bytep* volatile rows = nullptr;
+	zrn_image_t* volatile image = nullptr;
 	volatile int w, h;
 	int y;
-	uint8_t* volatile pixels = NULL;
-	if (!f) return NULL;
-	png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-	info = png ? png_create_info_struct(png) : NULL;
+	uint8_t* volatile pixels = nullptr;
+	if (!f) return nullptr;
+	png = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+	info = png ? png_create_info_struct(png) : nullptr;
 	if (!png || !info) goto done;
 	if (setjmp(png_jmpbuf(png))) goto done;
 	png_init_io(png, f);
 	png_read_info(png, info);
 	{
-		png_uint_32 pw = png_get_image_width(png, info);
-		png_uint_32 ph = png_get_image_height(png, info);
+		const png_uint_32 pw = png_get_image_width(png, info);
+		const png_uint_32 ph = png_get_image_height(png, info);
 		/* a sane bound: it also guarantees the values fit an int and the allocation below cannot overflow */
 		if (pw == 0 || ph == 0 || pw > 16384 || ph > 16384 || (size_t)pw > SIZE_MAX / 4 / (size_t)ph) {
 			zrn_error(Z_ERROR_IO, "PNG image %s is empty or too large (%lux%lu)", path, (unsigned long)pw, (unsigned long)ph);
@@ -165,7 +165,7 @@ zrn_image_t* zrn_image_load_png(const char* path) {
 done:
 	free(rows);
 	free(pixels);
-	if (png) png_destroy_read_struct(&png, info ? &info : NULL, NULL);
+	if (png) png_destroy_read_struct(&png, info ? &info : nullptr, nullptr);
 	fclose(f);
 	return image;
 }

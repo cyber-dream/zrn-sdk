@@ -1,25 +1,14 @@
-#include "internal.h"
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#ifdef ZRNUI_HAVE_FONTCONFIG
-#include <fontconfig/fontconfig.h>
-#endif
+/**
+ * zrnui - text.c
+ * UTF-8, line breaking, glyph cache and text drawing. The fonts come from font.c.
+ *
+ * Widths and heights are computed in logical pixels from the advances of
+ * the font in em units, so the layout does not depend on the scale of the
+ * root; the glyph bitmaps are rendered for the device size. There is no
+ * shaping (no HarfBuzz) and no kerning: text is laid out glyph by glyph.
+ */
 
-enum zst_face { ZST_FACE_REGULAR, ZST_FACE_LIGHT, ZST_FACE_SEMILIGHT, ZST_FACE_SEMIBOLD, ZST_FACE_BOLD, ZST_FACE_COUNT };
-
-#define ZST_FACE_CANDIDATES 8
-#define ZST_MAX_FALLBACKS 24
-struct zst_face_spec { const char* exact[ZST_FACE_CANDIDATES]; const char* standin[ZST_FACE_CANDIDATES]; int fc_weight; };
-typedef struct fallback_face { FT_Face face; char* path; int weight; } fallback_face_t;
-extern FT_Library g_ft;
-extern char* g_font_dir;
-extern FT_Face g_faces[];
-extern const struct zst_face_spec g_face_specs[];
-extern fallback_face_t g_fallbacks[];
-extern int g_fallback_count;
-extern int face_index(ZFontFamily family);
-extern FT_Face load_face(uint8_t index);
-
+#include "font.h"
 
 /* ============================================================================
  *  caches
@@ -29,9 +18,9 @@ typedef struct glyph_entry {
 	uint32_t key_cp;
 	int32_t key_face_size;
 	int used;
-	/** Which face draws the glyph: 0 the Selawik face asked for, n the fallback n - 1. Valid once `resolved`. */
+	/** The face that draws the glyph (a fallback font when the face asked for lacks it). Valid once `resolved`. */
 	int resolved;
-	int fallback;
+	FT_Face ft;
 	/** Advance in em. */
 	float advance;
 	int has_bitmap;
@@ -43,7 +32,7 @@ static glyph_entry_t* g_glyphs;
 static size_t g_glyph_cap, g_glyph_count;
 
 /* The cache does not grow without end: past this many entries it is emptied and the glyphs are rasterized again on demand. */
-#define ZST_GLYPH_LIMIT 8192
+static constexpr int ZST_GLYPH_LIMIT = 8192;
 
 /* Empties the glyph cache: every bitmap is freed and the table is reset, so no entry is half-reset. */
 static void glyph_flush(void) {
@@ -71,11 +60,11 @@ static glyph_entry_t* glyph_slot(const uint32_t cp, const int32_t face_size, con
 			i = (i + 1) & (g_glyph_cap - 1);
 		}
 	}
-	if (!create) return NULL;
+	if (!create) return nullptr;
 	if (g_glyph_count >= ZST_GLYPH_LIMIT) glyph_flush();
 	if ((g_glyph_count + 1) * 2 >= g_glyph_cap) {
 		const size_t old_cap = g_glyph_cap;
-		glyph_entry_t* old = g_glyphs;
+		glyph_entry_t* const old = g_glyphs;
 		const size_t new_cap = old_cap ? old_cap * 2 : 1024;
 		glyph_entry_t* fresh = (glyph_entry_t*)calloc(new_cap, sizeof *fresh);
 		if (fresh) {
@@ -97,7 +86,7 @@ static glyph_entry_t* glyph_slot(const uint32_t cp, const int32_t face_size, con
 			if (g_glyph_count + 1 >= g_glyph_cap) glyph_flush();
 		}
 	}
-	if (!g_glyphs) return NULL;
+	if (!g_glyphs) return nullptr;
 	i = hash2(cp, (uint32_t)face_size) & (g_glyph_cap - 1);
 	while (g_glyphs[i].used) i = (i + 1) & (g_glyph_cap - 1);
 	g_glyphs[i].used = 1;
@@ -107,143 +96,46 @@ static glyph_entry_t* glyph_slot(const uint32_t cp, const int32_t face_size, con
 	return &g_glyphs[i];
 }
 
-int zrn_text_init(void) {
-#ifdef ZRNUI_HAVE_FONTCONFIG
-	FcInit();
-#endif
-	if (FT_Init_FreeType(&g_ft) != 0) {
-		zrn_error(Z_ERROR_IO, "FreeType did not start");
-		return 0;
-	}
-	if (!load_face(ZST_FACE_REGULAR)) {
-		FT_Done_FreeType(g_ft);
-		g_ft = NULL;
-		return 0;
-	}
-	return 1;
-}
+bool zrn_text_init(void) { return zrn_fonts_init(); }
 
 void zrn_text_shutdown(void) {
-	int f;
 	for (size_t i = 0; i < g_glyph_cap; i++) if (g_glyphs[i].used) free(g_glyphs[i].alpha);
 	free(g_glyphs);
-	g_glyphs = NULL;
+	g_glyphs = nullptr;
 	g_glyph_cap = g_glyph_count = 0;
-	for (f = 0; f < ZST_FACE_COUNT; f++) {
-		if (g_faces[f]) FT_Done_Face(g_faces[f]);
-		g_faces[f] = NULL;
-	}
-	for (f = 0; f < g_fallback_count; f++) {
-		FT_Done_Face(g_fallbacks[f].face);
-		free(g_fallbacks[f].path);
-	}
-	g_fallback_count = 0;
-	if (g_ft) FT_Done_FreeType(g_ft);
-	g_ft = NULL;
-#ifdef ZRNUI_HAVE_FONTCONFIG
-	FcFini();
-#endif
-	free(g_font_dir);
-	g_font_dir = NULL;
-}
-
-
-/* ---- faces for the code points Selawik does not have (it is a Latin subset): found with fontconfig ---- */
-
-static FT_Face usable_face(uint8_t face);
-
-/* The index + 1 of a fallback face that has `cp` at the weight of `face`, 0 when there is none. */
-static int find_fallback(const uint8_t face, const uint32_t cp) {
-#ifdef ZRNUI_HAVE_FONTCONFIG
-	FcPattern* pattern;
-	FcCharSet* set;
-	FcResult result;
-	FcPattern* match;
-	FcChar8* file = NULL;
-	int weight = g_face_specs[face].fc_weight;
-	int found = 0, i;
-	/* a fallback already loaded for this weight that has the character */
-	for (i = 0; i < g_fallback_count; i++) {
-		if (g_fallbacks[i].weight == weight && FT_Get_Char_Index(g_fallbacks[i].face, cp) != 0) return i + 1;
-	}
-	if (g_fallback_count >= ZST_MAX_FALLBACKS) return 0;
-	pattern = FcPatternCreate();
-	set = FcCharSetCreate();
-	if (!pattern || !set) {
-		if (pattern) FcPatternDestroy(pattern);
-		if (set) FcCharSetDestroy(set);
-		return 0;
-	}
-	FcCharSetAddChar(set, cp);
-	FcPatternAddString(pattern, FC_FAMILY, (const FcChar8*)"sans-serif");
-	FcPatternAddInteger(pattern, FC_WEIGHT, weight);
-	FcPatternAddCharSet(pattern, FC_CHARSET, set);
-	FcConfigSubstitute(NULL, pattern, FcMatchPattern);
-	FcDefaultSubstitute(pattern);
-	match = FcFontMatch(NULL, pattern, &result);
-	if (match && FcPatternGetString(match, FC_FILE, 0, &file) == FcResultMatch && file) {
-		FT_Face ft;
-		/* the same file may serve another weight: reuse it */
-		for (i = 0; i < g_fallback_count; i++) {
-			if (strcmp(g_fallbacks[i].path, (const char*)file) == 0 && FT_Get_Char_Index(g_fallbacks[i].face, cp) != 0) {
-				found = i + 1;
-				break;
-			}
-		}
-		if (!found && FT_New_Face(g_ft, (const char*)file, 0, &ft) == 0) {
-			if (FT_Get_Char_Index(ft, cp) != 0) {
-				g_fallbacks[g_fallback_count].face = ft;
-				g_fallbacks[g_fallback_count].path = zrn_strdup((const char*)file);
-				g_fallbacks[g_fallback_count].weight = weight;
-				found = ++g_fallback_count;
-			} else {
-				FT_Done_Face(ft);
-			}
-		}
-	}
-	if (match) FcPatternDestroy(match);
-	FcPatternDestroy(pattern);
-	FcCharSetDestroy(set);
-	return found;
-#else
-	ZST_UNUSED(face); ZST_UNUSED(cp);
-	return 0;
-#endif
+	zrn_fonts_shutdown();
 }
 
 /* Decides which face draws a code point, once. */
 static glyph_entry_t* glyph_resolved(const uint8_t face, const uint32_t cp) {
-	glyph_entry_t* g = glyph_slot(cp, face, 1);
-	if (!g) return NULL;
+	glyph_entry_t* const g = glyph_slot(cp, face, 1);
+	if (!g) return nullptr;
 	if (!g->resolved) {
-		const FT_Face ft = usable_face(face);
 		g->resolved = 1;
-		g->fallback = 0;
-		if (ft && FT_Get_Char_Index(ft, cp) == 0 && cp > 0x20) g->fallback = find_fallback(face, cp);
+		g->ft = zrn_face_for_char(face, cp);
 	}
 	return g;
 }
 
-static FT_Face face_of(int face, uint32_t cp) {
-	glyph_entry_t* g = glyph_resolved(face, cp);
-	if (g && g->fallback > 0) return g_fallbacks[g->fallback - 1].face;
-	return usable_face(face);
+static FT_Face face_of(const uint8_t face, const uint32_t cp) {
+	const glyph_entry_t* const g = glyph_resolved(face, cp);
+	return g ? g->ft : zrn_face(face);
 }
 
-int zrn_font_has_glyph(zrn_font_t font, uint32_t cp) {
-	int face = face_index(font.family);
-	FT_Face ft = face_of(face, cp);
+int zrn_font_has_glyph(const zrn_font_t font, const uint32_t cp) {
+	const uint8_t face = zrn_face_index(font.family);
+	const FT_Face ft = face_of(face, cp);
 	return ft && FT_Get_Char_Index(ft, cp) != 0;
 }
 
 /* Advance of a code point in em. */
-static float advance_em(int face, uint32_t cp) {
-	glyph_entry_t* g = glyph_resolved(face, cp);
+static float advance_em(const uint8_t face, const uint32_t cp) {
+	glyph_entry_t* const g = glyph_resolved(face, cp);
 	if (!g) return 0.0001f;
 	if (g->advance == 0.0f) {
-		FT_Face ft = face_of(face, cp);
+		const FT_Face ft = face_of(face, cp);
 		if (ft) {
-			FT_UInt index = FT_Get_Char_Index(ft, cp);
+			const FT_UInt index = FT_Get_Char_Index(ft, cp);
 			FT_Set_Char_Size(ft, 0, 1000 * 64, 72, 72);
 			if (FT_Load_Glyph(ft, index, FT_LOAD_NO_HINTING | FT_LOAD_NO_BITMAP) == 0) g->advance = (float)ft->glyph->linearHoriAdvance / 65536.0f / 1000.0f;
 		}
@@ -252,41 +144,36 @@ static float advance_em(int face, uint32_t cp) {
 	return g->advance;
 }
 
-static FT_Face usable_face(const uint8_t face) {
-	const FT_Face ft = g_faces[face] ? g_faces[face] : load_face(face);
-	return ft ? ft : g_faces[ZST_FACE_REGULAR];
-}
-
-float zrn_font_line_height(zrn_font_t font) {
-	FT_Face ft = usable_face(face_index(font.family));
+float zrn_font_line_height(const zrn_font_t font) {
+	const FT_Face ft = zrn_face(zrn_face_index(font.family));
 	if (!ft) return font.size * 1.3f;
 	return font.size * (float)ft->height / (float)ft->units_per_EM;
 }
 
-float zrn_font_ascent(zrn_font_t font) {
-	FT_Face ft = usable_face(face_index(font.family));
+float zrn_font_ascent(const zrn_font_t font) {
+	const FT_Face ft = zrn_face(zrn_face_index(font.family));
 	if (!ft) return font.size;
 	return font.size * (float)ft->ascender / (float)ft->units_per_EM;
 }
 
-static float font_content_height(zrn_font_t font) {
-	FT_Face ft = usable_face(face_index(font.family));
+static float font_content_height(const zrn_font_t font) {
+	const FT_Face ft = zrn_face(zrn_face_index(font.family));
 	if (!ft) return font.size * 1.2f;
 	return font.size * (float)(ft->ascender - ft->descender) / (float)ft->units_per_EM;
 }
 
-static glyph_entry_t* glyph_bitmap(int face, float device_size, uint32_t cp) {
-	int32_t size_key = (int32_t)(device_size * 8.0f + 0.5f);
-	int32_t key = (int32_t)((size_key << 3) | (face + 1) | 0x40000000);
-	glyph_entry_t* g = glyph_slot(cp, key, 1);
+static glyph_entry_t* glyph_bitmap(const uint8_t face, const float device_size, const uint32_t cp) {
+	const int32_t size_key = (int32_t)(device_size * 8.0f + 0.5f);
+	const int32_t key = (int32_t)((size_key << 3) | (face + 1) | 0x40000000);
+	glyph_entry_t* const g = glyph_slot(cp, key, 1);
 	if (!g->has_bitmap) {
-		FT_Face ft = face_of(face, cp);
+		const FT_Face ft = face_of(face, cp);
 		g->has_bitmap = 1;
 		if (ft) {
-			FT_UInt index = FT_Get_Char_Index(ft, cp);
+			const FT_UInt index = FT_Get_Char_Index(ft, cp);
 			FT_Set_Char_Size(ft, 0, (FT_F26Dot6)(device_size * 64.0f + 0.5f), 72, 72);
 			if (FT_Load_Glyph(ft, index, FT_LOAD_NO_HINTING | FT_LOAD_RENDER) == 0 && ft->glyph->bitmap.pixel_mode == FT_PIXEL_MODE_GRAY) {
-				FT_Bitmap* bm = &ft->glyph->bitmap;
+				FT_Bitmap* const bm = &ft->glyph->bitmap;
 				unsigned row;
 				g->width = (int)bm->width;
 				g->height = (int)bm->rows;
@@ -311,7 +198,7 @@ static glyph_entry_t* glyph_bitmap(int face, float device_size, uint32_t cp) {
  *  UTF-8
  * ============================================================================ */
 
-uint32_t zrn_utf8_decode(const char* s, int length, int* consumed) {
+uint32_t zrn_utf8_decode(const char* const s, const int length, int* const consumed) {
 	const unsigned char* u = (const unsigned char*)s;
 	uint32_t cp;
 	int n, i;
@@ -330,7 +217,7 @@ uint32_t zrn_utf8_decode(const char* s, int length, int* consumed) {
 	return cp;
 }
 
-int zrn_utf8_encode(uint32_t cp, char* out) {
+int zrn_utf8_encode(const uint32_t cp, char* const out) {
 	if (cp < 0x80) { out[0] = (char)cp; return 1; }
 	if (cp < 0x800) { out[0] = (char)(0xC0 | (cp >> 6)); out[1] = (char)(0x80 | (cp & 0x3F)); return 2; }
 	if (cp < 0x10000) { out[0] = (char)(0xE0 | (cp >> 12)); out[1] = (char)(0x80 | ((cp >> 6) & 0x3F)); out[2] = (char)(0x80 | (cp & 0x3F)); return 3; }
@@ -338,7 +225,7 @@ int zrn_utf8_encode(uint32_t cp, char* out) {
 	return 4;
 }
 
-int zrn_utf8_next(const char* s, int length, int index) {
+int zrn_utf8_next(const char* const s, const int length, const int index) {
 	int used;
 	if (index >= length) return length;
 	zrn_utf8_decode(s + index, length - index, &used);
@@ -357,11 +244,11 @@ int zrn_utf8_prev(const char* s, int index) {
  *  measuring
  * ============================================================================ */
 
-static float char_advance(zrn_font_t font, uint32_t cp) {
-	return advance_em(face_index(font.family), cp) * font.size + (float)font.spacing * 0.001f * font.size;
+static float char_advance(const zrn_font_t font, const uint32_t cp) {
+	return advance_em(zrn_face_index(font.family), cp) * font.size + (float)font.spacing * 0.001f * font.size;
 }
 
-float zrn_text_width(zrn_font_t font, const char* s, int length) {
+float zrn_text_width(const zrn_font_t font, const char* const s, const int length) {
 	float w = 0;
 	int i = 0, used;
 	while (i < length) {
@@ -373,7 +260,7 @@ float zrn_text_width(zrn_font_t font, const char* s, int length) {
 	return w;
 }
 
-int zrn_text_index_at(zrn_font_t font, const char* s, int length, float x) {
+int zrn_text_index_at(const zrn_font_t font, const char* const s, const int length, const float x) {
 	float pen = 0;
 	int i = 0, used;
 	while (i < length) {
@@ -386,15 +273,15 @@ int zrn_text_index_at(zrn_font_t font, const char* s, int length, float x) {
 	return length;
 }
 
-zrn_text_layout_t* zrn_text_layout_new(zrn_font_t font, const char* text, int length, float max_width, int wrap, int max_lines, float line_height) {
+zrn_text_layout_t* zrn_text_layout_new(const zrn_font_t font, const char* const text, const int length, const float max_width, const int wrap, const int max_lines, const float line_height) {
 	zrn_text_layout_t* l = (zrn_text_layout_t*)calloc(1, sizeof *l);
 	int cap = 8, i = 0;
-	if (!l) return NULL;
+	if (!l) return nullptr;
 	l->font = font;
 	l->text = text;
 	l->line_height = line_height > 0 ? line_height : zrn_font_line_height(font);
 	l->lines = (zrn_line_t*)malloc((size_t)cap * sizeof *l->lines);
-	if (!l->lines) { free(l); return NULL; }
+	if (!l->lines) { free(l); return nullptr; }
 	for (;;) {
 		/* one paragraph, up to a newline */
 		int start = i, end = i, last_space = -1, used;
@@ -447,7 +334,7 @@ zrn_text_layout_t* zrn_text_layout_new(zrn_font_t font, const char* text, int le
 		if (i >= length) {
 			/* a text that ends with a newline has an empty last line */
 			if (next == line_end + 1 && next == length && line_end < length && text[line_end] == '\n') {
-				zrn_line_t empty = { length, length, 0 };
+				const zrn_line_t empty = { length, length, 0 };
 				if (l->line_count < cap) l->lines[l->line_count++] = empty;
 			}
 			break;
@@ -457,7 +344,7 @@ zrn_text_layout_t* zrn_text_layout_new(zrn_font_t font, const char* text, int le
 	return l;
 }
 
-void zrn_text_layout_free(zrn_text_layout_t* l) {
+void zrn_text_layout_free(zrn_text_layout_t* const l) {
 	if (!l) return;
 	free(l->lines);
 	free(l);
@@ -470,11 +357,12 @@ void zrn_text_layout_free(zrn_text_layout_t* l) {
 
 void zrn_blit_alpha(zrn_painter_t* p, int x, int y, int w, int h, const uint8_t* alpha, int stride, ZColor c);
 
-void zrn_draw_string(zrn_painter_t* p, const zrn_font_t font, const char* s, int length, float x, float y, ZColor c) {
-	int face = face_index(font.family), i = 0, used;
-	float device_size = font.size * p->scale;
+void zrn_draw_string(zrn_painter_t* const p, const zrn_font_t font, const char* const s, const int length, const float x, const float y, const ZColor c) {
+	const uint8_t face = zrn_face_index(font.family);
+	int i = 0, used;
+	const float device_size = font.size * p->scale;
 	float pen = p->tx + x * p->scale;
-	float baseline = p->ty + (y + font_content_height(font) * 0 + zrn_font_ascent(font)) * p->scale;
+	const float baseline = p->ty + (y + font_content_height(font) * 0 + zrn_font_ascent(font)) * p->scale;
 	if (c.a * p->alpha <= 0.001f || device_size < 1.0f) return;
 	while (i < length) {
 		uint32_t cp = zrn_utf8_decode(s + i, length - i, &used);
@@ -482,28 +370,28 @@ void zrn_draw_string(zrn_painter_t* p, const zrn_font_t font, const char* s, int
 		i += used;
 		if (cp == '\n' || cp == '\r') continue;
 		if (cp != ' ' && cp != '\t') {
-			glyph_entry_t* g = glyph_bitmap(face, device_size, cp);
+			glyph_entry_t* const g = glyph_bitmap(face, device_size, cp);
 			if (g->alpha) zrn_blit_alpha(p, (int)floorf(pen + 0.5f) + g->left, (int)floorf(baseline + 0.5f) - g->top, g->width, g->height, g->alpha, g->width, c);
 		}
 		pen += char_advance(font, cp) * p->scale;
 	}
 }
 
-void zrn_draw_text(zrn_painter_t* p, const zrn_text_layout_t* l, float x, float y, float width, ZTextAlignment align, ZTextTrimming trim, ZColor c) {
+void zrn_draw_text(zrn_painter_t* const p, const zrn_text_layout_t* const l, const float x, const float y, const float width, const ZTextAlignment align, const ZTextTrimming trim, const ZColor c) {
 	int i;
 	/* the glyphs sit in the line box: centered in a custom line height */
-	float shift = (l->line_height - zrn_font_line_height(l->font)) * 0.5f;
+	const float shift = (l->line_height - zrn_font_line_height(l->font)) * 0.5f;
 	for (i = 0; i < l->line_count; i++) {
 		const zrn_line_t* line = &l->lines[i];
 		float lx = x, ly = y + (float)i * l->line_height + shift;
-		int len = line->end - line->start;
+		const int len = line->end - line->start;
 		float lw = line->width;
-		int last = (i == l->line_count - 1);
+		const int last = (i == l->line_count - 1);
 		if (trim == Z_TRIM_WORD_ELLIPSIS && width > 0 && (lw > width + 0.5f || (last && l->truncated))) {
 			/* cut the line so that "..." fits */
 			static const char ellipsis[] = "\xE2\x80\xA6";
-			float room = width - char_advance(l->font, 0x2026);
-			int cut = zrn_text_index_at(l->font, l->text + line->start, len, zrn_maxf(room, 0));
+			const float room = width - char_advance(l->font, 0x2026);
+			const int cut = zrn_text_index_at(l->font, l->text + line->start, len, zrn_maxf(room, 0));
 			char buffer[1024];
 			if (cut > 0 && cut < (int)sizeof buffer - 4) {
 				memcpy(buffer, l->text + line->start, (size_t)cut);

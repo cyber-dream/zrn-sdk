@@ -9,17 +9,17 @@
 #define SV(e) ZST_AS(zrn_scroll_viewer_t, e)
 
 /* a drag starts after the finger moved this far */
-#define DRAG_THRESHOLD 10.0f
+static constexpr float DRAG_THRESHOLD = 10.0f;
 /* the bars stay in view this long after the last scroll */
-#define BAR_HOLD_MS 800.0f
+static constexpr float BAR_HOLD_MS = 800.0f;
 
 
-static void sv_limits(const zrn_scroll_viewer_t* s, double* max_x, double* max_y) {
+static void sv_limits(const zrn_scroll_viewer_t* const s, double* const max_x, double* const max_y) {
 	*max_x = s->extent_w > s->viewport_w ? s->extent_w - s->viewport_w : 0;
 	*max_y = s->extent_h > s->viewport_h ? s->extent_h - s->viewport_h : 0;
 }
 
-static void sv_clamp(zrn_scroll_viewer_t* s) {
+static void sv_clamp(zrn_scroll_viewer_t* const s) {
 	double mx, my;
 	sv_limits(s, &mx, &my);
 	if (s->offset_x < 0) s->offset_x = 0;
@@ -28,8 +28,8 @@ static void sv_clamp(zrn_scroll_viewer_t* s) {
 	if (s->offset_y > my) s->offset_y = my;
 }
 
-static void sv_changed(zrn_scroll_viewer_t* s, int fire) {
-	zrn_element_t* e = &s->base.base.base;
+static void sv_changed(zrn_scroll_viewer_t* const s, const int fire) {
+	zrn_element_t* const e = &s->base.base.base;
 	sv_clamp(s);
 	s->bar_visible = BAR_HOLD_MS;
 	e->wants_tick = 1;
@@ -37,9 +37,9 @@ static void sv_changed(zrn_scroll_viewer_t* s, int fire) {
 	if (fire && s->on_scroll) s->on_scroll(e->id, Z_SCROLL_THUMB_POSITION, s->offset_y, s->on_scroll_data);
 }
 
-static ZSize sv_measure(zrn_element_t* e, ZSize available) {
+static ZSize sv_measure(zrn_element_t* const e, const ZSize available) {
 	zrn_scroll_viewer_t* s = SV(e);
-	zrn_content_control_t* cc = &s->base;
+	zrn_content_control_t* const cc = &s->base;
 	ZSize room = available, content = { 0, 0 };
 	if (s->h_visibility != Z_SCROLLBAR_DISABLED) room.width = Z_INFINITE;
 	if (s->v_visibility != Z_SCROLLBAR_DISABLED) room.height = Z_INFINITE;
@@ -50,15 +50,15 @@ static ZSize sv_measure(zrn_element_t* e, ZSize available) {
 	return zrn_size(zrn_minf(content.width, available.width), zrn_minf(content.height, available.height));
 }
 
-static ZSize sv_arrange(zrn_element_t* e, ZSize final) {
-	zrn_scroll_viewer_t* s = SV(e);
-	zrn_content_control_t* cc = &s->base;
+static ZSize sv_arrange(zrn_element_t* const e, const ZSize final) {
+	zrn_scroll_viewer_t* const s = SV(e);
+	zrn_content_control_t* const cc = &s->base;
 	s->viewport_w = final.width;
 	s->viewport_h = final.height;
 	if (cc->content) {
-		ZSize d = cc->content->desired;
-		float w = s->h_visibility == Z_SCROLLBAR_DISABLED ? final.width : zrn_maxf(d.width, final.width);
-		float h = s->v_visibility == Z_SCROLLBAR_DISABLED ? final.height : zrn_maxf(d.height, final.height);
+		const ZSize d = cc->content->desired;
+		const float w = s->h_visibility == Z_SCROLLBAR_DISABLED ? final.width : zrn_maxf(d.width, final.width);
+		const float h = s->v_visibility == Z_SCROLLBAR_DISABLED ? final.height : zrn_maxf(d.height, final.height);
 		s->extent_w = s->h_visibility == Z_SCROLLBAR_DISABLED ? final.width : d.width;
 		s->extent_h = s->v_visibility == Z_SCROLLBAR_DISABLED ? final.height : d.height;
 		sv_clamp(s);
@@ -74,35 +74,35 @@ static ZSize sv_arrange(zrn_element_t* e, ZSize final) {
 	return final;
 }
 
-static void sv_paint_over(zrn_element_t* e, zrn_painter_t* p) {
-	zrn_scroll_viewer_t* s = SV(e);
+static void sv_paint_over(zrn_element_t* const e, zrn_painter_t* const p) {
+	zrn_scroll_viewer_t* const s = SV(e);
 	ZColor color;
 	double mx, my;
 	float alpha;
-	int always_v = s->v_visibility == Z_SCROLLBAR_VISIBLE, always_h = s->h_visibility == Z_SCROLLBAR_VISIBLE;
+	const int always_v = s->v_visibility == Z_SCROLLBAR_VISIBLE, always_h = s->h_visibility == Z_SCROLLBAR_VISIBLE;
 	sv_limits(s, &mx, &my);
 	alpha = zrn_clampf(s->bar_visible / 250.0f, 0, 1);
 	color = zrn_theme_color(e, ZST_TC_DISABLED);
 	if (s->show_v && (alpha > 0 || always_v)) {
-		float length = e->rect.height - (s->show_h ? 7.0f : 0);
-		float thumb = zrn_clampf((float)(s->viewport_h / s->extent_h) * length, zrn_minf(72.0f, length), length);
-		float pos = my > 0 ? (float)(s->offset_y / my) * (length - thumb) : 0;
+		const float length = e->rect.height - (s->show_h ? 7.0f : 0);
+		const float thumb = zrn_clampf((float)(s->viewport_h / s->extent_h) * length, zrn_minf(72.0f, length), length);
+		const float pos = my > 0 ? (float)(s->offset_y / my) * (length - thumb) : 0;
 		zrn_fill_rect(p, zrn_rect(e->rect.width - 6, pos + 1, 5, thumb - 2), zrn_color_alpha(color, always_v ? 1.0f : alpha));
 	}
 	if (s->show_h && (alpha > 0 || always_h)) {
-		float length = e->rect.width - (s->show_v ? 7.0f : 0);
-		float thumb = zrn_clampf((float)(s->viewport_w / s->extent_w) * length, zrn_minf(72.0f, length), length);
-		float pos = mx > 0 ? (float)(s->offset_x / mx) * (length - thumb) : 0;
+		const float length = e->rect.width - (s->show_v ? 7.0f : 0);
+		const float thumb = zrn_clampf((float)(s->viewport_w / s->extent_w) * length, zrn_minf(72.0f, length), length);
+		const float pos = mx > 0 ? (float)(s->offset_x / mx) * (length - thumb) : 0;
 		zrn_fill_rect(p, zrn_rect(pos + 1, e->rect.height - 6, thumb - 2, 5), zrn_color_alpha(color, always_h ? 1.0f : alpha));
 	}
 }
 
-static void sv_tick(zrn_element_t* e, float dt) {
+static void sv_tick(zrn_element_t* const e, const float dt) {
 	zrn_scroll_viewer_t* s = SV(e);
 	int busy = 0, fire = 0;
 	if (!s->dragging && (fabsf(s->velocity_x) > 20.0f || fabsf(s->velocity_y) > 20.0f)) {
 		/* inertia: exponential decay, 1/3 of the speed left after 0.35 s */
-		float decay = expf(-dt / 320.0f);
+		const float decay = expf(-dt / 320.0f);
 		double old_x = s->offset_x, old_y = s->offset_y;
 		s->offset_x += s->velocity_x * dt / 1000.0f;
 		s->offset_y += s->velocity_y * dt / 1000.0f;
@@ -119,7 +119,7 @@ static void sv_tick(zrn_element_t* e, float dt) {
 		s->velocity_x = s->velocity_y = 0;
 	}
 	if (s->bar_visible > 0 && !s->dragging) {
-		float before = s->bar_visible;
+		const float before = s->bar_visible;
 		s->bar_visible = zrn_maxf(0, s->bar_visible - dt);
 		if (before <= 250.0f || s->bar_visible <= 250.0f) zrn_changed_paint(e);
 		busy = busy || s->bar_visible > 0;
@@ -132,8 +132,8 @@ static void sv_tick(zrn_element_t* e, float dt) {
 static int sv_can_scroll_y(const zrn_scroll_viewer_t* s) { return s->v_visibility != Z_SCROLLBAR_DISABLED && s->extent_h > s->viewport_h; }
 static int sv_can_scroll_x(const zrn_scroll_viewer_t* s) { return s->h_visibility != Z_SCROLLBAR_DISABLED && s->extent_w > s->viewport_w; }
 
-static int sv_input(zrn_element_t* e, zrn_input_t* in) {
-	zrn_scroll_viewer_t* s = SV(e);
+static int sv_input(zrn_element_t* const e, zrn_input_t* const in) {
+	zrn_scroll_viewer_t* const s = SV(e);
 	switch (in->type) {
 		case ZST_IN_PREVIEW_DOWN:
 			s->drag_start_x = in->x;
@@ -148,11 +148,11 @@ static int sv_input(zrn_element_t* e, zrn_input_t* in) {
 			s->base.base.base.wants_tick = s->bar_visible > 0;
 			return 0;
 		case ZST_IN_PREVIEW_MOVE:
-			if (s->dragging || e->root == NULL || e->root->capture == e) return 0;
+			if (s->dragging || e->root == nullptr || e->root->capture == e) return 0;
 			if (s->drag_moved == 0 && e->root->capture) {
-				float dx = in->x - s->drag_start_x, dy = in->y - s->drag_start_y;
-				int along_y = sv_can_scroll_y(s) && fabsf(dy) > DRAG_THRESHOLD && fabsf(dy) >= fabsf(dx);
-				int along_x = sv_can_scroll_x(s) && fabsf(dx) > DRAG_THRESHOLD && fabsf(dx) > fabsf(dy);
+				const float dx = in->x - s->drag_start_x, dy = in->y - s->drag_start_y;
+				const int along_y = sv_can_scroll_y(s) && fabsf(dy) > DRAG_THRESHOLD && fabsf(dy) >= fabsf(dx);
+				const int along_x = sv_can_scroll_x(s) && fabsf(dx) > DRAG_THRESHOLD && fabsf(dx) > fabsf(dy);
 				if (along_y || along_x) {
 					/* the finger moved far enough: the drag is ours, whoever had the pointer loses it */
 					s->drag_moved = 1;
@@ -183,7 +183,7 @@ static int sv_input(zrn_element_t* e, zrn_input_t* in) {
 		case ZST_IN_POINTER_MOVE:
 			if (!s->dragging) return 0;
 			{
-				float dx = in->x - s->drag_start_x, dy = in->y - s->drag_start_y;
+				const float dx = in->x - s->drag_start_x, dy = in->y - s->drag_start_y;
 				if (!s->drag_moved && fabsf(dx) < DRAG_THRESHOLD && fabsf(dy) < DRAG_THRESHOLD) return 1;
 				s->drag_moved = 1;
 				if (sv_can_scroll_y(s)) s->offset_y = s->drag_offset_y - dy;
@@ -218,8 +218,8 @@ static int sv_input(zrn_element_t* e, zrn_input_t* in) {
 	}
 }
 
-static void sv_init(zrn_element_t* e) {
-	zrn_scroll_viewer_t* s = SV(e);
+static void sv_init(zrn_element_t* const e) {
+	zrn_scroll_viewer_t* const s = SV(e);
 	s->v_visibility = Z_SCROLLBAR_AUTO;
 	s->h_visibility = Z_SCROLLBAR_DISABLED;
 	e->clip_to_bounds = 1;
@@ -235,43 +235,43 @@ zrn_class_t zrn_class_scroll_viewer = {
 };
 
 Zid Zscroll_viewer_create(void) {
-	zrn_element_t* e = zrn_create(Z_CLASS_SCROLL_VIEWER);
+	zrn_element_t* const e = zrn_create(Z_CLASS_SCROLL_VIEWER);
 	return e ? e->id : Z_INVALID_ID;
 }
 
 static zrn_scroll_viewer_t* get_sv(Zid id) { return SV(zrn_get(id, Z_CLASS_SCROLL_VIEWER)); }
 
-void Zscroll_viewer_set_content(Zid id, Zid content) {
-	zrn_scroll_viewer_t* s = get_sv(id);
-	zrn_element_t* c = content != Z_INVALID_ID ? zrn_get(content, Z_CLASS_ELEMENT) : NULL;
+void Zscroll_viewer_set_content(const Zid id, const Zid content) {
+	zrn_scroll_viewer_t* const s = get_sv(id);
+	zrn_element_t* const c = content != Z_INVALID_ID ? zrn_get(content, Z_CLASS_ELEMENT) : nullptr;
 	if (!s || (content != Z_INVALID_ID && !c)) return;
 	zrn_content_set(&s->base, c);
 }
 
-void Zscroll_viewer_set_vertical_scrollbar_visibility(Zid id, ZScrollBarVisibility v) {
-	zrn_scroll_viewer_t* s = get_sv(id);
+void Zscroll_viewer_set_vertical_scrollbar_visibility(const Zid id, const ZScrollBarVisibility v) {
+	zrn_scroll_viewer_t* const s = get_sv(id);
 	if (!s) return;
 	s->v_visibility = v;
 	zrn_changed_layout(&s->base.base.base);
 }
 
-void Zscroll_viewer_set_horizontal_scrollbar_visibility(Zid id, ZScrollBarVisibility v) {
-	zrn_scroll_viewer_t* s = get_sv(id);
+void Zscroll_viewer_set_horizontal_scrollbar_visibility(const Zid id, const ZScrollBarVisibility v) {
+	zrn_scroll_viewer_t* const s = get_sv(id);
 	if (!s) return;
 	s->h_visibility = v;
 	zrn_changed_layout(&s->base.base.base);
 }
 
-void Zscroll_viewer_scroll_to_vertical_offset(Zid id, double offset) {
-	zrn_scroll_viewer_t* s = get_sv(id);
+void Zscroll_viewer_scroll_to_vertical_offset(const Zid id, const double offset) {
+	zrn_scroll_viewer_t* const s = get_sv(id);
 	if (!s) return;
 	s->offset_y = offset;
 	s->velocity_y = 0;
 	sv_changed(s, 1);
 }
 
-void Zscroll_viewer_scroll_to_horizontal_offset(Zid id, double offset) {
-	zrn_scroll_viewer_t* s = get_sv(id);
+void Zscroll_viewer_scroll_to_horizontal_offset(const Zid id, const double offset) {
+	zrn_scroll_viewer_t* const s = get_sv(id);
 	if (!s) return;
 	s->offset_x = offset;
 	s->velocity_x = 0;
@@ -285,8 +285,8 @@ double Zscroll_viewer_get_extent_width(Zid id) { zrn_scroll_viewer_t* s = get_sv
 double Zscroll_viewer_get_viewport_height(Zid id) { zrn_scroll_viewer_t* s = get_sv(id); return s ? s->viewport_h : 0; }
 double Zscroll_viewer_get_viewport_width(Zid id) { zrn_scroll_viewer_t* s = get_sv(id); return s ? s->viewport_w : 0; }
 
-void Zscroll_viewer_on_scroll(Zid id, ZScrollCallback callback, void* user_data) {
-	zrn_scroll_viewer_t* s = get_sv(id);
+void Zscroll_viewer_on_scroll(const Zid id, const ZScrollCallback callback, void* const user_data) {
+	zrn_scroll_viewer_t* const s = get_sv(id);
 	if (!s) return;
 	s->on_scroll = callback;
 	s->on_scroll_data = user_data;

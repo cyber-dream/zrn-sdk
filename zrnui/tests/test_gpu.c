@@ -62,10 +62,10 @@ int main(void) {
 	double mean, bad;
 	char path[512];
 	if (!Zinit()) return 1;
-	soft = Zroot_create(480, 800);
+	soft = zst_test_root(480, 800);
 	Zroot_set_renderer(soft, Z_RENDERER_SOFTWARE);
 	build(soft);
-	gpu = Zroot_create(480, 800);
+	gpu = zst_test_root(480, 800);
 	Zroot_set_renderer(gpu, Z_RENDERER_GPU);
 	build(gpu);
 	Zroot_render(soft, &fs);

@@ -63,7 +63,7 @@ static void test_icons(void) {
 	path = Zpath_icon_create("M 0,0 L 10,0 L 10,10 Z M 2 2 h 3 v 3 z");
 	CHECK(path != Z_INVALID_ID && Zelement_get_class(path) == Z_CLASS_PATH_ICON);
 	CHECK(Zpath_icon_set_data(path, "M0,0 L5,0 L5,5"));
-	Zset_error_callback(quiet_errors, NULL); /* the tests provoke errors on purpose */
+	Zset_error_callback(quiet_errors, nullptr); /* the tests provoke errors on purpose */
 	bad = Zpath_icon_create("M 0,0 Q 1,1 2,2");
 	CHECK(bad == Z_INVALID_ID);
 	CHECK(!Zpath_icon_set_data(path, "L"));
@@ -75,7 +75,7 @@ static void test_icons(void) {
 }
 
 static void test_icon_pixels(void) {
-	Zid root = Zroot_create(480, 200), wrap = Zwrap_panel_create(Z_HORIZONTAL), a, t, f, p, c;
+	Zid root = zst_test_root(480, 200), wrap = Zwrap_panel_create(Z_HORIZONTAL), a, t, f, p, c;
 	ZRect r;
 	ZPoint pt;
 	Zroot_set_visual(root, wrap);
@@ -132,7 +132,7 @@ static void test_symbols_all_draw(void) {
 	};
 	int i;
 	for (i = 0; i < (int)(sizeof syms / sizeof *syms); i++) {
-		Zid root = Zroot_create(100, 100), icon = Zsymbol_icon_create(syms[i]);
+		Zid root = zst_test_root(100, 100), icon = Zsymbol_icon_create(syms[i]);
 		int x, y, lit = 0;
 		Zelement_set_width(icon, 40);
 		Zelement_set_height(icon, 40);
@@ -155,7 +155,7 @@ static void test_symbols_all_draw(void) {
 /* ---- AppBarButton ---- */
 
 static void test_app_bar_button(void) {
-	Zid root = Zroot_create(480, 400), stack = Zstack_panel_create(Z_VERTICAL), b, tg, sep;
+	Zid root = zst_test_root(480, 400), stack = Zstack_panel_create(Z_VERTICAL), b, tg, sep;
 	ZRect r;
 	Zroot_set_visual(root, stack);
 	b = Zpanel_add(stack, Zapp_bar_button_create("save", Zsymbol_icon_create(Z_SYMBOL_SAVE)));
@@ -182,7 +182,7 @@ static void test_app_bar_button(void) {
 	Zapp_bar_separator_set_is_compact(sep, true);
 	CHECK(Zapp_bar_separator_get_is_compact(sep));
 	/* a tap: Click, a toggle: IsChecked */
-	Zbutton_on_click(b, on_click, NULL);
+	Zbutton_on_click(b, on_click, nullptr);
 	g_clicks = 0;
 	tap(root, center(b));
 	CHECK(g_clicks == 1);
@@ -219,14 +219,14 @@ static Zid page_with_bar(Zid frame, void* parameter) {
 	(void)frame; (void)parameter;
 	g_content_button = Zpanel_add(stack, Zbutton_create("content"));
 	Zelement_set_vertical_alignment(g_content_button, Z_VALIGN_TOP);
-	Zbutton_on_click(g_content_button, on_page_click, NULL);
+	Zbutton_on_click(g_content_button, on_page_click, nullptr);
 	Zpage_set_content(page, stack);
 	g_prim = Zapp_bar_button_create("add", Zsymbol_icon_create(Z_SYMBOL_ADD));
 	Zcommand_bar_add_primary_command(bar, g_prim);
 	Zcommand_bar_add_primary_command(bar, Zapp_bar_separator_create());
 	Zcommand_bar_add_primary_command(bar, Zapp_bar_toggle_button_create("pin", Zsymbol_icon_create(Z_SYMBOL_PIN)));
 	g_sec = Zapp_bar_button_create("settings", Z_INVALID_ID);
-	Zbutton_on_click(g_sec, on_click, NULL);
+	Zbutton_on_click(g_sec, on_click, nullptr);
 	Zcommand_bar_add_secondary_command(bar, g_sec);
 	more = Zapp_bar_button_create("about", Z_INVALID_ID);
 	Zcommand_bar_add_secondary_command(bar, more);
@@ -238,15 +238,15 @@ static Zid page_with_bar(Zid frame, void* parameter) {
 static Zid other_page(Zid frame, void* parameter) { (void)frame; (void)parameter; return Zpage_create(); }
 
 static Zid setup(Zid* frame, Zid* page) {
-	Zid root = Zroot_create(480, 800);
+	Zid root = zst_test_root(480, 800);
 	*frame = Zframe_create();
 	Zroot_set_visual(root, *frame);
-	Zframe_navigate(*frame, page_with_bar, NULL);
+	Zframe_navigate(*frame, page_with_bar, nullptr);
 	*page = Zframe_get_page(*frame);
 	Zroot_update_layout(root);
 	g_opened = g_closed = g_clicks = g_page_clicks = 0;
-	Zapp_bar_on_opened(g_cmd_bar, on_opened, NULL);
-	Zapp_bar_on_closed(g_cmd_bar, on_closed, NULL);
+	Zapp_bar_on_opened(g_cmd_bar, on_opened, nullptr);
+	Zapp_bar_on_closed(g_cmd_bar, on_closed, nullptr);
 	return root;
 }
 
@@ -372,15 +372,15 @@ static void test_light_dismiss_and_sticky(void) {
 	CHECK(g_page_clicks == 2);
 	Zapp_bar_set_is_sticky(bar, false);
 	/* Back closes the bar before it navigates */
-	Zframe_navigate(frame, other_page, NULL);
+	Zframe_navigate(frame, other_page, nullptr);
 	Zroot_update_layout(root);
 	CHECK(Zframe_get_back_stack_depth(frame) == 1);
 	Zroot_destroy(root);
 
 	root = setup(&frame, &page);
 	Zframe_go_back(frame);
-	Zframe_navigate(frame, other_page, NULL);
-	Zframe_navigate(frame, page_with_bar, NULL);
+	Zframe_navigate(frame, other_page, nullptr);
+	Zframe_navigate(frame, page_with_bar, nullptr);
 	page = Zframe_get_page(frame);
 	bar = Zpage_get_bottom_app_bar(page);
 	Zapp_bar_set_is_open(bar, true);
@@ -404,14 +404,14 @@ static void test_secondary_command(void) {
 	/* a primary one leaves the bar as it is */
 	Zapp_bar_set_is_open(bar, true);
 	Zroot_update_layout(root);
-	Zbutton_on_click(g_prim, on_click, NULL);
+	Zbutton_on_click(g_prim, on_click, nullptr);
 	tap(root, center(g_prim));
 	CHECK(g_clicks == 2 && Zapp_bar_get_is_open(bar));
 	/* the commands: counts, indexes, wrong classes refused */
 	CHECK(Zcommand_bar_get_primary_command_count(bar) == 3 && Zcommand_bar_get_secondary_command_count(bar) == 2);
 	CHECK(Zcommand_bar_get_primary_command(bar, 0) == g_prim && Zcommand_bar_get_secondary_command(bar, 0) == g_sec);
 	CHECK(Zcommand_bar_get_primary_command(bar, 9) == Z_INVALID_ID);
-	Zset_error_callback(quiet_errors, NULL); /* the tests provoke errors on purpose */
+	Zset_error_callback(quiet_errors, nullptr); /* the tests provoke errors on purpose */
 	CHECK(Zcommand_bar_add_primary_command(bar, Zbutton_create("plain")) == -1);
 	Zcommand_bar_clear_secondary_commands(bar);
 	CHECK(Zcommand_bar_get_secondary_command_count(bar) == 0 && !Zelement_is_valid(g_sec));
@@ -423,7 +423,7 @@ static void test_secondary_command(void) {
 }
 
 static void test_app_bar_content(void) {
-	Zid root = Zroot_create(480, 800), page = Zpage_create(), bar = Zapp_bar_create(), tb = Ztext_block_create("hello");
+	Zid root = zst_test_root(480, 800), page = Zpage_create(), bar = Zapp_bar_create(), tb = Ztext_block_create("hello");
 	Zpage_set_top_app_bar(page, bar);
 	Zcontent_control_set_content(bar, tb);
 	Zroot_set_visual(root, page);
@@ -501,7 +501,7 @@ static Zid mode_page(Zid frame, void* parameter) {
 }
 
 static void test_navigation_mode(void) {
-	Zid root = Zroot_create(480, 800), frame = Zframe_create();
+	Zid root = zst_test_root(480, 800), frame = Zframe_create();
 	Zroot_set_visual(root, frame);
 	g_log[0] = 0;
 	Zframe_navigate(frame, mode_page, "a");
@@ -520,7 +520,7 @@ static void test_navigation_mode(void) {
 }
 
 static void test_navigation_cache(void) {
-	Zid root = Zroot_create(480, 800), frame = Zframe_create(), a, b;
+	Zid root = zst_test_root(480, 800), frame = Zframe_create(), a, b;
 	Zroot_set_visual(root, frame);
 	g_built_a = g_built_b = 0;
 	/* "ac" asks for the cache, "b" does not */

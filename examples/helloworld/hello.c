@@ -3,10 +3,8 @@
 #include ""
 int main(void) {
     if (!Zinit()) return 1;
-    // 0 x 0: the size comes from the shell (ZRNUI_WINDOW or the compositor configure)
-    const Zid root = Zroot_create(0, 0);
-    // Zroot_set_debug(root, K_DEBUG_BOUNDS);  /* рамки */
-    // Zroot_set_debug(root, K_DEBUG_LABELS);  /* рамки + имена классов */
+    // the size comes from the shell (the compositor configure)
+    const Zid root = Zroot_create();
 
     // App::OnLaunched: a Frame is the content of the window, then it navigates to the first page
     const Zid frame = Zframe_create();

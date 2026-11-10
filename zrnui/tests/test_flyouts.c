@@ -50,7 +50,7 @@ static void on_click(Zid s, void* u) { (void)s; log_add((const char*)u); log_add
 static Zid g_button, g_band, g_stack;
 
 static Zid page_root(Zid* root) {
-	Zid r = Zroot_create(480, 800);
+	Zid r = zst_test_root(480, 800);
 	g_stack = Zstack_panel_create(Z_VERTICAL);
 	g_button = Zpanel_add(g_stack, Zbutton_create("open"));
 	Zelement_set_vertical_alignment(g_button, Z_VALIGN_TOP);
@@ -79,9 +79,9 @@ static void test_flyout_show_and_hide(void) {
 	CHECK(Zelement_get_class(flyout) == Z_CLASS_FLYOUT && Zelement_is_a(flyout, Z_CLASS_FLYOUT_BASE));
 	CHECK(Zflyout_get_content(flyout) == content);
 	CHECK(Zflyout_base_get_placement(flyout) == Z_FLYOUT_PLACEMENT_TOP);
-	Zflyout_base_on_opening(flyout, on_opening, NULL);
-	Zflyout_base_on_opened(flyout, on_opened, NULL);
-	Zflyout_base_on_closed(flyout, on_closed, NULL);
+	Zflyout_base_on_opening(flyout, on_opening, nullptr);
+	Zflyout_base_on_opened(flyout, on_opened, nullptr);
+	Zflyout_base_on_closed(flyout, on_closed, nullptr);
 	/* shown at an element it is Opening, then Opened */
 	Zflyout_base_set_placement(flyout, Z_FLYOUT_PLACEMENT_BOTTOM);
 	Zflyout_base_show_at(flyout, g_button);
@@ -155,7 +155,7 @@ static void test_flyout_placement(void) {
 	CHECK(pixel_is(root, 240, 790, 0x1F, 0x1F, 0x1F));
 	CHECK(pixel_is(root, 240, 2, 0x1F, 0x1F, 0x1F));
 	Zflyout_base_hide(flyout);
-	Zset_error_callback(quiet_errors, NULL);
+	Zset_error_callback(quiet_errors, nullptr);
 	Zflyout_base_set_placement(flyout, (ZFlyoutPlacementMode)7);
 	CHECK(Zflyout_base_get_placement(flyout) == Z_FLYOUT_PLACEMENT_FULL);
 	/* the target must be in a tree of a root */
@@ -174,7 +174,7 @@ static void test_flyout_target_tap_and_attach(void) {
 	Zflyout_set_content(flyout, content);
 	Zbutton_set_flyout(g_button, flyout);
 	CHECK(Zbutton_get_flyout(g_button) == flyout);
-	Zflyout_base_on_closed(flyout, on_closed, NULL);
+	Zflyout_base_on_closed(flyout, on_closed, nullptr);
 	Zbutton_on_click(g_button, on_click, "click");
 	/* a tap on the button runs Click and shows the flyout */
 	tap(root, center(g_button));
@@ -204,7 +204,7 @@ static void test_flyout_set_flyout_errors(void) {
 	page_root(&root);
 	Zbutton_set_flyout(g_button, f1);
 	b2 = Zpanel_add(g_stack, Zbutton_create("two"));
-	Zset_error_callback(quiet_errors, NULL);
+	Zset_error_callback(quiet_errors, nullptr);
 	Zbutton_set_flyout(b2, f1);
 	CHECK(Zbutton_get_flyout(b2) == Z_INVALID_ID);
 	/* replacing it destroys the old one; Z_INVALID_ID takes it away */
@@ -256,7 +256,7 @@ static void test_menu_flyout(void) {
 	Zmenu_flyout_item_on_click(b, on_click, "b");
 	Zmenu_flyout_item_on_click(t, on_click, "t");
 	Zmenu_flyout_item_on_click(off, on_click, "off");
-	Zflyout_base_on_closed(menu, on_closed, NULL);
+	Zflyout_base_on_closed(menu, on_closed, nullptr);
 	Zflyout_base_set_placement(menu, Z_FLYOUT_PLACEMENT_BOTTOM);
 	Zflyout_base_show_at(menu, g_button);
 	Zroot_update_layout(root);
@@ -354,8 +354,8 @@ static Zid make_dialog(void) {
 	Zcontent_control_set_text(d, "The file will be gone.");
 	Zcontent_dialog_set_primary_button_text(d, "delete");
 	Zcontent_dialog_set_secondary_button_text(d, "cancel");
-	Zcontent_dialog_on_opened(d, on_opened, NULL);
-	Zcontent_dialog_on_closed(d, on_closed, NULL);
+	Zcontent_dialog_on_opened(d, on_opened, nullptr);
+	Zcontent_dialog_on_closed(d, on_closed, nullptr);
 	Zcontent_dialog_on_primary_button_click(d, on_click, "primary");
 	Zcontent_dialog_on_secondary_button_click(d, on_click, "secondary");
 	g_results = 0;
@@ -372,7 +372,7 @@ static void test_dialog_look(void) {
 	CHECK_STR(Zcontent_dialog_get_title(d), "Delete?");
 	CHECK_STR(Zcontent_dialog_get_primary_button_text(d), "delete");
 	CHECK(Zcontent_dialog_get_is_primary_button_enabled(d) && Zcontent_dialog_get_is_secondary_button_enabled(d));
-	CHECK(Zcontent_dialog_show(d, root, on_result, NULL));
+	CHECK(Zcontent_dialog_show(d, root, on_result, nullptr));
 	CHECK_STR(g_log, "opened ");
 	Zroot_update_layout(root);
 	/* ContentDialogBackgroundThemeBrush is the chrome, at the top, as wide as the screen */
@@ -400,7 +400,7 @@ static void test_dialog_results(void) {
 	page_root(&root);
 	d = make_dialog();
 	Zroot_update_layout(root);
-	Zcontent_dialog_show(d, root, on_result, NULL);
+	Zcontent_dialog_show(d, root, on_result, nullptr);
 	Zroot_update_layout(root);
 	/* the buttons side by side: the primary one at the left half, the secondary one at the right */
 	{
@@ -410,8 +410,8 @@ static void test_dialog_results(void) {
 		pp = center(p);
 		CHECK(pp.x < 240);
 		/* a second show of a dialog that is open is refused */
-		Zset_error_callback(quiet_errors, NULL);
-		CHECK(!Zcontent_dialog_show(d, root, NULL, NULL));
+		Zset_error_callback(quiet_errors, nullptr);
+		CHECK(!Zcontent_dialog_show(d, root, nullptr, nullptr));
 		g_log[0] = 0;
 		tap(root, pp);
 		/* the button's own Click first, Closed, then the callback that is the result */
@@ -427,7 +427,7 @@ static void test_dialog_results(void) {
 		CHECK(r > 250 && g == 0 && b == 0);
 	}
 	/* shown again, the secondary button */
-	CHECK(Zcontent_dialog_show(d, root, on_result, NULL));
+	CHECK(Zcontent_dialog_show(d, root, on_result, nullptr));
 	Zroot_update_layout(root);
 	g_log[0] = 0;
 	{
@@ -443,25 +443,25 @@ static void test_dialog_results(void) {
 	CHECK_STR(g_log, "secondary closed result ");
 	CHECK(g_result == Z_CONTENT_DIALOG_RESULT_SECONDARY);
 	/* Hide: None */
-	Zcontent_dialog_show(d, root, on_result, NULL);
+	Zcontent_dialog_show(d, root, on_result, nullptr);
 	g_log[0] = 0;
 	Zcontent_dialog_hide(d);
 	CHECK_STR(g_log, "closed result ");
 	CHECK(g_result == Z_CONTENT_DIALOG_RESULT_NONE);
 	/* Back: None, and the page behind does not navigate */
-	Zcontent_dialog_show(d, root, on_result, NULL);
+	Zcontent_dialog_show(d, root, on_result, nullptr);
 	g_log[0] = 0;
 	CHECK(Zroot_back(root));
 	CHECK_STR(g_log, "closed result ");
 	CHECK(g_result == Z_CONTENT_DIALOG_RESULT_NONE);
 	/* Escape does the same, through the keyboard */
-	Zcontent_dialog_show(d, root, on_result, NULL);
+	Zcontent_dialog_show(d, root, on_result, nullptr);
 	g_log[0] = 0;
 	CHECK(Zroot_inject_key(root, Z_KEY_ESCAPE, 0, 1));
 	CHECK_STR(g_log, "closed result ");
 	/* a disabled button does not answer */
 	Zcontent_dialog_set_is_primary_button_enabled(d, false);
-	Zcontent_dialog_show(d, root, on_result, NULL);
+	Zcontent_dialog_show(d, root, on_result, nullptr);
 	Zroot_update_layout(root);
 	g_log[0] = 0;
 	{
@@ -472,7 +472,7 @@ static void test_dialog_results(void) {
 	CHECK(!Zcontent_dialog_get_is_primary_button_enabled(d));
 	/* the callback may be NULL */
 	Zcontent_dialog_set_is_primary_button_enabled(d, true);
-	CHECK(Zcontent_dialog_show(d, root, NULL, NULL));
+	CHECK(Zcontent_dialog_show(d, root, nullptr, nullptr));
 	Zcontent_dialog_hide(d);
 	Zelement_destroy(d);
 	Zroot_destroy(root);
@@ -488,7 +488,7 @@ static void test_dialog_blocks_input(void) {
 	Zroot_inject_pointer(root, Z_POINTER_UP, center(g_button).x, center(g_button).y);
 	CHECK(Zroot_get_focus(root) == g_button);
 	g_log[0] = 0;
-	Zcontent_dialog_show(d, root, on_result, NULL);
+	Zcontent_dialog_show(d, root, on_result, nullptr);
 	Zroot_update_layout(root);
 	CHECK(Zroot_get_focus(root) != g_button);
 	/* a tap where the page's button is: the dialog covers the top, so the button is under the dialog's body */
@@ -513,7 +513,7 @@ static void test_dialog_destroy_while_open(void) {
 	Zid root, d;
 	page_root(&root);
 	d = make_dialog();
-	Zcontent_dialog_show(d, root, on_result, NULL);
+	Zcontent_dialog_show(d, root, on_result, nullptr);
 	Zroot_update_layout(root);
 	Zelement_destroy(d);
 	Zroot_update_layout(root);
@@ -525,7 +525,7 @@ static void test_dialog_destroy_while_open(void) {
 	}
 	/* a dialog still open when the root goes */
 	d = make_dialog();
-	Zcontent_dialog_show(d, root, on_result, NULL);
+	Zcontent_dialog_show(d, root, on_result, nullptr);
 	Zroot_destroy(root);
 	Zshutdown();
 	CHECK(Zinit());
@@ -540,7 +540,7 @@ static void test_dialog_content_and_layout(void) {
 	Zelement_set_height(c, 100);
 	Zcontent_control_set_content(d, c);
 	Zcontent_dialog_set_primary_button_text(d, "ok");
-	Zcontent_dialog_show(d, root, NULL, NULL);
+	Zcontent_dialog_show(d, root, nullptr, nullptr);
 	Zroot_update_layout(root);
 	/* margins: the content 16.5 under the title row (a title row with no title is 33.5 high), 19 from the sides */
 	r = Zelement_get_bounds(c);
@@ -586,7 +586,7 @@ static void test_ticks_and_tweens_in_popups(void) {
 	CHECK(Zelement_get_opacity(content) < 0.01f);
 	Zflyout_base_hide(flyout);
 	d = make_dialog();
-	Zcontent_dialog_show(d, root, on_result, NULL);
+	Zcontent_dialog_show(d, root, on_result, nullptr);
 	Zelement_animate(Zcontent_control_get_content(d), Z_PROP_OPACITY, 0.5f, 50.0f, Z_EASE_LINEAR, 0);
 	run(root, 200);
 	CHECK_NEAR(Zelement_get_opacity(Zcontent_control_get_content(d)) * 100, 50);
@@ -598,7 +598,7 @@ static void test_ticks_and_tweens_in_popups(void) {
 
 int main(void) {
 	CHECK(Zinit());
-	Zset_error_callback(quiet_errors, NULL);
+	Zset_error_callback(quiet_errors, nullptr);
 	RUN(test_flyout_show_and_hide);
 	RUN(test_flyout_placement);
 	RUN(test_flyout_target_tap_and_attach);

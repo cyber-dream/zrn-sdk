@@ -28,8 +28,8 @@ typedef struct zrn_rich_text_block {
 enum { SET_SIZE = 1, SET_FAMILY = 2, SET_FOREGROUND = 4, SET_LINE_HEIGHT = 8, SET_SPACING = 16 };
 
 /* What the block says is the look of a paragraph. */
-static void rtb_apply(const zrn_rich_text_block_t* r, zrn_element_t* tb) {
-	Zid id = tb->id;
+static void rtb_apply(const zrn_rich_text_block_t* const r, zrn_element_t* const tb) {
+	const Zid id = tb->id;
 	if (r->set & SET_SIZE) Ztext_block_set_font_size(id, r->font_size);
 	if (r->set & SET_FAMILY) Ztext_block_set_font_family(id, r->family);
 	if (r->set & SET_FOREGROUND) Ztext_block_set_foreground(id, r->foreground);
@@ -40,19 +40,19 @@ static void rtb_apply(const zrn_rich_text_block_t* r, zrn_element_t* tb) {
 	Ztext_block_set_text_trimming(id, r->trimming);
 }
 
-static void rtb_apply_all(zrn_rich_text_block_t* r) {
+static void rtb_apply_all(zrn_rich_text_block_t* const r) {
 	int i;
 	for (i = 0; i < r->base.child_count; i++) rtb_apply(r, r->base.children[i]);
 	zrn_invalidate_deep(&r->base);
 	zrn_changed_layout(&r->base);
 }
 
-static ZSize rtb_measure(zrn_element_t* e, ZSize available) {
-	zrn_rich_text_block_t* r = RTB(e);
+static ZSize rtb_measure(zrn_element_t* const e, const ZSize available) {
+	zrn_rich_text_block_t* const r = RTB(e);
 	float pad_h = zrn_thickness_h(r->padding), w = 0, h = zrn_thickness_v(r->padding);
 	int i;
 	for (i = 0; i < e->child_count; i++) {
-		zrn_element_t* p = e->children[i];
+		zrn_element_t* const p = e->children[i];
 		zrn_measure(p, zrn_size(zrn_maxf(0, available.width - pad_h), Z_INFINITE));
 		w = zrn_maxf(w, p->desired.width);
 		h += p->desired.height;
@@ -60,8 +60,8 @@ static ZSize rtb_measure(zrn_element_t* e, ZSize available) {
 	return zrn_size(w + pad_h, h);
 }
 
-static ZSize rtb_arrange(zrn_element_t* e, ZSize final) {
-	zrn_rich_text_block_t* r = RTB(e);
+static ZSize rtb_arrange(zrn_element_t* const e, const ZSize final) {
+	zrn_rich_text_block_t* const r = RTB(e);
 	float y = r->padding.top;
 	int i;
 	for (i = 0; i < e->child_count; i++) {
@@ -72,8 +72,8 @@ static ZSize rtb_arrange(zrn_element_t* e, ZSize final) {
 	return final;
 }
 
-static void rtb_init(zrn_element_t* e) {
-	zrn_rich_text_block_t* r = RTB(e);
+static void rtb_init(zrn_element_t* const e) {
+	zrn_rich_text_block_t* const r = RTB(e);
 	r->wrapping = Z_WRAP;
 	r->alignment = Z_TEXT_LEFT;
 	r->trimming = Z_TRIM_NONE;
@@ -87,14 +87,14 @@ zrn_class_t zrn_class_rich_text_block = {
 };
 
 Zid Zrich_text_block_create(void) {
-	zrn_element_t* e = zrn_create(Z_CLASS_RICH_TEXT_BLOCK);
+	zrn_element_t* const e = zrn_create(Z_CLASS_RICH_TEXT_BLOCK);
 	return e ? e->id : Z_INVALID_ID;
 }
 
 static zrn_rich_text_block_t* get_rtb(Zid id) { return RTB(zrn_get(id, Z_CLASS_RICH_TEXT_BLOCK)); }
 
-int Zrich_text_block_add_paragraph(Zid id, const char* text) {
-	zrn_rich_text_block_t* r = get_rtb(id);
+int Zrich_text_block_add_paragraph(const Zid id, const char* const text) {
+	zrn_rich_text_block_t* const r = get_rtb(id);
 	Zid tb;
 	zrn_element_t* p;
 	if (!r) return -1;
@@ -107,123 +107,123 @@ int Zrich_text_block_add_paragraph(Zid id, const char* text) {
 	return r->base.child_count - 1;
 }
 
-void Zrich_text_block_set_paragraph_text(Zid id, int index, const char* text) {
-	zrn_rich_text_block_t* r = get_rtb(id);
+void Zrich_text_block_set_paragraph_text(const Zid id, const int index, const char* const text) {
+	zrn_rich_text_block_t* const r = get_rtb(id);
 	if (!r || index < 0 || index >= r->base.child_count) return;
 	Ztext_block_set_text(r->base.children[index]->id, text ? text : "");
 }
 
-const char* Zrich_text_block_get_paragraph_text(Zid id, int index) {
-	zrn_rich_text_block_t* r = get_rtb(id);
+const char* Zrich_text_block_get_paragraph_text(const Zid id, const int index) {
+	zrn_rich_text_block_t* const r = get_rtb(id);
 	return r && index >= 0 && index < r->base.child_count ? Ztext_block_get_text(r->base.children[index]->id) : "";
 }
 
-int Zrich_text_block_get_paragraph_count(Zid id) {
-	zrn_rich_text_block_t* r = get_rtb(id);
+int Zrich_text_block_get_paragraph_count(const Zid id) {
+	zrn_rich_text_block_t* const r = get_rtb(id);
 	return r ? r->base.child_count : 0;
 }
 
-Zid Zrich_text_block_get_paragraph(Zid id, int index) {
-	zrn_rich_text_block_t* r = get_rtb(id);
+Zid Zrich_text_block_get_paragraph(const Zid id, const int index) {
+	zrn_rich_text_block_t* const r = get_rtb(id);
 	return r && index >= 0 && index < r->base.child_count ? r->base.children[index]->id : Z_INVALID_ID;
 }
 
-void Zrich_text_block_remove_paragraph_at(Zid id, int index) {
-	zrn_rich_text_block_t* r = get_rtb(id);
+void Zrich_text_block_remove_paragraph_at(const Zid id, const int index) {
+	zrn_rich_text_block_t* const r = get_rtb(id);
 	if (!r || index < 0 || index >= r->base.child_count) return;
 	zrn_destroy(r->base.children[index]);
 	zrn_changed_layout(&r->base);
 }
 
-void Zrich_text_block_clear_paragraphs(Zid id) {
-	zrn_rich_text_block_t* r = get_rtb(id);
+void Zrich_text_block_clear_paragraphs(const Zid id) {
+	zrn_rich_text_block_t* const r = get_rtb(id);
 	if (!r) return;
 	while (r->base.child_count > 0) zrn_destroy(r->base.children[r->base.child_count - 1]);
 	zrn_changed_layout(&r->base);
 }
 
-void Zrich_text_block_set_font_size(Zid id, float size) {
-	zrn_rich_text_block_t* r = get_rtb(id);
+void Zrich_text_block_set_font_size(const Zid id, const float size) {
+	zrn_rich_text_block_t* const r = get_rtb(id);
 	if (!r) return;
 	r->font_size = size;
 	r->set |= SET_SIZE;
 	rtb_apply_all(r);
 }
 
-float Zrich_text_block_get_font_size(Zid id) {
-	zrn_rich_text_block_t* r = get_rtb(id);
+float Zrich_text_block_get_font_size(const Zid id) {
+	zrn_rich_text_block_t* const r = get_rtb(id);
 	if (!r) return 0;
 	return r->set & SET_SIZE ? r->font_size : (r->base.child_count ? zrn_inherited_font_size(r->base.children[0]) : ZST_FONT_NORMAL);
 }
 
-void Zrich_text_block_set_font_family(Zid id, ZFontFamily family) {
-	zrn_rich_text_block_t* r = get_rtb(id);
+void Zrich_text_block_set_font_family(const Zid id, const ZFontFamily family) {
+	zrn_rich_text_block_t* const r = get_rtb(id);
 	if (!r) return;
 	r->family = family;
 	r->set |= SET_FAMILY;
 	rtb_apply_all(r);
 }
 
-void Zrich_text_block_set_foreground(Zid id, ZColor color) {
-	zrn_rich_text_block_t* r = get_rtb(id);
+void Zrich_text_block_set_foreground(const Zid id, const ZColor color) {
+	zrn_rich_text_block_t* const r = get_rtb(id);
 	if (!r) return;
 	r->foreground = color;
 	r->set |= SET_FOREGROUND;
 	rtb_apply_all(r);
 }
 
-void Zrich_text_block_set_text_wrapping(Zid id, ZTextWrapping wrapping) {
-	zrn_rich_text_block_t* r = get_rtb(id);
+void Zrich_text_block_set_text_wrapping(const Zid id, const ZTextWrapping wrapping) {
+	zrn_rich_text_block_t* const r = get_rtb(id);
 	if (!r) return;
 	r->wrapping = wrapping;
 	rtb_apply_all(r);
 }
 
-void Zrich_text_block_set_text_alignment(Zid id, ZTextAlignment alignment) {
-	zrn_rich_text_block_t* r = get_rtb(id);
+void Zrich_text_block_set_text_alignment(const Zid id, const ZTextAlignment alignment) {
+	zrn_rich_text_block_t* const r = get_rtb(id);
 	if (!r) return;
 	r->alignment = alignment;
 	rtb_apply_all(r);
 }
 
-void Zrich_text_block_set_text_trimming(Zid id, ZTextTrimming trimming) {
-	zrn_rich_text_block_t* r = get_rtb(id);
+void Zrich_text_block_set_text_trimming(const Zid id, const ZTextTrimming trimming) {
+	zrn_rich_text_block_t* const r = get_rtb(id);
 	if (!r) return;
 	r->trimming = trimming;
 	rtb_apply_all(r);
 }
 
-void Zrich_text_block_set_line_height(Zid id, float line_height) {
-	zrn_rich_text_block_t* r = get_rtb(id);
+void Zrich_text_block_set_line_height(const Zid id, const float line_height) {
+	zrn_rich_text_block_t* const r = get_rtb(id);
 	if (!r) return;
 	r->line_height = line_height;
 	r->set |= SET_LINE_HEIGHT;
 	rtb_apply_all(r);
 }
 
-void Zrich_text_block_set_character_spacing(Zid id, int spacing) {
-	zrn_rich_text_block_t* r = get_rtb(id);
+void Zrich_text_block_set_character_spacing(const Zid id, const int spacing) {
+	zrn_rich_text_block_t* const r = get_rtb(id);
 	if (!r) return;
 	r->spacing = spacing;
 	r->set |= SET_SPACING;
 	rtb_apply_all(r);
 }
 
-void Zrich_text_block_set_padding(Zid id, ZThickness padding) {
-	zrn_rich_text_block_t* r = get_rtb(id);
+void Zrich_text_block_set_padding(const Zid id, const ZThickness padding) {
+	zrn_rich_text_block_t* const r = get_rtb(id);
 	if (!r) return;
 	r->padding = padding;
 	zrn_changed_layout(&r->base);
 }
 
-ZThickness Zrich_text_block_get_padding(Zid id) {
-	zrn_rich_text_block_t* r = get_rtb(id);
+ZThickness Zrich_text_block_get_padding(const Zid id) {
+	zrn_rich_text_block_t* const r = get_rtb(id);
 	return r ? r->padding : zrn_thickness_zero();
 }
 
-int Zrich_text_block_set_style(Zid id, ZTextStyle style) {
-	zrn_rich_text_block_t* r = get_rtb(id);
-	if (!r) return Z_FALSE;
+int Zrich_text_block_set_style(const Zid id, const ZTextStyle style) {
+	zrn_rich_text_block_t* const r = get_rtb(id);
+	if (!r) return false;
 	/* BaseRichTextBlockStyle: PhoneFontFamilyNormal, TextStyleMediumFontSize 16, LineHeight 21.5, WrapWholeWords, Clip;
 	 * BodyRichTextBlockStyle on it: 18 and a line of 24 */
 	if (style == Z_TEXT_STYLE_BASE) {
@@ -233,12 +233,12 @@ int Zrich_text_block_set_style(Zid id, ZTextStyle style) {
 		r->font_size = 18.0f;
 		r->line_height = 24.0f;
 	} else {
-		return Z_FALSE;
+		return false;
 	}
 	r->family = Z_FONT_NORMAL;
 	r->wrapping = Z_WRAP;
 	r->trimming = Z_TRIM_NONE;
 	r->set |= SET_SIZE | SET_FAMILY | SET_LINE_HEIGHT;
 	rtb_apply_all(r);
-	return Z_TRUE;
+	return true;
 }

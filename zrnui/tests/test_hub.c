@@ -77,7 +77,7 @@ static Zid setup(Zid* root, ZAnimations anim) {
 	ZColor colors[3] = { Zcolor_argb(0xFFC00000), Zcolor_argb(0xFF00C000), Zcolor_argb(0xFF0000C0) };
 	const char* names[3] = { "first", "second", "third" };
 	int i;
-	*root = Zroot_create(480, 800);
+	*root = zst_test_root(480, 800);
 	Zroot_set_renderer(*root, Z_RENDERER_SOFTWARE);
 	Zroot_set_animations(*root, anim);
 	g_hub = Zhub_create();
@@ -92,8 +92,8 @@ static Zid setup(Zid* root, ZAnimations anim) {
 	Zroot_update_layout(*root);
 	g_in_view = g_clicks = 0;
 	g_clicked = Z_INVALID_ID;
-	Zhub_on_sections_in_view_changed(g_hub, on_in_view, NULL);
-	Zhub_on_section_header_click(g_hub, on_header_click, NULL);
+	Zhub_on_sections_in_view_changed(g_hub, on_in_view, nullptr);
+	Zhub_on_section_header_click(g_hub, on_header_click, nullptr);
 	return g_hub;
 }
 
@@ -115,9 +115,9 @@ static void test_classes(void) {
 	CHECK(Zhub_add_section(hub, sec) == 0);
 	{
 		Zid other = Zhub_create();
-		Zset_error_callback(quiet, NULL);
+		Zset_error_callback(quiet, nullptr);
 		CHECK(Zhub_add_section(other, sec) == -1);
-		Zset_error_callback(NULL, NULL);
+		Zset_error_callback(nullptr, nullptr);
 		Zelement_destroy(other);
 	}
 	Zelement_destroy(hub);
@@ -151,7 +151,7 @@ static void test_layout_and_look(void) {
 }
 
 static void test_section_width_defaults(void) {
-	Zid root = Zroot_create(480, 800), hub = Zhub_create(), s = Zhub_section_create("wide"), t = Ztext_block_create("a very long line of words that does not fit in the screen and would run on and on if it were not told to wrap at the width it gets");
+	Zid root = zst_test_root(480, 800), hub = Zhub_create(), s = Zhub_section_create("wide"), t = Ztext_block_create("a very long line of words that does not fit in the screen and would run on and on if it were not told to wrap at the width it gets");
 	Zroot_set_renderer(root, Z_RENDERER_SOFTWARE);
 	Ztext_block_set_text_wrapping(t, Z_WRAP);
 	Zcontent_control_set_content(s, t);

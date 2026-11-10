@@ -17,29 +17,29 @@
 #define DIALOG(e) ZST_AS(zrn_content_dialog_t, e)
 
 /* FlyoutThemeMinHeight, FlyoutContentPanelPortraitThemeMargin 0,25.5,0,0 */
-#define FLYOUT_MIN_HEIGHT 43.0f
-#define FLYOUT_CONTENT_TOP 25.5f
+static constexpr float FLYOUT_MIN_HEIGHT = 43.0f;
+static constexpr float FLYOUT_CONTENT_TOP = 25.5f;
 /* MenuFlyoutPortraitBorderThemeThickness 0,1.5; MenuFlyoutPortraitThemePadding 19,13.5,0,26; MenuFlyoutItemThemePadding 0,8.5; TextStyleExtraLargeFontSize 25.5, SemiLight, CharacterSpacing -15 */
-#define MENU_BORDER 1.5f
-#define MENU_PAD_LEFT 19.0f
-#define MENU_PAD_TOP 13.5f
-#define MENU_PAD_BOTTOM 26.0f
-#define MENU_ITEM_PAD 8.5f
-#define MENU_FONT 25.5f
-#define MENU_SPACING (-15)
+static constexpr float MENU_BORDER = 1.5f;
+static constexpr float MENU_PAD_LEFT = 19.0f;
+static constexpr float MENU_PAD_TOP = 13.5f;
+static constexpr float MENU_PAD_BOTTOM = 26.0f;
+static constexpr float MENU_ITEM_PAD = 8.5f;
+static constexpr float MENU_FONT = 25.5f;
+static constexpr int MENU_SPACING = (-15);
 /* ContentDialog: title margin 19,33.5,19,0 (min row 19), content margin 19,16.5,19,0 (min row 35), button rows min 45 with the
  * hosts padded 19,24,9.5,9.5 and 9.5,24,19,9.5; the title is 25.5 SemiBold and the content 18.14 */
-#define DIALOG_TITLE_MIN 19.0f
-#define DIALOG_CONTENT_MIN 35.0f
-#define DIALOG_BUTTONS_MIN 45.0f
-#define DIALOG_SIDE 19.0f
-#define DIALOG_TITLE_TOP 33.5f
-#define DIALOG_CONTENT_TOP 16.5f
-#define DIALOG_BUTTON_TOP 24.0f
-#define DIALOG_BUTTON_GAP 9.5f
-#define DIALOG_BUTTON_BOTTOM 9.5f
-#define DIALOG_TITLE_FONT 25.5f
-#define DIALOG_CONTENT_FONT 18.14f
+static constexpr float DIALOG_TITLE_MIN = 19.0f;
+static constexpr float DIALOG_CONTENT_MIN = 35.0f;
+static constexpr float DIALOG_BUTTONS_MIN = 45.0f;
+static constexpr float DIALOG_SIDE = 19.0f;
+static constexpr float DIALOG_TITLE_TOP = 33.5f;
+static constexpr float DIALOG_CONTENT_TOP = 16.5f;
+static constexpr float DIALOG_BUTTON_TOP = 24.0f;
+static constexpr float DIALOG_BUTTON_GAP = 9.5f;
+static constexpr float DIALOG_BUTTON_BOTTOM = 9.5f;
+static constexpr float DIALOG_TITLE_FONT = 25.5f;
+static constexpr float DIALOG_CONTENT_FONT = 18.14f;
 
 
 /* ============================================================================
@@ -48,20 +48,20 @@
 
 static void flyout_popup_closed(Zid popup, void* user_data);
 
-static void set_handler(zrn_element_t* e, ZEvent ev, ZRoutedCallback cb, void* data) {
+static void set_handler(zrn_element_t* const e, const ZEvent ev, const ZRoutedCallback cb, void* const data) {
 	e->handlers[ev - Z_EVENT_CLICK].callback = cb;
 	e->handlers[ev - Z_EVENT_CLICK].user_data = data;
 }
 
-static zrn_element_t* presenter_of(zrn_flyout_base_t* f) {
-	return f->popup && f->popup->child_count ? f->popup->children[0] : NULL;
+static zrn_element_t* presenter_of(zrn_flyout_base_t* const f) {
+	return f->popup && f->popup->child_count ? f->popup->children[0] : nullptr;
 }
 
 /* The popup the flyout shows in, and the Border around the content (the presenter) in it. */
-static void flyout_base_init(zrn_element_t* e) {
-	zrn_flyout_base_t* f = FB(e);
-	zrn_element_t* popup = zrn_create(Z_CLASS_POPUP);
-	zrn_element_t* presenter = zrn_create(Z_CLASS_BORDER);
+static void flyout_base_init(zrn_element_t* const e) {
+	zrn_flyout_base_t* const f = FB(e);
+	zrn_element_t* const popup = zrn_create(Z_CLASS_POPUP);
+	zrn_element_t* const presenter = zrn_create(Z_CLASS_BORDER);
 	f->placement = Z_FLYOUT_PLACEMENT_TOP;
 	if (!popup || !presenter) {
 		if (popup) zrn_destroy(popup);
@@ -76,8 +76,8 @@ static void flyout_base_init(zrn_element_t* e) {
 	f->popup = popup;
 }
 
-static void flyout_base_child_removed(zrn_element_t* e, zrn_element_t* child) {
-	if (FB(e)->popup == child) FB(e)->popup = NULL;
+static void flyout_base_child_removed(zrn_element_t* const e, zrn_element_t* const child) {
+	if (FB(e)->popup == child) FB(e)->popup = nullptr;
 }
 
 zrn_class_t zrn_class_flyout_base = {
@@ -86,8 +86,8 @@ zrn_class_t zrn_class_flyout_base = {
 };
 
 /* The popup is closed, by a tap outside, Back, Hide or an item: the flyout is no longer shown. */
-static void flyout_popup_closed(Zid popup, void* user_data) {
-	zrn_element_t* e = zrn_lookup((Zid)(uintptr_t)user_data);
+static void flyout_popup_closed(const Zid popup, void* const user_data) {
+	zrn_element_t* const e = zrn_lookup((Zid)(uintptr_t)user_data);
 	ZST_UNUSED(popup);
 	if (!e || !FB(e)->is_open) return;
 	FB(e)->is_open = 0;
@@ -102,7 +102,7 @@ void zrn_flyout_show_at(zrn_element_t* e, zrn_element_t* target) {
 	zrn_popup_t* popup;
 	zrn_element_t* presenter;
 	zrn_root_t* r;
-	Zid id = e->id, target_id = target->id;
+	const Zid id = e->id, target_id = target->id;
 	if (!f->popup || !(presenter = presenter_of(f))) return;
 	r = target->root;
 	if (!r) {
@@ -140,7 +140,7 @@ void zrn_flyout_show_at(zrn_element_t* e, zrn_element_t* target) {
 	}
 	/* the look of the moment: the theme can change between two showings */
 	{
-		zrn_border_t* b = ZST_AS(zrn_border_t, presenter);
+		zrn_border_t* const b = ZST_AS(zrn_border_t, presenter);
 		if (e->cls == &zrn_class_menu_flyout) {
 			b->background = zrn_theme_color(e, ZST_TC_BACKGROUND);
 			b->border_brush = zrn_theme_color(e, ZST_TC_FOREGROUND);
@@ -160,8 +160,8 @@ void zrn_flyout_show_at(zrn_element_t* e, zrn_element_t* target) {
 
 static zrn_flyout_base_t* get_flyout(Zid id) { return FB(zrn_get(id, Z_CLASS_FLYOUT_BASE)); }
 
-void Zflyout_base_set_placement(Zid id, ZFlyoutPlacementMode placement) {
-	zrn_flyout_base_t* f = get_flyout(id);
+void Zflyout_base_set_placement(const Zid id, const ZFlyoutPlacementMode placement) {
+	zrn_flyout_base_t* const f = get_flyout(id);
 	if (!f) return;
 	if (placement < Z_FLYOUT_PLACEMENT_TOP || placement > Z_FLYOUT_PLACEMENT_FULL) {
 		zrn_error(Z_ERROR_INVALID_ARGUMENT, "unknown FlyoutPlacementMode 0x%x", (unsigned)placement);
@@ -170,42 +170,42 @@ void Zflyout_base_set_placement(Zid id, ZFlyoutPlacementMode placement) {
 	f->placement = placement;
 }
 
-ZFlyoutPlacementMode Zflyout_base_get_placement(Zid id) {
-	zrn_flyout_base_t* f = get_flyout(id);
+ZFlyoutPlacementMode Zflyout_base_get_placement(const Zid id) {
+	zrn_flyout_base_t* const f = get_flyout(id);
 	return f ? f->placement : Z_FLYOUT_PLACEMENT_TOP;
 }
 
-void Zflyout_base_show_at(Zid id, Zid placement_target) {
-	zrn_flyout_base_t* f = get_flyout(id);
-	zrn_element_t* t = zrn_get(placement_target, Z_CLASS_ELEMENT);
+void Zflyout_base_show_at(const Zid id, const Zid placement_target) {
+	zrn_flyout_base_t* const f = get_flyout(id);
+	zrn_element_t* const t = zrn_get(placement_target, Z_CLASS_ELEMENT);
 	if (f && t) zrn_flyout_show_at(&f->base, t);
 }
 
-void Zflyout_base_hide(Zid id) {
-	zrn_flyout_base_t* f = get_flyout(id);
+void Zflyout_base_hide(const Zid id) {
+	zrn_flyout_base_t* const f = get_flyout(id);
 	if (f && f->is_open && f->popup) zrn_popup_close(f->popup);
 }
 
-int Zflyout_base_get_is_open(Zid id) {
-	zrn_flyout_base_t* f = get_flyout(id);
+int Zflyout_base_get_is_open(const Zid id) {
+	zrn_flyout_base_t* const f = get_flyout(id);
 	return f ? f->is_open : 0;
 }
 
-void Zflyout_base_on_opening(Zid id, ZRoutedCallback callback, void* user_data) {
+void Zflyout_base_on_opening(const Zid id, const ZRoutedCallback callback, void* const user_data) {
 	if (get_flyout(id)) Zelement_on(id, Z_EVENT_OPENING, callback, user_data);
 }
 
-void Zflyout_base_on_opened(Zid id, ZRoutedCallback callback, void* user_data) {
+void Zflyout_base_on_opened(const Zid id, const ZRoutedCallback callback, void* const user_data) {
 	if (get_flyout(id)) Zelement_on(id, Z_EVENT_OPENED, callback, user_data);
 }
 
-void Zflyout_base_on_closed(Zid id, ZRoutedCallback callback, void* user_data) {
+void Zflyout_base_on_closed(const Zid id, const ZRoutedCallback callback, void* const user_data) {
 	if (get_flyout(id)) Zelement_on(id, Z_EVENT_CLOSED, callback, user_data);
 }
 
-void Zbutton_set_flyout(Zid button, Zid flyout) {
-	zrn_element_t* b = zrn_get(button, Z_CLASS_BUTTON);
-	zrn_element_t* f = flyout != Z_INVALID_ID ? zrn_get(flyout, Z_CLASS_FLYOUT_BASE) : NULL;
+void Zbutton_set_flyout(const Zid button, const Zid flyout) {
+	zrn_element_t* const b = zrn_get(button, Z_CLASS_BUTTON);
+	zrn_element_t* const f = flyout != Z_INVALID_ID ? zrn_get(flyout, Z_CLASS_FLYOUT_BASE) : nullptr;
 	zrn_button_base_t* bb;
 	if (!b || (flyout != Z_INVALID_ID && !f)) return;
 	bb = ZST_AS(zrn_button_base_t, b);
@@ -216,8 +216,8 @@ void Zbutton_set_flyout(Zid button, Zid flyout) {
 	zrn_set_only_child(b, &bb->flyout, f);
 }
 
-Zid Zbutton_get_flyout(Zid button) {
-	zrn_element_t* b = zrn_get(button, Z_CLASS_BUTTON);
+Zid Zbutton_get_flyout(const Zid button) {
+	zrn_element_t* const b = zrn_get(button, Z_CLASS_BUTTON);
 	return b && ZST_AS(zrn_button_base_t, b)->flyout ? ZST_AS(zrn_button_base_t, b)->flyout->id : Z_INVALID_ID;
 }
 
@@ -226,8 +226,8 @@ Zid Zbutton_get_flyout(Zid button) {
  *  Flyout
  * ============================================================================ */
 
-static void flyout_init(zrn_element_t* e) {
-	zrn_element_t* presenter = presenter_of(FB(e));
+static void flyout_init(zrn_element_t* const e) {
+	zrn_element_t* const presenter = presenter_of(FB(e));
 	/* FlyoutPresenter: the content starts 25.5 px under the top edge, and it is at least 43 px tall */
 	if (presenter) ZST_AS(zrn_border_t, presenter)->padding = Zthickness(0, FLYOUT_CONTENT_TOP, 0, 0);
 }
@@ -237,25 +237,25 @@ zrn_class_t zrn_class_flyout = {
 };
 
 Zid Zflyout_create(void) {
-	zrn_element_t* e = zrn_create(Z_CLASS_FLYOUT);
+	zrn_element_t* const e = zrn_create(Z_CLASS_FLYOUT);
 	return e ? e->id : Z_INVALID_ID;
 }
 
-void Zflyout_set_content(Zid id, Zid content) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_FLYOUT);
-	zrn_element_t* c = content != Z_INVALID_ID ? zrn_get(content, Z_CLASS_ELEMENT) : NULL;
+void Zflyout_set_content(const Zid id, const Zid content) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_FLYOUT);
+	zrn_element_t* const c = content != Z_INVALID_ID ? zrn_get(content, Z_CLASS_ELEMENT) : nullptr;
 	zrn_element_t* presenter;
 	zrn_element_t* slot;
 	if (!e || (content != Z_INVALID_ID && !c)) return;
 	presenter = presenter_of(FB(e));
 	if (!presenter) return;
-	slot = presenter->child_count ? presenter->children[0] : NULL;
+	slot = presenter->child_count ? presenter->children[0] : nullptr;
 	zrn_set_only_child(presenter, &slot, c);
 }
 
-Zid Zflyout_get_content(Zid id) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_FLYOUT);
-	zrn_element_t* presenter = e ? presenter_of(FB(e)) : NULL;
+Zid Zflyout_get_content(const Zid id) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_FLYOUT);
+	zrn_element_t* const presenter = e ? presenter_of(FB(e)) : nullptr;
 	return presenter && presenter->child_count ? presenter->children[0]->id : Z_INVALID_ID;
 }
 
@@ -265,36 +265,36 @@ Zid Zflyout_get_content(Zid id) {
  * ============================================================================ */
 
 static zrn_font_t menu_font(void) {
-	zrn_font_t f = { Z_FONT_SEMILIGHT, MENU_FONT, MENU_SPACING };
+	const zrn_font_t f = { Z_FONT_SEMILIGHT, MENU_FONT, MENU_SPACING };
 	return f;
 }
 
 static void item_destroy(zrn_element_t* e) { free(ITEM(e)->text); }
 
-static void item_init(zrn_element_t* e) {
-	zrn_control_t* c = ZST_AS(zrn_control_t, e);
+static void item_init(zrn_element_t* const e) {
+	zrn_control_t* const c = ZST_AS(zrn_control_t, e);
 	c->padding = Zthickness(0, MENU_ITEM_PAD, 0, MENU_ITEM_PAD);
 	c->font_family = Z_FONT_SEMILIGHT;
 	c->font_size = MENU_FONT;
 	e->focusable = 0;
 }
 
-static ZSize item_measure(zrn_element_t* e, ZSize available) {
-	zrn_control_t* c = ZST_AS(zrn_control_t, e);
+static ZSize item_measure(zrn_element_t* const e, const ZSize available) {
+	zrn_control_t* const c = ZST_AS(zrn_control_t, e);
 	const char* t = ITEM(e)->text ? ITEM(e)->text : "";
 	ZST_UNUSED(available);
 	return zrn_size(zrn_text_width(menu_font(), t, (int)strlen(t)) + zrn_thickness_h(c->padding), zrn_font_line_height(menu_font()) + zrn_thickness_v(c->padding));
 }
 
-static void item_paint(zrn_element_t* e, zrn_painter_t* p) {
-	zrn_control_t* c = ZST_AS(zrn_control_t, e);
+static void item_paint(zrn_element_t* const e, zrn_painter_t* const p) {
+	zrn_control_t* const c = ZST_AS(zrn_control_t, e);
 	const char* t = ITEM(e)->text ? ITEM(e)->text : "";
 	/* MenuFlyoutItemDisabledForegroundThemeBrush is PhoneDisabled */
-	ZColor fg = zrn_effectively_enabled(e) ? zrn_ctl_foreground(c) : zrn_theme_color(e, ZST_TC_PHONE_DISABLED);
+	const ZColor fg = zrn_effectively_enabled(e) ? zrn_ctl_foreground(c) : zrn_theme_color(e, ZST_TC_PHONE_DISABLED);
 	zrn_draw_string(p, menu_font(), t, (int)strlen(t), c->padding.left, c->padding.top, fg);
 	if (e->cls == &zrn_class_toggle_menu_flyout_item && ITEM(e)->is_checked) {
 		/* the template has no mark for it: a check at the right edge, as high as a digit */
-		float x = e->rect.width - 19.0f - 16.0f, y = e->rect.height * 0.5f;
+		const float x = e->rect.width - 19.0f - 16.0f, y = e->rect.height * 0.5f;
 		zrn_draw_line(p, x, y, x + 5.5f, y + 5.5f, 2.5f, fg);
 		zrn_draw_line(p, x + 5.5f, y + 5.5f, x + 16.0f, y - 6.0f, 2.5f, fg);
 	}
@@ -302,15 +302,15 @@ static void item_paint(zrn_element_t* e, zrn_painter_t* p) {
 
 /* A tap runs Click, and the flyout the item is in closes. */
 static int item_input(zrn_element_t* e, zrn_input_t* in) {
-	zrn_menu_flyout_item_t* m = ITEM(e);
+	zrn_menu_flyout_item_t* const m = ITEM(e);
 	switch (in->type) {
 		case ZST_IN_POINTER_DOWN:
 			m->pressed = 1;
 			if (e->root) zrn_set_capture(e->root, e);
 			return 1;
 		case ZST_IN_POINTER_UP: {
-			int inside = in->x >= 0 && in->y >= 0 && in->x < e->rect.width && in->y < e->rect.height;
-			Zid id = e->id;
+			const int inside = in->x >= 0 && in->y >= 0 && in->x < e->rect.width && in->y < e->rect.height;
+			const Zid id = e->id;
 			zrn_element_t* p;
 			if (!m->pressed) return 0;
 			m->pressed = 0;
@@ -353,12 +353,12 @@ zrn_class_t zrn_class_toggle_menu_flyout_item = {
 };
 
 /* The template of the separator is not in the phone XAML: a hairline in a row as high as the other rows' padding. */
-static ZSize separator_measure(zrn_element_t* e, ZSize available) {
+static ZSize separator_measure(zrn_element_t* const e, const ZSize available) {
 	ZST_UNUSED(e); ZST_UNUSED(available);
 	return zrn_size(0, 2 * MENU_ITEM_PAD);
 }
 
-static void separator_paint(zrn_element_t* e, zrn_painter_t* p) {
+static void separator_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	zrn_fill_rect(p, zrn_rect(0, e->rect.height * 0.5f - 0.5f, e->rect.width, 1.0f), zrn_theme_color(e, ZST_TC_BASE_MEDIUM_MID));
 }
 
@@ -367,8 +367,8 @@ zrn_class_t zrn_class_menu_flyout_separator = {
 	.measure = separator_measure, .paint = separator_paint
 };
 
-static Zid make_menu_item(ZClass cls, const char* text) {
-	zrn_element_t* e = zrn_create(cls);
+static Zid make_menu_item(const ZClass cls, const char* const text) {
+	zrn_element_t* const e = zrn_create(cls);
 	if (!e) return Z_INVALID_ID;
 	zrn_set_string(&ITEM(e)->text, text ? text : "");
 	return e->id;
@@ -376,39 +376,39 @@ static Zid make_menu_item(ZClass cls, const char* text) {
 
 Zid Zmenu_flyout_item_create(const char* text) { return make_menu_item(Z_CLASS_MENU_FLYOUT_ITEM, text); }
 
-Zid Ztoggle_menu_flyout_item_create(const char* text, int is_checked) {
-	Zid id = make_menu_item(Z_CLASS_TOGGLE_MENU_FLYOUT_ITEM, text);
+Zid Ztoggle_menu_flyout_item_create(const char* const text, const int is_checked) {
+	const Zid id = make_menu_item(Z_CLASS_TOGGLE_MENU_FLYOUT_ITEM, text);
 	if (id != Z_INVALID_ID) ITEM(zrn_lookup(id))->is_checked = is_checked != 0;
 	return id;
 }
 
-Zid Zmenu_flyout_separator_create(void) { return make_menu_item(Z_CLASS_MENU_FLYOUT_SEPARATOR, NULL); }
+Zid Zmenu_flyout_separator_create(void) { return make_menu_item(Z_CLASS_MENU_FLYOUT_SEPARATOR, nullptr); }
 
-void Zmenu_flyout_item_set_text(Zid id, const char* text) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_MENU_FLYOUT_ITEM);
+void Zmenu_flyout_item_set_text(const Zid id, const char* const text) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_MENU_FLYOUT_ITEM);
 	if (!e) return;
 	zrn_set_string(&ITEM(e)->text, text ? text : "");
 	zrn_changed_layout(e);
 }
 
-const char* Zmenu_flyout_item_get_text(Zid id) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_MENU_FLYOUT_ITEM);
+const char* Zmenu_flyout_item_get_text(const Zid id) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_MENU_FLYOUT_ITEM);
 	return e && ITEM(e)->text ? ITEM(e)->text : "";
 }
 
-void Zmenu_flyout_item_on_click(Zid id, ZRoutedCallback callback, void* user_data) {
+void Zmenu_flyout_item_on_click(const Zid id, const ZRoutedCallback callback, void* const user_data) {
 	if (zrn_get(id, Z_CLASS_MENU_FLYOUT_ITEM)) Zelement_on(id, Z_EVENT_CLICK, callback, user_data);
 }
 
-void Ztoggle_menu_flyout_item_set_is_checked(Zid id, int is_checked) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_TOGGLE_MENU_FLYOUT_ITEM);
+void Ztoggle_menu_flyout_item_set_is_checked(const Zid id, const int is_checked) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_TOGGLE_MENU_FLYOUT_ITEM);
 	if (!e) return;
 	ITEM(e)->is_checked = is_checked != 0;
 	zrn_changed_paint(e);
 }
 
-int Ztoggle_menu_flyout_item_get_is_checked(Zid id) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_TOGGLE_MENU_FLYOUT_ITEM);
+int Ztoggle_menu_flyout_item_get_is_checked(const Zid id) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_TOGGLE_MENU_FLYOUT_ITEM);
 	return e ? ITEM(e)->is_checked : 0;
 }
 
@@ -417,14 +417,14 @@ int Ztoggle_menu_flyout_item_get_is_checked(Zid id) {
  *  MenuFlyout
  * ============================================================================ */
 
-static zrn_element_t* menu_stack(zrn_flyout_base_t* f) {
-	zrn_element_t* presenter = presenter_of(f);
-	return presenter && presenter->child_count ? presenter->children[0] : NULL;
+static zrn_element_t* menu_stack(zrn_flyout_base_t* const f) {
+	zrn_element_t* const presenter = presenter_of(f);
+	return presenter && presenter->child_count ? presenter->children[0] : nullptr;
 }
 
-static void menu_flyout_init(zrn_element_t* e) {
-	zrn_element_t* presenter = presenter_of(FB(e));
-	zrn_element_t* stack = zrn_create(Z_CLASS_STACK_PANEL);
+static void menu_flyout_init(zrn_element_t* const e) {
+	zrn_element_t* const presenter = presenter_of(FB(e));
+	zrn_element_t* const stack = zrn_create(Z_CLASS_STACK_PANEL);
 	if (!presenter || !stack) {
 		if (stack) zrn_destroy(stack);
 		return;
@@ -440,13 +440,13 @@ zrn_class_t zrn_class_menu_flyout = {
 };
 
 Zid Zmenu_flyout_create(void) {
-	zrn_element_t* e = zrn_create(Z_CLASS_MENU_FLYOUT);
+	zrn_element_t* const e = zrn_create(Z_CLASS_MENU_FLYOUT);
 	return e ? e->id : Z_INVALID_ID;
 }
 
-int Zmenu_flyout_add_item(Zid id, Zid item) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_MENU_FLYOUT);
-	zrn_element_t* i = item != Z_INVALID_ID ? zrn_get(item, Z_CLASS_MENU_FLYOUT_ITEM_BASE) : NULL;
+int Zmenu_flyout_add_item(const Zid id, const Zid item) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_MENU_FLYOUT);
+	zrn_element_t* const i = item != Z_INVALID_ID ? zrn_get(item, Z_CLASS_MENU_FLYOUT_ITEM_BASE) : nullptr;
 	zrn_element_t* stack;
 	if (!e || !i) return -1;
 	stack = menu_stack(FB(e));
@@ -458,21 +458,21 @@ int Zmenu_flyout_add_item(Zid id, Zid item) {
 	return i->parent == stack ? stack->child_count - 1 : -1;
 }
 
-int Zmenu_flyout_get_item_count(Zid id) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_MENU_FLYOUT);
-	zrn_element_t* stack = e ? menu_stack(FB(e)) : NULL;
+int Zmenu_flyout_get_item_count(const Zid id) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_MENU_FLYOUT);
+	zrn_element_t* const stack = e ? menu_stack(FB(e)) : nullptr;
 	return stack ? stack->child_count : 0;
 }
 
-Zid Zmenu_flyout_get_item(Zid id, int index) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_MENU_FLYOUT);
-	zrn_element_t* stack = e ? menu_stack(FB(e)) : NULL;
+Zid Zmenu_flyout_get_item(const Zid id, const int index) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_MENU_FLYOUT);
+	zrn_element_t* const stack = e ? menu_stack(FB(e)) : nullptr;
 	return stack && index >= 0 && index < stack->child_count ? stack->children[index]->id : Z_INVALID_ID;
 }
 
-void Zmenu_flyout_clear_items(Zid id) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_MENU_FLYOUT);
-	zrn_element_t* stack = e ? menu_stack(FB(e)) : NULL;
+void Zmenu_flyout_clear_items(const Zid id) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_MENU_FLYOUT);
+	zrn_element_t* const stack = e ? menu_stack(FB(e)) : nullptr;
 	if (stack) zrn_clear_children(stack);
 }
 
@@ -486,9 +486,9 @@ void Zmenu_flyout_clear_items(Zid id) {
 static void dialog_button_click(Zid sender, void* user_data);
 static void dialog_popup_closed(Zid popup, void* user_data);
 
-static zrn_element_t* make_dialog_button(zrn_element_t* dialog, int primary) {
-	zrn_element_t* b = zrn_create(Z_CLASS_BUTTON);
-	if (!b) return NULL;
+static zrn_element_t* make_dialog_button(zrn_element_t* const dialog, const int primary) {
+	zrn_element_t* const b = zrn_create(Z_CLASS_BUTTON);
+	if (!b) return nullptr;
 	b->halign = Z_HALIGN_STRETCH;
 	b->valign = Z_VALIGN_TOP;
 	set_handler(b, Z_EVENT_CLICK, dialog_button_click, (void*)(uintptr_t)dialog->id);
@@ -497,9 +497,9 @@ static zrn_element_t* make_dialog_button(zrn_element_t* dialog, int primary) {
 	return b;
 }
 
-static void dialog_init(zrn_element_t* e) {
-	zrn_content_dialog_t* d = DIALOG(e);
-	zrn_control_t* c = &d->base.base;
+static void dialog_init(zrn_element_t* const e) {
+	zrn_content_dialog_t* const d = DIALOG(e);
+	zrn_control_t* const c = &d->base.base;
 	zrn_text_block_t* t;
 	e->focusable = 0;
 	c->font_size = DIALOG_CONTENT_FONT;
@@ -523,9 +523,9 @@ static void dialog_init(zrn_element_t* e) {
 	if (d->button2) d->button2->visibility = Z_COLLAPSED;
 }
 
-static void dialog_destroy(zrn_element_t* e) {
-	zrn_content_dialog_t* d = DIALOG(e);
-	zrn_element_t* popup = d->popup != Z_INVALID_ID ? zrn_lookup(d->popup) : NULL;
+static void dialog_destroy(zrn_element_t* const e) {
+	zrn_content_dialog_t* const d = DIALOG(e);
+	zrn_element_t* const popup = d->popup != Z_INVALID_ID ? zrn_lookup(d->popup) : nullptr;
 	/* a dialog that is destroyed while it shows takes its popup with it, unless the popup is what is destroying it */
 	if (popup && !popup->destroying) zrn_destroy(popup);
 	d->popup = Z_INVALID_ID;
@@ -533,25 +533,25 @@ static void dialog_destroy(zrn_element_t* e) {
 	free(d->secondary_text);
 }
 
-static void dialog_child_removed(zrn_element_t* e, zrn_element_t* child) {
-	zrn_content_dialog_t* d = DIALOG(e);
-	if (d->title == child) d->title = NULL;
-	else if (d->button1 == child) d->button1 = NULL;
-	else if (d->button2 == child) d->button2 = NULL;
+static void dialog_child_removed(zrn_element_t* const e, zrn_element_t* const child) {
+	zrn_content_dialog_t* const d = DIALOG(e);
+	if (d->title == child) d->title = nullptr;
+	else if (d->button1 == child) d->button1 = nullptr;
+	else if (d->button2 == child) d->button2 = nullptr;
 	else zrn_cc_child_removed(e, child);
 }
 
 static int visible(const zrn_element_t* e) { return e && e->visibility == Z_VISIBLE; }
 
-static float title_height(zrn_content_dialog_t* d) {
+static float title_height(zrn_content_dialog_t* const d) {
 	return d->title && visible(d->title) ? d->title->desired.height : 0;
 }
 
-static ZSize dialog_measure(zrn_element_t* e, ZSize available) {
-	zrn_content_dialog_t* d = DIALOG(e);
-	float w = available.width < Z_INFINITE * 0.5f ? available.width : 480.0f;
-	float inner = zrn_maxf(0, w - 2 * DIALOG_SIDE);
-	float col = w * 0.5f;
+static ZSize dialog_measure(zrn_element_t* const e, const ZSize available) {
+	zrn_content_dialog_t* const d = DIALOG(e);
+	const float w = available.width < Z_INFINITE * 0.5f ? available.width : 480.0f;
+	const float inner = zrn_maxf(0, w - 2 * DIALOG_SIDE);
+	const float col = w * 0.5f;
 	float title_row, content_row, buttons_row = DIALOG_BUTTONS_MIN, ch = 0;
 	if (d->title) {
 		const char* s = Ztext_block_get_text(d->title->id);
@@ -567,19 +567,19 @@ static ZSize dialog_measure(zrn_element_t* e, ZSize available) {
 	if (d->button1) zrn_measure(d->button1, zrn_size(zrn_maxf(0, col - DIALOG_SIDE - DIALOG_BUTTON_GAP), Z_INFINITE));
 	if (d->button2) zrn_measure(d->button2, zrn_size(zrn_maxf(0, col - DIALOG_SIDE - DIALOG_BUTTON_GAP), Z_INFINITE));
 	if (visible(d->button1) || visible(d->button2)) {
-		float bh = zrn_maxf(visible(d->button1) ? d->button1->desired.height : 0, visible(d->button2) ? d->button2->desired.height : 0);
+		const float bh = zrn_maxf(visible(d->button1) ? d->button1->desired.height : 0, visible(d->button2) ? d->button2->desired.height : 0);
 		buttons_row = zrn_maxf(DIALOG_BUTTONS_MIN, DIALOG_BUTTON_TOP + bh + DIALOG_BUTTON_BOTTOM);
 	}
 	return zrn_size(w, title_row + content_row + buttons_row);
 }
 
-static ZSize dialog_arrange(zrn_element_t* e, ZSize final) {
-	zrn_content_dialog_t* d = DIALOG(e);
-	float inner = zrn_maxf(0, final.width - 2 * DIALOG_SIDE), col = final.width * 0.5f;
-	float title_row = zrn_maxf(DIALOG_TITLE_MIN, DIALOG_TITLE_TOP + title_height(d));
-	float ch = d->base.content ? d->base.content->desired.height : 0;
-	float content_row = zrn_maxf(DIALOG_CONTENT_MIN, DIALOG_CONTENT_TOP + ch);
-	float y = title_row + content_row;
+static ZSize dialog_arrange(zrn_element_t* const e, const ZSize final) {
+	zrn_content_dialog_t* const d = DIALOG(e);
+	const float inner = zrn_maxf(0, final.width - 2 * DIALOG_SIDE), col = final.width * 0.5f;
+	const float title_row = zrn_maxf(DIALOG_TITLE_MIN, DIALOG_TITLE_TOP + title_height(d));
+	const float ch = d->base.content ? d->base.content->desired.height : 0;
+	const float content_row = zrn_maxf(DIALOG_CONTENT_MIN, DIALOG_CONTENT_TOP + ch);
+	const float y = title_row + content_row;
 	if (d->title) zrn_arrange(d->title, zrn_rect(DIALOG_SIDE, DIALOG_TITLE_TOP, inner, title_height(d)));
 	if (d->base.content) zrn_arrange(d->base.content, zrn_rect(DIALOG_SIDE, title_row + DIALOG_CONTENT_TOP, inner, ch));
 	if (d->button1) zrn_arrange(d->button1, zrn_rect(DIALOG_SIDE, y + DIALOG_BUTTON_TOP, zrn_maxf(0, col - DIALOG_SIDE - DIALOG_BUTTON_GAP), d->button1->desired.height));
@@ -587,7 +587,7 @@ static ZSize dialog_arrange(zrn_element_t* e, ZSize final) {
 	return final;
 }
 
-static void dialog_paint(zrn_element_t* e, zrn_painter_t* p) {
+static void dialog_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	/* ContentDialogBackgroundThemeBrush is the chrome */
 	zrn_fill_rect(p, zrn_local_rect(e), zrn_ctl_background(&DIALOG(e)->base.base, zrn_theme_color(e, ZST_TC_CHROME)));
 }
@@ -599,31 +599,31 @@ zrn_class_t zrn_class_content_dialog = {
 };
 
 Zid Zcontent_dialog_create(void) {
-	zrn_element_t* e = zrn_create(Z_CLASS_CONTENT_DIALOG);
+	zrn_element_t* const e = zrn_create(Z_CLASS_CONTENT_DIALOG);
 	return e ? e->id : Z_INVALID_ID;
 }
 
 static zrn_content_dialog_t* get_dialog(Zid id) { return DIALOG(zrn_get(id, Z_CLASS_CONTENT_DIALOG)); }
 
-void Zcontent_dialog_set_title(Zid id, const char* title) {
-	zrn_content_dialog_t* d = get_dialog(id);
+void Zcontent_dialog_set_title(const Zid id, const char* const title) {
+	zrn_content_dialog_t* const d = get_dialog(id);
 	if (d && d->title) {
 		Ztext_block_set_text(d->title->id, title ? title : "");
 		zrn_changed_layout(&d->base.base.base);
 	}
 }
 
-const char* Zcontent_dialog_get_title(Zid id) {
-	zrn_content_dialog_t* d = get_dialog(id);
+const char* Zcontent_dialog_get_title(const Zid id) {
+	zrn_content_dialog_t* const d = get_dialog(id);
 	return d && d->title ? Ztext_block_get_text(d->title->id) : "";
 }
 
-static void dialog_set_button_text(Zid id, int primary, const char* text) {
-	zrn_content_dialog_t* d = get_dialog(id);
+static void dialog_set_button_text(const Zid id, const int primary, const char* const text) {
+	zrn_content_dialog_t* const d = get_dialog(id);
 	zrn_element_t* b;
 	if (!d) return;
 	b = primary ? d->button1 : d->button2;
-	zrn_set_string(primary ? &d->primary_text : &d->secondary_text, text && *text ? text : NULL);
+	zrn_set_string(primary ? &d->primary_text : &d->secondary_text, text && *text ? text : nullptr);
 	if (!b) return;
 	/* a button with no text is not there */
 	b->visibility = text && *text ? Z_VISIBLE : Z_COLLAPSED;
@@ -634,70 +634,70 @@ static void dialog_set_button_text(Zid id, int primary, const char* text) {
 void Zcontent_dialog_set_primary_button_text(Zid id, const char* text) { dialog_set_button_text(id, 1, text); }
 void Zcontent_dialog_set_secondary_button_text(Zid id, const char* text) { dialog_set_button_text(id, 0, text); }
 
-const char* Zcontent_dialog_get_primary_button_text(Zid id) {
-	zrn_content_dialog_t* d = get_dialog(id);
+const char* Zcontent_dialog_get_primary_button_text(const Zid id) {
+	zrn_content_dialog_t* const d = get_dialog(id);
 	return d && d->primary_text ? d->primary_text : "";
 }
 
-const char* Zcontent_dialog_get_secondary_button_text(Zid id) {
-	zrn_content_dialog_t* d = get_dialog(id);
+const char* Zcontent_dialog_get_secondary_button_text(const Zid id) {
+	zrn_content_dialog_t* const d = get_dialog(id);
 	return d && d->secondary_text ? d->secondary_text : "";
 }
 
-void Zcontent_dialog_set_is_primary_button_enabled(Zid id, int enabled) {
-	zrn_content_dialog_t* d = get_dialog(id);
+void Zcontent_dialog_set_is_primary_button_enabled(const Zid id, const int enabled) {
+	zrn_content_dialog_t* const d = get_dialog(id);
 	if (!d) return;
 	d->primary_enabled = enabled != 0;
 	if (d->button1) Zelement_set_enabled(d->button1->id, enabled);
 }
 
-void Zcontent_dialog_set_is_secondary_button_enabled(Zid id, int enabled) {
-	zrn_content_dialog_t* d = get_dialog(id);
+void Zcontent_dialog_set_is_secondary_button_enabled(const Zid id, const int enabled) {
+	zrn_content_dialog_t* const d = get_dialog(id);
 	if (!d) return;
 	d->secondary_enabled = enabled != 0;
 	if (d->button2) Zelement_set_enabled(d->button2->id, enabled);
 }
 
-int Zcontent_dialog_get_is_primary_button_enabled(Zid id) {
-	zrn_content_dialog_t* d = get_dialog(id);
+int Zcontent_dialog_get_is_primary_button_enabled(const Zid id) {
+	zrn_content_dialog_t* const d = get_dialog(id);
 	return d ? d->primary_enabled : 0;
 }
 
-int Zcontent_dialog_get_is_secondary_button_enabled(Zid id) {
-	zrn_content_dialog_t* d = get_dialog(id);
+int Zcontent_dialog_get_is_secondary_button_enabled(const Zid id) {
+	zrn_content_dialog_t* const d = get_dialog(id);
 	return d ? d->secondary_enabled : 0;
 }
 
-void Zcontent_dialog_on_primary_button_click(Zid id, ZRoutedCallback callback, void* user_data) {
+void Zcontent_dialog_on_primary_button_click(const Zid id, const ZRoutedCallback callback, void* const user_data) {
 	if (get_dialog(id)) Zelement_on(id, Z_EVENT_PRIMARY_BUTTON_CLICK, callback, user_data);
 }
 
-void Zcontent_dialog_on_secondary_button_click(Zid id, ZRoutedCallback callback, void* user_data) {
+void Zcontent_dialog_on_secondary_button_click(const Zid id, const ZRoutedCallback callback, void* const user_data) {
 	if (get_dialog(id)) Zelement_on(id, Z_EVENT_SECONDARY_BUTTON_CLICK, callback, user_data);
 }
 
-void Zcontent_dialog_on_opened(Zid id, ZRoutedCallback callback, void* user_data) {
+void Zcontent_dialog_on_opened(const Zid id, const ZRoutedCallback callback, void* const user_data) {
 	if (get_dialog(id)) Zelement_on(id, Z_EVENT_OPENED, callback, user_data);
 }
 
-void Zcontent_dialog_on_closed(Zid id, ZRoutedCallback callback, void* user_data) {
+void Zcontent_dialog_on_closed(const Zid id, const ZRoutedCallback callback, void* const user_data) {
 	if (get_dialog(id)) Zelement_on(id, Z_EVENT_CLOSED, callback, user_data);
 }
 
 /* The dialog is over: the popup goes, the focus returns where it was, Closed and then the callback tell. */
-static void dialog_finish(zrn_element_t* e, ZContentDialogResult result) {
-	zrn_content_dialog_t* d = DIALOG(e);
-	zrn_root_t* r = e->root;
-	zrn_element_t* popup = d->popup != Z_INVALID_ID ? zrn_lookup(d->popup) : NULL;
-	zrn_element_t* previous = d->previous_focus != Z_INVALID_ID ? zrn_lookup(d->previous_focus) : NULL;
-	ZContentDialogResultCallback callback = d->callback;
-	void* data = d->callback_data;
-	Zid id = e->id;
+static void dialog_finish(zrn_element_t* const e, const ZContentDialogResult result) {
+	zrn_content_dialog_t* const d = DIALOG(e);
+	zrn_root_t* const r = e->root;
+	zrn_element_t* const popup = d->popup != Z_INVALID_ID ? zrn_lookup(d->popup) : nullptr;
+	zrn_element_t* const previous = d->previous_focus != Z_INVALID_ID ? zrn_lookup(d->previous_focus) : nullptr;
+	const ZContentDialogResultCallback callback = d->callback;
+	void* const data = d->callback_data;
+	const Zid id = e->id;
 	if (!d->is_open) return;
 	d->is_open = 0;
 	d->result = result;
-	d->callback = NULL;
-	d->callback_data = NULL;
+	d->callback = nullptr;
+	d->callback_data = nullptr;
 	d->previous_focus = Z_INVALID_ID;
 	d->popup = Z_INVALID_ID;
 	if (popup) {
@@ -706,14 +706,14 @@ static void dialog_finish(zrn_element_t* e, ZContentDialogResult result) {
 		zrn_remove_child(popup, e);
 		zrn_destroy(popup);
 	}
-	if (r && r->focus == NULL && previous && previous->root == r) zrn_set_focus(r, previous);
+	if (r && r->focus == nullptr && previous && previous->root == r) zrn_set_focus(r, previous);
 	if (!zrn_raise(zrn_lookup(id), Z_EVENT_CLOSED)) return;
 	if (callback) callback(id, result, data);
 }
 
-static void dialog_button_click(Zid sender, void* user_data) {
-	zrn_element_t* e = zrn_lookup((Zid)(uintptr_t)user_data);
-	zrn_element_t* b = zrn_lookup(sender);
+static void dialog_button_click(const Zid sender, void* const user_data) {
+	zrn_element_t* const e = zrn_lookup((Zid)(uintptr_t)user_data);
+	zrn_element_t* const b = zrn_lookup(sender);
 	int primary;
 	Zid id;
 	if (!e || !b || !DIALOG(e)->is_open) return;
@@ -724,31 +724,31 @@ static void dialog_button_click(Zid sender, void* user_data) {
 }
 
 /* Back, or anything that closes the popup but a button: the result is None. */
-static void dialog_popup_closed(Zid popup, void* user_data) {
-	zrn_element_t* e = zrn_lookup((Zid)(uintptr_t)user_data);
+static void dialog_popup_closed(const Zid popup, void* const user_data) {
+	zrn_element_t* const e = zrn_lookup((Zid)(uintptr_t)user_data);
 	ZST_UNUSED(popup);
 	if (e && DIALOG(e)->is_open) dialog_finish(e, Z_CONTENT_DIALOG_RESULT_NONE);
 }
 
-int Zcontent_dialog_show(Zid id, Zid root, ZContentDialogResultCallback callback, void* user_data) {
-	zrn_content_dialog_t* d = get_dialog(id);
-	zrn_root_t* r = zrn_root_lookup(root);
+int Zcontent_dialog_show(const Zid id, const Zid root, const ZContentDialogResultCallback callback, void* const user_data) {
+	zrn_content_dialog_t* const d = get_dialog(id);
+	zrn_root_t* const r = zrn_root_lookup(root);
 	zrn_element_t *e, *popup, *focus;
-	if (!d) return Z_FALSE;
+	if (!d) return false;
 	e = &d->base.base.base;
 	if (!r) {
 		zrn_error(Z_ERROR_INVALID_ID, "invalid root handle 0x%x", (unsigned)root);
-		return Z_FALSE;
+		return false;
 	}
-	if (d->is_open) return Z_FALSE;
+	if (d->is_open) return false;
 	if (e->parent) {
 		zrn_error(Z_ERROR_HAS_PARENT, "a ContentDialog is shown with Zcontent_dialog_show, it is not put in a tree");
-		return Z_FALSE;
+		return false;
 	}
 	popup = zrn_create(Z_CLASS_POPUP);
 	if (!popup || !r->overlay) {
 		if (popup) zrn_destroy(popup);
-		return Z_FALSE;
+		return false;
 	}
 	ZST_AS(zrn_popup_t, popup)->modal = 1;
 	ZST_AS(zrn_popup_t, popup)->stays_open = 1;
@@ -764,13 +764,13 @@ int Zcontent_dialog_show(Zid id, Zid root, ZContentDialogResultCallback callback
 	d->previous_focus = r->focus ? r->focus->id : Z_INVALID_ID;
 	zrn_popup_set_open(popup, 1);
 	/* the keyboard goes into the dialog: the button that is the answer, or the first one there is */
-	focus = visible(d->button1) && d->primary_enabled ? d->button1 : (visible(d->button2) && d->secondary_enabled ? d->button2 : NULL);
+	focus = visible(d->button1) && d->primary_enabled ? d->button1 : (visible(d->button2) && d->secondary_enabled ? d->button2 : nullptr);
 	zrn_set_focus(r, focus);
-	if (!zrn_raise(e, Z_EVENT_OPENED)) return Z_TRUE;
-	return Z_TRUE;
+	if (!zrn_raise(e, Z_EVENT_OPENED)) return true;
+	return true;
 }
 
-void Zcontent_dialog_hide(Zid id) {
-	zrn_content_dialog_t* d = get_dialog(id);
+void Zcontent_dialog_hide(const Zid id) {
+	zrn_content_dialog_t* const d = get_dialog(id);
 	if (d && d->is_open) dialog_finish(&d->base.base.base, Z_CONTENT_DIALOG_RESULT_NONE);
 }

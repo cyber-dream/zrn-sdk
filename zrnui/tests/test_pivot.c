@@ -17,7 +17,7 @@ static Zid make_list(const char* const* names, int n) {
 	Zid list = Zlist_view_create();
 	int i;
 	for (i = 0; i < n; i++) {
-		Zid item = Zlist_view_item_create(NULL), t = Ztext_block_create(names[i]);
+		Zid item = Zlist_view_item_create(nullptr), t = Ztext_block_create(names[i]);
 		Ztext_block_set_style(t, Z_TEXT_STYLE_PHONE_LARGE);
 		Zelement_set_margin(t, Zthickness(0, 0, 0, 12));
 		Zcontent_control_set_content(item, t);
@@ -42,7 +42,7 @@ static Zid add_page(Zid pivot, const char* header, Zid content) {
 }
 
 static Zid setup(Zid* root, ZAnimations anim) {
-	*root = Zroot_create(480, 800);
+	*root = zst_test_root(480, 800);
 	Zroot_set_renderer(*root, Z_RENDERER_SOFTWARE);
 	Zroot_set_animations(*root, anim);
 	g_pivot = Zpivot_create();
@@ -55,8 +55,8 @@ static Zid setup(Zid* root, ZAnimations anim) {
 	Zroot_set_visual(*root, g_pivot);
 	Zroot_update_layout(*root);
 	g_changes = g_clicks = g_button_clicks = g_loading = g_loaded = 0;
-	Zpivot_on_selection_changed(g_pivot, on_change, NULL);
-	Zlist_view_on_item_click(g_system, on_item_click, NULL);
+	Zpivot_on_selection_changed(g_pivot, on_change, nullptr);
+	Zlist_view_on_item_click(g_system, on_item_click, nullptr);
 	return g_pivot;
 }
 
@@ -131,9 +131,9 @@ static void test_classes(void) {
 	/* an item is in one pivot only */
 	{
 		Zid other = Zpivot_create();
-		Zset_error_callback(quiet, NULL);
+		Zset_error_callback(quiet, nullptr);
 		CHECK(Zpivot_add_item(other, item) == -1);
-		Zset_error_callback(NULL, NULL);
+		Zset_error_callback(nullptr, nullptr);
 		Zelement_destroy(other);
 	}
 	CHECK(!Zpivot_get_is_locked(pivot));
@@ -283,7 +283,7 @@ static void test_flick(void) {
 }
 
 static void test_ring_of_three(void) {
-	Zid root = Zroot_create(480, 800), pivot = Zpivot_create(), items[3];
+	Zid root = zst_test_root(480, 800), pivot = Zpivot_create(), items[3];
 	const char* names[3] = { "one", "two", "three" };
 	int i;
 	Zroot_set_renderer(root, Z_RENDERER_SOFTWARE);
@@ -315,8 +315,8 @@ static void test_ring_of_three(void) {
 static void test_slide(void) {
 	Zid root;
 	setup(&root, Z_ANIMATIONS_ON);
-	Zpivot_on_pivot_item_loading(g_pivot, on_loading, NULL);
-	Zpivot_on_pivot_item_loaded(g_pivot, on_loaded, NULL);
+	Zpivot_on_pivot_item_loading(g_pivot, on_loading, nullptr);
+	Zpivot_on_pivot_item_loaded(g_pivot, on_loaded, nullptr);
 	Zpivot_set_selected_index(g_pivot, 1);
 	CHECK(Zpivot_get_selected_index(g_pivot) == 1);
 	/* Loading comes with the choice, Loaded when the page has arrived */
@@ -383,15 +383,15 @@ static void test_item_click(void) {
 
 /* A button on a page: a tap is its Click; a drag that starts on it, from the 13th px of the move on, is the pivot's, and the button is not clicked. */
 static void test_button_on_page(void) {
-	Zid root = Zroot_create(480, 800), pivot = Zpivot_create(), button = Zbutton_create("go"), other = Zbutton_create("x");
+	Zid root = zst_test_root(480, 800), pivot = Zpivot_create(), button = Zbutton_create("go"), other = Zbutton_create("x");
 	ZPoint p;
 	int i;
 	Zroot_set_renderer(root, Z_RENDERER_SOFTWARE);
 	Zroot_set_animations(root, Z_ANIMATIONS_OFF);
-	Zbutton_on_click(button, on_button, NULL);
+	Zbutton_on_click(button, on_button, nullptr);
 	add_page(pivot, "a", button);
 	add_page(pivot, "b", other);
-	Zpivot_on_selection_changed(pivot, on_change, NULL);
+	Zpivot_on_selection_changed(pivot, on_change, nullptr);
 	Zroot_set_visual(root, pivot);
 	Zroot_update_layout(root);
 	g_button_clicks = g_changes = 0;
@@ -415,7 +415,7 @@ static void test_button_on_page(void) {
 
 /* A press on the page where nothing takes it (the pivot has the pointer from the start) follows the finger too. */
 static void test_press_on_empty_page(void) {
-	Zid root = Zroot_create(480, 800), pivot = Zpivot_create();
+	Zid root = zst_test_root(480, 800), pivot = Zpivot_create();
 	Zroot_set_renderer(root, Z_RENDERER_SOFTWARE);
 	Zroot_set_animations(root, Z_ANIMATIONS_OFF);
 	Zpivot_add_item(pivot, Zpivot_item_create("a"));
@@ -431,7 +431,7 @@ static void test_press_on_empty_page(void) {
 }
 
 static void test_items_added_and_removed(void) {
-	Zid root = Zroot_create(480, 800), pivot = Zpivot_create(), a = Zpivot_item_create("a"), b = Zpivot_item_create("b"), c = Zpivot_item_create("c"), z = Zpivot_item_create("z");
+	Zid root = zst_test_root(480, 800), pivot = Zpivot_create(), a = Zpivot_item_create("a"), b = Zpivot_item_create("b"), c = Zpivot_item_create("c"), z = Zpivot_item_create("z");
 	Zroot_set_renderer(root, Z_RENDERER_SOFTWARE);
 	Zroot_set_animations(root, Z_ANIMATIONS_OFF);
 	Zpivot_add_item(pivot, a);

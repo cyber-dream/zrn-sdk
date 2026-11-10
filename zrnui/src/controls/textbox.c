@@ -11,10 +11,10 @@
 #define TB(e) ZST_AS(zrn_text_box_t, e)
 
 /* TextControlThemeMinHeight / MinWidth, TextControlHeaderMarginThemeThickness (the 4.8 under the header) */
-#define TBX_MIN_HEIGHT 34.0f
-#define TBX_MIN_WIDTH 51.0f
-#define TBX_HEADER_GAP 4.8f
-#define BLINK_MS 530.0f
+static constexpr float TBX_MIN_HEIGHT = 34.0f;
+static constexpr float TBX_MIN_WIDTH = 51.0f;
+static constexpr float TBX_HEADER_GAP = 4.8f;
+static constexpr float BLINK_MS = 530.0f;
 
 static char* g_clipboard;
 
@@ -23,7 +23,7 @@ static char* g_clipboard;
  *  geometry
  * ============================================================================ */
 
-static zrn_font_t tbx_font(const zrn_text_box_t* b) {
+static zrn_font_t tbx_font(const zrn_text_box_t* const b) {
 	zrn_font_t f;
 	f.family = b->base.font_family;
 	f.size = b->base.font_size;
@@ -36,15 +36,15 @@ static uint32_t bullet_char(const zrn_text_box_t* b);
 static zrn_font_t tbx_header_font(void) { zrn_font_t f = { Z_FONT_NORMAL, ZST_81_FONT_CONTROL_HEADER, 0 }; return f; }
 
 /* The header takes a row of its own above the box. */
-static float tbx_header_height(const zrn_text_box_t* b) {
+static float tbx_header_height(const zrn_text_box_t* const b) {
 	return b->header && *b->header ? zrn_font_line_height(tbx_header_font()) + TBX_HEADER_GAP : 0;
 }
 
-static ZThickness tbx_chrome(zrn_element_t* e) {
+static ZThickness tbx_chrome(zrn_element_t* const e) {
 	return Zthickness(0, tbx_header_height(TB(e)), 0, 0);
 }
 
-static ZThickness tbx_insets(const zrn_element_t* e) {
+static ZThickness tbx_insets(const zrn_element_t* const e) {
 	const zrn_control_t* c = ZST_AS(const zrn_control_t, e);
 	ZThickness ch = tbx_chrome((zrn_element_t*)e), t;
 	t.left = ch.left + c->border_thickness.left + c->padding.left;
@@ -55,13 +55,13 @@ static ZThickness tbx_insets(const zrn_element_t* e) {
 }
 
 /* The area of the text, in local coordinates. */
-static ZRect tbx_content(const zrn_element_t* e) {
-	ZThickness in = tbx_insets(e);
+static ZRect tbx_content(const zrn_element_t* const e) {
+	const ZThickness in = tbx_insets(e);
 	return zrn_rect(in.left, in.top, zrn_maxf(0, e->rect.width - zrn_thickness_h(in)), zrn_maxf(0, e->rect.height - zrn_thickness_v(in)));
 }
 
 /* What is shown: the text, or one bullet per character for a password. The caller frees when *heap. */
-static const char* tbx_display(const zrn_text_box_t* b, int* length, int* heap) {
+static const char* tbx_display(const zrn_text_box_t* const b, int* const length, int* const heap) {
 	*heap = 0;
 	if (!b->password) {
 		*length = b->length_bytes;
@@ -88,18 +88,23 @@ static const char* tbx_display(const zrn_text_box_t* b, int* length, int* heap) 
 	}
 }
 
+/* Frees what tbx_display allocated: the string is const for the reader, but owned by the caller when `heap`. */
+static void tbx_display_release(const char* const disp, const int heap) {
+	if (heap) free((void*)(uintptr_t)disp);
+}
+
 /* The bullet of the box, or U+2022 when no font has it. */
-static uint32_t bullet_char(const zrn_text_box_t* b) {
-	uint32_t cp = b->password_char ? b->password_char : 0x25CF;
+static uint32_t bullet_char(const zrn_text_box_t* const b) {
+	const uint32_t cp = b->password_char ? b->password_char : 0x25CF;
 	return zrn_font_has_glyph(tbx_font(b), cp) ? cp : 0x2022;
 }
 
-static int bullet_length(const zrn_text_box_t* b) {
+static int bullet_length(const zrn_text_box_t* const b) {
 	char bullet[4];
 	return zrn_utf8_encode(bullet_char(b), bullet);
 }
 
-static int real_to_display(const zrn_text_box_t* b, int index) {
+static int real_to_display(const zrn_text_box_t* const b, const int index) {
 	int count = 0, i = 0;
 	if (!b->password) return index;
 	while (i < index) {
@@ -109,7 +114,7 @@ static int real_to_display(const zrn_text_box_t* b, int index) {
 	return count * bullet_length(b);
 }
 
-static int display_to_real(const zrn_text_box_t* b, int index) {
+static int display_to_real(const zrn_text_box_t* const b, const int index) {
 	int count, i = 0, k = 0;
 	if (!b->password) return index;
 	count = index / bullet_length(b);
@@ -122,19 +127,19 @@ static int display_to_real(const zrn_text_box_t* b, int index) {
 
 static int tbx_wrap(const zrn_text_box_t* b) { return b->wrapping == Z_WRAP; }
 
-static zrn_text_layout_t* tbx_layout(const zrn_text_box_t* b, const char* disp, int length, float width) {
-	int wrap = tbx_wrap(b) && width > 0;
+static zrn_text_layout_t* tbx_layout(const zrn_text_box_t* const b, const char* const disp, const int length, const float width) {
+	const int wrap = tbx_wrap(b) && width > 0;
 	return zrn_text_layout_new(tbx_font(b), disp, length, wrap ? width : 0, wrap, 0, 0);
 }
 
 /* The line and the x of a display index. */
-static void caret_position(const zrn_text_layout_t* l, int index, int* line, float* x) {
+static void caret_position(const zrn_text_layout_t* const l, const int index, int* const line, float* const x) {
 	int i;
 	for (i = 0; i < l->line_count; i++) {
 		const zrn_line_t* ln = &l->lines[i];
-		int next_start = i + 1 < l->line_count ? l->lines[i + 1].start : 0x7fffffff;
+		const int next_start = i + 1 < l->line_count ? l->lines[i + 1].start : 0x7fffffff;
 		if (index <= ln->end || index < next_start || i == l->line_count - 1) {
-			int upto = index < ln->start ? ln->start : (index > ln->end ? ln->end : index);
+			const int upto = index < ln->start ? ln->start : (index > ln->end ? ln->end : index);
 			*line = i;
 			*x = zrn_text_width(l->font, l->text + ln->start, upto - ln->start);
 			return;
@@ -144,7 +149,7 @@ static void caret_position(const zrn_text_layout_t* l, int index, int* line, flo
 	*x = 0;
 }
 
-static int index_at(const zrn_text_layout_t* l, float x, float y) {
+static int index_at(const zrn_text_layout_t* const l, const float x, const float y) {
 	int line = l->line_height > 0 ? (int)floorf(y / l->line_height) : 0;
 	const zrn_line_t* ln;
 	if (line < 0) line = 0;
@@ -161,7 +166,7 @@ static int index_at(const zrn_text_layout_t* l, float x, float y) {
 static int sel_min(const zrn_text_box_t* b) { return b->caret < b->anchor ? b->caret : b->anchor; }
 static int sel_max(const zrn_text_box_t* b) { return b->caret < b->anchor ? b->anchor : b->caret; }
 
-static int count_chars(const char* s, int length) {
+static int count_chars(const char* const s, const int length) {
 	int n = 0, i = 0;
 	while (i < length) {
 		i = zrn_utf8_next(s, length, i);
@@ -170,9 +175,9 @@ static int count_chars(const char* s, int length) {
 	return n;
 }
 
-/* @return Z_FALSE when a handler destroyed the box. */
-static int tbx_changed(zrn_text_box_t* b, int from_user) {
-	zrn_element_t* e = &b->base.base;
+/* @return false when a handler destroyed the box. */
+static int tbx_changed(zrn_text_box_t* const b, const int from_user) {
+	zrn_element_t* const e = &b->base.base;
 	b->caret_blink = 0;
 	zrn_changed_layout(e);
 	if (b->quiet) return 1;
@@ -185,7 +190,7 @@ static int tbx_changed(zrn_text_box_t* b, int from_user) {
 /* Replaces [start, end) with `insert`. Newlines are dropped unless the box accepts them. */
 static void tbx_replace(zrn_text_box_t* b, int start, int end, const char* insert, int from_user) {
 	int ilen = insert ? (int)strlen(insert) : 0, i, kept = 0;
-	char* filtered = NULL;
+	char* filtered = nullptr;
 	char* text;
 	if (start < 0) start = 0;
 	if (end > b->length_bytes) end = b->length_bytes;
@@ -194,7 +199,7 @@ static void tbx_replace(zrn_text_box_t* b, int start, int end, const char* inser
 		filtered = (char*)malloc((size_t)ilen + 1);
 		if (!filtered) return;
 		for (i = 0; i < ilen; i++) {
-			char ch = insert[i];
+			const char ch = insert[i];
 			if (ch == '\r') continue;
 			if (ch == '\n' && !b->accepts_return) continue;
 			filtered[kept++] = ch;
@@ -233,7 +238,7 @@ static void tbx_replace(zrn_text_box_t* b, int start, int end, const char* inser
 	tbx_changed(b, from_user);
 }
 
-static void tbx_delete_selection(zrn_text_box_t* b, int from_user) {
+static void tbx_delete_selection(zrn_text_box_t* const b, const int from_user) {
 	if (b->caret != b->anchor) tbx_replace(b, sel_min(b), sel_max(b), "", from_user);
 }
 
@@ -247,13 +252,13 @@ static void tbx_move(zrn_text_box_t* b, int index, int extend) {
 }
 
 /* Zeeps the caret in view by moving the scroll offsets. */
-static void tbx_ensure_visible(zrn_text_box_t* b) {
-	zrn_element_t* e = &b->base.base;
-	ZRect area = tbx_content(e);
+static void tbx_ensure_visible(zrn_text_box_t* const b) {
+	zrn_element_t* const e = &b->base.base;
+	const ZRect area = tbx_content(e);
 	int length, heap, line;
 	float x;
 	const char* disp = tbx_display(b, &length, &heap);
-	zrn_text_layout_t* l = tbx_layout(b, disp, length, area.width);
+	zrn_text_layout_t* const l = tbx_layout(b, disp, length, area.width);
 	if (l) {
 		caret_position(l, real_to_display(b, b->caret), &line, &x);
 		if (!tbx_wrap(b)) {
@@ -264,14 +269,14 @@ static void tbx_ensure_visible(zrn_text_box_t* b) {
 			b->scroll_x = 0;
 		}
 		{
-			float top = (float)line * l->line_height, bottom = top + l->line_height;
+			const float top = (float)line * l->line_height, bottom = top + l->line_height;
 			if (bottom - b->scroll_y > area.height) b->scroll_y = bottom - area.height;
 			if (top - b->scroll_y < 0) b->scroll_y = top;
 			if (l->height <= area.height) b->scroll_y = 0;
 		}
 		zrn_text_layout_free(l);
 	}
-	if (heap) free((char*)disp);
+	tbx_display_release(disp, heap);
 }
 
 static void tbx_set_text(zrn_text_box_t* b, const char* text) {
@@ -301,13 +306,13 @@ static int word_right(const zrn_text_box_t* b, int index) {
 	return index;
 }
 
-static void tbx_vertical_move(zrn_text_box_t* b, int dir, int extend) {
+static void tbx_vertical_move(zrn_text_box_t* const b, const int dir, const int extend) {
 	zrn_element_t* e = &b->base.base;
-	ZRect area = tbx_content(e);
+	const ZRect area = tbx_content(e);
 	int length, heap, line;
 	float x;
 	const char* disp = tbx_display(b, &length, &heap);
-	zrn_text_layout_t* l = tbx_layout(b, disp, length, area.width);
+	zrn_text_layout_t* const l = tbx_layout(b, disp, length, area.width);
 	if (l) {
 		caret_position(l, real_to_display(b, b->caret), &line, &x);
 		line += dir;
@@ -316,13 +321,13 @@ static void tbx_vertical_move(zrn_text_box_t* b, int dir, int extend) {
 		else tbx_move(b, display_to_real(b, index_at(l, x, (float)line * l->line_height + 1)), extend);
 		zrn_text_layout_free(l);
 	}
-	if (heap) free((char*)disp);
+	tbx_display_release(disp, heap);
 }
 
-static int tbx_key(zrn_element_t* e, zrn_input_t* in) {
-	zrn_text_box_t* b = TB(e);
-	Zid id = e->id;
-	int shift = (in->mods & Z_MOD_SHIFT) != 0, ctrl = (in->mods & Z_MOD_CTRL) != 0;
+static int tbx_key(zrn_element_t* const e, zrn_input_t* const in) {
+	zrn_text_box_t* const b = TB(e);
+	const Zid id = e->id;
+	const int shift = (in->mods & Z_MOD_SHIFT) != 0, ctrl = (in->mods & Z_MOD_CTRL) != 0;
 	switch (in->key) {
 		case Z_KEY_LEFT:
 			if (b->caret != b->anchor && !shift) tbx_move(b, sel_min(b), 0);
@@ -379,7 +384,7 @@ static int tbx_key(zrn_element_t* e, zrn_input_t* in) {
 		case Z_KEY_X:
 			if (!ctrl) return 0;
 			if (b->caret != b->anchor && !b->password) {
-				int s = sel_min(b), n = sel_max(b) - s;
+				const int s = sel_min(b), n = sel_max(b) - s;
 				free(g_clipboard);
 				g_clipboard = (char*)malloc((size_t)n + 1);
 				if (g_clipboard) {
@@ -403,22 +408,22 @@ static int tbx_key(zrn_element_t* e, zrn_input_t* in) {
 	return 1;
 }
 
-static int tbx_index_from_point(zrn_text_box_t* b, float x, float y) {
+static int tbx_index_from_point(zrn_text_box_t* const b, const float x, const float y) {
 	zrn_element_t* e = &b->base.base;
-	ZRect area = tbx_content(e);
+	const ZRect area = tbx_content(e);
 	int length, heap, index = 0;
 	const char* disp = tbx_display(b, &length, &heap);
-	zrn_text_layout_t* l = tbx_layout(b, disp, length, area.width);
+	zrn_text_layout_t* const l = tbx_layout(b, disp, length, area.width);
 	if (l) {
 		index = display_to_real(b, index_at(l, x - area.x + b->scroll_x, y - area.y + b->scroll_y));
 		zrn_text_layout_free(l);
 	}
-	if (heap) free((char*)disp);
+	tbx_display_release(disp, heap);
 	return index;
 }
 
-static int tbx_input(zrn_element_t* e, zrn_input_t* in) {
-	zrn_text_box_t* b = TB(e);
+static int tbx_input(zrn_element_t* const e, zrn_input_t* const in) {
+	zrn_text_box_t* const b = TB(e);
 	switch (in->type) {
 		case ZST_IN_POINTER_DOWN:
 			if (!zrn_effectively_enabled(e)) return 1;
@@ -454,7 +459,7 @@ static int tbx_input(zrn_element_t* e, zrn_input_t* in) {
 		case ZST_IN_TEXT:
 			if (b->read_only || !in->text) return 1;
 			{
-				Zid id = e->id;
+				const Zid id = e->id;
 				tbx_replace(b, sel_min(b), sel_max(b), in->text, 1);
 				if (zrn_lookup(id)) tbx_ensure_visible(b);
 			}
@@ -464,9 +469,9 @@ static int tbx_input(zrn_element_t* e, zrn_input_t* in) {
 	}
 }
 
-static void tbx_tick(zrn_element_t* e, float dt) {
-	zrn_text_box_t* b = TB(e);
-	float before = b->caret_blink;
+static void tbx_tick(zrn_element_t* const e, const float dt) {
+	zrn_text_box_t* const b = TB(e);
+	const float before = b->caret_blink;
 	b->caret_blink += dt;
 	if ((int)(before / BLINK_MS) != (int)(b->caret_blink / BLINK_MS)) zrn_changed_paint(e);
 }
@@ -476,11 +481,11 @@ static void tbx_tick(zrn_element_t* e, float dt) {
  *  layout and paint
  * ============================================================================ */
 
-static ZSize tbx_measure(zrn_element_t* e, ZSize available) {
-	zrn_text_box_t* b = TB(e);
-	ZThickness in = tbx_insets(e);
-	float header = tbx_header_height(b);
-	float inner_w = available.width >= Z_INFINITE * 0.5f ? 0 : zrn_maxf(0, available.width - zrn_thickness_h(in));
+static ZSize tbx_measure(zrn_element_t* const e, const ZSize available) {
+	zrn_text_box_t* const b = TB(e);
+	const ZThickness in = tbx_insets(e);
+	const float header = tbx_header_height(b);
+	const float inner_w = available.width >= Z_INFINITE * 0.5f ? 0 : zrn_maxf(0, available.width - zrn_thickness_h(in));
 	int length, heap;
 	const char* disp = tbx_display(b, &length, &heap);
 	zrn_text_layout_t* l = tbx_layout(b, disp, length, inner_w);
@@ -490,23 +495,23 @@ static ZSize tbx_measure(zrn_element_t* e, ZSize available) {
 		h = zrn_maxf(h, l->height);
 		zrn_text_layout_free(l);
 	}
-	if (heap) free((char*)disp);
+	tbx_display_release(disp, heap);
 	/* the ScrollViewer of the box has MinHeight 34 */
 	return zrn_size(w + zrn_thickness_h(in), header + zrn_maxf(TBX_MIN_HEIGHT, h + zrn_thickness_v(in) - header));
 }
 
-static void tbx_paint(zrn_element_t* e, zrn_painter_t* p) {
-	zrn_text_box_t* b = TB(e);
-	zrn_control_t* c = &b->base;
-	int focused = e->root && e->root->focus == e, enabled = zrn_effectively_enabled(e);
-	float header = tbx_header_height(b);
-	ZRect box = zrn_rect(0, header, e->rect.width, e->rect.height - header);
+static void tbx_paint(zrn_element_t* const e, zrn_painter_t* const p) {
+	zrn_text_box_t* const b = TB(e);
+	zrn_control_t* const c = &b->base;
+	const int focused = e->root && e->root->focus == e, enabled = zrn_effectively_enabled(e);
+	const float header = tbx_header_height(b);
+	const ZRect box = zrn_rect(0, header, e->rect.width, e->rect.height - header);
 	ZColor background = zrn_ctl_background(c, zrn_theme_color(e, ZST_TC_TEXT_BOX_BACKGROUND_81));
 	ZColor border = zrn_ctl_border_brush(c, zrn_theme_color(e, ZST_TC_TEXT_BOX_BORDER_81));
 	ZColor fg = zrn_ctl_color(c, ZST_C_FOREGROUND, c->foreground, zrn_theme_color(e, ZST_TC_TEXT_BOX_FOREGROUND_81));
 	ZColor placeholder = zrn_theme_color(e, ZST_TC_TEXT_BOX_PLACEHOLDER_81);
 	ZColor header_color = zrn_theme_color(e, ZST_TC_BASE_MID);
-	ZRect area = tbx_content(e);
+	const ZRect area = tbx_content(e);
 	int length, heap, i, sel_a = sel_min(b), sel_b = sel_max(b);
 	const char* disp;
 	zrn_text_layout_t* l;
@@ -528,29 +533,29 @@ static void tbx_paint(zrn_element_t* e, zrn_painter_t* p) {
 	}
 	if (background.a > 0) {
 		/* inside the outline only: two translucent layers would show a lighter rim */
-		ZThickness t = c->border_thickness;
+		const ZThickness t = c->border_thickness;
 		zrn_fill_rect(p, zrn_rect(box.x + t.left, box.y + t.top, box.width - zrn_thickness_h(t), box.height - zrn_thickness_v(t)), background);
 	}
 	zrn_stroke_rect(p, box, c->border_thickness, border);
 	zrn_push_clip(p, area);
 	disp = tbx_display(b, &length, &heap);
 	if (length == 0 && b->placeholder && *b->placeholder && !focused) {
-		zrn_font_t font = tbx_font(b);
+		const zrn_font_t font = tbx_font(b);
 		zrn_draw_string(p, font, b->placeholder, (int)strlen(b->placeholder), area.x, area.y, placeholder);
 	}
 	l = tbx_layout(b, disp, length, area.width);
 	if (l) {
-		ZColor selection_fg = zrn_theme_color(e, ZST_TC_TEXT_OVER_ACCENT);
-		ZColor accent = zrn_theme_color(e, ZST_TC_ACCENT);
-		int da = real_to_display(b, sel_a), db = real_to_display(b, sel_b);
+		const ZColor selection_fg = zrn_theme_color(e, ZST_TC_TEXT_OVER_ACCENT);
+		const ZColor accent = zrn_theme_color(e, ZST_TC_ACCENT);
+		const int da = real_to_display(b, sel_a), db = real_to_display(b, sel_b);
 		for (i = 0; i < l->line_count; i++) {
 			const zrn_line_t* ln = &l->lines[i];
-			float x = area.x - b->scroll_x, y = area.y - b->scroll_y + (float)i * l->line_height;
-			int s = da > ln->start ? da : ln->start, t = db < ln->end ? db : ln->end;
+			const float x = area.x - b->scroll_x, y = area.y - b->scroll_y + (float)i * l->line_height;
+			const int s = da > ln->start ? da : ln->start, t = db < ln->end ? db : ln->end;
 			if (focused && enabled && sel_a != sel_b && s < t) {
 				/* before, selected, after */
-				float x0 = x + zrn_text_width(l->font, disp + ln->start, s - ln->start);
-				float x1 = x0 + zrn_text_width(l->font, disp + s, t - s);
+				const float x0 = x + zrn_text_width(l->font, disp + ln->start, s - ln->start);
+				const float x1 = x0 + zrn_text_width(l->font, disp + s, t - s);
 				zrn_fill_rect(p, zrn_rect(x0, y, x1 - x0, l->line_height), accent);
 				zrn_draw_string(p, l->font, disp + ln->start, s - ln->start, x, y, fg);
 				zrn_draw_string(p, l->font, disp + s, t - s, x0, y, selection_fg);
@@ -567,13 +572,13 @@ static void tbx_paint(zrn_element_t* e, zrn_painter_t* p) {
 		}
 		zrn_text_layout_free(l);
 	}
-	if (heap) free((char*)disp);
+	tbx_display_release(disp, heap);
 	zrn_pop_clip(p);
 }
 
-static void tbx_init(zrn_element_t* e) {
-	zrn_text_box_t* b = TB(e);
-	zrn_control_t* c = &b->base;
+static void tbx_init(zrn_element_t* const e) {
+	zrn_text_box_t* const b = TB(e);
+	zrn_control_t* const c = &b->base;
 	/* the style of TextBox: TextControlBorderThemeThickness, TextControlThemePadding, ContentControlFontSize, TextControlMarginThemeThickness */
 	c->border_thickness = Zthickness_uniform(ZST_81_BORDER_THICKNESS);
 	c->padding = Zthickness(7, 0.8f, 8, 0);
@@ -587,7 +592,7 @@ static void tbx_init(zrn_element_t* e) {
 	b->wrapping = Z_NO_WRAP;
 }
 
-static void tbx_destroy(zrn_element_t* e) {
+static void tbx_destroy(zrn_element_t* const e) {
 	free(TB(e)->text);
 	free(TB(e)->placeholder);
 	free(TB(e)->header);
@@ -599,8 +604,8 @@ zrn_class_t zrn_class_text_box = {
 	.tick = tbx_tick, .chrome = tbx_chrome
 };
 
-static void password_init(zrn_element_t* e) {
-	zrn_text_box_t* b = TB(e);
+static void password_init(zrn_element_t* const e) {
+	zrn_text_box_t* const b = TB(e);
 	b->password = 1;
 	b->password_char = 0x25CF;
 }
@@ -610,8 +615,8 @@ zrn_class_t zrn_class_password_box = {
 	.init = password_init
 };
 
-Zid Ztext_box_create(const char* text) {
-	zrn_element_t* e = zrn_create(Z_CLASS_TEXT_BOX);
+Zid Ztext_box_create(const char* const text) {
+	zrn_element_t* const e = zrn_create(Z_CLASS_TEXT_BOX);
 	if (!e) return Z_INVALID_ID;
 	if (text && *text) {
 		TB(e)->quiet = 1;
@@ -622,50 +627,50 @@ Zid Ztext_box_create(const char* text) {
 }
 
 Zid Zpassword_box_create(void) {
-	zrn_element_t* e = zrn_create(Z_CLASS_PASSWORD_BOX);
+	zrn_element_t* const e = zrn_create(Z_CLASS_PASSWORD_BOX);
 	return e ? e->id : Z_INVALID_ID;
 }
 
 static zrn_text_box_t* get_tb(Zid id) { return TB(zrn_get(id, Z_CLASS_TEXT_BOX)); }
 
-void Ztext_box_set_text(Zid id, const char* text) {
-	zrn_text_box_t* b = get_tb(id);
+void Ztext_box_set_text(const Zid id, const char* const text) {
+	zrn_text_box_t* const b = get_tb(id);
 	if (b) tbx_set_text(b, text);
 }
 
-const char* Ztext_box_get_text(Zid id) {
-	zrn_text_box_t* b = get_tb(id);
+const char* Ztext_box_get_text(const Zid id) {
+	zrn_text_box_t* const b = get_tb(id);
 	return b && b->text ? b->text : "";
 }
 
-void Ztext_box_set_accepts_return(Zid id, int accepts_return) {
-	zrn_text_box_t* b = get_tb(id);
+void Ztext_box_set_accepts_return(const Zid id, const int accepts_return) {
+	zrn_text_box_t* const b = get_tb(id);
 	if (!b) return;
 	b->accepts_return = accepts_return != 0;
 	zrn_changed_layout(&b->base.base);
 }
 
-void Ztext_box_set_text_wrapping(Zid id, ZTextWrapping wrapping) {
-	zrn_text_box_t* b = get_tb(id);
+void Ztext_box_set_text_wrapping(const Zid id, const ZTextWrapping wrapping) {
+	zrn_text_box_t* const b = get_tb(id);
 	if (!b) return;
 	b->wrapping = wrapping;
 	zrn_changed_layout(&b->base.base);
 }
 
-void Ztext_box_set_is_read_only(Zid id, int is_read_only) {
-	zrn_text_box_t* b = get_tb(id);
+void Ztext_box_set_is_read_only(const Zid id, const int is_read_only) {
+	zrn_text_box_t* const b = get_tb(id);
 	if (!b) return;
 	b->read_only = is_read_only != 0;
 	zrn_changed_paint(&b->base.base);
 }
 
-void Ztext_box_set_max_length(Zid id, int max_length) {
-	zrn_text_box_t* b = get_tb(id);
+void Ztext_box_set_max_length(const Zid id, const int max_length) {
+	zrn_text_box_t* const b = get_tb(id);
 	if (b) b->max_length = max_length < 0 ? 0 : max_length;
 }
 
 void Ztext_box_select(Zid id, int start, int length) {
-	zrn_text_box_t* b = get_tb(id);
+	zrn_text_box_t* const b = get_tb(id);
 	if (!b) return;
 	if (start < 0) start = 0;
 	if (start > b->length_bytes) start = b->length_bytes;
@@ -676,69 +681,62 @@ void Ztext_box_select(Zid id, int start, int length) {
 	zrn_changed_paint(&b->base.base);
 }
 
-void Ztext_box_select_all(Zid id) {
-	zrn_text_box_t* b = get_tb(id);
+void Ztext_box_select_all(const Zid id) {
+	zrn_text_box_t* const b = get_tb(id);
 	if (b) Ztext_box_select(id, 0, b->length_bytes);
 }
 
 int Ztext_box_get_selection_start(Zid id) { zrn_text_box_t* b = get_tb(id); return b ? sel_min(b) : 0; }
 int Ztext_box_get_selection_length(Zid id) { zrn_text_box_t* b = get_tb(id); return b ? sel_max(b) - sel_min(b) : 0; }
 
-void Ztext_box_set_placeholder_text(Zid id, const char* placeholder_text) {
-	zrn_text_box_t* b = get_tb(id);
+void Ztext_box_set_placeholder_text(const Zid id, const char* const placeholder_text) {
+	zrn_text_box_t* const b = get_tb(id);
 	if (!b) return;
-	zrn_set_string(&b->placeholder, placeholder_text && *placeholder_text ? placeholder_text : NULL);
+	zrn_set_string(&b->placeholder, placeholder_text && *placeholder_text ? placeholder_text : nullptr);
 	zrn_changed_paint(&b->base.base);
 }
 
-const char* Ztext_box_get_placeholder_text(Zid id) {
-	zrn_text_box_t* b = get_tb(id);
+const char* Ztext_box_get_placeholder_text(const Zid id) {
+	zrn_text_box_t* const b = get_tb(id);
 	return b && b->placeholder ? b->placeholder : "";
 }
 
-void Ztext_box_set_header(Zid id, const char* header) {
-	zrn_text_box_t* b = get_tb(id);
+void Ztext_box_set_header(const Zid id, const char* const header) {
+	zrn_text_box_t* const b = get_tb(id);
 	if (!b) return;
-	zrn_set_string(&b->header, header && *header ? header : NULL);
+	zrn_set_string(&b->header, header && *header ? header : nullptr);
 	zrn_changed_layout(&b->base.base);
 }
 
-const char* Ztext_box_get_header(Zid id) {
-	zrn_text_box_t* b = get_tb(id);
+const char* Ztext_box_get_header(const Zid id) {
+	zrn_text_box_t* const b = get_tb(id);
 	return b && b->header ? b->header : "";
 }
 
 int Ztext_box_get_is_read_only(Zid id) { zrn_text_box_t* b = get_tb(id); return b ? b->read_only : 0; }
 int Ztext_box_get_max_length(Zid id) { zrn_text_box_t* b = get_tb(id); return b ? b->max_length : 0; }
 
-void Zpassword_box_set_password(Zid id, const char* password) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_PASSWORD_BOX);
+void Zpassword_box_set_password(const Zid id, const char* const password) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_PASSWORD_BOX);
 	if (e) tbx_set_text(TB(e), password);
 }
 
-const char* Zpassword_box_get_password(Zid id) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_PASSWORD_BOX);
+const char* Zpassword_box_get_password(const Zid id) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_PASSWORD_BOX);
 	return e && TB(e)->text ? TB(e)->text : "";
 }
 
-void Zpassword_box_set_header(Zid id, const char* header) {
+void Zpassword_box_set_header(const Zid id, const char* const header) {
 	if (zrn_get(id, Z_CLASS_PASSWORD_BOX)) Ztext_box_set_header(id, header);
 }
 
-void Zpassword_box_set_placeholder_text(Zid id, const char* placeholder_text) {
+void Zpassword_box_set_placeholder_text(const Zid id, const char* const placeholder_text) {
 	if (zrn_get(id, Z_CLASS_PASSWORD_BOX)) Ztext_box_set_placeholder_text(id, placeholder_text);
 }
 
-void Zpassword_box_set_password_char(Zid id, uint32_t codepoint) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_PASSWORD_BOX);
+void Zpassword_box_set_password_char(const Zid id, const uint32_t codepoint) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_PASSWORD_BOX);
 	if (!e) return;
 	TB(e)->password_char = codepoint;
 	zrn_changed_layout(e);
-}
-
-/* used by AutoSuggestBox */
-void zrn_text_box_set_text_quiet(zrn_text_box_t* b, const char* text) {
-	b->quiet = 1;
-	tbx_set_text(b, text);
-	b->quiet = 0;
 }

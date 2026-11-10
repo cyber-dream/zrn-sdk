@@ -44,7 +44,7 @@ static int same_date(ZDate a, ZDate b) { return a.year == b.year && a.month == b
 static int same_time(ZTimeOfDay a, ZTimeOfDay b) { return a.hour == b.hour && a.minute == b.minute; }
 
 static Zid make_root(Zid visual, ZAnimations animations) {
-	Zid root = Zroot_create(480, 800);
+	Zid root = zst_test_root(480, 800);
 	Zroot_set_renderer(root, Z_RENDERER_SOFTWARE);
 	Zroot_set_animations(root, animations);
 	Zroot_set_visual(root, visual);
@@ -70,12 +70,12 @@ static Zid make_selector(int count, Zid* root, ZAnimations animations) {
 	for (i = 0; i < count; i++) {
 		char text[16];
 		snprintf(text, sizeof text, "%d", i + 1);
-		Zlooping_selector_add_item(sel, text, NULL);
+		Zlooping_selector_add_item(sel, text, nullptr);
 	}
 	Zelement_set_horizontal_alignment(sel, Z_HALIGN_LEFT);
 	*root = make_root(sel, animations);
 	g_changes = 0;
-	Zlooping_selector_on_selection_changed(sel, on_change, NULL);
+	Zlooping_selector_on_selection_changed(sel, on_change, nullptr);
 	return sel;
 }
 
@@ -260,9 +260,9 @@ static Zid date_setup(Zid* root, ZDate date, ZAnimations animations) {
 	g_flyout = Zdate_picker_get_flyout(g_dp);
 	g_button = Zdate_picker_get_flyout_button(g_dp);
 	g_date_events = g_picked = g_closed = 0;
-	Zdate_picker_on_date_changed(g_dp, on_date, NULL);
-	Zdate_picker_flyout_on_date_picked(g_flyout, on_date_picked, NULL);
-	Zflyout_base_on_closed(g_flyout, on_closed, NULL);
+	Zdate_picker_on_date_changed(g_dp, on_date, nullptr);
+	Zdate_picker_flyout_on_date_picked(g_flyout, on_date_picked, nullptr);
+	Zflyout_base_on_closed(g_flyout, on_closed, nullptr);
 	return g_dp;
 }
 
@@ -507,7 +507,7 @@ static void test_date_picker_flyout_alone(void) {
 	Zpicker_flyout_base_set_title(flyout, "pick");
 	root = make_root(button, Z_ANIMATIONS_OFF);
 	g_picked = 0;
-	Zdate_picker_flyout_on_date_picked(flyout, on_date_picked, NULL);
+	Zdate_picker_flyout_on_date_picked(flyout, on_date_picked, nullptr);
 	CHECK(same_date(Zdate_picker_flyout_get_date(flyout), D(2001, 9, 11)));
 	Zflyout_base_show_at(flyout, button);
 	Zroot_update_layout(root);
@@ -539,7 +539,7 @@ static Zid time_setup(Zid* root, ZTimeOfDay time, ZAnimations animations) {
 	g_tflyout = Ztime_picker_get_flyout(g_tp);
 	g_tbutton = Ztime_picker_get_flyout_button(g_tp);
 	g_time_events = 0;
-	Ztime_picker_on_time_changed(g_tp, on_time, NULL);
+	Ztime_picker_on_time_changed(g_tp, on_time, nullptr);
 	return g_tp;
 }
 

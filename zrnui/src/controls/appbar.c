@@ -18,43 +18,43 @@
 
 /* AppBarThemeMinHeight 54.5, AppBarTopBorderThemeThickness 0,0,0,1.5 / AppBarBottomBorderThemeThickness 0,1.5,0,0 and the
  * theme padding of the other side: the closed bar of a page is 1.5 + 54.5 + 1.5 = 57.5, the MaxHeight of the CommandBar style. */
-#define BAR_ROW 54.5f
-#define BAR_BORDER 1.5f
-#define BAR_COMPACT_HEIGHT 57.5f
+static constexpr float BAR_ROW = 54.5f;
+static constexpr float BAR_BORDER = 1.5f;
+static constexpr float BAR_COMPACT_HEIGHT = 57.5f;
 /* The height of a Minimal bar: not in the XAML, chosen. */
-#define BAR_MINIMAL_HEIGHT 35.0f
+static constexpr float BAR_MINIMAL_HEIGHT = 35.0f;
 /* The opening of the bar: chosen. */
-#define BAR_OPEN_MS 167.0f
+static constexpr float BAR_OPEN_MS = 167.0f;
 /* The three dots that open the bar: not in the XAML, chosen. */
-#define ELLIPSIS_WIDTH 30.0f
-#define ELLIPSIS_DOT 5.0f
-#define ELLIPSIS_STEP 8.5f
+static constexpr float ELLIPSIS_WIDTH = 30.0f;
+static constexpr float ELLIPSIS_DOT = 5.0f;
+static constexpr float ELLIPSIS_STEP = 8.5f;
 
 /* The AppBarButton template: the circle, its margins, the label and its width. */
-#define ITEM_CIRCLE 38.5f
-#define ITEM_OUTLINE 2.5f
-#define ITEM_TOP 12.0f
-#define ITEM_TOGGLE_TOP 11.0f
-#define ITEM_GAP 4.0f
-#define ITEM_FULL_WIDTH 80.0f
-#define ITEM_COMPACT_WIDTH 48.0f
-#define ITEM_LABEL_WIDTH 70.5f
-#define ITEM_LABEL_FONT 9.5f
-#define ITEM_LABEL_BOTTOM 10.5f
-#define ICON_SIZE 20.0f
+static constexpr float ITEM_CIRCLE = 38.5f;
+static constexpr float ITEM_OUTLINE = 2.5f;
+static constexpr float ITEM_TOP = 12.0f;
+static constexpr float ITEM_TOGGLE_TOP = 11.0f;
+static constexpr float ITEM_GAP = 4.0f;
+static constexpr float ITEM_FULL_WIDTH = 80.0f;
+static constexpr float ITEM_COMPACT_WIDTH = 48.0f;
+static constexpr float ITEM_LABEL_WIDTH = 70.5f;
+static constexpr float ITEM_LABEL_FONT = 9.5f;
+static constexpr float ITEM_LABEL_BOTTOM = 10.5f;
+static constexpr float ICON_SIZE = 20.0f;
 /* The rows of the secondary commands take the measures of a MenuFlyoutItem: padding 0,8.5, ExtraLarge SemiLight type. */
-#define ROW_PAD_V 8.5f
-#define ROW_LEFT 19.0f
-#define ROW_TOP 13.5f
-#define ROW_FONT 25.5f
-#define SEPARATOR_WIDTH 12.0f
+static constexpr float ROW_PAD_V = 8.5f;
+static constexpr float ROW_LEFT = 19.0f;
+static constexpr float ROW_TOP = 13.5f;
+static constexpr float ROW_FONT = 25.5f;
+static constexpr float SEPARATOR_WIDTH = 12.0f;
 
 
 /* ============================================================================
  *  IconElement
  * ============================================================================ */
 
-static void icon_destroy(zrn_element_t* e) {
+static void icon_destroy(zrn_element_t* const e) {
 	zrn_icon_t* i = ICON(e);
 	free(i->glyph);
 	free(i->path);
@@ -62,19 +62,19 @@ static void icon_destroy(zrn_element_t* e) {
 	if (i->image) zrn_image_free(i->image);
 }
 
-static void icon_init(zrn_element_t* e) {
+static void icon_init(zrn_element_t* const e) {
 	zrn_icon_t* i = ICON(e);
 	i->font_size = ICON_SIZE;
 	i->family = Z_FONT_NORMAL;
 	e->hit_visible = 0;
 }
 
-static ZColor icon_color(zrn_element_t* e) {
+static ZColor icon_color(zrn_element_t* const e) {
 	zrn_icon_t* i = ICON(e);
 	return i->has_foreground ? i->foreground : zrn_inherited_foreground(e);
 }
 
-static ZSize icon_measure(zrn_element_t* e, ZSize available) {
+static ZSize icon_measure(zrn_element_t* const e, const ZSize available) {
 	zrn_icon_t* i = ICON(e);
 	ZST_UNUSED(available);
 	if (e->cls == &zrn_class_font_icon) {
@@ -102,13 +102,13 @@ typedef struct shape {
 static float sx(const shape_t* h, float v) { return h->ox + v * h->s; }
 static float sy(const shape_t* h, float v) { return h->oy + v * h->s; }
 
-static void sh_line(shape_t* h, float x0, float y0, float x1, float y1) {
+static void sh_line(shape_t* const h, const float x0, const float y0, const float x1, const float y1) {
 	float t = zrn_maxf(1.0f, 2.0f * h->s);
 	zrn_draw_line(h->p, sx(h, x0), sy(h, y0), sx(h, x1), sy(h, y1), t, h->c);
 }
 
 /* A run of lines with round joints. */
-static void sh_poly(shape_t* h, const float* xy, int n, int closed) {
+static void sh_poly(shape_t* const h, const float* const xy, const int n, const int closed) {
 	float t = zrn_maxf(1.0f, 2.0f * h->s);
 	int i;
 	for (i = 0; i + 1 < n; i++) sh_line(h, xy[2 * i], xy[2 * i + 1], xy[2 * i + 2], xy[2 * i + 3]);
@@ -127,19 +127,19 @@ static void sh_fill(shape_t* h, const float* xy, int n) {
 	zrn_fill_polygon(h->p, pts, n, h->c);
 }
 
-static void sh_rect(shape_t* h, float x, float y, float w, float rh) {
+static void sh_rect(shape_t* const h, const float x, const float y, const float w, const float rh) {
 	zrn_fill_rect(h->p, zrn_rect(sx(h, x), sy(h, y), w * h->s, rh * h->s), h->c);
 }
 
-static void sh_dot(shape_t* h, float x, float y, float r) {
+static void sh_dot(shape_t* const h, const float x, const float y, const float r) {
 	zrn_fill_ellipse(h->p, zrn_rect(sx(h, x - r), sy(h, y - r), 2 * r * h->s, 2 * r * h->s), h->c);
 }
 
-static void sh_ring(shape_t* h, float x, float y, float r, float thickness) {
+static void sh_ring(shape_t* const h, const float x, const float y, const float r, const float thickness) {
 	zrn_stroke_ellipse(h->p, zrn_rect(sx(h, x - r), sy(h, y - r), 2 * r * h->s, 2 * r * h->s), zrn_maxf(1.0f, thickness * h->s), h->c);
 }
 
-static void sh_star(shape_t* h, int outline) {
+static void sh_star(shape_t* const h, const int outline) {
 	float xy[20];
 	int i;
 	for (i = 0; i < 10; i++) {
@@ -151,7 +151,7 @@ static void sh_star(shape_t* h, int outline) {
 	else sh_fill(h, xy, 10);
 }
 
-static void draw_symbol(zrn_painter_t* p, ZSymbol symbol, ZRect box, ZColor c) {
+static void draw_symbol(zrn_painter_t* const p, const ZSymbol symbol, const ZRect box, const ZColor c) {
 	shape_t h;
 	float side = zrn_minf(box.width, box.height);
 	h.p = p;
@@ -252,7 +252,7 @@ static void draw_symbol(zrn_painter_t* p, ZSymbol symbol, ZRect box, ZColor c) {
 	}
 }
 
-static void symbol_icon_paint(zrn_element_t* e, zrn_painter_t* p) {
+static void symbol_icon_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	draw_symbol(p, ICON(e)->symbol, zrn_local_rect(e), icon_color(e));
 }
 
@@ -263,7 +263,7 @@ zrn_class_t zrn_class_symbol_icon = {
 	.init = symbol_icon_init, .paint = symbol_icon_paint
 };
 
-static void font_icon_paint(zrn_element_t* e, zrn_painter_t* p) {
+static void font_icon_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	zrn_icon_t* i = ICON(e);
 	zrn_font_t font = { i->family, i->font_size, 0 };
 	const char* g = i->glyph ? i->glyph : "";
@@ -275,7 +275,7 @@ zrn_class_t zrn_class_font_icon = {
 	.base = &zrn_class_icon_element, .name = "FontIcon", .id = Z_CLASS_FONT_ICON, .size = sizeof(zrn_icon_t), .paint = font_icon_paint
 };
 
-static void path_icon_paint(zrn_element_t* e, zrn_painter_t* p) {
+static void path_icon_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	zrn_icon_t* i = ICON(e);
 	float bw = i->path_bounds[2] - i->path_bounds[0], bh = i->path_bounds[3] - i->path_bounds[1];
 	float s, ox, oy;
@@ -302,7 +302,7 @@ zrn_class_t zrn_class_path_icon = {
 	.base = &zrn_class_icon_element, .name = "PathIcon", .id = Z_CLASS_PATH_ICON, .size = sizeof(zrn_icon_t), .paint = path_icon_paint
 };
 
-static void bitmap_icon_paint(zrn_element_t* e, zrn_painter_t* p) {
+static void bitmap_icon_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	zrn_image_t* image = ICON(e)->image;
 	float s, w, h;
 	if (!image || image->width <= 0 || image->height <= 0) return;
@@ -318,12 +318,12 @@ zrn_class_t zrn_class_bitmap_icon = {
 
 static zrn_icon_t* get_icon(Zid id, ZClass cls) { return ICON(zrn_get(id, cls)); }
 
-static Zid make_icon(ZClass cls) {
+static Zid make_icon(const ZClass cls) {
 	zrn_element_t* e = zrn_create(cls);
 	return e ? e->id : Z_INVALID_ID;
 }
 
-void Zicon_element_set_foreground(Zid id, ZColor color) {
+void Zicon_element_set_foreground(const Zid id, const ZColor color) {
 	zrn_icon_t* i = get_icon(id, Z_CLASS_ICON_ELEMENT);
 	if (!i) return;
 	i->foreground = color;
@@ -331,50 +331,50 @@ void Zicon_element_set_foreground(Zid id, ZColor color) {
 	zrn_changed_paint(&i->base);
 }
 
-Zid Zsymbol_icon_create(ZSymbol symbol) {
+Zid Zsymbol_icon_create(const ZSymbol symbol) {
 	Zid id = make_icon(Z_CLASS_SYMBOL_ICON);
 	if (id != Z_INVALID_ID) ICON(zrn_lookup(id))->symbol = symbol;
 	return id;
 }
 
-void Zsymbol_icon_set_symbol(Zid id, ZSymbol symbol) {
+void Zsymbol_icon_set_symbol(const Zid id, const ZSymbol symbol) {
 	zrn_icon_t* i = get_icon(id, Z_CLASS_SYMBOL_ICON);
 	if (!i) return;
 	i->symbol = symbol;
 	zrn_changed_paint(&i->base);
 }
 
-ZSymbol Zsymbol_icon_get_symbol(Zid id) {
+ZSymbol Zsymbol_icon_get_symbol(const Zid id) {
 	zrn_icon_t* i = get_icon(id, Z_CLASS_SYMBOL_ICON);
 	return i ? i->symbol : Z_SYMBOL_PLACEHOLDER;
 }
 
-Zid Zfont_icon_create(const char* glyph) {
+Zid Zfont_icon_create(const char* const glyph) {
 	Zid id = make_icon(Z_CLASS_FONT_ICON);
 	if (id != Z_INVALID_ID) zrn_set_string(&ICON(zrn_lookup(id))->glyph, glyph ? glyph : "");
 	return id;
 }
 
-void Zfont_icon_set_glyph(Zid id, const char* glyph) {
+void Zfont_icon_set_glyph(const Zid id, const char* const glyph) {
 	zrn_icon_t* i = get_icon(id, Z_CLASS_FONT_ICON);
 	if (!i) return;
 	zrn_set_string(&i->glyph, glyph ? glyph : "");
 	zrn_changed_layout(&i->base);
 }
 
-const char* Zfont_icon_get_glyph(Zid id) {
+const char* Zfont_icon_get_glyph(const Zid id) {
 	zrn_icon_t* i = get_icon(id, Z_CLASS_FONT_ICON);
 	return i && i->glyph ? i->glyph : "";
 }
 
-void Zfont_icon_set_font_size(Zid id, float font_size) {
+void Zfont_icon_set_font_size(const Zid id, const float font_size) {
 	zrn_icon_t* i = get_icon(id, Z_CLASS_FONT_ICON);
 	if (!i || font_size <= 0) return;
 	i->font_size = font_size;
 	zrn_changed_layout(&i->base);
 }
 
-void Zfont_icon_set_font_family(Zid id, ZFontFamily family) {
+void Zfont_icon_set_font_family(const Zid id, const ZFontFamily family) {
 	zrn_icon_t* i = get_icon(id, Z_CLASS_FONT_ICON);
 	if (!i) return;
 	i->family = family;
@@ -390,9 +390,9 @@ static const char* path_number(const char* s, float* out, int* ok) {
 	return end;
 }
 
-static int path_parse(zrn_icon_t* i, const char* data) {
-	float* pts = NULL;
-	int* runs = NULL;
+static int path_parse(zrn_icon_t* const i, const char* const data) {
+	float* pts = nullptr;
+	int* runs = nullptr;
 	int count = 0, cap = 0, run_count = 0, run_start = 0, k;
 	float cx = 0, cy = 0, sx0 = 0, sy0 = 0;
 	char cmd = 0;
@@ -461,7 +461,7 @@ static int path_parse(zrn_icon_t* i, const char* data) {
 	if (fail || count == 0) {
 		free(pts);
 		free(runs);
-		return Z_FALSE;
+		return false;
 	}
 	for (k = 0; k < count; k++) {
 		bounds[0] = zrn_minf(bounds[0], pts[2 * k]);
@@ -475,21 +475,21 @@ static int path_parse(zrn_icon_t* i, const char* data) {
 	i->path_runs = runs;
 	i->path_run_count = run_count;
 	memcpy(i->path_bounds, bounds, sizeof bounds);
-	return Z_TRUE;
+	return true;
 }
 
-int Zpath_icon_set_data(Zid id, const char* data) {
+int Zpath_icon_set_data(const Zid id, const char* const data) {
 	zrn_icon_t* i = get_icon(id, Z_CLASS_PATH_ICON);
-	if (!i || !data) return Z_FALSE;
+	if (!i || !data) return false;
 	if (!path_parse(i, data)) {
 		zrn_error(Z_ERROR_INVALID_ARGUMENT, "Path.Data is not M, L, H, V and Z commands: \"%s\"", data);
-		return Z_FALSE;
+		return false;
 	}
 	zrn_changed_paint(&i->base);
-	return Z_TRUE;
+	return true;
 }
 
-Zid Zpath_icon_create(const char* data) {
+Zid Zpath_icon_create(const char* const data) {
 	Zid id = make_icon(Z_CLASS_PATH_ICON);
 	if (id != Z_INVALID_ID && data && !Zpath_icon_set_data(id, data)) {
 		Zelement_destroy(id);
@@ -498,22 +498,22 @@ Zid Zpath_icon_create(const char* data) {
 	return id;
 }
 
-int Zbitmap_icon_set_uri_source(Zid id, const char* path) {
+int Zbitmap_icon_set_uri_source(const Zid id, const char* const path) {
 	zrn_icon_t* i = get_icon(id, Z_CLASS_BITMAP_ICON);
 	zrn_image_t* image;
-	if (!i || !path) return Z_FALSE;
+	if (!i || !path) return false;
 	image = zrn_image_load_png(path);
 	if (!image) {
 		zrn_error(Z_ERROR_IO, "cannot read the PNG \"%s\"", path);
-		return Z_FALSE;
+		return false;
 	}
 	if (i->image) zrn_image_free(i->image);
 	i->image = image;
 	zrn_changed_paint(&i->base);
-	return Z_TRUE;
+	return true;
 }
 
-Zid Zbitmap_icon_create(const char* path) {
+Zid Zbitmap_icon_create(const char* const path) {
 	Zid id = make_icon(Z_CLASS_BITMAP_ICON);
 	if (id != Z_INVALID_ID && path && !Zbitmap_icon_set_uri_source(id, path)) {
 		Zelement_destroy(id);
@@ -527,12 +527,12 @@ Zid Zbitmap_icon_create(const char* path) {
  *  AppBarButton and AppBarToggleButton
  * ============================================================================ */
 
-static zrn_app_bar_item_t* item_of(zrn_element_t* e) {
+static zrn_app_bar_item_t* item_of(zrn_element_t* const e) {
 	if (zrn_is_a(e, Z_CLASS_APP_BAR_TOGGLE_BUTTON)) return &ZST_AS(zrn_app_bar_toggle_button_t, e)->item;
 	return &ZST_AS(zrn_app_bar_button_t, e)->item;
 }
 
-static zrn_font_t label_font(zrn_element_t* e) {
+static zrn_font_t label_font(zrn_element_t* const e) {
 	zrn_font_t f = { ZST_AS(zrn_control_t, e)->font_family, ITEM_LABEL_FONT, 0 };
 	return f;
 }
@@ -544,7 +544,7 @@ static zrn_font_t row_font(void) {
 
 static float item_top(const zrn_element_t* e) { return zrn_is_a(e, Z_CLASS_APP_BAR_TOGGLE_BUTTON) ? ITEM_TOGGLE_TOP : ITEM_TOP; }
 
-static float label_height(zrn_element_t* e) {
+static float label_height(zrn_element_t* const e) {
 	zrn_app_bar_item_t* it = item_of(e);
 	zrn_text_layout_t* l;
 	float h;
@@ -557,20 +557,20 @@ static float label_height(zrn_element_t* e) {
 }
 
 /* How tall the button is with its label shown or not. */
-static float item_height(zrn_element_t* e, int compact) {
+static float item_height(zrn_element_t* const e, const int compact) {
 	zrn_app_bar_item_t* it = item_of(e);
 	if (it->overflow) return zrn_font_line_height(row_font()) + 2 * ROW_PAD_V;
 	return item_top(e) + ITEM_CIRCLE + ITEM_GAP + (compact ? 0 : label_height(e) + ITEM_LABEL_BOTTOM);
 }
 
-static ZSize item_measure(zrn_element_t* e, ZSize available) {
+static ZSize item_measure(zrn_element_t* const e, const ZSize available) {
 	zrn_app_bar_item_t* it = item_of(e);
 	if (ZST_AS(zrn_content_control_t, e)->content) zrn_measure(ZST_AS(zrn_content_control_t, e)->content, zrn_size(ITEM_CIRCLE, ITEM_CIRCLE));
 	if (it->overflow) return zrn_size(available.width < Z_INFINITE * 0.5f ? available.width : 480.0f, item_height(e, 0));
 	return zrn_size(it->is_compact ? ITEM_COMPACT_WIDTH : ITEM_FULL_WIDTH, item_height(e, it->is_compact));
 }
 
-static ZSize item_arrange(zrn_element_t* e, ZSize final) {
+static ZSize item_arrange(zrn_element_t* const e, const ZSize final) {
 	zrn_content_control_t* cc = ZST_AS(zrn_content_control_t, e);
 	if (cc->content && !item_of(e)->overflow) {
 		/* the icon is as big as it asks for, in the middle of the circle */
@@ -583,22 +583,22 @@ static ZSize item_arrange(zrn_element_t* e, ZSize final) {
 	return final;
 }
 
-static ZThickness item_chrome(zrn_element_t* e) {
+static ZThickness item_chrome(zrn_element_t* const e) {
 	ZST_UNUSED(e);
 	return zrn_thickness_zero();
 }
 
-static int item_pressed(zrn_element_t* e) {
+static int item_pressed(zrn_element_t* const e) {
 	zrn_button_base_t* b = ZST_AS(zrn_button_base_t, e);
 	return b->pressed && b->pointer_over;
 }
 
-static int item_checked(zrn_element_t* e) {
+static int item_checked(zrn_element_t* const e) {
 	return zrn_is_a(e, Z_CLASS_APP_BAR_TOGGLE_BUTTON) && ZST_AS(zrn_toggle_button_t, e)->state == Z_CHECKED;
 }
 
 /* The colors of the states of the templates: the outline, the fill of the circle, and the foreground of the icon. */
-static void item_colors(zrn_element_t* e, ZColor* stroke, ZColor* fill, ZColor* icon, ZColor* label) {
+static void item_colors(zrn_element_t* const e, ZColor* const stroke, ZColor* const fill, ZColor* const icon, ZColor* const label) {
 	ZColor fg = zrn_theme_color(e, ZST_TC_FOREGROUND), bg = zrn_theme_color(e, ZST_TC_BACKGROUND);
 	ZColor disabled = zrn_theme_color(e, ZST_TC_PHONE_DISABLED), none = Zcolor_rgba(0, 0, 0, 0);
 	int enabled = zrn_effectively_enabled(e), pressed = item_pressed(e), checked = item_checked(e);
@@ -620,13 +620,13 @@ static void item_colors(zrn_element_t* e, ZColor* stroke, ZColor* fill, ZColor* 
 	}
 }
 
-static ZColor item_content_foreground(zrn_element_t* e) {
+static ZColor item_content_foreground(zrn_element_t* const e) {
 	ZColor stroke, fill, icon, label;
 	item_colors(e, &stroke, &fill, &icon, &label);
 	return icon;
 }
 
-static void item_paint(zrn_element_t* e, zrn_painter_t* p) {
+static void item_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	zrn_app_bar_item_t* it = item_of(e);
 	ZColor stroke, fill, icon, label;
 	item_colors(e, &stroke, &fill, &icon, &label);
@@ -652,7 +652,7 @@ static void item_paint(zrn_element_t* e, zrn_painter_t* p) {
 	}
 }
 
-static void item_init(zrn_element_t* e) {
+static void item_init(zrn_element_t* const e) {
 	zrn_control_t* c = ZST_AS(zrn_control_t, e);
 	/* the style of both: Top, Left, normal weight; no outline, no padding, no minimum size, no touch overhang */
 	c->border_thickness = zrn_thickness_zero();
@@ -679,7 +679,7 @@ zrn_class_t zrn_class_app_bar_toggle_button = {
 	.chrome = item_chrome, .content_foreground = item_content_foreground
 };
 
-static Zid make_item(ZClass cls, const char* label, Zid icon) {
+static Zid make_item(const ZClass cls, const char* const label, const Zid icon) {
 	zrn_element_t* e = zrn_create(cls);
 	if (!e) return Z_INVALID_ID;
 	zrn_set_string(&item_of(e)->label, label ? label : "");
@@ -693,47 +693,47 @@ static Zid make_item(ZClass cls, const char* label, Zid icon) {
 Zid Zapp_bar_button_create(const char* label, Zid icon) { return make_item(Z_CLASS_APP_BAR_BUTTON, label, icon); }
 Zid Zapp_bar_toggle_button_create(const char* label, Zid icon) { return make_item(Z_CLASS_APP_BAR_TOGGLE_BUTTON, label, icon); }
 
-static zrn_element_t* get_item(Zid id) {
+static zrn_element_t* get_item(const Zid id) {
 	zrn_element_t* e = zrn_lookup(id);
 	if (!e || (!zrn_is_a(e, Z_CLASS_APP_BAR_BUTTON) && !zrn_is_a(e, Z_CLASS_APP_BAR_TOGGLE_BUTTON))) {
 		zrn_error(e ? Z_ERROR_WRONG_CLASS : Z_ERROR_INVALID_ID, "not an app bar button");
-		return NULL;
+		return nullptr;
 	}
 	return e;
 }
 
-void Zapp_bar_button_set_label(Zid id, const char* label) {
+void Zapp_bar_button_set_label(const Zid id, const char* const label) {
 	zrn_element_t* e = get_item(id);
 	if (!e) return;
 	zrn_set_string(&item_of(e)->label, label ? label : "");
 	zrn_changed_layout(e);
 }
 
-const char* Zapp_bar_button_get_label(Zid id) {
+const char* Zapp_bar_button_get_label(const Zid id) {
 	zrn_element_t* e = get_item(id);
 	return e && item_of(e)->label ? item_of(e)->label : "";
 }
 
-void Zapp_bar_button_set_icon(Zid id, Zid icon) {
+void Zapp_bar_button_set_icon(const Zid id, const Zid icon) {
 	zrn_element_t* e = get_item(id);
-	zrn_element_t* i = icon != Z_INVALID_ID ? zrn_get(icon, Z_CLASS_ICON_ELEMENT) : NULL;
+	zrn_element_t* i = icon != Z_INVALID_ID ? zrn_get(icon, Z_CLASS_ICON_ELEMENT) : nullptr;
 	if (!e || (icon != Z_INVALID_ID && !i)) return;
 	zrn_content_set(ZST_AS(zrn_content_control_t, e), i);
 }
 
-Zid Zapp_bar_button_get_icon(Zid id) {
+Zid Zapp_bar_button_get_icon(const Zid id) {
 	zrn_element_t* e = get_item(id);
 	return e && ZST_AS(zrn_content_control_t, e)->content ? ZST_AS(zrn_content_control_t, e)->content->id : Z_INVALID_ID;
 }
 
-void Zapp_bar_button_set_is_compact(Zid id, int is_compact) {
+void Zapp_bar_button_set_is_compact(const Zid id, const int is_compact) {
 	zrn_element_t* e = get_item(id);
 	if (!e) return;
 	item_of(e)->is_compact = is_compact != 0;
 	zrn_changed_layout(e);
 }
 
-int Zapp_bar_button_get_is_compact(Zid id) {
+int Zapp_bar_button_get_is_compact(const Zid id) {
 	zrn_element_t* e = get_item(id);
 	return e ? item_of(e)->is_compact : 0;
 }
@@ -748,17 +748,17 @@ typedef struct zrn_app_bar_separator {
 	int is_compact;
 } zrn_app_bar_separator_t;
 
-static ZSize separator_measure(zrn_element_t* e, ZSize available) {
+static ZSize separator_measure(zrn_element_t* const e, const ZSize available) {
 	ZST_UNUSED(e); ZST_UNUSED(available);
 	return zrn_size(SEPARATOR_WIDTH, ITEM_TOP + ITEM_CIRCLE + ITEM_GAP);
 }
 
-static void separator_paint(zrn_element_t* e, zrn_painter_t* p) {
+static void separator_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	/* AppBarSeparatorForegroundThemeBrush is PhoneBaseMediumMid: a hairline as tall as the circles */
 	zrn_fill_rect(p, zrn_rect(e->rect.width * 0.5f - 0.5f, ITEM_TOP, 1.0f, ITEM_CIRCLE), zrn_theme_color(e, ZST_TC_BASE_MEDIUM_MID));
 }
 
-static void separator_init(zrn_element_t* e) {
+static void separator_init(zrn_element_t* const e) {
 	e->focusable = 0;
 	e->halign = Z_HALIGN_LEFT;
 	e->valign = Z_VALIGN_TOP;
@@ -774,12 +774,12 @@ Zid Zapp_bar_separator_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-void Zapp_bar_separator_set_is_compact(Zid id, int is_compact) {
+void Zapp_bar_separator_set_is_compact(const Zid id, const int is_compact) {
 	zrn_element_t* e = zrn_get(id, Z_CLASS_APP_BAR_SEPARATOR);
 	if (e) ZST_AS(zrn_app_bar_separator_t, e)->is_compact = is_compact != 0;
 }
 
-int Zapp_bar_separator_get_is_compact(Zid id) {
+int Zapp_bar_separator_get_is_compact(const Zid id) {
 	zrn_element_t* e = zrn_get(id, Z_CLASS_APP_BAR_SEPARATOR);
 	return e ? ZST_AS(zrn_app_bar_separator_t, e)->is_compact : 0;
 }
@@ -789,44 +789,44 @@ int Zapp_bar_separator_get_is_compact(Zid id) {
  *  AppBar
  * ============================================================================ */
 
-float zrn_app_bar_closed_height(zrn_element_t* bar) {
+float zrn_app_bar_closed_height(zrn_element_t* const bar) {
 	return BAR(bar)->closed_mode == Z_APP_BAR_CLOSED_MINIMAL ? BAR_MINIMAL_HEIGHT : BAR_COMPACT_HEIGHT;
 }
 
-void zrn_app_bar_set_on_top(zrn_element_t* bar, int on_top) {
+void zrn_app_bar_set_on_top(zrn_element_t* const bar, const int on_top) {
 	if (BAR(bar)->on_top == on_top) return;
 	BAR(bar)->on_top = on_top != 0;
 	zrn_changed_layout(bar);
 }
 
 /* Closed and Minimal: only the three dots show. */
-static int bar_hides_commands(zrn_element_t* e) {
+static int bar_hides_commands(zrn_element_t* const e) {
 	zrn_app_bar_t* b = BAR(e);
 	return b->closed_mode == Z_APP_BAR_CLOSED_MINIMAL && !b->is_open && b->open_t <= 0;
 }
 
 static float bar_open_height(zrn_element_t* e, float width);
 
-static ZColor bar_background(zrn_element_t* e) {
+static ZColor bar_background(zrn_element_t* const e) {
 	zrn_control_t* c = ZST_AS(zrn_control_t, e);
 	/* CommandBarBackgroundThemeBrush is the chrome; AppBarBackgroundThemeBrush the background of the page */
 	return zrn_ctl_background(c, zrn_theme_color(e, zrn_is_a(e, Z_CLASS_COMMAND_BAR) ? ZST_TC_CHROME : ZST_TC_BACKGROUND));
 }
 
-static float bar_width(zrn_element_t* e, ZSize available) {
+static float bar_width(zrn_element_t* const e, const ZSize available) {
 	ZST_UNUSED(e);
 	return available.width < Z_INFINITE * 0.5f ? available.width : 480.0f;
 }
 
 /* The height now: between the closed one and the open one while it opens or closes. */
-static float bar_height(zrn_element_t* e, float width) {
+static float bar_height(zrn_element_t* const e, const float width) {
 	float closed = zrn_app_bar_closed_height(e), open = zrn_maxf(closed, bar_open_height(e, width));
 	return closed + (open - closed) * zrn_ease(Z_EASE_OUT, BAR(e)->open_t);
 }
 
 float zrn_app_bar_height(zrn_element_t* bar, float width) { return bar_height(bar, width); }
 
-static ZSize app_bar_measure(zrn_element_t* e, ZSize available) {
+static ZSize app_bar_measure(zrn_element_t* const e, const ZSize available) {
 	zrn_content_control_t* cc = ZST_AS(zrn_content_control_t, e);
 	float w = bar_width(e, available), h;
 	if (cc->content) zrn_measure(cc->content, zrn_size(zrn_maxf(0, w - ELLIPSIS_WIDTH), Z_INFINITE));
@@ -834,13 +834,13 @@ static ZSize app_bar_measure(zrn_element_t* e, ZSize available) {
 	return zrn_size(w, h);
 }
 
-static float app_bar_open_height(zrn_element_t* e, float width) {
+static float app_bar_open_height(zrn_element_t* const e, const float width) {
 	zrn_content_control_t* cc = ZST_AS(zrn_content_control_t, e);
 	ZST_UNUSED(width);
 	return cc->content ? cc->content->desired.height + 2 * BAR_BORDER : 0;
 }
 
-static ZSize app_bar_arrange(zrn_element_t* e, ZSize final) {
+static ZSize app_bar_arrange(zrn_element_t* const e, const ZSize final) {
 	zrn_content_control_t* cc = ZST_AS(zrn_content_control_t, e);
 	if (cc->content) {
 		if (bar_hides_commands(e)) zrn_arrange(cc->content, zrn_rect(0, final.height + 1, zrn_maxf(0, final.width - ELLIPSIS_WIDTH), cc->content->desired.height));
@@ -850,20 +850,20 @@ static ZSize app_bar_arrange(zrn_element_t* e, ZSize final) {
 }
 
 /* The three dots, and where a press opens the bar: all of a Minimal bar, the right edge of a Compact one. */
-static ZRect ellipsis_rect(zrn_element_t* e) {
+static ZRect ellipsis_rect(zrn_element_t* const e) {
 	if (bar_hides_commands(e)) return zrn_local_rect(e);
 	return zrn_rect(e->rect.width - ELLIPSIS_WIDTH, 0, ELLIPSIS_WIDTH, e->rect.height);
 }
 
 /* Where the middle of the dots is, vertically: in line with the circles of the buttons, centred in a Minimal bar. */
-static float ellipsis_y(zrn_element_t* e, float row_top) {
+static float ellipsis_y(zrn_element_t* const e, const float row_top) {
 	if (bar_hides_commands(e)) return e->rect.height * 0.5f;
 	return row_top + ITEM_TOP + ITEM_CIRCLE * 0.5f;
 }
 
 static float bar_row_top(zrn_element_t* e);
 
-static void bar_paint(zrn_element_t* e, zrn_painter_t* p) {
+static void bar_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	ZRect r = zrn_local_rect(e);
 	zrn_control_t* c = ZST_AS(zrn_control_t, e);
 	ZColor border = zrn_ctl_border_brush(c, zrn_theme_color(e, ZST_TC_BACKGROUND));
@@ -877,12 +877,12 @@ static void bar_paint(zrn_element_t* e, zrn_painter_t* p) {
 	for (i = -1; i <= 1; i++) zrn_fill_ellipse(p, zrn_rect(cx + (float)i * ELLIPSIS_STEP - ELLIPSIS_DOT * 0.5f, cy - ELLIPSIS_DOT * 0.5f, ELLIPSIS_DOT, ELLIPSIS_DOT), fg);
 }
 
-static int bar_hit_ellipsis(zrn_element_t* e, float x, float y) {
+static int bar_hit_ellipsis(zrn_element_t* const e, const float x, const float y) {
 	ZRect r = ellipsis_rect(e);
 	return x >= r.x && y >= r.y && x < r.x + r.width && y < r.y + r.height;
 }
 
-static int bar_input(zrn_element_t* e, zrn_input_t* in) {
+static int bar_input(zrn_element_t* const e, zrn_input_t* const in) {
 	int* pressed = &BAR(e)->ellipsis_pressed;
 	switch (in->type) {
 		case ZST_IN_POINTER_DOWN:
@@ -906,13 +906,13 @@ static int bar_input(zrn_element_t* e, zrn_input_t* in) {
 	}
 }
 
-void zrn_app_bar_item_clicked(zrn_element_t* item) {
+void zrn_app_bar_item_clicked(zrn_element_t* const item) {
 	/* a secondary command was chosen: the menu goes */
 	if (zrn_is_a(item, Z_CLASS_APP_BAR_BUTTON) && item_of(item)->overflow) {
 		zrn_element_t* p;
 		for (p = item->parent; p; p = p->parent) {
 			if (zrn_is_a(p, Z_CLASS_APP_BAR)) {
-				Zapp_bar_set_is_open(p->id, Z_FALSE);
+				Zapp_bar_set_is_open(p->id, false);
 				return;
 			}
 		}
@@ -921,7 +921,7 @@ void zrn_app_bar_item_clicked(zrn_element_t* item) {
 
 static void bar_sync_compact(zrn_element_t* e);
 
-static void bar_tick(zrn_element_t* e, float dt) {
+static void bar_tick(zrn_element_t* const e, const float dt) {
 	zrn_app_bar_t* b = BAR(e);
 	float goal = b->is_open ? 1.0f : 0.0f;
 	if (b->open_t == goal) { e->wants_tick = 0; return; }
@@ -932,7 +932,7 @@ static void bar_tick(zrn_element_t* e, float dt) {
 	if (b->open_t == goal) e->wants_tick = 0;
 }
 
-static void app_bar_init(zrn_element_t* e) {
+static void app_bar_init(zrn_element_t* const e) {
 	zrn_control_t* c = ZST_AS(zrn_control_t, e);
 	BAR(e)->closed_mode = Z_APP_BAR_CLOSED_COMPACT;
 	e->focusable = 0;
@@ -967,7 +967,7 @@ void Zapp_bar_set_is_open(Zid id, int is_open) {
 	goal = is_open ? 1.0f : 0.0f;
 	if (e->root) {
 		if (is_open) e->root->open_bar = e;
-		else if (e->root->open_bar == e) e->root->open_bar = NULL;
+		else if (e->root->open_bar == e) e->root->open_bar = nullptr;
 	}
 	if (e->root && zrn_animations_enabled(e->root)) {
 		e->wants_tick = 1;
@@ -980,22 +980,22 @@ void Zapp_bar_set_is_open(Zid id, int is_open) {
 	zrn_raise(e, is_open ? Z_EVENT_OPENED : Z_EVENT_CLOSED);
 }
 
-int Zapp_bar_get_is_open(Zid id) {
+int Zapp_bar_get_is_open(const Zid id) {
 	zrn_app_bar_t* b = get_bar(id);
 	return b ? b->is_open : 0;
 }
 
-void Zapp_bar_set_is_sticky(Zid id, int is_sticky) {
+void Zapp_bar_set_is_sticky(const Zid id, const int is_sticky) {
 	zrn_app_bar_t* b = get_bar(id);
 	if (b) b->is_sticky = is_sticky != 0;
 }
 
-int Zapp_bar_get_is_sticky(Zid id) {
+int Zapp_bar_get_is_sticky(const Zid id) {
 	zrn_app_bar_t* b = get_bar(id);
 	return b ? b->is_sticky : 0;
 }
 
-void Zapp_bar_set_closed_display_mode(Zid id, ZAppBarClosedDisplayMode mode) {
+void Zapp_bar_set_closed_display_mode(const Zid id, const ZAppBarClosedDisplayMode mode) {
 	zrn_app_bar_t* b = get_bar(id);
 	if (!b) return;
 	if (mode != Z_APP_BAR_CLOSED_COMPACT && mode != Z_APP_BAR_CLOSED_MINIMAL) {
@@ -1007,16 +1007,16 @@ void Zapp_bar_set_closed_display_mode(Zid id, ZAppBarClosedDisplayMode mode) {
 	zrn_changed_layout(&b->base.base.base);
 }
 
-ZAppBarClosedDisplayMode Zapp_bar_get_closed_display_mode(Zid id) {
+ZAppBarClosedDisplayMode Zapp_bar_get_closed_display_mode(const Zid id) {
 	zrn_app_bar_t* b = get_bar(id);
 	return b ? b->closed_mode : Z_APP_BAR_CLOSED_COMPACT;
 }
 
-void Zapp_bar_on_opened(Zid id, ZRoutedCallback callback, void* user_data) {
+void Zapp_bar_on_opened(const Zid id, const ZRoutedCallback callback, void* const user_data) {
 	if (zrn_get(id, Z_CLASS_APP_BAR)) Zelement_on(id, Z_EVENT_OPENED, callback, user_data);
 }
 
-void Zapp_bar_on_closed(Zid id, ZRoutedCallback callback, void* user_data) {
+void Zapp_bar_on_closed(const Zid id, const ZRoutedCallback callback, void* const user_data) {
 	if (zrn_get(id, Z_CLASS_APP_BAR)) Zelement_on(id, Z_EVENT_CLOSED, callback, user_data);
 }
 
@@ -1027,7 +1027,7 @@ void Zapp_bar_on_closed(Zid id, ZRoutedCallback callback, void* user_data) {
  *  their labels and the secondary commands are a list of text rows over (or, on top, under) the row.
  * ============================================================================ */
 
-static void list_remove(zrn_element_t*** list, int* count, zrn_element_t* child) {
+static void list_remove(zrn_element_t*** list, int* const count, zrn_element_t* const child) {
 	int i;
 	for (i = 0; i < *count; i++) {
 		if ((*list)[i] == child) {
@@ -1038,22 +1038,22 @@ static void list_remove(zrn_element_t*** list, int* count, zrn_element_t* child)
 	}
 }
 
-static void command_bar_child_removed(zrn_element_t* e, zrn_element_t* child) {
+static void command_bar_child_removed(zrn_element_t* const e, zrn_element_t* const child) {
 	zrn_command_bar_t* c = CBAR(e);
 	list_remove(&c->primary, &c->primary_count, child);
 	list_remove(&c->secondary, &c->secondary_count, child);
 	zrn_cc_child_removed(e, child);
 }
 
-static void command_bar_destroy(zrn_element_t* e) {
+static void command_bar_destroy(zrn_element_t* const e) {
 	free(CBAR(e)->primary);
 	free(CBAR(e)->secondary);
-	CBAR(e)->primary = NULL;
-	CBAR(e)->secondary = NULL;
+	CBAR(e)->primary = nullptr;
+	CBAR(e)->secondary = nullptr;
 }
 
 /* The labels show as soon as the bar starts to open and go when it has closed. */
-static void bar_sync_compact(zrn_element_t* e) {
+static void bar_sync_compact(zrn_element_t* const e) {
 	zrn_command_bar_t* c;
 	int compact, i;
 	if (!zrn_is_a(e, Z_CLASS_COMMAND_BAR)) return;
@@ -1073,7 +1073,7 @@ static void bar_sync_compact(zrn_element_t* e) {
 }
 
 /* The row of the primary commands, as tall as the tallest: closed (no labels) or open. */
-static float command_row_height(zrn_command_bar_t* c, int open) {
+static float command_row_height(zrn_command_bar_t* const c, const int open) {
 	float h = BAR_ROW;
 	int i;
 	for (i = 0; i < c->primary_count; i++) {
@@ -1083,7 +1083,7 @@ static float command_row_height(zrn_command_bar_t* c, int open) {
 	return h;
 }
 
-static float secondary_height(zrn_command_bar_t* c) {
+static float secondary_height(zrn_command_bar_t* const c) {
 	float h = 0;
 	int i;
 	if (c->secondary_count == 0) return 0;
@@ -1091,26 +1091,26 @@ static float secondary_height(zrn_command_bar_t* c) {
 	return ROW_TOP + h;
 }
 
-static float command_open_height(zrn_element_t* e, float width) {
+static float command_open_height(zrn_element_t* const e, const float width) {
 	zrn_command_bar_t* c = CBAR(e);
 	ZST_UNUSED(width);
 	return 2 * BAR_BORDER + secondary_height(c) + command_row_height(c, 1);
 }
 
-static float bar_open_height(zrn_element_t* e, float width) {
+static float bar_open_height(zrn_element_t* const e, const float width) {
 	if (zrn_is_a(e, Z_CLASS_COMMAND_BAR)) return command_open_height(e, width);
 	return app_bar_open_height(e, width);
 }
 
 /* Where the row of the buttons starts: under the border, and under the secondary list that has come into view. */
-static float bar_row_top(zrn_element_t* e) {
+static float bar_row_top(zrn_element_t* const e) {
 	zrn_app_bar_t* b = BAR(e);
 	float t = zrn_ease(Z_EASE_OUT, b->open_t);
 	if (!zrn_is_a(e, Z_CLASS_COMMAND_BAR) || b->on_top) return BAR_BORDER;
 	return BAR_BORDER + secondary_height(CBAR(e)) * t;
 }
 
-static ZSize command_bar_measure(zrn_element_t* e, ZSize available) {
+static ZSize command_bar_measure(zrn_element_t* const e, const ZSize available) {
 	zrn_command_bar_t* c = CBAR(e);
 	zrn_content_control_t* cc = &c->base.base;
 	float w = bar_width(e, available), primary_w = 0;
@@ -1125,7 +1125,7 @@ static ZSize command_bar_measure(zrn_element_t* e, ZSize available) {
 	return zrn_size(w, bar_height(e, w));
 }
 
-static ZSize command_bar_arrange(zrn_element_t* e, ZSize final) {
+static ZSize command_bar_arrange(zrn_element_t* const e, const ZSize final) {
 	zrn_command_bar_t* c = CBAR(e);
 	zrn_content_control_t* cc = &c->base.base;
 	float t = zrn_ease(Z_EASE_OUT, c->base.open_t);
@@ -1167,13 +1167,13 @@ Zid Zcommand_bar_create(void) {
 
 static zrn_command_bar_t* get_command_bar(Zid id) { return CBAR(zrn_get(id, Z_CLASS_COMMAND_BAR)); }
 
-static int is_command(const zrn_element_t* e) {
+static int is_command(const zrn_element_t* const e) {
 	return zrn_is_a(e, Z_CLASS_APP_BAR_BUTTON) || zrn_is_a(e, Z_CLASS_APP_BAR_TOGGLE_BUTTON) || zrn_is_a(e, Z_CLASS_APP_BAR_SEPARATOR);
 }
 
-static int add_command(Zid bar, Zid command, int secondary) {
+static int add_command(const Zid bar, const Zid command, const int secondary) {
 	zrn_command_bar_t* c = get_command_bar(bar);
-	zrn_element_t* cmd = command != Z_INVALID_ID ? zrn_get(command, Z_CLASS_ELEMENT) : NULL;
+	zrn_element_t* cmd = command != Z_INVALID_ID ? zrn_get(command, Z_CLASS_ELEMENT) : nullptr;
 	zrn_element_t*** list;
 	int* count;
 	int* cap;
@@ -1211,32 +1211,32 @@ static int add_command(Zid bar, Zid command, int secondary) {
 int Zcommand_bar_add_primary_command(Zid bar, Zid command) { return add_command(bar, command, 0); }
 int Zcommand_bar_add_secondary_command(Zid bar, Zid command) { return add_command(bar, command, 1); }
 
-int Zcommand_bar_get_primary_command_count(Zid bar) {
+int Zcommand_bar_get_primary_command_count(const Zid bar) {
 	zrn_command_bar_t* c = get_command_bar(bar);
 	return c ? c->primary_count : 0;
 }
 
-int Zcommand_bar_get_secondary_command_count(Zid bar) {
+int Zcommand_bar_get_secondary_command_count(const Zid bar) {
 	zrn_command_bar_t* c = get_command_bar(bar);
 	return c ? c->secondary_count : 0;
 }
 
-Zid Zcommand_bar_get_primary_command(Zid bar, int index) {
+Zid Zcommand_bar_get_primary_command(const Zid bar, const int index) {
 	zrn_command_bar_t* c = get_command_bar(bar);
 	return c && index >= 0 && index < c->primary_count ? c->primary[index]->id : Z_INVALID_ID;
 }
 
-Zid Zcommand_bar_get_secondary_command(Zid bar, int index) {
+Zid Zcommand_bar_get_secondary_command(const Zid bar, const int index) {
 	zrn_command_bar_t* c = get_command_bar(bar);
 	return c && index >= 0 && index < c->secondary_count ? c->secondary[index]->id : Z_INVALID_ID;
 }
 
-void Zcommand_bar_clear_primary_commands(Zid bar) {
+void Zcommand_bar_clear_primary_commands(const Zid bar) {
 	zrn_command_bar_t* c = get_command_bar(bar);
 	while (c && c->primary_count > 0) zrn_destroy(c->primary[c->primary_count - 1]);
 }
 
-void Zcommand_bar_clear_secondary_commands(Zid bar) {
+void Zcommand_bar_clear_secondary_commands(const Zid bar) {
 	zrn_command_bar_t* c = get_command_bar(bar);
 	while (c && c->secondary_count > 0) zrn_destroy(c->secondary[c->secondary_count - 1]);
 }

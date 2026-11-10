@@ -11,7 +11,7 @@ static void run(Zid root, float ms) {
 }
 
 static Zid make_root(ZAnimations mode) {
-	Zid root = Zroot_create(480, 800);
+	Zid root = zst_test_root(480, 800);
 	Zroot_set_renderer(root, Z_RENDERER_SOFTWARE);
 	Zroot_set_animations(root, mode);
 	return root;
@@ -82,7 +82,7 @@ static int red_extent(ZFrame f, int* left) {
 }
 
 static void test_projection_on_gpu(void) {
-	Zid root = Zroot_create(480, 800), border;
+	Zid root = zst_test_root(480, 800), border;
 	ZFrame f;
 	int left, width_flat, width_turned;
 	Zroot_set_renderer(root, Z_RENDERER_GPU);
@@ -146,14 +146,14 @@ static Zid build_page(const char* tag, int rows) {
 static Zid page_a(Zid frame, void* param) {
 	(void)frame; (void)param;
 	g_page_a = build_page("a", 3);
-	Zpage_on_navigated_from(g_page_a, from_a, NULL);
+	Zpage_on_navigated_from(g_page_a, from_a, nullptr);
 	return g_page_a;
 }
 
 static Zid page_b(Zid frame, void* param) {
 	(void)frame; (void)param;
 	g_page_b = build_page("b", 3);
-	Zpage_on_navigated_to(g_page_b, to_b, NULL);
+	Zpage_on_navigated_to(g_page_b, to_b, nullptr);
 	return g_page_b;
 }
 
@@ -165,10 +165,10 @@ static Zid first_row(Zid page) {
 static void test_turnstile(void) {
 	Zid root = make_root(Z_ANIMATIONS_ON), frame = Zframe_create(), row0, row2;
 	Zroot_set_visual(root, frame);
-	Zelement_on(frame, Z_EVENT_NAVIGATED, navigated, NULL);
+	Zelement_on(frame, Z_EVENT_NAVIGATED, navigated, nullptr);
 	g_log[0] = 0;
 	/* the first page has nothing to turn away from, but it swings in: the app opens as the second half of a turn */
-	CHECK(Zframe_navigate(frame, page_a, NULL));
+	CHECK(Zframe_navigate(frame, page_a, nullptr));
 	CHECK(Zframe_is_transitioning(frame));
 	CHECK_NEAR(Zelement_get_property(first_row(g_page_a), Z_PROP_OPACITY), 0);
 	run(root, 64);
@@ -178,7 +178,7 @@ static void test_turnstile(void) {
 	CHECK(!Zframe_is_transitioning(frame));
 	CHECK_NEAR(Zelement_get_property(first_row(g_page_a), Z_PROP_OPACITY) * 100, 100);
 	g_log[0] = 0;
-	CHECK(Zframe_navigate(frame, page_b, NULL));
+	CHECK(Zframe_navigate(frame, page_b, nullptr));
 	CHECK(Zframe_is_transitioning(frame));
 	CHECK(strcmp(g_log, "fromA ") == 0);
 	/* the old page is still the one in the frame, turning away, and cannot be touched */
@@ -206,10 +206,10 @@ static void test_turnstile(void) {
 	CHECK_NEAR(Zelement_get_property(row0, Z_PROP_OPACITY) * 100, 100);
 	/* a Navigate in the middle of a transition ends it at once */
 	g_log[0] = 0;
-	CHECK(Zframe_navigate(frame, page_a, NULL));
+	CHECK(Zframe_navigate(frame, page_a, nullptr));
 	run(root, 100);
-	CHECK(Zframe_navigate(frame, page_b, NULL));
-	CHECK(strstr(g_log, "nav ") != NULL);
+	CHECK(Zframe_navigate(frame, page_b, nullptr));
+	CHECK(strstr(g_log, "nav ") != nullptr);
 	CHECK(Zframe_get_back_stack_depth(frame) == 3);
 	/* going back turns the other way */
 	run(root, 1000);
@@ -224,8 +224,8 @@ static void test_turnstile(void) {
 static void test_no_transition_without_animations(void) {
 	Zid root = make_root(Z_ANIMATIONS_OFF), frame = Zframe_create();
 	Zroot_set_visual(root, frame);
-	Zframe_navigate(frame, page_a, NULL);
-	Zframe_navigate(frame, page_b, NULL);
+	Zframe_navigate(frame, page_a, nullptr);
+	Zframe_navigate(frame, page_b, nullptr);
 	CHECK(!Zframe_is_transitioning(frame));
 	CHECK(Zframe_get_page(frame) == g_page_b);
 	Zroot_destroy(root);
@@ -234,8 +234,8 @@ static void test_no_transition_without_animations(void) {
 	frame = Zframe_create();
 	Zroot_set_visual(root, frame);
 	Zframe_set_transition(frame, Z_TRANSITION_NONE);
-	Zframe_navigate(frame, page_a, NULL);
-	Zframe_navigate(frame, page_b, NULL);
+	Zframe_navigate(frame, page_a, nullptr);
+	Zframe_navigate(frame, page_b, nullptr);
 	CHECK(!Zframe_is_transitioning(frame));
 	Zroot_destroy(root);
 }
@@ -302,13 +302,13 @@ static Zid titled_page(Zid frame, void* param) {
 }
 
 static void test_turnstile_pictures(void) {
-	Zid root = Zroot_create(480, 800), frame = Zframe_create();
+	Zid root = zst_test_root(480, 800), frame = Zframe_create();
 	ZFrame f;
 	char path[512];
 	Zroot_set_renderer(root, Z_RENDERER_GPU);
 	Zroot_set_animations(root, Z_ANIMATIONS_ON);
 	Zroot_set_visual(root, frame);
-	Zframe_navigate(frame, titled_page, NULL);
+	Zframe_navigate(frame, titled_page, nullptr);
 	if (!Zroot_render(root, &f)) {
 		printf("  no OpenGL ES 2 context here: no pictures\n");
 		Zroot_destroy(root);

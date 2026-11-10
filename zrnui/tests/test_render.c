@@ -72,7 +72,7 @@ static void build_controls(Zid root) {
 }
 
 static void test_all_controls(void) {
-	Zid root = Zroot_create(480, 1700);
+	Zid root = zst_test_root(480, 1700);
 	build_controls(root);
 	show(root, "controls-dark");
 	Zroot_set_theme(root, Z_THEME_LIGHT);
@@ -82,7 +82,7 @@ static void test_all_controls(void) {
 }
 
 static void test_button_pixels(void) {
-	Zid root = Zroot_create(480, 200), page = Zstack_panel_create(Z_VERTICAL), b;
+	Zid root = zst_test_root(480, 200), page = Zstack_panel_create(Z_VERTICAL), b;
 	int r, g, bl;
 	b = Zpanel_add(page, Zbutton_create("OK"));
 	Zelement_set_horizontal_alignment(b, Z_HALIGN_LEFT);
@@ -109,7 +109,7 @@ static void test_button_pixels(void) {
 
 static void test_states(void) {
 	static const char* const words[] = { "apple", "apricot", "banana" };
-	Zid root = Zroot_create(480, 700), stack = Zstack_panel_create(Z_VERTICAL), b, tb, ac, cb, pb, sl;
+	Zid root = zst_test_root(480, 700), stack = Zstack_panel_create(Z_VERTICAL), b, tb, ac, cb, pb, sl;
 	Zelement_set_margin(stack, Zthickness(12, 0, 12, 0));
 	Zroot_set_visual(root, stack);
 	b = Zpanel_add(stack, Zbutton_create("pressed"));
@@ -154,7 +154,7 @@ static int lit_pixels(Zid root, int x0, int y0, int x1, int y1) {
 }
 
 static void test_cyrillic_and_password(void) {
-	Zid root = Zroot_create(480, 400), stack = Zstack_panel_create(Z_VERTICAL), t, pw, ru;
+	Zid root = zst_test_root(480, 400), stack = Zstack_panel_create(Z_VERTICAL), t, pw, ru;
 	int cyrillic, boxes;
 	Zroot_set_visual(root, stack);
 	t = Zpanel_add(stack, Ztext_block_create("Hello, world"));
@@ -177,7 +177,7 @@ static void test_cyrillic_and_password(void) {
 }
 
 static void test_zero_sized_canvas_is_not_culled(void) {
-	Zid root = Zroot_create(200, 200), stack = Zstack_panel_create(Z_VERTICAL), canvas, red;
+	Zid root = zst_test_root(200, 200), stack = Zstack_panel_create(Z_VERTICAL), canvas, red;
 	int r, g, b;
 	Zroot_set_visual(root, stack);
 	/* a Canvas has no size of its own: its rectangle is empty, its children are not */
@@ -193,7 +193,7 @@ static void test_zero_sized_canvas_is_not_culled(void) {
 }
 
 static void test_image_roundtrip(void) {
-	Zid root = Zroot_create(200, 200), img = Zimage_create();
+	Zid root = zst_test_root(200, 200), img = Zimage_create();
 	ZSize s;
 	int r, g, b;
 	Zroot_set_visual(root, img);
@@ -224,7 +224,7 @@ static int near_rgb(Zid root, int x, int y, int er, int eg, int eb, int toleranc
 }
 
 static void test_toggle_switch_pixels(void) {
-	Zid root = Zroot_create(480, 200), stack = Zstack_panel_create(Z_VERTICAL), sw;
+	Zid root = zst_test_root(480, 200), stack = Zstack_panel_create(Z_VERTICAL), sw;
 	sw = Zpanel_add(stack, Ztoggle_switch_create());
 	Zelement_set_vertical_alignment(sw, Z_VALIGN_TOP);
 	Zroot_set_visual(root, stack);
@@ -250,7 +250,7 @@ static void test_toggle_switch_pixels(void) {
 }
 
 static void test_progress_ring_pixels(void) {
-	Zid root = Zroot_create(480, 200), stack = Zstack_panel_create(Z_VERTICAL), ring;
+	Zid root = zst_test_root(480, 200), stack = Zstack_panel_create(Z_VERTICAL), ring;
 	int before, outside;
 	ring = Zpanel_add(stack, Zprogress_ring_create());
 	Zelement_set_vertical_alignment(ring, Z_VALIGN_TOP);
@@ -302,7 +302,7 @@ static void test_progress_ring_pixels(void) {
 }
 
 static void test_slider_and_progress_bar_pixels(void) {
-	Zid root = Zroot_create(480, 300), stack = Zstack_panel_create(Z_VERTICAL), sl, dis, pb, ind;
+	Zid root = zst_test_root(480, 300), stack = Zstack_panel_create(Z_VERTICAL), sl, dis, pb, ind;
 	Zroot_set_visual(root, stack);
 	sl = Zpanel_add(stack, Zslider_create(Z_HORIZONTAL));
 	Zrange_base_set_value(sl, 50);
@@ -340,7 +340,7 @@ static void test_slider_and_progress_bar_pixels(void) {
 }
 
 static void test_toggle_and_check_pixels(void) {
-	Zid root = Zroot_create(480, 300), stack = Zstack_panel_create(Z_VERTICAL), cb, tg;
+	Zid root = zst_test_root(480, 300), stack = Zstack_panel_create(Z_VERTICAL), cb, tg;
 	Zroot_set_visual(root, stack);
 	cb = Zpanel_add(stack, Zcheck_box_create("check"));
 	tg = Zpanel_add(stack, Ztoggle_button_create("toggle"));
@@ -368,7 +368,7 @@ static void test_toggle_and_check_pixels(void) {
 }
 
 static void test_text_box_pixels(void) {
-	Zid root = Zroot_create(480, 300), stack = Zstack_panel_create(Z_VERTICAL), tb, other;
+	Zid root = zst_test_root(480, 300), stack = Zstack_panel_create(Z_VERTICAL), tb, other;
 	int lit;
 	Zroot_set_visual(root, stack);
 	tb = Zpanel_add(stack, Ztext_box_create(""));

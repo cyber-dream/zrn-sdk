@@ -8,7 +8,7 @@
  * A program shows the buffer in whatever window or framebuffer it has
  * (Wayland shm, SDL, a test that writes a PNG) and forwards its events:
  *
- *   Zid root = Zroot_create(0, 0);
+ *   Zid root = Zroot_create();
  *   Zroot_set_visual(root, page);
  *   for (;;) {
  *       Zroot_inject_pointer(root, Z_POINTER_DOWN, x, y);   // from your events
@@ -73,12 +73,11 @@ extern "C" {
 #endif
 
 	/**
-	 * @brief Creates a root of `width` x `height` logical pixels (480 x 800 is a WP8 screen).
-	 * 0 x 0 leaves the size to the window: Zwindow_run sizes the root by what the compositor
-	 * gives (480 x 800 until the first configure), so an application does not manage it.
+	 * @brief Creates a root. Its size comes from the window (Zwindow_run sizes it by what the compositor
+	 * gives, 480 x 800 until the first configure); a program without a window sets it with Zroot_set_size.
 	 * Dark theme, Cobalt accent as the system default of a Windows Phone 8 test device.
 	 */
-	ZRNUI_API Zid Zroot_create();
+	ZRNUI_API Zid Zroot_create(void);
 	ZRNUI_API void Zroot_destroy(Zid root);
 	ZRNUI_API int Zroot_is_valid(Zid root);
 
@@ -123,16 +122,6 @@ extern "C" {
 	 * only as a debug override), not from the app.
 	 */
 	ZRNUI_API void Zroot_set_scale(Zid root, float scale);
-
-	/**
-	 * @brief The debug overlay, drawn over the frame after all the painting: the
-	 * arranged rect of every element, without the controls taking part. Z_DEBUG_BOUNDS
-	 * outlines the elements (the accent for containers, the base for leaves);
-	 * Z_DEBUG_LABELS also writes the class (and the Name) over each outline.
-	 * The boxes are where the input hits, so they show the real layout.
-	 */
-	ZRNUI_API void Zroot_set_debug(Zid root, int flags);
-	ZRNUI_API int Zroot_get_debug(Zid root);
 
 	/**
 	 * Theme. Dark: white on black. Light: black on white. The accent colors

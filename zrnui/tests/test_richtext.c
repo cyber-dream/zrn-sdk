@@ -5,7 +5,7 @@
 #include "test.h"
 
 static Zid make_root(Zid visual, int theme_light) {
-	Zid root = Zroot_create(480, 800);
+	Zid root = zst_test_root(480, 800);
 	Zroot_set_renderer(root, Z_RENDERER_SOFTWARE);
 	Zelement_set_vertical_alignment(visual, Z_VALIGN_TOP);
 	if (theme_light) Zroot_set_theme(root, Z_THEME_LIGHT);

@@ -19,14 +19,14 @@
 #include <string.h>
 
 #define ZST_UNUSED(x) ((void)(x))
-#define ZST_PI 3.14159265358979f
+static constexpr float ZST_PI = 3.14159265358979f;
 
 /**
  * The safe area: what the status bar of the shell covers at the top of the screen, in logical
  * pixels, where the first element of a page starts (the 25 px of a Windows Phone page). A constant
  * for now; it is going to come from the shell, and change while the app runs.
  */
-#define ZST_SAFE_AREA_TOP 32.0f
+static constexpr float ZST_SAFE_AREA_TOP = 32.0f;
 
 typedef struct zrn_element zrn_element_t;
 typedef struct zrn_class zrn_class_t;
@@ -54,9 +54,10 @@ static inline float zrn_thickness_h(ZThickness t) { return t.left + t.right; }
 static inline float zrn_thickness_v(ZThickness t) { return t.top + t.bottom; }
 
 char* zrn_strdup(const char* s);
+void zrn_theme_reset(void);
 void zrn_set_string(char** dest, const char* s);
 /** Reports an error through Zset_error_callback and remembers it. */
-void zrn_error(ZError error, const char* fmt, ...);
+[[gnu::format(printf, 2, 3)]] void zrn_error(ZError error, const char* fmt, ...);
 
 
 /* ============================================================================
@@ -121,7 +122,7 @@ struct zrn_class {
 	void (*paint)(zrn_element_t* e, zrn_painter_t* p);
 	/** Draws over the children (scroll bars, focus marks). */
 	void (*paint_over)(zrn_element_t* e, zrn_painter_t* p);
-	/** Returns Z_TRUE when the input was handled and must not bubble. */
+	/** Returns true when the input was handled and must not bubble. */
 	int (*input)(zrn_element_t* e, zrn_input_t* in);
 	void (*tick)(zrn_element_t* e, float delta_ms);
 	/** A child element is about to be detached: drop pointers to it. */
@@ -199,7 +200,7 @@ struct zrn_element {
 
 	/* render transform (anim.c): rotation in degrees about the point (proj_cx, proj_cy) of the element, as fractions of its size */
 	float rot_x, rot_y, proj_cx, proj_cy, render_scale, translate_x, translate_y;
-	/** Z_TRUE when any of the above is not the identity. */
+	/** true when any of the above is not the identity. */
 	int transformed;
 	int tilt;
 	/** Animations running on this element: one slot per ZAnimatedProperty, NULL when it has none. */
@@ -348,7 +349,7 @@ typedef struct zrn_control {
 typedef struct zrn_content_control {
 	zrn_control_t base;
 	zrn_element_t* content;
-	/** Z_TRUE when `content` is the TextBlock made for a string. */
+	/** true when `content` is the TextBlock made for a string. */
 	int content_is_text;
 } zrn_content_control_t;
 
@@ -378,7 +379,7 @@ typedef struct zrn_frame {
 	zrn_content_control_t base;
 	zrn_frame_entry_t* entries;
 	int count, capacity, current;
-	/** Z_TRUE while the callbacks of a navigation run; another Navigate from them is refused. */
+	/** true while the callbacks of a navigation run; another Navigate from them is refused. */
 	int navigating;
 	/** The transition (frame.c): 1 the old page turns away, 2 the new one swings in, 0 none. */
 	ZPageTransition transition;
@@ -525,9 +526,9 @@ typedef struct zrn_text_box {
 	int selecting;
 	/** Set while a program changes the text, to not fire TextChanged twice. */
 	int quiet;
-	/** Z_TRUE while TextChanged is raised for a change the user typed. */
+	/** true while TextChanged is raised for a change the user typed. */
 	int from_user;
-	/** Called first for a key (an AutoSuggestBox takes Up, Down, Enter and Escape); Z_TRUE when it took the key. */
+	/** Called first for a key (an AutoSuggestBox takes Up, Down, Enter and Escape); true when it took the key. */
 	int (*key_hook)(struct zrn_text_box* box, zrn_input_t* in);
 } zrn_text_box_t;
 
@@ -595,7 +596,7 @@ typedef struct zrn_flip_view {
 	int sliding, pressed, dragging;
 	float press_x, press_y, last_x, velocity;
 	int touch_animations_for_all;
-	/** Z_TRUE while a finger or a key changes the selection. */
+	/** true while a finger or a key changes the selection. */
 	int user_nav;
 } zrn_flip_view_t;
 
@@ -766,7 +767,7 @@ int zrn_effectively_visible(const zrn_element_t* e);
 ZPoint zrn_to_root(const zrn_element_t* e, ZPoint p);
 ZPoint zrn_from_root(const zrn_element_t* e, ZPoint p);
 zrn_element_t* zrn_hit_test(zrn_element_t* e, ZPoint p);
-/** Calls the handler of an event. @return Z_FALSE when the handler destroyed the element: the caller must then touch nothing of it. */
+/** Calls the handler of an event. @return false when the handler destroyed the element: the caller must then touch nothing of it. */
 int zrn_raise(zrn_element_t* e, ZEvent ev);
 /** A change of an inherited property (font) can change the measure of everything below. */
 void zrn_invalidate_deep(zrn_element_t* e);
@@ -803,7 +804,7 @@ extern zrn_class_t zrn_class_element, zrn_class_panel, zrn_class_stack_panel, zr
 
 void zrn_popup_close(zrn_element_t* popup);
 void zrn_popup_set_open(zrn_element_t* popup, int open);
-/** Closes what the Back button closes first: a dialog, a popup, an open app bar. Z_TRUE when it closed something. */
+/** Closes what the Back button closes first: a dialog, a popup, an open app bar. true when it closed something. */
 int zrn_root_dismiss_top(zrn_root_t* r);
 /** A page (frame.c) asks the bars it shows how tall they are closed and now, and tells them they are on top. */
 float zrn_app_bar_closed_height(zrn_element_t* bar);
@@ -926,27 +927,27 @@ ZColor zrn_theme_color(const zrn_element_t* e, zrn_theme_color_id_t id);
 ZColor zrn_accent_color(ZAccent accent);
 
 /* WP8 sizes (themes.md) */
-#define ZST_FONT_SMALL 18.667f
-#define ZST_FONT_NORMAL 20.0f
-#define ZST_FONT_MEDIUM 22.667f
-#define ZST_FONT_MEDIUM_LARGE 25.333f
-#define ZST_FONT_LARGE 32.0f
-#define ZST_FONT_EXTRA_LARGE 42.667f
-#define ZST_FONT_EXTRA_EXTRA_LARGE 72.0f
-#define ZST_FONT_HUGE 186.667f
-#define ZST_BORDER_THICKNESS 3.0f
-#define ZST_TOUCH_TARGET_OVERHANG 12.0f
+static constexpr float ZST_FONT_SMALL = 18.667f;
+static constexpr float ZST_FONT_NORMAL = 20.0f;
+static constexpr float ZST_FONT_MEDIUM = 22.667f;
+static constexpr float ZST_FONT_MEDIUM_LARGE = 25.333f;
+static constexpr float ZST_FONT_LARGE = 32.0f;
+static constexpr float ZST_FONT_EXTRA_LARGE = 42.667f;
+static constexpr float ZST_FONT_EXTRA_EXTRA_LARGE = 72.0f;
+static constexpr float ZST_FONT_HUGE = 186.667f;
+static constexpr float ZST_BORDER_THICKNESS = 3.0f;
+static constexpr float ZST_TOUCH_TARGET_OVERHANG = 12.0f;
 
 /* Windows Phone 8.1 (themeresources.xaml and generic.xaml), taken as they are */
-#define ZST_81_BORDER_THICKNESS 2.5f
+static constexpr float ZST_81_BORDER_THICKNESS = 2.5f;
 /** PhoneTouchTargetOverhang is 0,9.5 and PhoneTouchTargetLargeOverhang 0,16: only above and below. */
-#define ZST_81_TOUCH_OVERHANG 9.5f
-#define ZST_81_TOUCH_LARGE_OVERHANG 16.0f
-#define ZST_81_FONT_LARGE 18.14f
-#define ZST_81_FONT_CONTROL_HEADER 16.0f
-#define ZST_81_FONT_CONTENT 20.26f
-#define ZST_81_FONT_EXTRA_LARGE 25.5f
-#define ZST_81_FONT_EXTRA_LARGE_PLUS 29.86f
+static constexpr float ZST_81_TOUCH_OVERHANG = 9.5f;
+static constexpr float ZST_81_TOUCH_LARGE_OVERHANG = 16.0f;
+static constexpr float ZST_81_FONT_LARGE = 18.14f;
+static constexpr float ZST_81_FONT_CONTROL_HEADER = 16.0f;
+static constexpr float ZST_81_FONT_CONTENT = 20.26f;
+static constexpr float ZST_81_FONT_EXTRA_LARGE = 25.5f;
+static constexpr float ZST_81_FONT_EXTRA_LARGE_PLUS = 29.86f;
 
 
 /* ============================================================================
@@ -988,7 +989,7 @@ typedef struct zrn_res_override {
 	union { ZColor color; float d; int i; ZThickness thickness; } v;
 } zrn_res_override_t;
 
-/** The value of a key of a root (NULL: the default theme) as the type says; Z_FALSE when the key has no such value. */
+/** The value of a key of a root (NULL: the default theme) as the type says; false when the key has no such value. */
 int zrn_res_color(const zrn_root_t* r, ZThemeResource key, ZColor* out);
 int zrn_res_double(const zrn_root_t* r, ZThemeResource key, float* out);
 int zrn_res_int(const zrn_root_t* r, ZThemeResource key, int* out);
@@ -1018,7 +1019,7 @@ typedef struct zrn_binding {
 	ZThemeResource key;
 } zrn_binding_t;
 
-/** Binds `prop` of `e` to `key` (replacing its binding) and applies it; Z_FALSE when the key is not of the type the property takes. */
+/** Binds `prop` of `e` to `key` (replacing its binding) and applies it; false when the key is not of the type the property takes. */
 int zrn_bind(zrn_element_t* e, zrn_bind_prop_t prop, ZThemeResource key);
 /** A direct setter was called: the property keeps its value and stops following a key. */
 void zrn_unbind(zrn_element_t* e, zrn_bind_prop_t prop);
@@ -1054,12 +1055,12 @@ typedef struct zrn_text_layout {
 	float width, height, line_height;
 } zrn_text_layout_t;
 
-int zrn_text_init(void);
+bool zrn_text_init(void);
 void zrn_text_shutdown(void);
 /** Lays text out. `max_width` <= 0 is unlimited. The text must outlive the layout. */
 zrn_text_layout_t* zrn_text_layout_new(zrn_font_t font, const char* text, int length, float max_width, int wrap, int max_lines, float line_height);
 void zrn_text_layout_free(zrn_text_layout_t* l);
-/** Z_TRUE when the font, or a fallback found on the system, has the glyph. */
+/** true when the font, or a fallback found on the system, has the glyph. */
 int zrn_font_has_glyph(zrn_font_t font, uint32_t cp);
 float zrn_font_line_height(zrn_font_t font);
 float zrn_font_ascent(zrn_font_t font);
@@ -1204,7 +1205,7 @@ struct zrn_root {
 	int first_frame;
 	ZRenderer renderer;
 	ZAnimations animations;
-	/** Z_TRUE while the window of Zwindow_run draws with the OpenGL renderer. */
+	/** true while the window of Zwindow_run draws with the OpenGL renderer. */
 	int gpu_window;
 	/** The clock of animations, in ms: the sum of the Zroot_tick deltas. */
 	double time_ms;
@@ -1216,18 +1217,15 @@ struct zrn_root {
 	/** The overrides of ThemeResource keys the application set (resources.c). */
 	struct zrn_res_override* overrides;
 	int override_count, override_cap;
-	/** The debug overlay: zero, or a mix of Z_DEBUG_BOUNDS and Z_DEBUG_LABELS (debug.c). */
-	int debug_flags;
 };
 
 zrn_root_t* zrn_root_lookup(Zid id);
 /**
  * Lays the tree out when it needs it and, when something changed, paints it with `p` (the clear
- * and every element). Z_TRUE when it painted. The software and the GPU renderer both go through it.
+ * and every element). true when it painted. The software and the GPU renderer both go through it.
  */
 int zrn_root_paint(zrn_root_t* r, zrn_painter_t* p);
 /** Draws the debug overlay over the frame (debug.c): the bounds of the elements, their class names. */
-void zrn_debug_element(const zrn_element_t* e, zrn_painter_t* p, const zrn_root_t* r);
 /** The name Zroot_get_renderer_name reports. */
 void zrn_note_renderer(const char* name);
 

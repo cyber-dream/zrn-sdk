@@ -1,7 +1,7 @@
 pkgname=zrnui
 pkgver=2.0.0
 pkgrel=1
-pkgdesc="TBD"
+pkgdesc="TBD" #TODO
 arch=('x86_64' 'aarch64')
 url="https://github.com/Zerone-Laboratories/zrn-sdk"
 license=('MIT')
@@ -34,8 +34,8 @@ package() {
 
     # 4. Копируем шрифты в правильную подпапку selawik
     install -d "$pkgdir/usr/share/fonts/zrnui/selawik"
-    install -m644 "$startdir"/fonts/* "$pkgdir/usr/share/fonts/zrnui/selawik/"
+    install -m644 "$startdir"/fonts/selawik/* "$pkgdir/usr/share/fonts/zrnui/selawik/"
 
     # 5. Копируем файл конфигурации темы из вложенной папки theme
-    install -Dm644 "$startdir/theme/theme.ini" "$pkgdir/usr/share/zrnui/theme.ini"
+    install -Dm644 "$startdir/theme/theme.ini" "$pkgdir/usr/share/zrnui/theme/theme.ini"
 }

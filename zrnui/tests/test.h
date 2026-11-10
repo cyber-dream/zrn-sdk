@@ -7,6 +7,13 @@
 
 #include <zrnui.h>
 
+/** A root of a given size in logical pixels: Zroot_create takes none, the window owns the size. */
+static inline Zid zst_test_root(const int width, const int height) {
+	const Zid root = Zroot_create();
+	Zroot_set_size(root, width, height);
+	return root;
+}
+
 #include <png.h>
 #include <stdlib.h>
 
@@ -57,14 +64,14 @@ static int __attribute__((unused)) test_save_png(Zid root, const char* path) {
 	FILE* file;
 	png_structp png;
 	png_infop info;
-	png_bytep* volatile rows = NULL;
+	png_bytep* volatile rows = nullptr;
 	volatile int ok = 0;
 	int y;
 	Zroot_render(root, &f);
 	file = fopen(path, "wb");
 	if (!file || !f.pixels) { if (file) fclose(file); return 0; }
-	png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-	info = png ? png_create_info_struct(png) : NULL;
+	png = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+	info = png ? png_create_info_struct(png) : nullptr;
 	rows = (png_bytep*)malloc((size_t)f.height * sizeof *rows);
 	if (!png || !info || !rows) goto done;
 	if (setjmp(png_jmpbuf(png))) goto done;
@@ -73,11 +80,11 @@ static int __attribute__((unused)) test_save_png(Zid root, const char* path) {
 	png_write_info(png, info);
 	for (y = 0; y < f.height; y++) rows[y] = (png_bytep)(f.pixels + (size_t)y * (size_t)f.stride);
 	png_write_image(png, rows);
-	png_write_end(png, NULL);
+	png_write_end(png, nullptr);
 	ok = 1;
 done:
 	free(rows);
-	if (png) png_destroy_write_struct(&png, info ? &info : NULL);
+	if (png) png_destroy_write_struct(&png, info ? &info : nullptr);
 	fclose(file);
 	return ok;
 }
