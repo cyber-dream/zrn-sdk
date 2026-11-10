@@ -325,7 +325,7 @@ static void tbx_vertical_move(zrn_text_box_t* const b, const int dir, const int 
 }
 
 static int tbx_key(zrn_element_t* const e, const zrn_input_t* const in) {
-	zrn_text_box_t* const b = TB(e);
+	const auto b = TB(e);
 	const Zid id = e->id;
 	const int shift = (in->mods & Z_MOD_SHIFT) != 0, ctrl = (in->mods & Z_MOD_CTRL) != 0;
 	switch (in->key) {
@@ -423,7 +423,7 @@ static int tbx_index_from_point(zrn_text_box_t* const b, const float x, const fl
 }
 
 static int tbx_input(zrn_element_t* const e, zrn_input_t* const in) {
-	zrn_text_box_t* const b = TB(e);
+	const auto b = TB(e);
 	switch (in->type) {
 		case ZST_IN_POINTER_DOWN:
 			if (!zrn_effectively_enabled(e)) return 1;
@@ -470,7 +470,7 @@ static int tbx_input(zrn_element_t* const e, zrn_input_t* const in) {
 }
 
 static void tbx_tick(zrn_element_t* const e, const float dt) {
-	zrn_text_box_t* const b = TB(e);
+	const auto b = TB(e);
 	const float before = b->caret_blink;
 	b->caret_blink += dt;
 	if ((int)(before / BLINK_MS) != (int)(b->caret_blink / BLINK_MS)) zrn_changed_paint(e);
@@ -501,7 +501,7 @@ static ZSize tbx_measure(zrn_element_t* const e, const ZSize available) {
 }
 
 static void tbx_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_text_box_t* const b = TB(e);
+	const auto b = TB(e);
 	zrn_control_t* const c = &b->base;
 	const int focused = e->root && e->root->focus == e, enabled = zrn_effectively_enabled(e);
 	const float header = tbx_header_height(b);
@@ -577,7 +577,7 @@ static void tbx_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 }
 
 static void tbx_init(zrn_element_t* const e) {
-	zrn_text_box_t* const b = TB(e);
+	const auto b = TB(e);
 	zrn_control_t* const c = &b->base;
 	/* the style of TextBox: TextControlBorderThemeThickness, TextControlThemePadding, ContentControlFontSize, TextControlMarginThemeThickness */
 	c->border_thickness = Zthickness_uniform(ZST_81_BORDER_THICKNESS);
@@ -605,7 +605,7 @@ zrn_class_t zrn_class_text_box = {
 };
 
 static void password_init(zrn_element_t* const e) {
-	zrn_text_box_t* const b = TB(e);
+	const auto b = TB(e);
 	b->password = 1;
 	b->password_char = 0x25CF;
 }

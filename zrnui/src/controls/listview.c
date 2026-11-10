@@ -25,7 +25,7 @@ static int lvb_input(zrn_element_t* const e, zrn_input_t* const in) {
 }
 
 static void lvb_init(zrn_element_t* const e) {
-	zrn_items_control_t* const o = IC(e);
+	const auto o = IC(e);
 	zrn_element_t* const scroll = zrn_create(Z_CLASS_SCROLL_VIEWER);
 	zrn_element_t* const presenter = zrn_create(Z_CLASS_STACK_PANEL);
 	zrn_element_t* const host = zrn_create(Z_CLASS_ITEMS_STACK_PANEL);
@@ -227,7 +227,7 @@ void Zlist_view_set_footer_content(const Zid id, const Zid footer) {
  * ============================================================================ */
 
 static void header_item_init(zrn_element_t* const e) {
-	zrn_control_t* const c = ZST_AS(zrn_control_t, e);
+	const auto c = ZST_AS(zrn_control_t, e);
 	c->h_content = Z_HALIGN_LEFT;
 	c->v_content = Z_VALIGN_TOP;
 	c->font_size = 12.0f;

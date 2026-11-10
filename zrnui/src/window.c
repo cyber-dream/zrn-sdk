@@ -299,7 +299,7 @@ static void touch_motion(void* const d, struct wl_touch* t, const uint32_t time,
 }
 static void touch_frame(void* d, struct wl_touch* t) { (void)d; (void)t; }
 static void touch_cancel(void* const d, struct wl_touch* t) {
-	window_t* w = (window_t*)d;
+	auto w = (window_t*)d;
 	(void)t;
 	if (w->touch_id >= 0) Zroot_inject_pointer(w->root, Z_POINTER_UP, -1000, -1000);
 	w->touch_id = -1;
@@ -314,7 +314,7 @@ static const struct wl_touch_listener touch_listener = {
 /* ---- keyboard ---- */
 
 static void kb_keymap(void* const d, struct wl_keyboard* k, const uint32_t format, const int32_t fd, const uint32_t size) {
-	window_t* w = (window_t*)d;
+	auto w = (window_t*)d;
 	char* map;
 	(void)k;
 	if (format != WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1) { close(fd); return; }

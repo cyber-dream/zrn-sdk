@@ -32,7 +32,7 @@ static int range_assign(zrn_range_base_t* r, double value) {
 }
 
 static void range_init(zrn_element_t* const e) {
-	zrn_range_base_t* const r = RANGE(e);
+	const auto r = RANGE(e);
 	r->minimum = 0;
 	r->maximum = 1;
 	r->small_change = 0.1;
@@ -136,7 +136,7 @@ static float slider_header_height(const zrn_slider_t* const s) {
 }
 
 static ZSize slider_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_slider_t* const s = SLIDER(e);
+	const auto s = SLIDER(e);
 	const ZThickness pad = s->base.base.padding;
 	float along = s->orientation == Z_HORIZONTAL ? available.width : available.height;
 	const float header = slider_header_height(s);
@@ -147,7 +147,7 @@ static ZSize slider_measure(zrn_element_t* const e, const ZSize available) {
 
 /* Track, thumb and the accent part of the track, in local coordinates; the band is the area under the header. */
 static void slider_geometry(zrn_element_t* const e, ZRect* const track, ZRect* const thumb, ZRect* const fill) {
-	zrn_slider_t* const s = SLIDER(e);
+	const auto s = SLIDER(e);
 	const ZThickness pad = s->base.base.padding;
 	const double f = range_fraction(&s->base);
 	const float top = pad.top + slider_header_height(s);
@@ -168,7 +168,7 @@ static void slider_geometry(zrn_element_t* const e, ZRect* const track, ZRect* c
 }
 
 static void slider_paint_ticks(zrn_element_t* const e, zrn_painter_t* const p, const ZRect track) {
-	zrn_slider_t* const s = SLIDER(e);
+	const auto s = SLIDER(e);
 	double range = s->base.maximum - s->base.minimum, v;
 	const ZColor outside = zrn_theme_color(e, ZST_TC_BASE_MEDIUM_MID);
 	const ZColor inline_color = zrn_theme_color(e, ZST_TC_BACKGROUND);
@@ -193,7 +193,7 @@ static void slider_paint_ticks(zrn_element_t* const e, zrn_painter_t* const p, c
 }
 
 static void slider_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_slider_t* const s = SLIDER(e);
+	const auto s = SLIDER(e);
 	const zrn_control_t* const c = &s->base.base;
 	ZRect track, thumb, fill;
 	const int enabled = zrn_effectively_enabled(e);
@@ -216,7 +216,7 @@ static void slider_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 
 /* The value a touch at (x, y) means: the thumb is centered on it, then snapped to StepFrequency or TickFrequency. */
 static void slider_set_from(zrn_element_t* const e, const float x, const float y) {
-	zrn_slider_t* const s = SLIDER(e);
+	const auto s = SLIDER(e);
 	const ZThickness pad = s->base.base.padding;
 	const float top = pad.top + slider_header_height(s);
 	double f, v, step = s->snaps_to == Z_SNAPS_TO_TICKS && s->tick_frequency > 0 ? s->tick_frequency : s->step_frequency;
@@ -242,7 +242,7 @@ static void slider_step(zrn_slider_t* const s, const double delta) {
 }
 
 static int slider_input(zrn_element_t* const e, zrn_input_t* const in) {
-	zrn_slider_t* const s = SLIDER(e);
+	const auto s = SLIDER(e);
 	switch (in->type) {
 		case ZST_IN_POINTER_DOWN:
 			if (!zrn_effectively_enabled(e)) return 1;
@@ -281,7 +281,7 @@ static int slider_input(zrn_element_t* const e, zrn_input_t* const in) {
 }
 
 static void slider_init(zrn_element_t* const e) {
-	zrn_slider_t* const s = SLIDER(e);
+	const auto s = SLIDER(e);
 	s->orientation = Z_HORIZONTAL;
 	s->base.maximum = 100;
 	s->base.small_change = 1;
@@ -396,7 +396,7 @@ static float progress_dot_offset(const int i, const float t, const float width) 
 }
 
 static void progress_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_progress_bar_t* const b = PROGRESS(e);
+	const auto b = PROGRESS(e);
 	const zrn_control_t* const c = &b->base.base;
 	const ZColor accent = zrn_theme_color(e, ZST_TC_ACCENT);
 	const ZColor fg = zrn_ctl_color(c, ZST_C_FOREGROUND, c->foreground, accent);
@@ -425,7 +425,7 @@ static void progress_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 }
 
 static void progress_tick(zrn_element_t* const e, const float dt) {
-	zrn_progress_bar_t* const b = PROGRESS(e);
+	const auto b = PROGRESS(e);
 	if (!b->indeterminate) return;
 	b->time_ms += dt;
 	if (b->time_ms >= PB_CYCLE_MS) b->time_ms = fmodf(b->time_ms, PB_CYCLE_MS);
@@ -433,7 +433,7 @@ static void progress_tick(zrn_element_t* const e, const float dt) {
 }
 
 static void progress_init(zrn_element_t* const e) {
-	zrn_progress_bar_t* const b = PROGRESS(e);
+	const auto b = PROGRESS(e);
 	b->base.maximum = 100;
 	e->min_height = PB_HEIGHT;
 	e->valign = Z_VALIGN_CENTER;
@@ -516,7 +516,7 @@ static float progress_ring_angle(const float u) {
 }
 
 static void progress_ring_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_progress_ring_t* const r = RING(e);
+	const auto r = RING(e);
 	zrn_control_t* const c = &r->base;
 	const ZColor fg = zrn_ctl_color(c, ZST_C_FOREGROUND, c->foreground, zrn_theme_color(e, ZST_TC_ACCENT));
 	float cx = e->rect.width * 0.5f, cy = e->rect.height * 0.5f, t = r->time_ms / 1000.0f, start = PR_DOT_MARGIN + PR_DOT * 0.5f - PR_SIZE * 0.5f;
@@ -535,7 +535,7 @@ static void progress_ring_paint(zrn_element_t* const e, zrn_painter_t* const p) 
 }
 
 static void progress_ring_tick(zrn_element_t* const e, const float dt) {
-	zrn_progress_ring_t* const r = RING(e);
+	const auto r = RING(e);
 	if (!r->is_active) return;
 	r->time_ms += dt;
 	if (r->time_ms >= PR_CYCLE_MS) r->time_ms = fmodf(r->time_ms, PR_CYCLE_MS);
@@ -610,14 +610,14 @@ static ZRect scrollbar_thumb(zrn_element_t* const e) {
 }
 
 static void scrollbar_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_scrollbar_t* const s = SCROLLBAR(e);
+	const auto s = SCROLLBAR(e);
 	const zrn_control_t* const c = &s->base.base;
 	if (s->base.maximum <= s->base.minimum) return;
 	zrn_fill_rect(p, scrollbar_thumb(e), zrn_ctl_background(c, zrn_theme_color(e, ZST_TC_DISABLED)));
 }
 
 static void scrollbar_scroll(zrn_element_t* const e, const ZScrollEventType type, const double value) {
-	zrn_scrollbar_t* const s = SCROLLBAR(e);
+	const auto s = SCROLLBAR(e);
 	const Zid id = e->id;
 	range_assign(&s->base, value);
 	if (!zrn_lookup(id)) return; /* ValueChanged destroyed the bar */
@@ -625,7 +625,7 @@ static void scrollbar_scroll(zrn_element_t* const e, const ZScrollEventType type
 }
 
 static int scrollbar_input(zrn_element_t* const e, zrn_input_t* const in) {
-	zrn_scrollbar_t* const s = SCROLLBAR(e);
+	const auto s = SCROLLBAR(e);
 	const int vertical = s->orientation == Z_VERTICAL;
 	const float pos = vertical ? in->y : in->x;
 	switch (in->type) {
@@ -667,7 +667,7 @@ static int scrollbar_input(zrn_element_t* const e, zrn_input_t* const in) {
 }
 
 static void scrollbar_init(zrn_element_t* const e) {
-	zrn_scrollbar_t* const s = SCROLLBAR(e);
+	const auto s = SCROLLBAR(e);
 	s->orientation = Z_VERTICAL;
 	s->base.maximum = 1;
 	s->base.base.padding = Zthickness_uniform(1);
@@ -717,7 +717,7 @@ static void thumb_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 }
 
 static int thumb_input(zrn_element_t* const e, zrn_input_t* const in) {
-	zrn_thumb_t* const t = THUMB(e);
+	const auto t = THUMB(e);
 	ZPoint root;
 	switch (in->type) {
 		case ZST_IN_POINTER_DOWN:

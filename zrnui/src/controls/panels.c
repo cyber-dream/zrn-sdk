@@ -185,7 +185,7 @@ static ZSize wrap_item_size(const zrn_wrap_panel_t* const w, const zrn_element_t
 
 /* Lays the children out in lines no longer than `limit`; when `place` the children are arranged. Returns the extent. */
 static ZSize wrap_flow(zrn_element_t* const e, const float limit, const int place) {
-	zrn_wrap_panel_t* w = ZST_AS(zrn_wrap_panel_t, e);
+	auto w = ZST_AS(zrn_wrap_panel_t, e);
 	int horizontal = w->orientation == Z_HORIZONTAL, i;
 	float pos = 0, line_extent = 0, offset = 0, max_pos = 0;
 	int line_start = 0;
@@ -244,13 +244,13 @@ static ZSize wrap_measure(zrn_element_t* const e, const ZSize available) {
 }
 
 static ZSize wrap_arrange(zrn_element_t* const e, const ZSize final) {
-	zrn_wrap_panel_t* const w = ZST_AS(zrn_wrap_panel_t, e);
+	const auto w = ZST_AS(zrn_wrap_panel_t, e);
 	wrap_flow(e, w->orientation == Z_HORIZONTAL ? final.width : final.height, 1);
 	return final;
 }
 
 static void wrap_init(zrn_element_t* const e) {
-	zrn_wrap_panel_t* const w = ZST_AS(zrn_wrap_panel_t, e);
+	const auto w = ZST_AS(zrn_wrap_panel_t, e);
 	w->orientation = Z_HORIZONTAL;
 	w->item_width = Z_AUTO;
 	w->item_height = Z_AUTO;
@@ -318,7 +318,7 @@ static int wg_per_line(const zrn_items_wrap_grid_t* const g, const float along_r
 
 /* Puts the cells in lines along the orientation. Returns the size taken; with `place` the items are arranged. */
 static ZSize wg_flow(zrn_element_t* const e, const float along_room, const float cw, const float ch, const int per_line, const int place) {
-	zrn_items_wrap_grid_t* g = WG(e);
+	auto g = WG(e);
 	int horizontal = g->orientation == Z_HORIZONTAL, in_line = 0, i;
 	float cell_along = horizontal ? cw : ch, cell_across = horizontal ? ch : cw;
 	float across = 0, max_along = 0;
@@ -356,7 +356,7 @@ static ZSize wg_flow(zrn_element_t* const e, const float along_room, const float
 }
 
 static ZSize wg_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_items_wrap_grid_t* const g = WG(e);
+	const auto g = WG(e);
 	int horizontal = g->orientation == Z_HORIZONTAL, per_line, i;
 	float cw, ch, along = horizontal ? available.width : available.height;
 	wg_cell(e, available, &cw, &ch);
@@ -379,7 +379,7 @@ static ZSize wg_arrange(zrn_element_t* const e, const ZSize final) {
 }
 
 static void wg_init(zrn_element_t* const e) {
-	zrn_items_wrap_grid_t* const g = WG(e);
+	const auto g = WG(e);
 	g->orientation = Z_HORIZONTAL;
 	g->max_rows_or_columns = -1;
 	g->item_width = Z_AUTO;
@@ -582,7 +582,7 @@ static void grid_clamp_auto(const grid_axis_t* const axis) {
 }
 
 static ZSize grid_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_grid_t* g = ZST_AS(zrn_grid_t, e);
+	auto g = ZST_AS(zrn_grid_t, e);
 	grid_axis_t cols, rows;
 	grid_cell_t* cells = nullptr;
 	float col_content[256] = {}, row_content[256] = {};
@@ -636,7 +636,7 @@ static ZSize grid_measure(zrn_element_t* const e, const ZSize available) {
 }
 
 static ZSize grid_arrange(zrn_element_t* const e, const ZSize final) {
-	zrn_grid_t* const g = ZST_AS(zrn_grid_t, e);
+	const auto g = ZST_AS(zrn_grid_t, e);
 	grid_axis_t cols, rows;
 	float content_cols[256] = {}, content_rows[256] = {}, col_pos[257], row_pos[257];
 	int i;
@@ -959,7 +959,7 @@ static void viewbox_scale(const zrn_viewbox_t* const v, const ZSize content, con
 }
 
 static ZSize viewbox_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_viewbox_t* const v = ZST_AS(zrn_viewbox_t, e);
+	const auto v = ZST_AS(zrn_viewbox_t, e);
 	float sx, sy;
 	zrn_element_t* c;
 	if (!e->child_count) return zrn_size(0, 0);
@@ -970,7 +970,7 @@ static ZSize viewbox_measure(zrn_element_t* const e, const ZSize available) {
 }
 
 static ZSize viewbox_arrange(zrn_element_t* const e, const ZSize final) {
-	zrn_viewbox_t* const v = ZST_AS(zrn_viewbox_t, e);
+	const auto v = ZST_AS(zrn_viewbox_t, e);
 	zrn_element_t* c;
 	if (!e->child_count) return final;
 	c = e->children[0];
@@ -981,7 +981,7 @@ static ZSize viewbox_arrange(zrn_element_t* const e, const ZSize final) {
 }
 
 static void viewbox_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_viewbox_t* const v = ZST_AS(zrn_viewbox_t, e);
+	const auto v = ZST_AS(zrn_viewbox_t, e);
 	zrn_element_t* c;
 	float scale = p->scale, tx = p->tx, ty = p->ty, w, h;
 	if (!e->child_count) return;
@@ -998,7 +998,7 @@ static void viewbox_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 }
 
 static void viewbox_init(zrn_element_t* const e) {
-	zrn_viewbox_t* const v = ZST_AS(zrn_viewbox_t, e);
+	const auto v = ZST_AS(zrn_viewbox_t, e);
 	v->stretch = Z_STRETCH_UNIFORM;
 	v->direction = Z_STRETCH_BOTH;
 	v->scale_x = v->scale_y = 1.0f;

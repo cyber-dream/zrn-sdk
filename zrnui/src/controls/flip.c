@@ -24,7 +24,7 @@ static ZRect flip_viewport(const zrn_element_t* const e) {
 }
 
 static ZSize flip_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_items_control_t* const o = IC(e);
+	const auto o = IC(e);
 	float w = available.width < Z_INFINITE * 0.5f ? available.width : 0, h = available.height < Z_INFINITE * 0.5f ? available.height : 0;
 	int i, n = zrn_ic_count(o);
 	const float vw = zrn_maxf(0, w - 2 * FLIP_MARGIN), vh = zrn_maxf(0, h - 2 * FLIP_MARGIN);
@@ -38,7 +38,7 @@ static ZSize flip_measure(zrn_element_t* const e, const ZSize available) {
 }
 
 static ZSize flip_arrange(zrn_element_t* const e, const ZSize final) {
-	zrn_flip_view_t* const f = FV(e);
+	const auto f = FV(e);
 	zrn_items_control_t* o = &f->base;
 	const ZRect view = flip_viewport(e);
 	int i, n = zrn_ic_count(o);
@@ -91,7 +91,7 @@ void zrn_flip_items_changed(zrn_items_control_t* const o) {
 }
 
 static void flip_tick(zrn_element_t* const e, const float dt) {
-	zrn_flip_view_t* const f = FV(e);
+	const auto f = FV(e);
 	if (!f->sliding) {
 		if (!f->dragging) e->wants_tick = 0;
 		return;
@@ -132,7 +132,7 @@ static void flip_release(zrn_flip_view_t* const f, const float width) {
 }
 
 static int flip_input(zrn_element_t* const e, zrn_input_t* const in) {
-	zrn_flip_view_t* const f = FV(e);
+	const auto f = FV(e);
 	const int n = zrn_ic_count(&f->base);
 	const float width = e->rect.width - 2 * FLIP_MARGIN > 1 ? e->rect.width - 2 * FLIP_MARGIN : 1;
 	switch (in->type) {
@@ -209,7 +209,7 @@ static int flip_input(zrn_element_t* const e, zrn_input_t* const in) {
 }
 
 static void flip_init(zrn_element_t* const e) {
-	zrn_flip_view_t* const f = FV(e);
+	const auto f = FV(e);
 	zrn_items_control_t* const o = &f->base;
 	zrn_element_t* const host = zrn_create(Z_CLASS_STACK_PANEL);
 	/* FlipView: IsTabStop False; a touch gives it the keyboard */
@@ -286,13 +286,13 @@ static ZSize sz_arrange(zrn_element_t* const e, const ZSize final) {
 }
 
 static void sz_child_removed(zrn_element_t* const e, zrn_element_t* const child) {
-	zrn_semantic_zoom_t* const z = SZ(e);
+	const auto z = SZ(e);
 	if (z->zoomed_in == child) z->zoomed_in = nullptr;
 	if (z->zoomed_out == child) z->zoomed_out = nullptr;
 }
 
 static void sz_init(zrn_element_t* const e) {
-	zrn_semantic_zoom_t* const z = SZ(e);
+	const auto z = SZ(e);
 	z->in_active = 1;
 	z->can_change = 1;
 	z->button_enabled = 1;

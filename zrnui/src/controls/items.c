@@ -128,7 +128,7 @@ static ZFontFamily item_font_family(zrn_element_t* const e) {
 }
 
 static ZColor item_content_foreground(zrn_element_t* const e) {
-	zrn_selector_item_t* const it = ITEM(e);
+	const auto it = ITEM(e);
 	const zrn_control_t* const c = &it->base.base;
 	const zrn_items_control_t* const o = zrn_item_owner(e);
 	const int enabled = zrn_effectively_enabled(e);
@@ -165,7 +165,7 @@ static void check_glyph(zrn_painter_t* const p, const float x, const float y, co
 }
 
 static void item_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_selector_item_t* const it = ITEM(e);
+	const auto it = ITEM(e);
 	const zrn_control_t* const c = &it->base.base;
 	const zrn_items_control_t* const o = zrn_item_owner(e);
 	const int enabled = zrn_effectively_enabled(e);
@@ -213,7 +213,7 @@ static void item_tapped(zrn_element_t* const e) {
 }
 
 static int item_input(zrn_element_t* const e, zrn_input_t* const in) {
-	zrn_selector_item_t* const it = ITEM(e);
+	const auto it = ITEM(e);
 	switch (in->type) {
 		case ZST_IN_POINTER_DOWN:
 			/* the container is enabled by itself, but its control is not */
@@ -258,7 +258,7 @@ zrn_class_t zrn_class_selector_item = {
 static void list_box_item_init(zrn_element_t* e) { CTL(e)->padding = Zthickness(6.5f, 8, 6.5f, 8); }
 
 static void combo_box_item_init(zrn_element_t* const e) {
-	zrn_control_t* const c = CTL(e);
+	const auto c = CTL(e);
 	c->padding = Zthickness(6.5f, 8.5f, 0, 16);
 	c->h_content = Z_HALIGN_STRETCH;
 	c->font_size = ZST_81_FONT_CONTENT;
@@ -266,7 +266,7 @@ static void combo_box_item_init(zrn_element_t* const e) {
 }
 
 static void flip_view_item_init(zrn_element_t* const e) {
-	zrn_control_t* const c = CTL(e);
+	const auto c = CTL(e);
 	c->h_content = Z_HALIGN_STRETCH;
 	c->v_content = Z_VALIGN_STRETCH;
 	c->font_size = ZST_81_FONT_CONTENT;
@@ -347,7 +347,7 @@ static void ic_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 }
 
 static void ic_init(zrn_element_t* const e) {
-	zrn_items_control_t* const o = IC(e);
+	const auto o = IC(e);
 	zrn_element_t* const host = zrn_create(Z_CLASS_STACK_PANEL);
 	o->selected_index = -1;
 	o->sel_mode = ZST_SEL_SINGLE;
@@ -359,7 +359,7 @@ static void ic_init(zrn_element_t* const e) {
 }
 
 static void ic_child_removed(zrn_element_t* const e, zrn_element_t* const child) {
-	zrn_items_control_t* const o = IC(e);
+	const auto o = IC(e);
 	if (o->host == child) o->host = nullptr;
 	if (o->scroll == child) {
 		o->scroll = nullptr;
@@ -774,7 +774,7 @@ static int grid_columns(const zrn_items_control_t* const o) {
 }
 
 int zrn_ic_key(zrn_element_t* const e, zrn_input_t* const in) {
-	zrn_items_control_t* o = IC(e);
+	auto o = IC(e);
 	int n = zrn_ic_count(o), at, next, step = 0, grid = o->host && zrn_is_a(o->host, Z_CLASS_ITEMS_WRAP_GRID);
 	zrn_element_t* focus = zrn_lookup(o->focus_item);
 	int sideways = panel_scrolls_sideways(o->host);
@@ -827,8 +827,8 @@ go:
  * ============================================================================ */
 
 static void list_box_init(zrn_element_t* const e) {
-	zrn_items_control_t* const o = IC(e);
-	zrn_control_t* const c = CTL(e);
+	const auto o = IC(e);
+	const auto c = CTL(e);
 	zrn_element_t* const scroll = zrn_create(Z_CLASS_SCROLL_VIEWER);
 	zrn_element_t* const host = zrn_create(Z_CLASS_VIRTUALIZING_STACK_PANEL);
 	/* ListBox: BorderThickness 1.5, FontSize 12, IsTabStop False but it takes the keyboard when it is touched */

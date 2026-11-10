@@ -55,7 +55,7 @@ static constexpr float SEPARATOR_WIDTH = 12.0f;
  * ============================================================================ */
 
 static void icon_destroy(zrn_element_t* const e) {
-	zrn_icon_t* i = ICON(e);
+	auto i = ICON(e);
 	free(i->glyph);
 	free(i->path);
 	free(i->path_runs);
@@ -63,19 +63,19 @@ static void icon_destroy(zrn_element_t* const e) {
 }
 
 static void icon_init(zrn_element_t* const e) {
-	zrn_icon_t* i = ICON(e);
+	auto i = ICON(e);
 	i->font_size = ICON_SIZE;
 	i->family = Z_FONT_NORMAL;
 	e->hit_visible = 0;
 }
 
 static ZColor icon_color(zrn_element_t* const e) {
-	zrn_icon_t* i = ICON(e);
+	auto i = ICON(e);
 	return i->has_foreground ? i->foreground : zrn_inherited_foreground(e);
 }
 
 static ZSize icon_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_icon_t* i = ICON(e);
+	auto i = ICON(e);
 	ZST_UNUSED(available);
 	if (e->cls == &zrn_class_font_icon) {
 		const zrn_font_t font = { i->family, i->font_size, 0 };
@@ -264,7 +264,7 @@ zrn_class_t zrn_class_symbol_icon = {
 };
 
 static void font_icon_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_icon_t* i = ICON(e);
+	auto i = ICON(e);
 	const zrn_font_t font = { i->family, i->font_size, 0 };
 	const char* g = i->glyph ? i->glyph : "";
 	const float w = zrn_text_width(font, g, (int)strlen(g)), h = zrn_font_line_height(font);
@@ -276,7 +276,7 @@ zrn_class_t zrn_class_font_icon = {
 };
 
 static void path_icon_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_icon_t* i = ICON(e);
+	auto i = ICON(e);
 	const float bw = i->path_bounds[2] - i->path_bounds[0], bh = i->path_bounds[3] - i->path_bounds[1];
 	float s, ox, oy;
 	int run, at = 0, k;
@@ -653,7 +653,7 @@ static void item_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 }
 
 static void item_init(zrn_element_t* const e) {
-	zrn_control_t* c = ZST_AS(zrn_control_t, e);
+	auto c = ZST_AS(zrn_control_t, e);
 	/* the style of both: Top, Left, normal weight; no outline, no padding, no minimum size, no touch overhang */
 	c->border_thickness = zrn_thickness_zero();
 	c->padding = zrn_thickness_zero();
@@ -808,7 +808,7 @@ static int bar_hides_commands(zrn_element_t* const e) {
 static float bar_open_height(zrn_element_t* e, float width);
 
 static ZColor bar_background(zrn_element_t* const e) {
-	zrn_control_t* c = ZST_AS(zrn_control_t, e);
+	auto c = ZST_AS(zrn_control_t, e);
 	/* CommandBarBackgroundThemeBrush is the chrome; AppBarBackgroundThemeBrush the background of the page */
 	return zrn_ctl_background(c, zrn_theme_color(e, zrn_is_a(e, Z_CLASS_COMMAND_BAR) ? ZST_TC_CHROME : ZST_TC_BACKGROUND));
 }
@@ -865,7 +865,7 @@ static float bar_row_top(zrn_element_t* e);
 
 static void bar_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	const ZRect r = zrn_local_rect(e);
-	zrn_control_t* c = ZST_AS(zrn_control_t, e);
+	auto c = ZST_AS(zrn_control_t, e);
 	const ZColor border = zrn_ctl_border_brush(c, zrn_theme_color(e, ZST_TC_BACKGROUND));
 	const ZColor fg = zrn_ctl_foreground(c);
 	const float cx = e->rect.width - ELLIPSIS_WIDTH * 0.5f, cy = ellipsis_y(e, bar_row_top(e));
@@ -922,7 +922,7 @@ void zrn_app_bar_item_clicked(zrn_element_t* const item) {
 static void bar_sync_compact(zrn_element_t* e);
 
 static void bar_tick(zrn_element_t* const e, const float dt) {
-	zrn_app_bar_t* b = BAR(e);
+	auto b = BAR(e);
 	const float goal = b->is_open ? 1.0f : 0.0f;
 	if (b->open_t == goal) { e->wants_tick = 0; return; }
 	if (goal > b->open_t) b->open_t = zrn_minf(goal, b->open_t + dt / BAR_OPEN_MS);
@@ -933,7 +933,7 @@ static void bar_tick(zrn_element_t* const e, const float dt) {
 }
 
 static void app_bar_init(zrn_element_t* const e) {
-	zrn_control_t* c = ZST_AS(zrn_control_t, e);
+	auto c = ZST_AS(zrn_control_t, e);
 	BAR(e)->closed_mode = Z_APP_BAR_CLOSED_COMPACT;
 	e->focusable = 0;
 	e->clip_to_bounds = 1;
@@ -1039,7 +1039,7 @@ static void list_remove(zrn_element_t*** list, int* const count, const zrn_eleme
 }
 
 static void command_bar_child_removed(zrn_element_t* const e, zrn_element_t* const child) {
-	zrn_command_bar_t* c = CBAR(e);
+	auto c = CBAR(e);
 	list_remove(&c->primary, &c->primary_count, child);
 	list_remove(&c->secondary, &c->secondary_count, child);
 	zrn_cc_child_removed(e, child);
@@ -1092,7 +1092,7 @@ static float secondary_height(const zrn_command_bar_t* const c) {
 }
 
 static float command_open_height(zrn_element_t* const e, const float width) {
-	zrn_command_bar_t* c = CBAR(e);
+	auto c = CBAR(e);
 	ZST_UNUSED(width);
 	return 2 * BAR_BORDER + secondary_height(c) + command_row_height(c, 1);
 }
@@ -1104,14 +1104,14 @@ static float bar_open_height(zrn_element_t* const e, const float width) {
 
 /* Where the row of the buttons starts: under the border, and under the secondary list that has come into view. */
 static float bar_row_top(zrn_element_t* const e) {
-	zrn_app_bar_t* b = BAR(e);
+	auto b = BAR(e);
 	float t = zrn_ease(Z_EASE_OUT, b->open_t);
 	if (!zrn_is_a(e, Z_CLASS_COMMAND_BAR) || b->on_top) return BAR_BORDER;
 	return BAR_BORDER + secondary_height(CBAR(e)) * t;
 }
 
 static ZSize command_bar_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_command_bar_t* c = CBAR(e);
+	auto c = CBAR(e);
 	zrn_content_control_t* cc = &c->base.base;
 	float w = bar_width(e, available), primary_w = 0;
 	int i;
@@ -1126,7 +1126,7 @@ static ZSize command_bar_measure(zrn_element_t* const e, const ZSize available) 
 }
 
 static ZSize command_bar_arrange(zrn_element_t* const e, const ZSize final) {
-	zrn_command_bar_t* c = CBAR(e);
+	auto c = CBAR(e);
 	zrn_content_control_t* cc = &c->base.base;
 	float t = zrn_ease(Z_EASE_OUT, c->base.open_t);
 	float row_top = bar_row_top(e), x = final.width - ELLIPSIS_WIDTH, primary_w = 0, sec_h = secondary_height(c), y;

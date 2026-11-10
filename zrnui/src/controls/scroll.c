@@ -38,7 +38,7 @@ static void sv_changed(zrn_scroll_viewer_t* const s, const int fire) {
 }
 
 static ZSize sv_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_scroll_viewer_t* s = SV(e);
+	auto s = SV(e);
 	const zrn_content_control_t* const cc = &s->base;
 	ZSize room = available, content = { 0, 0 };
 	if (s->h_visibility != Z_SCROLLBAR_DISABLED) room.width = Z_INFINITE;
@@ -51,7 +51,7 @@ static ZSize sv_measure(zrn_element_t* const e, const ZSize available) {
 }
 
 static ZSize sv_arrange(zrn_element_t* const e, const ZSize final) {
-	zrn_scroll_viewer_t* const s = SV(e);
+	const auto s = SV(e);
 	const zrn_content_control_t* const cc = &s->base;
 	s->viewport_w = final.width;
 	s->viewport_h = final.height;
@@ -98,7 +98,7 @@ static void sv_paint_over(zrn_element_t* const e, zrn_painter_t* const p) {
 }
 
 static void sv_tick(zrn_element_t* const e, const float dt) {
-	zrn_scroll_viewer_t* s = SV(e);
+	auto s = SV(e);
 	int busy = 0, fire = 0;
 	if (!s->dragging && (fabsf(s->velocity_x) > 20.0f || fabsf(s->velocity_y) > 20.0f)) {
 		/* inertia: exponential decay, 1/3 of the speed left after 0.35 s */
@@ -133,7 +133,7 @@ static int sv_can_scroll_y(const zrn_scroll_viewer_t* s) { return s->v_visibilit
 static int sv_can_scroll_x(const zrn_scroll_viewer_t* s) { return s->h_visibility != Z_SCROLLBAR_DISABLED && s->extent_w > s->viewport_w; }
 
 static int sv_input(zrn_element_t* const e, zrn_input_t* const in) {
-	zrn_scroll_viewer_t* const s = SV(e);
+	const auto s = SV(e);
 	switch (in->type) {
 		case ZST_IN_PREVIEW_DOWN:
 			s->drag_start_x = in->x;
@@ -219,7 +219,7 @@ static int sv_input(zrn_element_t* const e, zrn_input_t* const in) {
 }
 
 static void sv_init(zrn_element_t* const e) {
-	zrn_scroll_viewer_t* const s = SV(e);
+	const auto s = SV(e);
 	s->v_visibility = Z_SCROLLBAR_AUTO;
 	s->h_visibility = Z_SCROLLBAR_DISABLED;
 	e->clip_to_bounds = 1;

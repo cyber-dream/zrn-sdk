@@ -184,7 +184,7 @@ static ZSize ls_measure(zrn_element_t* const e, const ZSize available) {
 }
 
 static void ls_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_looping_selector_t* const s = LS(e);
+	const auto s = LS(e);
 	const float w = e->rect.width, hh = e->rect.height, ch = item_cell_height(s), center = hh * 0.5f;
 	const ZColor accent = zrn_theme_color(e, ZST_TC_ACCENT), over = zrn_theme_color(e, ZST_TC_TEXT_OVER_ACCENT), low = zrn_theme_color(e, ZST_TC_TEXT_LOW);
 	int base, half, j, n = s->count;
@@ -271,7 +271,7 @@ static void ls_snap_to(zrn_looping_selector_t* const s, const int target) {
 }
 
 static void ls_tick(zrn_element_t* const e, const float dt) {
-	zrn_looping_selector_t* s = LS(e);
+	auto s = LS(e);
 	int busy = 0;
 	if (s->inertia) {
 		const float old = s->pos;
@@ -334,7 +334,7 @@ static void ls_step(zrn_looping_selector_t* const s, const int direction) {
 }
 
 static int ls_input(zrn_element_t* const e, zrn_input_t* const in) {
-	zrn_looping_selector_t* const s = LS(e);
+	const auto s = LS(e);
 	const float ch = item_cell_height(s);
 	switch (in->type) {
 	case ZST_IN_POINTER_DOWN:
@@ -401,7 +401,7 @@ static int ls_input(zrn_element_t* const e, zrn_input_t* const in) {
 }
 
 static void ls_init(zrn_element_t* const e) {
-	zrn_looping_selector_t* const s = LS(e);
+	const auto s = LS(e);
 	/* the style: ShouldLoop True; IsTabStop is false in the pickers, the keys work while it has the focus */
 	s->should_loop = 1;
 	s->selected = -1;
@@ -425,7 +425,7 @@ static void ls_clear(zrn_looping_selector_t* const s) {
 }
 
 static void ls_destroy(zrn_element_t* const e) {
-	zrn_looping_selector_t* const s = LS(e);
+	const auto s = LS(e);
 	ls_clear(s);
 	free(s->items);
 	s->items = nullptr;
@@ -765,7 +765,7 @@ static void picker_header_of(Zid owner, zrn_picker_flyout_t* f);
 
 /* About to show: the selectors begin on the value, and the title is the header of the picker. */
 static void flyout_on_show(zrn_element_t* const e) {
-	zrn_picker_flyout_t* const f = PF(e);
+	const auto f = PF(e);
 	picker_header_of(f->owner, f);
 	flyout_set_title_text(f);
 	flyout_sync(f);
@@ -786,7 +786,7 @@ static zrn_element_t* make_bar_button(const char* const label, const ZSymbol sym
 
 /* The presenter's content: the title, the selectors in the middle and the bar of Done and Cancel at the bottom. */
 static void picker_flyout_init(zrn_element_t* const e) {
-	zrn_picker_flyout_t* const f = PF(e);
+	const auto f = PF(e);
 	zrn_element_t* const presenter = f->base.popup && f->base.popup->child_count ? f->base.popup->children[0] : nullptr;
 	Zid grid, inner, title, bar;
 	int i;
@@ -846,7 +846,7 @@ zrn_class_t zrn_class_picker_flyout_base = {
 };
 
 static void date_flyout_init(zrn_element_t* const e) {
-	zrn_picker_flyout_t* const f = PF(e);
+	const auto f = PF(e);
 	const ZDate t = today();
 	int i;
 	f->date = t;
@@ -863,7 +863,7 @@ static void date_flyout_init(zrn_element_t* const e) {
 }
 
 static void time_flyout_init(zrn_element_t* const e) {
-	zrn_picker_flyout_t* const f = PF(e);
+	const auto f = PF(e);
 	int i;
 	f->time.hour = 0;
 	f->time.minute = 0;
@@ -1060,7 +1060,7 @@ static void picker_refresh_button(const zrn_picker_t* const p) {
 }
 
 static ZSize picker_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_picker_t* const p = PICKER(e);
+	const auto p = PICKER(e);
 	zrn_control_t* const c = &p->base;
 	const float w = available.width < Z_INFINITE * 0.5f ? available.width : 480.0f;
 	float pad_h = zrn_thickness_h(c->padding), h = c->padding.top + c->padding.bottom + header_height(p);
@@ -1074,7 +1074,7 @@ static ZSize picker_measure(zrn_element_t* const e, const ZSize available) {
 }
 
 static ZSize picker_arrange(zrn_element_t* const e, const ZSize final) {
-	zrn_picker_t* const p = PICKER(e);
+	const auto p = PICKER(e);
 	const zrn_control_t* const c = &p->base;
 	if (p->button) {
 		zrn_arrange(p->button, zrn_rect(c->padding.left, c->padding.top + header_height(p), zrn_maxf(0, final.width - zrn_thickness_h(c->padding)), p->button->desired.height));
@@ -1083,7 +1083,7 @@ static ZSize picker_arrange(zrn_element_t* const e, const ZSize final) {
 }
 
 static void picker_paint(zrn_element_t* const e, zrn_painter_t* const painter) {
-	zrn_picker_t* const p = PICKER(e);
+	const auto p = PICKER(e);
 	const zrn_control_t* const c = &p->base;
 	if (!p->header || !*p->header) return;
 	zrn_draw_string(painter, header_font(), p->header, (int)strlen(p->header), c->padding.left, c->padding.top,
@@ -1091,7 +1091,7 @@ static void picker_paint(zrn_element_t* const e, zrn_painter_t* const painter) {
 }
 
 static void picker_init(zrn_element_t* const e) {
-	zrn_picker_t* const p = PICKER(e);
+	const auto p = PICKER(e);
 	const int is_date = e->cls == &zrn_class_date_picker;
 	const Zid button = Zbutton_create(""), flyout = is_date ? Zdate_picker_flyout_create() : Ztime_picker_flyout_create();
 	zrn_element_t* const b = zrn_lookup(button);
@@ -1113,7 +1113,7 @@ static void picker_init(zrn_element_t* const e) {
 	zrn_add_child(e, b, -1);
 	p->button = b;
 	if (zrn_lookup(flyout)) {
-		zrn_picker_flyout_t* const f = PF(zrn_lookup(flyout));
+		const auto f = PF(zrn_lookup(flyout));
 		p->flyout = zrn_lookup(flyout);
 		f->owner = e->id;
 		if (is_date) f->date = p->date;
@@ -1156,7 +1156,7 @@ static void date_picker_set(zrn_picker_t* const p, const ZDate date, const int r
 	const ZDate old = p->date;
 	p->date = coerce_date(date, p->min_year, p->max_year);
 	if (p->flyout) {
-		zrn_picker_flyout_t* const f = PF(p->flyout);
+		const auto f = PF(p->flyout);
 		f->min_year = p->min_year;
 		f->max_year = p->max_year;
 		f->date = p->date;
@@ -1177,7 +1177,7 @@ static void time_picker_set(zrn_picker_t* const p, const ZTimeOfDay t, const int
 	const ZTimeOfDay old = p->time;
 	p->time = coerce_time(t);
 	if (p->flyout) {
-		zrn_picker_flyout_t* const f = PF(p->flyout);
+		const auto f = PF(p->flyout);
 		f->minute_increment = p->minute_increment;
 		f->clock = p->clock;
 		f->time = p->time;

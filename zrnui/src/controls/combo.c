@@ -50,7 +50,7 @@ static zrn_element_t* make_drop_down(zrn_element_t* const owner, zrn_element_t* 
 
 /* The popups follow the theme of the moment they open. */
 static void style_drop_down(const zrn_element_t* const popup, const ZColor background, const ZColor border_brush) {
-	zrn_border_t* const b = ZST_AS(zrn_border_t, popup->children[0]);
+	const auto b = ZST_AS(zrn_border_t, popup->children[0]);
 	b->background = background;
 	b->border_brush = border_brush;
 }
@@ -98,7 +98,7 @@ static ZSize combo_arrange(zrn_element_t* const e, const ZSize final) {
 }
 
 static void combo_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_combo_box_t* const c = CB(e);
+	const auto c = CB(e);
 	const zrn_control_t* const ctl = &c->base.base;
 	const zrn_font_t font = { ctl->font_family, ctl->font_size, 0 };
 	const ZRect box = combo_box_rect(e);
@@ -147,7 +147,7 @@ static int combo_set_open(zrn_combo_box_t* c, int open) {
 	c->is_open = open;
 	if (open) {
 		zrn_element_t* const border = c->popup->children[0];
-		zrn_popup_t* const popup = ZST_AS(zrn_popup_t, c->popup);
+		const auto popup = ZST_AS(zrn_popup_t, c->popup);
 		float above = 0;
 		int i;
 		style_drop_down(c->popup, zrn_theme_color(e, ZST_TC_BASE_WHITE), zrn_theme_color(e, ZST_TC_ACCENT));
@@ -188,7 +188,7 @@ void zrn_combo_item_tapped(zrn_items_control_t* const o, const int index) {
 }
 
 static int combo_input(zrn_element_t* const e, zrn_input_t* const in) {
-	zrn_combo_box_t* const c = CB(e);
+	const auto c = CB(e);
 	switch (in->type) {
 		case ZST_IN_POINTER_DOWN:
 			if (!zrn_effectively_enabled(e)) return 1;
@@ -224,7 +224,7 @@ static int combo_input(zrn_element_t* const e, zrn_input_t* const in) {
 }
 
 static void combo_init(zrn_element_t* const e) {
-	zrn_combo_box_t* const c = CB(e);
+	const auto c = CB(e);
 	zrn_items_control_t* const o = &c->base;
 	zrn_element_t* const scroll = zrn_create(Z_CLASS_SCROLL_VIEWER);
 	zrn_element_t* const host = zrn_create(Z_CLASS_VIRTUALIZING_STACK_PANEL);

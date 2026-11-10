@@ -258,7 +258,7 @@ static void pivot_select(zrn_pivot_t* p, int index, const int animate) {
 }
 
 static void pivot_tick(zrn_element_t* const e, const float dt) {
-	zrn_pivot_t* const p = PIVOT(e);
+	const auto p = PIVOT(e);
 	if (!p->sliding) {
 		if (!p->dragging) e->wants_tick = 0;
 		return;
@@ -305,7 +305,7 @@ static void pivot_begin_drag(zrn_pivot_t* const p) {
 }
 
 static int pivot_input(zrn_element_t* const e, zrn_input_t* const in) {
-	zrn_pivot_t* const p = PIVOT(e);
+	const auto p = PIVOT(e);
 	const float width = e->rect.width > 0 ? e->rect.width : 1;
 	const int can_drag = p->count >= 2 && !p->is_locked;
 	switch (in->type) {
@@ -397,7 +397,7 @@ static void pivot_destroy(zrn_element_t* const e) {
 }
 
 static void pivot_child_removed(zrn_element_t* const e, zrn_element_t* const child) {
-	zrn_pivot_t* const p = PIVOT(e);
+	const auto p = PIVOT(e);
 	int i;
 	for (i = 0; i < p->count; i++) {
 		if (p->items[i] != child) continue;
@@ -425,7 +425,7 @@ zrn_class_t zrn_class_pivot = {
  * ============================================================================ */
 
 static void pivot_item_init(zrn_element_t* const e) {
-	zrn_control_t* const c = ZST_AS(zrn_control_t, e);
+	const auto c = ZST_AS(zrn_control_t, e);
 	/* PivotItem: Margin 19,22.5,19,0 (PivotItemMargin), the content stretches */
 	e->margin = Zthickness(ITEM_MARGIN_LEFT, ITEM_MARGIN_TOP, ITEM_MARGIN_RIGHT, 0);
 	c->h_content = Z_HALIGN_STRETCH;

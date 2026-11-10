@@ -28,7 +28,7 @@ static void page_bar_room(const zrn_page_t* const p, float* const top, float* co
 }
 
 static ZSize page_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_page_t* const p = PAGE(e);
+	const auto p = PAGE(e);
 	const zrn_content_control_t* const cc = &p->base;
 	float top, bottom;
 	ZSize content = { 0, 0 };
@@ -43,7 +43,7 @@ static ZSize page_measure(zrn_element_t* const e, const ZSize available) {
 }
 
 static ZSize page_arrange(zrn_element_t* const e, const ZSize final) {
-	zrn_page_t* const p = PAGE(e);
+	const auto p = PAGE(e);
 	float top, bottom;
 	page_bar_room(p, &top, &bottom);
 	if (p->base.content) zrn_arrange(p->base.content, zrn_rect(0, top, final.width, zrn_maxf(0, final.height - top - bottom)));
@@ -53,7 +53,7 @@ static ZSize page_arrange(zrn_element_t* const e, const ZSize final) {
 }
 
 static void page_child_removed(zrn_element_t* const e, zrn_element_t* const child) {
-	zrn_page_t* const p = PAGE(e);
+	const auto p = PAGE(e);
 	if (p->top_bar == child) p->top_bar = nullptr;
 	else if (p->bottom_bar == child) p->bottom_bar = nullptr;
 	else zrn_cc_child_removed(e, child);
@@ -168,7 +168,7 @@ static void drop_cached(const zrn_frame_t* const f, const int first) {
 }
 
 static void frame_destroy(zrn_element_t* const e) {
-	zrn_frame_t* const f = FRAME(e);
+	const auto f = FRAME(e);
 	zrn_element_t* const pending = f->pending != Z_INVALID_ID ? zrn_lookup(f->pending) : nullptr;
 	if (pending && !pending->parent) zrn_destroy(pending);
 	drop_cached(f, 0);
@@ -332,7 +332,7 @@ static void finish(zrn_frame_t* const f, const Zid frame_id) {
 }
 
 static void frame_tick(zrn_element_t* e, const float dt) {
-	zrn_frame_t* f = FRAME(e);
+	auto f = FRAME(e);
 	const Zid id = e->id;
 	if (f->phase == 0) { e->wants_tick = 0; return; }
 	f->elapsed += dt;

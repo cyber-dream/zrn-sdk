@@ -59,7 +59,7 @@ static zrn_element_t* presenter_of(const zrn_flyout_base_t* const f) {
 
 /* The popup the flyout shows in, and the Border around the content (the presenter) in it. */
 static void flyout_base_init(zrn_element_t* const e) {
-	zrn_flyout_base_t* const f = FB(e);
+	const auto f = FB(e);
 	zrn_element_t* const popup = zrn_create(Z_CLASS_POPUP);
 	zrn_element_t* const presenter = zrn_create(Z_CLASS_BORDER);
 	f->placement = Z_FLYOUT_PLACEMENT_TOP;
@@ -98,7 +98,7 @@ static void flyout_popup_closed(const Zid popup, void* const user_data) {
 }
 
 void zrn_flyout_show_at(zrn_element_t* e, zrn_element_t* target) {
-	zrn_flyout_base_t* f = FB(e);
+	auto f = FB(e);
 	zrn_popup_t* popup;
 	zrn_element_t* presenter;
 	zrn_root_t* r;
@@ -140,7 +140,7 @@ void zrn_flyout_show_at(zrn_element_t* e, zrn_element_t* target) {
 	}
 	/* the look of the moment: the theme can change between two showings */
 	{
-		zrn_border_t* const b = ZST_AS(zrn_border_t, presenter);
+		const auto b = ZST_AS(zrn_border_t, presenter);
 		if (e->cls == &zrn_class_menu_flyout) {
 			b->background = zrn_theme_color(e, ZST_TC_BACKGROUND);
 			b->border_brush = zrn_theme_color(e, ZST_TC_FOREGROUND);
@@ -272,7 +272,7 @@ static zrn_font_t menu_font(void) {
 static void item_destroy(zrn_element_t* e) { free(ITEM(e)->text); }
 
 static void item_init(zrn_element_t* const e) {
-	zrn_control_t* const c = ZST_AS(zrn_control_t, e);
+	const auto c = ZST_AS(zrn_control_t, e);
 	c->padding = Zthickness(0, MENU_ITEM_PAD, 0, MENU_ITEM_PAD);
 	c->font_family = Z_FONT_SEMILIGHT;
 	c->font_size = MENU_FONT;
@@ -302,7 +302,7 @@ static void item_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 
 /* A tap runs Click, and the flyout the item is in closes. */
 static int item_input(zrn_element_t* e, zrn_input_t* in) {
-	zrn_menu_flyout_item_t* const m = ITEM(e);
+	const auto m = ITEM(e);
 	switch (in->type) {
 		case ZST_IN_POINTER_DOWN:
 			m->pressed = 1;
@@ -498,7 +498,7 @@ static zrn_element_t* make_dialog_button(zrn_element_t* const dialog, const int 
 }
 
 static void dialog_init(zrn_element_t* const e) {
-	zrn_content_dialog_t* const d = DIALOG(e);
+	const auto d = DIALOG(e);
 	zrn_control_t* const c = &d->base.base;
 	zrn_text_block_t* t;
 	e->focusable = 0;
@@ -524,7 +524,7 @@ static void dialog_init(zrn_element_t* const e) {
 }
 
 static void dialog_destroy(zrn_element_t* const e) {
-	zrn_content_dialog_t* const d = DIALOG(e);
+	const auto d = DIALOG(e);
 	zrn_element_t* const popup = d->popup != Z_INVALID_ID ? zrn_lookup(d->popup) : nullptr;
 	/* a dialog that is destroyed while it shows takes its popup with it, unless the popup is what is destroying it */
 	if (popup && !popup->destroying) zrn_destroy(popup);
@@ -534,7 +534,7 @@ static void dialog_destroy(zrn_element_t* const e) {
 }
 
 static void dialog_child_removed(zrn_element_t* const e, zrn_element_t* const child) {
-	zrn_content_dialog_t* const d = DIALOG(e);
+	const auto d = DIALOG(e);
 	if (d->title == child) d->title = nullptr;
 	else if (d->button1 == child) d->button1 = nullptr;
 	else if (d->button2 == child) d->button2 = nullptr;
@@ -548,7 +548,7 @@ static float title_height(const zrn_content_dialog_t* const d) {
 }
 
 static ZSize dialog_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_content_dialog_t* const d = DIALOG(e);
+	const auto d = DIALOG(e);
 	const float w = available.width < Z_INFINITE * 0.5f ? available.width : 480.0f;
 	const float inner = zrn_maxf(0, w - 2 * DIALOG_SIDE);
 	const float col = w * 0.5f;
@@ -574,7 +574,7 @@ static ZSize dialog_measure(zrn_element_t* const e, const ZSize available) {
 }
 
 static ZSize dialog_arrange(zrn_element_t* const e, const ZSize final) {
-	zrn_content_dialog_t* const d = DIALOG(e);
+	const auto d = DIALOG(e);
 	const float inner = zrn_maxf(0, final.width - 2 * DIALOG_SIDE), col = final.width * 0.5f;
 	const float title_row = zrn_maxf(DIALOG_TITLE_MIN, DIALOG_TITLE_TOP + title_height(d));
 	const float ch = d->base.content ? d->base.content->desired.height : 0;
@@ -686,7 +686,7 @@ void Zcontent_dialog_on_closed(const Zid id, const ZRoutedCallback callback, voi
 
 /* The dialog is over: the popup goes, the focus returns where it was, Closed and then the callback tell. */
 static void dialog_finish(zrn_element_t* const e, const ZContentDialogResult result) {
-	zrn_content_dialog_t* const d = DIALOG(e);
+	const auto d = DIALOG(e);
 	zrn_root_t* const r = e->root;
 	zrn_element_t* const popup = d->popup != Z_INVALID_ID ? zrn_lookup(d->popup) : nullptr;
 	zrn_element_t* const previous = d->previous_focus != Z_INVALID_ID ? zrn_lookup(d->previous_focus) : nullptr;

@@ -267,14 +267,14 @@ static void apply_binding(zrn_element_t* const e, const zrn_binding_t* const b) 
 			zrn_changed_layout(e);
 			break;
 		case ZST_BP_TEXT_FOREGROUND: {
-			zrn_text_block_t* const tb = ZST_AS(zrn_text_block_t, e);
+			const auto tb = ZST_AS(zrn_text_block_t, e);
 			tb->foreground = c;
 			tb->set_flags |= ZST_TB_FOREGROUND;
 			zrn_changed_paint(e);
 			break;
 		}
 		case ZST_BP_TEXT_FONT_SIZE: {
-			zrn_text_block_t* const tb = ZST_AS(zrn_text_block_t, e);
+			const auto tb = ZST_AS(zrn_text_block_t, e);
 			tb->font_size = d;
 			tb->set_flags |= ZST_TB_FONT_SIZE;
 			zrn_changed_layout(e);

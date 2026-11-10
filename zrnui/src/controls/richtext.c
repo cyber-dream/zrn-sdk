@@ -48,7 +48,7 @@ static void rtb_apply_all(zrn_rich_text_block_t* const r) {
 }
 
 static ZSize rtb_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_rich_text_block_t* const r = RTB(e);
+	const auto r = RTB(e);
 	float pad_h = zrn_thickness_h(r->padding), w = 0, h = zrn_thickness_v(r->padding);
 	int i;
 	for (i = 0; i < e->child_count; i++) {
@@ -73,7 +73,7 @@ static ZSize rtb_arrange(zrn_element_t* const e, const ZSize final) {
 }
 
 static void rtb_init(zrn_element_t* const e) {
-	zrn_rich_text_block_t* const r = RTB(e);
+	const auto r = RTB(e);
 	r->wrapping = Z_WRAP;
 	r->alignment = Z_TEXT_LEFT;
 	r->trimming = Z_TRIM_NONE;

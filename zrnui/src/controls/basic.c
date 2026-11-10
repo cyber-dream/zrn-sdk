@@ -37,7 +37,7 @@ static void tb_drop_layout(zrn_text_block_t* const t) {
 
 /* The layout for a width; cached until the text, the font or the width changes. */
 static zrn_text_layout_t* tb_layout(zrn_text_block_t* const t, const float width) {
-	zrn_text_layout_t* l = (zrn_text_layout_t*)t->layout;
+	auto l = (zrn_text_layout_t*)t->layout;
 	const zrn_font_t font = tb_font(t);
 	const int wrap = t->wrapping == Z_WRAP && width > 0 && width < Z_INFINITE * 0.5f;
 	if (l && (l->font.size != font.size || l->font.family != font.family || l->font.spacing != font.spacing || (wrap && t->layout_width != width) || (!wrap && t->layout_width != 0))) {
@@ -54,7 +54,7 @@ static zrn_text_layout_t* tb_layout(zrn_text_block_t* const t, const float width
 }
 
 static ZSize tb_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_text_block_t* const t = ZST_AS(zrn_text_block_t, e);
+	const auto t = ZST_AS(zrn_text_block_t, e);
 	zrn_text_layout_t* l;
 	tb_drop_layout(t);
 	l = tb_layout(t, available.width);
@@ -64,7 +64,7 @@ static ZSize tb_measure(zrn_element_t* const e, const ZSize available) {
 }
 
 static void tb_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_text_block_t* const t = ZST_AS(zrn_text_block_t, e);
+	const auto t = ZST_AS(zrn_text_block_t, e);
 	zrn_text_layout_t* l;
 	ZColor c;
 	if (!t->text || !*t->text) return;
@@ -76,7 +76,7 @@ static void tb_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 }
 
 static void tb_init(zrn_element_t* const e) {
-	zrn_text_block_t* const t = ZST_AS(zrn_text_block_t, e);
+	const auto t = ZST_AS(zrn_text_block_t, e);
 	t->wrapping = Z_NO_WRAP;
 	t->alignment = Z_TEXT_LEFT;
 	t->trimming = Z_TRIM_NONE;
@@ -84,7 +84,7 @@ static void tb_init(zrn_element_t* const e) {
 }
 
 static void tb_destroy(zrn_element_t* const e) {
-	zrn_text_block_t* const t = ZST_AS(zrn_text_block_t, e);
+	const auto t = ZST_AS(zrn_text_block_t, e);
 	tb_drop_layout(t);
 	free(t->text);
 }
@@ -258,7 +258,7 @@ Zid Zimage_create(void) {
 }
 
 static int image_set(zrn_element_t* const e, zrn_image_t* const image) {
-	zrn_image_element_t* const im = ZST_AS(zrn_image_element_t, e);
+	const auto im = ZST_AS(zrn_image_element_t, e);
 	if (!image) return false;
 	zrn_image_free(im->image);
 	im->image = image;
@@ -305,7 +305,7 @@ static ZSize popup_measure(zrn_element_t* e, const ZSize a) { ZST_UNUSED(e); ZST
 static ZSize popup_arrange(zrn_element_t* e, const ZSize f) { ZST_UNUSED(e); return f; }
 
 static void popup_init(zrn_element_t* const e) {
-	zrn_popup_t* const p = ZST_AS(zrn_popup_t, e);
+	const auto p = ZST_AS(zrn_popup_t, e);
 	p->stays_open = 0;
 	p->placement = Z_PLACE_BOTTOM;
 }
@@ -351,7 +351,7 @@ void Zpopup_set_placement_target(const Zid id, const Zid target, const ZPlacemen
 }
 
 void zrn_popup_set_open(zrn_element_t* e, int open) {
-	zrn_popup_t* const p = ZST_AS(zrn_popup_t, e);
+	const auto p = ZST_AS(zrn_popup_t, e);
 	open = open != 0;
 	if (p->is_open == open) return;
 	p->is_open = open;
@@ -398,7 +398,7 @@ ZColor zrn_ctl_background(const zrn_control_t* c, const ZColor fallback) { retur
 ZColor zrn_ctl_border_brush(const zrn_control_t* c, const ZColor fallback) { return zrn_ctl_color(c, ZST_C_BORDER_BRUSH, c->border_brush, fallback); }
 
 static void control_init(zrn_element_t* const e) {
-	zrn_control_t* const c = ZST_AS(zrn_control_t, e);
+	const auto c = ZST_AS(zrn_control_t, e);
 	c->font_size = ZST_FONT_NORMAL;
 	c->font_family = Z_FONT_NORMAL;
 	c->h_content = Z_HALIGN_CENTER;
@@ -547,7 +547,7 @@ ZSize zrn_cc_measure(zrn_element_t* const e, const ZSize available) {
 }
 
 ZSize zrn_cc_arrange(zrn_element_t* const e, const ZSize final) {
-	zrn_content_control_t* const cc = ZST_AS(zrn_content_control_t, e);
+	const auto cc = ZST_AS(zrn_content_control_t, e);
 	const zrn_control_t* c = &cc->base;
 	const ZThickness in = zrn_cc_insets(e);
 	const ZRect inner = zrn_rect(in.left, in.top, zrn_maxf(0, final.width - zrn_thickness_h(in)), zrn_maxf(0, final.height - zrn_thickness_v(in)));
@@ -571,7 +571,7 @@ ZSize zrn_cc_arrange(zrn_element_t* const e, const ZSize final) {
 }
 
 void zrn_cc_child_removed(zrn_element_t* const e, zrn_element_t* const child) {
-	zrn_content_control_t* const cc = ZST_AS(zrn_content_control_t, e);
+	const auto cc = ZST_AS(zrn_content_control_t, e);
 	if (cc->content == child) {
 		cc->content = nullptr;
 		cc->content_is_text = 0;
@@ -676,7 +676,7 @@ static void tooltip_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 }
 
 static void tooltip_init(zrn_element_t* const e) {
-	zrn_control_t* const c = ZST_AS(zrn_control_t, e);
+	const auto c = ZST_AS(zrn_control_t, e);
 	e->focusable = 0;
 	c->padding = Zthickness(8, 4, 8, 4);
 	c->border_thickness = Zthickness_uniform(1);

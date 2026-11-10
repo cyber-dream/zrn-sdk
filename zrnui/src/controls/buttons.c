@@ -44,7 +44,7 @@ static void button_set_pressed(zrn_button_base_t* const b, const int pressed, co
 }
 
 static int button_input(zrn_element_t* const e, zrn_input_t* const in) {
-	zrn_button_base_t* const b = BUTTON(e);
+	const auto b = BUTTON(e);
 	switch (in->type) {
 		case ZST_IN_POINTER_DOWN:
 			if (!zrn_effectively_enabled(e)) return 1;
@@ -116,7 +116,7 @@ static int button_input(zrn_element_t* const e, zrn_input_t* const in) {
 }
 
 static void button_tick(zrn_element_t* const e, const float dt) {
-	zrn_button_base_t* const b = BUTTON(e);
+	const auto b = BUTTON(e);
 	if (!b->repeat || !b->pressed) return;
 	if (!button_is_pressed(b)) return;
 	b->repeat_timer += dt;
@@ -151,7 +151,7 @@ static ZColor button_content_foreground(zrn_element_t* const e) {
 
 /* The Button template: a Border (BorderThickness 2.5) with the touch overhang above and below it. */
 static void button_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_button_base_t* const b = BUTTON(e);
+	const auto b = BUTTON(e);
 	const zrn_control_t* const c = &b->base.base;
 	const ZRect r = zrn_rect(0, ZST_81_TOUCH_OVERHANG, e->rect.width, e->rect.height - 2 * ZST_81_TOUCH_OVERHANG);
 	ZColor background = zrn_ctl_background(c, Zcolor_rgba(0, 0, 0, 0));
@@ -168,7 +168,7 @@ static void button_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 
 /* The style of Button, RepeatButton and ToggleButton; the classes below it change what they differ in. */
 static void button_init(zrn_element_t* const e) {
-	zrn_button_base_t* const b = BUTTON(e);
+	const auto b = BUTTON(e);
 	zrn_control_t* const c = &b->base.base;
 	c->border_thickness = Zthickness_uniform(ZST_81_BORDER_THICKNESS);
 	c->padding = Zthickness(9.5f, 0, 9.5f, 3.5f);
@@ -357,7 +357,7 @@ static int radio_exclude(zrn_element_t* const e, Zid** out_ids) {
 	toggle_find_radios(top, &list, &count, &cap);
 	if (count > 0) ids = (Zid*)malloc((size_t)count * sizeof *ids);
 	for (i = 0; i < count && ids; i++) {
-		zrn_toggle_button_t* const other = TOGGLE(list[i]);
+		const auto other = TOGGLE(list[i]);
 		int same;
 		if (list[i] == e || other->state != Z_CHECKED) continue;
 		if (me->group_name && *me->group_name) same = other->group_name && strcmp(other->group_name, me->group_name) == 0;
@@ -374,7 +374,7 @@ static int radio_exclude(zrn_element_t* const e, Zid** out_ids) {
 }
 
 static void toggle_set_state(zrn_element_t* const e, const ZToggleState state) {
-	zrn_toggle_button_t* const t = TOGGLE(e);
+	const auto t = TOGGLE(e);
 	Zid* others = nullptr;
 	int n = 0, i;
 	if (t->state == state) return;
@@ -416,7 +416,7 @@ static ZColor toggle_content_foreground(zrn_element_t* const e) {
 }
 
 static void toggle_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_toggle_button_t* const t = TOGGLE(e);
+	const auto t = TOGGLE(e);
 	const zrn_control_t* const c = &t->base.base.base;
 	const ZRect r = zrn_rect(0, ZST_81_TOUCH_OVERHANG, e->rect.width, e->rect.height - 2 * ZST_81_TOUCH_OVERHANG);
 	ZColor background = zrn_ctl_background(c, Zcolor_rgba(0, 0, 0, 0));
@@ -539,7 +539,7 @@ static ZColor box_fill(zrn_element_t* const e) {
 }
 
 static void checkbox_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_toggle_button_t* const t = TOGGLE(e);
+	const auto t = TOGGLE(e);
 	const zrn_control_t* const c = &t->base.base.base;
 	const ZRect box = box_rect();
 	const ZColor fill = box_fill(e), mark = box_mark(e);
@@ -732,7 +732,7 @@ static int ts_set_on(zrn_toggle_switch_t* t, int on) {
 }
 
 static void ts_tick(zrn_element_t* const e, const float dt) {
-	zrn_toggle_switch_t* const t = TSW(e);
+	const auto t = TSW(e);
 	if (t->dragging) { t->knob_animating = 0; return; }
 	if (!t->knob_animating) return;
 	t->knob_elapsed += dt;
@@ -758,7 +758,7 @@ static int ts_on_knob(const zrn_element_t* const e, const float x, const float y
 }
 
 static int ts_input(zrn_element_t* const e, zrn_input_t* const in) {
-	zrn_toggle_switch_t* const t = TSW(e);
+	const auto t = TSW(e);
 	switch (in->type) {
 		case ZST_IN_POINTER_DOWN: {
 			ts_geometry_t box;
@@ -826,7 +826,7 @@ static int ts_input(zrn_element_t* const e, zrn_input_t* const in) {
 }
 
 static void ts_init(zrn_element_t* const e) {
-	zrn_toggle_switch_t* const t = TSW(e);
+	const auto t = TSW(e);
 	zrn_control_t* const c = &t->base;
 	c->padding = Zthickness(0, 0, 25.5f, 0);
 	c->font_family = Z_FONT_SEMIBOLD;

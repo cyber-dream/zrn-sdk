@@ -102,8 +102,8 @@ static float section_header_band(void) { return SECTION_HEADER_TOP + zrn_font_li
 static float section_top(const zrn_element_t* e) { return section_placeholder(e) + section_header_band(); }
 
 static ZSize section_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_content_control_t* const cc = ZST_AS(zrn_content_control_t, e);
-	zrn_hub_section_t* const s = SECTION(e);
+	const auto cc = ZST_AS(zrn_content_control_t, e);
+	const auto s = SECTION(e);
 	zrn_hub_t* const h = hub_of(e);
 	float top = section_top(e), w = available.width, text_w;
 	ZSize content = { 0, 0 };
@@ -143,7 +143,7 @@ static int point_in(const ZRect r, const float x, const float y) { return x >= r
 
 /* A tap on an interactive header is SectionHeaderClick; the rest of the section does not take the pointer, the scroller does. */
 static int section_input(zrn_element_t* const e, zrn_input_t* const in) {
-	zrn_hub_section_t* const s = SECTION(e);
+	const auto s = SECTION(e);
 	switch (in->type) {
 	case ZST_IN_POINTER_DOWN:
 		if (!s->interactive || !point_in(section_header_rect(e), in->x, in->y)) return 0;
@@ -176,7 +176,7 @@ static int section_input(zrn_element_t* const e, zrn_input_t* const in) {
 }
 
 static void section_init(zrn_element_t* const e) {
-	zrn_control_t* const c = ZST_AS(zrn_control_t, e);
+	const auto c = ZST_AS(zrn_control_t, e);
 	/* HubSection: Margin 19,0,0,0 (HubSectionMarginThickness); its content stretches */
 	e->margin = Zthickness(SECTION_MARGIN_LEFT, 0, 0, 0);
 	c->h_content = Z_HALIGN_STRETCH;
@@ -242,7 +242,7 @@ static void hub_scrolled(const Zid scroll, const ZScrollEventType type, const do
 }
 
 static ZSize hub_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_hub_t* const h = HUB(e);
+	const auto h = HUB(e);
 	const float w = available.width < Z_INFINITE * 0.5f ? available.width : 480.0f;
 	const float hh = available.height < Z_INFINITE * 0.5f ? available.height : 800.0f;
 	h->view_width = w;
@@ -251,7 +251,7 @@ static ZSize hub_measure(zrn_element_t* const e, const ZSize available) {
 }
 
 static ZSize hub_arrange(zrn_element_t* const e, const ZSize final) {
-	zrn_hub_t* const h = HUB(e);
+	const auto h = HUB(e);
 	if (h->scroll) zrn_arrange(h->scroll, zrn_rect(0, 0, final.width, final.height));
 	/* the sections are where they are now: the range is quietly the one of the layout */
 	view_range(h, &h->view_first, &h->view_count);
@@ -282,7 +282,7 @@ static void hub_apply_orientation(const zrn_hub_t* const h) {
 }
 
 static void hub_init(zrn_element_t* const e) {
-	zrn_hub_t* const h = HUB(e);
+	const auto h = HUB(e);
 	zrn_element_t* const scroll = zrn_create(Z_CLASS_SCROLL_VIEWER);
 	zrn_element_t* const host = zrn_create(Z_CLASS_STACK_PANEL);
 	e->focusable = 0;
@@ -307,7 +307,7 @@ static void hub_destroy(zrn_element_t* const e) {
 }
 
 static void hub_child_removed(zrn_element_t* const e, zrn_element_t* const child) {
-	zrn_hub_t* const h = HUB(e);
+	const auto h = HUB(e);
 	if (h->scroll == child) {
 		h->scroll = nullptr;
 		h->host = nullptr;

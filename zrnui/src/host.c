@@ -706,7 +706,7 @@ void zrn_popup_close(zrn_element_t* popup);
 static int close_outside(const zrn_root_t* const r, const zrn_element_t* const target) {
 	int i, swallow = 0;
 	for (i = r->popup_count - 1; i >= 0; i--) {
-		zrn_popup_t* const popup = ZST_AS(zrn_popup_t, r->popups[i]);
+		const auto popup = ZST_AS(zrn_popup_t, r->popups[i]);
 		if (popup->stays_open) continue;
 		if (target && is_inside(target, &popup->base)) continue;
 		if (target && popup->base.parent && is_inside(target, popup->base.parent)) swallow = 1;
@@ -728,7 +728,7 @@ static int in_a_popup(const zrn_root_t* const r, const zrn_element_t* const e) {
 int zrn_root_dismiss_top(zrn_root_t* const r) {
 	int i;
 	for (i = r->popup_count - 1; i >= 0; i--) {
-		zrn_popup_t* const popup = ZST_AS(zrn_popup_t, r->popups[i]);
+		const auto popup = ZST_AS(zrn_popup_t, r->popups[i]);
 		/* a modal popup (a ContentDialog) closes as if it were told to hide; a popup that stays open is the program's own */
 		if (popup->stays_open && !popup->modal) continue;
 		zrn_popup_close(&popup->base);
