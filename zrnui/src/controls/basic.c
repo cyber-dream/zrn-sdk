@@ -173,8 +173,8 @@ int Ztext_block_set_style(const Zid text_block, const ZTextStyle style) {
 		[Z_TEXT_STYLE_PHONE_HUGE - Z_TEXT_STYLE_NONE] = { Z_FONT_LIGHT, ZST_FONT_HUGE, 0, 0, 0, 0, 12 }
 	};
 	zrn_text_block_t* const t = get_tb(text_block);
-	const int i = style - (int)Z_TEXT_STYLE_NONE;
-	if (!t || i <= 0 || i >= (Z_TEXT_STYLE_LAST_ - Z_TEXT_STYLE_NONE)) return false;
+	const int i = (int)style - (int)Z_TEXT_STYLE_NONE;
+	if (!t || i <= 0 || i >= (int)(Z_TEXT_STYLE_LAST_ - Z_TEXT_STYLE_NONE)) return false;
 	zrn_unbind(&t->base, ZST_BP_TEXT_FONT_SIZE);
 	zrn_unbind(&t->base, ZST_BP_TEXT_FOREGROUND);
 	zrn_unbind(&t->base, ZST_BP_TEXT_CHARACTER_SPACING);
