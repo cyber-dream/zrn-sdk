@@ -118,7 +118,7 @@ static zrn_font_entry_t* zrn_entry_add(void) {
 }
 
 static void zrn_entry_drop_last(void) {
-	zrn_font_entry_t* const entry = &g_fonts[--g_font_count];
+	const zrn_font_entry_t* const entry = &g_fonts[--g_font_count];
 	free(entry->path);
 	free(entry->family);
 }

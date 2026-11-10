@@ -117,35 +117,35 @@ int zrn_res_font_family(const zrn_root_t* const r, const ZThemeResource key, ZFo
 
 ZColor Zroot_get_theme_color(const Zid root, const ZThemeResource key) {
 	ZColor c = Zcolor_rgba(0, 0, 0, 0);
-	zrn_root_t* r = get_root(root);
+	const zrn_root_t* r = get_root(root);
 	if (r) zrn_res_color(r, key, &c);
 	return c;
 }
 
 float Zroot_get_theme_double(const Zid root, const ZThemeResource key) {
 	float v = 0;
-	zrn_root_t* r = get_root(root);
+	const zrn_root_t* r = get_root(root);
 	if (r) zrn_res_double(r, key, &v);
 	return v;
 }
 
 int Zroot_get_theme_int(const Zid root, const ZThemeResource key) {
 	int v = 0;
-	zrn_root_t* r = get_root(root);
+	const zrn_root_t* r = get_root(root);
 	if (r) zrn_res_int(r, key, &v);
 	return v;
 }
 
 ZThickness Zroot_get_theme_thickness(const Zid root, const ZThemeResource key) {
 	ZThickness v = zrn_thickness_zero();
-	zrn_root_t* r = get_root(root);
+	const zrn_root_t* r = get_root(root);
 	if (r) zrn_res_thickness(r, key, &v);
 	return v;
 }
 
 ZFontFamily Zroot_get_theme_font_family(const Zid root, const ZThemeResource key) {
 	ZFontFamily v = Z_FONT_NORMAL;
-	zrn_root_t* r = get_root(root);
+	const zrn_root_t* r = get_root(root);
 	if (r) zrn_res_font_family(r, key, &v);
 	return v;
 }

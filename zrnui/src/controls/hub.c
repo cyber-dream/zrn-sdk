@@ -119,20 +119,20 @@ static ZSize section_measure(zrn_element_t* const e, const ZSize available) {
 }
 
 static ZSize section_arrange(zrn_element_t* const e, const ZSize final) {
-	zrn_content_control_t* const cc = ZST_AS(zrn_content_control_t, e);
+	const zrn_content_control_t* const cc = ZST_AS(zrn_content_control_t, e);
 	const float top = section_top(e);
 	if (cc->content) zrn_arrange(cc->content, zrn_rect(0, top, final.width, zrn_maxf(0, final.height - top)));
 	return final;
 }
 
 static ZRect section_header_rect(zrn_element_t* const e) {
-	zrn_hub_section_t* const s = SECTION(e);
+	const zrn_hub_section_t* const s = SECTION(e);
 	const char* t = s->header ? s->header : "";
 	return zrn_rect(SECTION_HEADER_X, section_placeholder(e) + SECTION_HEADER_TOP, zrn_text_width(section_font(), t, (int)strlen(t)), zrn_font_line_height(section_font()));
 }
 
 static void section_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_hub_section_t* const s = SECTION(e);
+	const zrn_hub_section_t* const s = SECTION(e);
 	ZRect r;
 	if (!s->header || !*s->header) return;
 	r = section_header_rect(e);
@@ -211,7 +211,7 @@ static void view_range(const zrn_hub_t* const h, int* const first, int* const co
 	offset = is_vertical(h) ? s->offset_y : s->offset_x;
 	size = is_vertical(h) ? s->viewport_h : s->viewport_w;
 	for (i = 0; i < n; i++) {
-		zrn_element_t* const sec = h->host->children[i];
+		const zrn_element_t* const sec = h->host->children[i];
 		const float a = is_vertical(h) ? sec->rect.y - sec->margin.top : sec->rect.x - sec->margin.left;
 		const float b = is_vertical(h) ? sec->rect.y + sec->rect.height : sec->rect.x + sec->rect.width;
 		if (sec->visibility == Z_COLLAPSED) continue;
@@ -259,7 +259,7 @@ static ZSize hub_arrange(zrn_element_t* const e, const ZSize final) {
 }
 
 static void hub_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_hub_t* const h = HUB(e);
+	const zrn_hub_t* const h = HUB(e);
 	zrn_scroll_viewer_t* const s = scroll_of(h);
 	float x = HUB_HEADER_X, y = HUB_HEADER_Y;
 	if (!h->header || !*h->header || !s) return;
@@ -321,7 +321,7 @@ zrn_class_t zrn_class_hub = {
 };
 
 Zid Zhub_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_HUB);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_HUB);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -335,7 +335,7 @@ void Zhub_set_header(const Zid id, const char* const header) {
 }
 
 const char* Zhub_get_header(const Zid id) {
-	zrn_hub_t* const h = get_hub(id);
+	const zrn_hub_t* const h = get_hub(id);
 	return h && h->header ? h->header : "";
 }
 
@@ -352,12 +352,12 @@ void Zhub_set_orientation(const Zid id, const ZOrientation orientation) {
 }
 
 ZOrientation Zhub_get_orientation(const Zid id) {
-	zrn_hub_t* const h = get_hub(id);
+	const zrn_hub_t* const h = get_hub(id);
 	return h ? h->orientation : Z_HORIZONTAL;
 }
 
 Zid Zhub_get_scroll_viewer(const Zid id) {
-	zrn_hub_t* const h = get_hub(id);
+	const zrn_hub_t* const h = get_hub(id);
 	return h && h->scroll ? h->scroll->id : Z_INVALID_ID;
 }
 
@@ -376,7 +376,7 @@ int Zhub_insert_section(Zid id, int index, Zid section) {
 }
 
 int Zhub_add_section(const Zid id, const Zid section) {
-	zrn_hub_t* const h = get_hub(id);
+	const zrn_hub_t* const h = get_hub(id);
 	return h ? Zhub_insert_section(id, section_count(h), section) : -1;
 }
 
@@ -394,12 +394,12 @@ void Zhub_clear_sections(const Zid id) {
 }
 
 int Zhub_get_section_count(const Zid id) {
-	zrn_hub_t* const h = get_hub(id);
+	const zrn_hub_t* const h = get_hub(id);
 	return h ? section_count(h) : 0;
 }
 
 Zid Zhub_get_section(const Zid id, const int index) {
-	zrn_hub_t* const h = get_hub(id);
+	const zrn_hub_t* const h = get_hub(id);
 	return h && index >= 0 && index < section_count(h) ? h->host->children[index]->id : Z_INVALID_ID;
 }
 

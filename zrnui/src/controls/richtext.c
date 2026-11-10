@@ -61,7 +61,7 @@ static ZSize rtb_measure(zrn_element_t* const e, const ZSize available) {
 }
 
 static ZSize rtb_arrange(zrn_element_t* const e, const ZSize final) {
-	zrn_rich_text_block_t* const r = RTB(e);
+	const zrn_rich_text_block_t* const r = RTB(e);
 	float y = r->padding.top;
 	int i;
 	for (i = 0; i < e->child_count; i++) {
@@ -87,7 +87,7 @@ zrn_class_t zrn_class_rich_text_block = {
 };
 
 Zid Zrich_text_block_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_RICH_TEXT_BLOCK);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_RICH_TEXT_BLOCK);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -114,17 +114,17 @@ void Zrich_text_block_set_paragraph_text(const Zid id, const int index, const ch
 }
 
 const char* Zrich_text_block_get_paragraph_text(const Zid id, const int index) {
-	zrn_rich_text_block_t* const r = get_rtb(id);
+	const zrn_rich_text_block_t* const r = get_rtb(id);
 	return r && index >= 0 && index < r->base.child_count ? Ztext_block_get_text(r->base.children[index]->id) : "";
 }
 
 int Zrich_text_block_get_paragraph_count(const Zid id) {
-	zrn_rich_text_block_t* const r = get_rtb(id);
+	const zrn_rich_text_block_t* const r = get_rtb(id);
 	return r ? r->base.child_count : 0;
 }
 
 Zid Zrich_text_block_get_paragraph(const Zid id, const int index) {
-	zrn_rich_text_block_t* const r = get_rtb(id);
+	const zrn_rich_text_block_t* const r = get_rtb(id);
 	return r && index >= 0 && index < r->base.child_count ? r->base.children[index]->id : Z_INVALID_ID;
 }
 
@@ -217,7 +217,7 @@ void Zrich_text_block_set_padding(const Zid id, const ZThickness padding) {
 }
 
 ZThickness Zrich_text_block_get_padding(const Zid id) {
-	zrn_rich_text_block_t* const r = get_rtb(id);
+	const zrn_rich_text_block_t* const r = get_rtb(id);
 	return r ? r->padding : zrn_thickness_zero();
 }
 

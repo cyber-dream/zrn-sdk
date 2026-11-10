@@ -39,7 +39,7 @@ static void sv_changed(zrn_scroll_viewer_t* const s, const int fire) {
 
 static ZSize sv_measure(zrn_element_t* const e, const ZSize available) {
 	zrn_scroll_viewer_t* s = SV(e);
-	zrn_content_control_t* const cc = &s->base;
+	const zrn_content_control_t* const cc = &s->base;
 	ZSize room = available, content = { 0, 0 };
 	if (s->h_visibility != Z_SCROLLBAR_DISABLED) room.width = Z_INFINITE;
 	if (s->v_visibility != Z_SCROLLBAR_DISABLED) room.height = Z_INFINITE;
@@ -52,7 +52,7 @@ static ZSize sv_measure(zrn_element_t* const e, const ZSize available) {
 
 static ZSize sv_arrange(zrn_element_t* const e, const ZSize final) {
 	zrn_scroll_viewer_t* const s = SV(e);
-	zrn_content_control_t* const cc = &s->base;
+	const zrn_content_control_t* const cc = &s->base;
 	s->viewport_w = final.width;
 	s->viewport_h = final.height;
 	if (cc->content) {
@@ -75,7 +75,7 @@ static ZSize sv_arrange(zrn_element_t* const e, const ZSize final) {
 }
 
 static void sv_paint_over(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_scroll_viewer_t* const s = SV(e);
+	const zrn_scroll_viewer_t* const s = SV(e);
 	ZColor color;
 	double mx, my;
 	float alpha;
@@ -103,7 +103,7 @@ static void sv_tick(zrn_element_t* const e, const float dt) {
 	if (!s->dragging && (fabsf(s->velocity_x) > 20.0f || fabsf(s->velocity_y) > 20.0f)) {
 		/* inertia: exponential decay, 1/3 of the speed left after 0.35 s */
 		const float decay = expf(-dt / 320.0f);
-		double old_x = s->offset_x, old_y = s->offset_y;
+		const double old_x = s->offset_x, old_y = s->offset_y;
 		s->offset_x += s->velocity_x * dt / 1000.0f;
 		s->offset_y += s->velocity_y * dt / 1000.0f;
 		s->velocity_x *= decay;
@@ -235,7 +235,7 @@ zrn_class_t zrn_class_scroll_viewer = {
 };
 
 Zid Zscroll_viewer_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_SCROLL_VIEWER);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_SCROLL_VIEWER);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -278,12 +278,12 @@ void Zscroll_viewer_scroll_to_horizontal_offset(const Zid id, const double offse
 	sv_changed(s, 1);
 }
 
-double Zscroll_viewer_get_vertical_offset(Zid id) { zrn_scroll_viewer_t* s = get_sv(id); return s ? s->offset_y : 0; }
-double Zscroll_viewer_get_horizontal_offset(Zid id) { zrn_scroll_viewer_t* s = get_sv(id); return s ? s->offset_x : 0; }
-double Zscroll_viewer_get_extent_height(Zid id) { zrn_scroll_viewer_t* s = get_sv(id); return s ? s->extent_h : 0; }
-double Zscroll_viewer_get_extent_width(Zid id) { zrn_scroll_viewer_t* s = get_sv(id); return s ? s->extent_w : 0; }
-double Zscroll_viewer_get_viewport_height(Zid id) { zrn_scroll_viewer_t* s = get_sv(id); return s ? s->viewport_h : 0; }
-double Zscroll_viewer_get_viewport_width(Zid id) { zrn_scroll_viewer_t* s = get_sv(id); return s ? s->viewport_w : 0; }
+double Zscroll_viewer_get_vertical_offset(Zid id) { const zrn_scroll_viewer_t* s = get_sv(id); return s ? s->offset_y : 0; }
+double Zscroll_viewer_get_horizontal_offset(Zid id) { const zrn_scroll_viewer_t* s = get_sv(id); return s ? s->offset_x : 0; }
+double Zscroll_viewer_get_extent_height(Zid id) { const zrn_scroll_viewer_t* s = get_sv(id); return s ? s->extent_h : 0; }
+double Zscroll_viewer_get_extent_width(Zid id) { const zrn_scroll_viewer_t* s = get_sv(id); return s ? s->extent_w : 0; }
+double Zscroll_viewer_get_viewport_height(Zid id) { const zrn_scroll_viewer_t* s = get_sv(id); return s ? s->viewport_h : 0; }
+double Zscroll_viewer_get_viewport_width(Zid id) { const zrn_scroll_viewer_t* s = get_sv(id); return s ? s->viewport_w : 0; }
 
 void Zscroll_viewer_on_scroll(const Zid id, const ZScrollCallback callback, void* const user_data) {
 	zrn_scroll_viewer_t* const s = get_sv(id);

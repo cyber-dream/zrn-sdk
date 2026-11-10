@@ -197,7 +197,7 @@ static float scale_of_env(const char* const env) {
 
 static void preferred_scale(void* const d, struct wp_fractional_scale_v1* s, const uint32_t scale) {
 	const auto w = (window_t*)d;
-	float f = scale / 120.0f; /* in 1/120 of a scale of 1: 180 is 1.5 */
+	const float f = scale / 120.0f; /* in 1/120 of a scale of 1: 180 is 1.5 */
 	(void)s;
 	w->preferred_scale = scale;
 	/* the compositor owns the scale of a mobile shell; the environment only overrides it */

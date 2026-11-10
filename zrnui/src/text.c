@@ -173,7 +173,7 @@ static glyph_entry_t* glyph_bitmap(const uint8_t face, const float device_size, 
 			const FT_UInt index = FT_Get_Char_Index(ft, cp);
 			FT_Set_Char_Size(ft, 0, (FT_F26Dot6)(device_size * 64.0f + 0.5f), 72, 72);
 			if (FT_Load_Glyph(ft, index, FT_LOAD_NO_HINTING | FT_LOAD_RENDER) == 0 && ft->glyph->bitmap.pixel_mode == FT_PIXEL_MODE_GRAY) {
-				FT_Bitmap* const bm = &ft->glyph->bitmap;
+				const FT_Bitmap* const bm = &ft->glyph->bitmap;
 				unsigned row;
 				g->width = (int)bm->width;
 				g->height = (int)bm->rows;
@@ -265,7 +265,7 @@ int zrn_text_index_at(const zrn_font_t font, const char* const s, const int leng
 	int i = 0, used;
 	while (i < length) {
 		uint32_t cp = zrn_utf8_decode(s + i, length - i, &used);
-		float a = char_advance(font, cp);
+		const float a = char_advance(font, cp);
 		if (x < pen + a * 0.5f) return i;
 		pen += a;
 		i += used ? used : 1;
@@ -365,12 +365,12 @@ void zrn_draw_string(zrn_painter_t* const p, const zrn_font_t font, const char* 
 	const float baseline = p->ty + (y + font_content_height(font) * 0 + zrn_font_ascent(font)) * p->scale;
 	if (c.a * p->alpha <= 0.001f || device_size < 1.0f) return;
 	while (i < length) {
-		uint32_t cp = zrn_utf8_decode(s + i, length - i, &used);
+		const uint32_t cp = zrn_utf8_decode(s + i, length - i, &used);
 		if (!used) used = 1;
 		i += used;
 		if (cp == '\n' || cp == '\r') continue;
 		if (cp != ' ' && cp != '\t') {
-			glyph_entry_t* const g = glyph_bitmap(face, device_size, cp);
+			const glyph_entry_t* const g = glyph_bitmap(face, device_size, cp);
 			if (g->alpha) zrn_blit_alpha(p, (int)floorf(pen + 0.5f) + g->left, (int)floorf(baseline + 0.5f) - g->top, g->width, g->height, g->alpha, g->width, c);
 		}
 		pen += char_advance(font, cp) * p->scale;
@@ -385,7 +385,7 @@ void zrn_draw_text(zrn_painter_t* const p, const zrn_text_layout_t* const l, con
 		const zrn_line_t* line = &l->lines[i];
 		float lx = x, ly = y + (float)i * l->line_height + shift;
 		const int len = line->end - line->start;
-		float lw = line->width;
+		const float lw = line->width;
 		const int last = (i == l->line_count - 1);
 		if (trim == Z_TRIM_WORD_ELLIPSIS && width > 0 && (lw > width + 0.5f || (last && l->truncated))) {
 			/* cut the line so that "..." fits */

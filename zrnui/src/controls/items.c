@@ -97,7 +97,7 @@ static int multi_check(const zrn_items_control_t* const o) {
  * ============================================================================ */
 
 static ZThickness item_chrome(zrn_element_t* const e) {
-	zrn_items_control_t* const o = zrn_item_owner(e);
+	const zrn_items_control_t* const o = zrn_item_owner(e);
 	if (zrn_is_a(e, Z_CLASS_LIST_VIEW_ITEM) && multi_check(o)) return Zthickness(CHECK_SHIFT, 0, 0, 0);
 	return zrn_thickness_zero();
 }
@@ -114,24 +114,24 @@ static int item_focused(zrn_element_t* const e, const zrn_items_control_t* const
 }
 
 static float item_font_size(zrn_element_t* const e) {
-	zrn_control_t* const c = CTL(e);
-	zrn_items_control_t* const o = zrn_item_owner(e);
+	const zrn_control_t* const c = CTL(e);
+	const zrn_items_control_t* const o = zrn_item_owner(e);
 	if (!(c->set_flags & ZST_C_FONT_SIZE) && o && (o->base.set_flags & ZST_C_FONT_SIZE)) return o->base.font_size;
 	return c->font_size;
 }
 
 static ZFontFamily item_font_family(zrn_element_t* const e) {
-	zrn_control_t* const c = CTL(e);
-	zrn_items_control_t* const o = zrn_item_owner(e);
+	const zrn_control_t* const c = CTL(e);
+	const zrn_items_control_t* const o = zrn_item_owner(e);
 	if (!(c->set_flags & ZST_C_FONT_FAMILY) && o && (o->base.set_flags & ZST_C_FONT_FAMILY)) return o->base.font_family;
 	return c->font_family;
 }
 
 static ZColor item_content_foreground(zrn_element_t* const e) {
 	zrn_selector_item_t* const it = ITEM(e);
-	zrn_control_t* const c = &it->base.base;
-	zrn_items_control_t* const o = zrn_item_owner(e);
-	int enabled = zrn_effectively_enabled(e);
+	const zrn_control_t* const c = &it->base.base;
+	const zrn_items_control_t* const o = zrn_item_owner(e);
+	const int enabled = zrn_effectively_enabled(e);
 	ZColor fg;
 	if (zrn_is_a(e, Z_CLASS_LIST_BOX_ITEM)) {
 		/* ListBoxItem: the Foreground of the ListBox is PhoneBaseBlack (Dark; Light has the white that reads on its dark box), selected is PhoneBaseWhite on the accent */
@@ -166,9 +166,9 @@ static void check_glyph(zrn_painter_t* const p, const float x, const float y, co
 
 static void item_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	zrn_selector_item_t* const it = ITEM(e);
-	zrn_control_t* const c = &it->base.base;
-	zrn_items_control_t* const o = zrn_item_owner(e);
-	int enabled = zrn_effectively_enabled(e);
+	const zrn_control_t* const c = &it->base.base;
+	const zrn_items_control_t* const o = zrn_item_owner(e);
+	const int enabled = zrn_effectively_enabled(e);
 	const ZRect r = zrn_local_rect(e);
 	ZColor bg = zrn_ctl_background(c, Zcolor_rgba(0, 0, 0, 0));
 	if (zrn_is_a(e, Z_CLASS_LIST_BOX_ITEM)) {
@@ -187,7 +187,7 @@ static void item_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	} else if (zrn_is_a(e, Z_CLASS_GRID_VIEW_ITEM) && multi_check(o) && it->selected && enabled) {
 		/* GridMultiSelect: SelectedBorder of 2.5 in the accent and the earmark with the check in the top right corner */
 		const ZColor accent = zrn_theme_color(e, ZST_TC_ACCENT);
-		float tri[6] = { r.width - EARMARK, 0, r.width, 0, r.width, EARMARK };
+		const float tri[6] = { r.width - EARMARK, 0, r.width, 0, r.width, EARMARK };
 		zrn_stroke_rect(p, r, Zthickness_uniform(2.5f), accent);
 		zrn_fill_polygon(p, tri, 3, accent);
 		check_glyph(p, r.width - 1.0f - 17.0f, 1.0f, 17.0f, 14.5f, zrn_theme_color(e, ZST_TC_TEXT_OVER_ACCENT));
@@ -292,7 +292,7 @@ static zrn_element_t* make_item(const ZClass cls, const char* const text) {
 }
 
 static Zid create_item(const ZClass cls, const char* const content) {
-	zrn_element_t* e = make_item(cls, content);
+	const zrn_element_t* e = make_item(cls, content);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -330,7 +330,7 @@ static ZSize ic_arrange(zrn_element_t* const e, const ZSize final) {
 }
 
 static void ic_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_control_t* const c = CTL(e);
+	const zrn_control_t* const c = CTL(e);
 	const ZRect r = zrn_local_rect(e);
 	const int box = zrn_is_a(e, Z_CLASS_LIST_BOX), enabled = zrn_effectively_enabled(e);
 	ZColor bg = box ? zrn_theme_color(e, ZST_TC_BASE_MEDIUM_HIGH) : Zcolor_rgba(0, 0, 0, 0);
@@ -381,7 +381,7 @@ static zrn_items_control_t* get_ic(Zid id) { return IC(zrn_get(id, Z_CLASS_ITEMS
 static zrn_items_control_t* get_selector(Zid id) { return IC(zrn_get(id, Z_CLASS_SELECTOR)); }
 
 Zid Zitems_control_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_ITEMS_CONTROL);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_ITEMS_CONTROL);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -479,19 +479,19 @@ void Zitems_control_clear(const Zid id) {
 }
 
 int Zitems_control_get_count(const Zid id) {
-	zrn_items_control_t* const o = get_ic(id);
+	const zrn_items_control_t* const o = get_ic(id);
 	return o ? zrn_ic_count(o) : 0;
 }
 
 Zid Zitems_control_get_container(const Zid id, const int index) {
-	zrn_items_control_t* const o = get_ic(id);
-	zrn_element_t* const item = o ? zrn_ic_item(o, index) : nullptr;
+	const zrn_items_control_t* const o = get_ic(id);
+	const zrn_element_t* const item = o ? zrn_ic_item(o, index) : nullptr;
 	return item ? item->id : Z_INVALID_ID;
 }
 
 int Zitems_control_index_from_container(const Zid id, const Zid container) {
-	zrn_items_control_t* const o = get_ic(id);
-	zrn_element_t* const c = zrn_get(container, Z_CLASS_ELEMENT);
+	const zrn_items_control_t* const o = get_ic(id);
+	const zrn_element_t* const c = zrn_get(container, Z_CLASS_ELEMENT);
 	return o && c ? zrn_ic_index_of(o, c) : -1;
 }
 
@@ -502,13 +502,13 @@ const char* zrn_container_text(zrn_element_t* const container) {
 }
 
 const char* Zitems_control_get_text(const Zid id, const int index) {
-	zrn_items_control_t* const o = get_ic(id);
+	const zrn_items_control_t* const o = get_ic(id);
 	zrn_element_t* const item = o ? zrn_ic_item(o, index) : nullptr;
 	return item ? zrn_container_text(item) : "";
 }
 
 Zid Zitems_control_get_scroll_viewer(const Zid id) {
-	zrn_items_control_t* const o = get_ic(id);
+	const zrn_items_control_t* const o = get_ic(id);
 	return o && o->scroll ? o->scroll->id : Z_INVALID_ID;
 }
 
@@ -590,7 +590,7 @@ void Zitems_control_set_items_panel(const Zid id, const Zid panel) {
 }
 
 Zid Zitems_control_get_items_panel(const Zid id) {
-	zrn_items_control_t* o = get_ic(id);
+	const zrn_items_control_t* o = get_ic(id);
 	return o && o->host ? o->host->id : Z_INVALID_ID;
 }
 
@@ -856,7 +856,7 @@ zrn_class_t zrn_class_list_box = {
 };
 
 Zid Zlist_box_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_LIST_BOX);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_LIST_BOX);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -875,7 +875,7 @@ ZSelectionMode Zlist_box_get_selection_mode(const Zid id) {
 }
 
 int Zlist_box_get_selected_indices(const Zid id, int* const indices, const int max) {
-	zrn_items_control_t* const o = get_list_box(id);
+	const zrn_items_control_t* const o = get_list_box(id);
 	return o ? zrn_ic_selected_indices(o, indices, max) : 0;
 }
 

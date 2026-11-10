@@ -39,7 +39,7 @@ static void tb_drop_layout(zrn_text_block_t* const t) {
 static zrn_text_layout_t* tb_layout(zrn_text_block_t* const t, const float width) {
 	zrn_text_layout_t* l = (zrn_text_layout_t*)t->layout;
 	const zrn_font_t font = tb_font(t);
-	int wrap = t->wrapping == Z_WRAP && width > 0 && width < Z_INFINITE * 0.5f;
+	const int wrap = t->wrapping == Z_WRAP && width > 0 && width < Z_INFINITE * 0.5f;
 	if (l && (l->font.size != font.size || l->font.family != font.family || l->font.spacing != font.spacing || (wrap && t->layout_width != width) || (!wrap && t->layout_width != 0))) {
 		tb_drop_layout(t);
 		l = nullptr;
@@ -113,7 +113,7 @@ void Ztext_block_set_text(const Zid id, const char* const text) {
 }
 
 const char* Ztext_block_get_text(const Zid id) {
-	zrn_text_block_t* const t = get_tb(id);
+	const zrn_text_block_t* const t = get_tb(id);
 	return t && t->text ? t->text : "";
 }
 
@@ -221,7 +221,7 @@ static ZSize image_fit(const zrn_image_element_t* const im, const ZSize room) {
 }
 
 static ZSize image_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_image_element_t* const im = ZST_AS(zrn_image_element_t, e);
+	const zrn_image_element_t* const im = ZST_AS(zrn_image_element_t, e);
 	ZSize s = image_fit(im, available);
 	/* UniformToFill measures to the room, the picture is cropped */
 	if (im->stretch == Z_STRETCH_UNIFORM_TO_FILL) {
@@ -232,7 +232,7 @@ static ZSize image_measure(zrn_element_t* const e, const ZSize available) {
 }
 
 static void image_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_image_element_t* const im = ZST_AS(zrn_image_element_t, e);
+	const zrn_image_element_t* const im = ZST_AS(zrn_image_element_t, e);
 	ZSize full;
 	ZRect dest;
 	if (!im->image) return;
@@ -253,7 +253,7 @@ zrn_class_t zrn_class_image = {
 };
 
 Zid Zimage_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_IMAGE);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_IMAGE);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -291,7 +291,7 @@ void Zimage_set_stretch(const Zid id, const ZStretch stretch) {
 
 ZSize Zimage_get_natural_size(const Zid id) {
 	zrn_element_t* const e = zrn_get(id, Z_CLASS_IMAGE);
-	zrn_image_t* const image = e ? ZST_AS(zrn_image_element_t, e)->image : nullptr;
+	const zrn_image_t* const image = e ? ZST_AS(zrn_image_element_t, e)->image : nullptr;
 	return image ? zrn_size((float)image->width, (float)image->height) : zrn_size(0, 0);
 }
 
@@ -320,7 +320,7 @@ zrn_class_t zrn_class_popup = {
 };
 
 Zid Zpopup_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_POPUP);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_POPUP);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -407,7 +407,7 @@ static void control_init(zrn_element_t* const e) {
 }
 
 static ZColor control_content_foreground(zrn_element_t* const e) {
-	zrn_control_t* const c = ZST_AS(zrn_control_t, e);
+	const zrn_control_t* const c = ZST_AS(zrn_control_t, e);
 	if (!zrn_effectively_enabled(e)) return zrn_theme_color(e, ZST_TC_DISABLED);
 	return zrn_ctl_foreground(c);
 }
@@ -469,7 +469,7 @@ void Zcontrol_set_padding(const Zid id, const ZThickness t) {
 }
 
 ZThickness Zcontrol_get_padding(const Zid id) {
-	zrn_control_t* const c = get_control(id);
+	const zrn_control_t* const c = get_control(id);
 	return c ? c->padding : zrn_thickness_zero();
 }
 
@@ -483,7 +483,7 @@ void Zcontrol_set_font_size(const Zid id, const float size) {
 }
 
 float Zcontrol_get_font_size(const Zid id) {
-	zrn_control_t* const c = get_control(id);
+	const zrn_control_t* const c = get_control(id);
 	return c ? c->font_size : 0;
 }
 
@@ -525,7 +525,7 @@ void Zcontrol_set_tab_index(const Zid id, const int tab_index) {
  * ============================================================================ */
 
 ZThickness zrn_cc_insets(zrn_element_t* const e) {
-	zrn_control_t* c = ZST_AS(zrn_control_t, e);
+	const zrn_control_t* c = ZST_AS(zrn_control_t, e);
 	const ZThickness chrome = e->cls->chrome ? e->cls->chrome(e) : zrn_thickness_zero();
 	ZThickness t;
 	t.left = chrome.left + c->border_thickness.left + c->padding.left;
@@ -536,7 +536,7 @@ ZThickness zrn_cc_insets(zrn_element_t* const e) {
 }
 
 ZSize zrn_cc_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_content_control_t* const cc = ZST_AS(zrn_content_control_t, e);
+	const zrn_content_control_t* const cc = ZST_AS(zrn_content_control_t, e);
 	const ZThickness in = zrn_cc_insets(e);
 	ZSize content = { 0, 0 };
 	if (cc->content) {
@@ -548,11 +548,11 @@ ZSize zrn_cc_measure(zrn_element_t* const e, const ZSize available) {
 
 ZSize zrn_cc_arrange(zrn_element_t* const e, const ZSize final) {
 	zrn_content_control_t* const cc = ZST_AS(zrn_content_control_t, e);
-	zrn_control_t* c = &cc->base;
+	const zrn_control_t* c = &cc->base;
 	const ZThickness in = zrn_cc_insets(e);
-	ZRect inner = zrn_rect(in.left, in.top, zrn_maxf(0, final.width - zrn_thickness_h(in)), zrn_maxf(0, final.height - zrn_thickness_v(in)));
+	const ZRect inner = zrn_rect(in.left, in.top, zrn_maxf(0, final.width - zrn_thickness_h(in)), zrn_maxf(0, final.height - zrn_thickness_v(in)));
 	if (cc->content) {
-		ZSize d = cc->content->desired;
+		const ZSize d = cc->content->desired;
 		ZRect r = inner;
 		/* ContentPresenter: the alignment of the content is the control's HorizontalContentAlignment */
 		if (c->h_content != Z_HALIGN_STRETCH) {
@@ -605,7 +605,7 @@ void zrn_content_set_text(zrn_content_control_t* const c, const char* const text
 static zrn_content_control_t* get_cc(Zid id) { return ZST_AS(zrn_content_control_t, zrn_get(id, Z_CLASS_CONTENT_CONTROL)); }
 
 Zid Zcontent_control_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_CONTENT_CONTROL);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_CONTENT_CONTROL);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -622,7 +622,7 @@ void Zcontent_control_set_text(const Zid id, const char* const text) {
 }
 
 Zid Zcontent_control_get_content(const Zid id) {
-	zrn_content_control_t* const c = get_cc(id);
+	const zrn_content_control_t* const c = get_cc(id);
 	return c && c->content ? c->content->id : Z_INVALID_ID;
 }
 
@@ -708,7 +708,7 @@ static ZSize separator_measure(zrn_element_t* const e, const ZSize available) {
 }
 
 static void separator_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_control_t* const c = ZST_AS(zrn_control_t, e);
+	const zrn_control_t* const c = ZST_AS(zrn_control_t, e);
 	zrn_fill_rect(p, zrn_local_rect(e), zrn_ctl_background(c, zrn_theme_color(e, ZST_TC_INACTIVE)));
 }
 
@@ -720,6 +720,6 @@ zrn_class_t zrn_class_separator = {
 };
 
 Zid Zseparator_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_SEPARATOR);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_SEPARATOR);
 	return e ? e->id : Z_INVALID_ID;
 }

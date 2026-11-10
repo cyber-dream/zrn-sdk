@@ -128,7 +128,7 @@ static void button_tick(zrn_element_t* const e, const float dt) {
 		return;
 	}
 	while (b->repeat_timer >= (float)b->interval_ms && b->pressed) {
-		Zid id = e->id;
+		const Zid id = e->id;
 		b->repeat_timer -= (float)b->interval_ms;
 		button_click(e);
 		if (!zrn_lookup(id) || b->interval_ms <= 0) break;
@@ -143,7 +143,7 @@ static ZThickness button_chrome(zrn_element_t* const e) {
 
 /* The foreground of the content: ButtonPressedForeground while held, ButtonDisabledForeground (PhoneBaseLow) when disabled. */
 static ZColor button_content_foreground(zrn_element_t* const e) {
-	zrn_button_base_t* const b = BUTTON(e);
+	const zrn_button_base_t* const b = BUTTON(e);
 	if (!zrn_effectively_enabled(e)) return zrn_theme_color(e, ZST_TC_BASE_LOW);
 	if (button_is_pressed(b)) return zrn_theme_color(e, ZST_TC_TEXT_OVER_ACCENT);
 	return zrn_ctl_foreground(&b->base.base);
@@ -152,7 +152,7 @@ static ZColor button_content_foreground(zrn_element_t* const e) {
 /* The Button template: a Border (BorderThickness 2.5) with the touch overhang above and below it. */
 static void button_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	zrn_button_base_t* const b = BUTTON(e);
-	zrn_control_t* const c = &b->base.base;
+	const zrn_control_t* const c = &b->base.base;
 	const ZRect r = zrn_rect(0, ZST_81_TOUCH_OVERHANG, e->rect.width, e->rect.height - 2 * ZST_81_TOUCH_OVERHANG);
 	ZColor background = zrn_ctl_background(c, Zcolor_rgba(0, 0, 0, 0));
 	ZColor border = zrn_ctl_border_brush(c, zrn_ctl_foreground(c));
@@ -215,12 +215,12 @@ static zrn_element_t* make_button(const ZClass cls, const char* const content) {
 }
 
 Zid Zbutton_create(const char* const content) {
-	zrn_element_t* const e = make_button(Z_CLASS_BUTTON, content);
+	const zrn_element_t* const e = make_button(Z_CLASS_BUTTON, content);
 	return e ? e->id : Z_INVALID_ID;
 }
 
 Zid Zrepeat_button_create(const char* const content) {
-	zrn_element_t* const e = make_button(Z_CLASS_REPEAT_BUTTON, content);
+	const zrn_element_t* const e = make_button(Z_CLASS_REPEAT_BUTTON, content);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -234,12 +234,12 @@ void Zbutton_set_click_mode(const Zid id, const ZClickMode mode) {
 }
 
 int Zbutton_is_pressed(const Zid id) {
-	zrn_button_base_t* const b = get_button(id);
+	const zrn_button_base_t* const b = get_button(id);
 	return b ? button_is_pressed(b) : 0;
 }
 
 int Zbutton_is_pointer_over(const Zid id) {
-	zrn_button_base_t* const b = get_button(id);
+	const zrn_button_base_t* const b = get_button(id);
 	return b ? b->base.base.base.pointer_over != 0 : 0;
 }
 
@@ -287,7 +287,7 @@ static ZColor hyperlink_content_foreground(zrn_element_t* const e) {
 }
 
 static void hyperlink_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_control_t* const c = &BUTTON(e)->base.base;
+	const zrn_control_t* const c = &BUTTON(e)->base.base;
 	/* HyperlinkButtonBackgroundThemeBrush is transparent: only a color the program set shows */
 	if (c->set_flags & ZST_C_BACKGROUND) zrn_fill_rect(p, zrn_local_rect(e), c->background);
 }
@@ -311,7 +311,7 @@ zrn_class_t zrn_class_hyperlink_button = {
 };
 
 Zid Zhyperlink_button_create(const char* const content) {
-	zrn_element_t* const e = make_button(Z_CLASS_HYPERLINK_BUTTON, content);
+	const zrn_element_t* const e = make_button(Z_CLASS_HYPERLINK_BUTTON, content);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -348,7 +348,7 @@ static void toggle_find_radios(zrn_element_t* const e, zrn_element_t*** list, in
 /* Checking a radio button unchecks the others of its group: same GroupName, or, with none, the same parent.
  * Their states change here; the Unchecked events are the caller's, once nothing is half done. */
 static int radio_exclude(zrn_element_t* const e, Zid** out_ids) {
-	zrn_toggle_button_t* const me = TOGGLE(e);
+	const zrn_toggle_button_t* const me = TOGGLE(e);
 	zrn_element_t* top = e;
 	zrn_element_t** list = nullptr;
 	Zid* ids = nullptr;
@@ -390,7 +390,7 @@ static void toggle_set_state(zrn_element_t* const e, const ZToggleState state) {
 }
 
 static void toggle_on_click(zrn_element_t* const e) {
-	zrn_toggle_button_t* const t = TOGGLE(e);
+	const zrn_toggle_button_t* const t = TOGGLE(e);
 	if (e->cls == &zrn_class_radio_button) {
 		toggle_set_state(e, Z_CHECKED);
 		return;
@@ -408,7 +408,7 @@ static void toggle_on_click(zrn_element_t* const e) {
  * is the checked look at 0.4 opacity.
  */
 static ZColor toggle_content_foreground(zrn_element_t* const e) {
-	zrn_toggle_button_t* const t = TOGGLE(e);
+	const zrn_toggle_button_t* const t = TOGGLE(e);
 	const int enabled = zrn_effectively_enabled(e);
 	if (t->state == Z_CHECKED) return zrn_color_alpha(zrn_theme_color(e, ZST_TC_TEXT_OVER_ACCENT), enabled ? 1.0f : 0.4f);
 	if (!enabled) return zrn_theme_color(e, ZST_TC_BASE_LOW);
@@ -417,7 +417,7 @@ static ZColor toggle_content_foreground(zrn_element_t* const e) {
 
 static void toggle_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	zrn_toggle_button_t* const t = TOGGLE(e);
-	zrn_control_t* const c = &t->base.base.base;
+	const zrn_control_t* const c = &t->base.base.base;
 	const ZRect r = zrn_rect(0, ZST_81_TOUCH_OVERHANG, e->rect.width, e->rect.height - 2 * ZST_81_TOUCH_OVERHANG);
 	ZColor background = zrn_ctl_background(c, Zcolor_rgba(0, 0, 0, 0));
 	ZColor border = zrn_ctl_border_brush(c, zrn_ctl_foreground(c));
@@ -445,7 +445,7 @@ zrn_class_t zrn_class_toggle_button = {
 };
 
 Zid Ztoggle_button_create(const char* const content) {
-	zrn_element_t* const e = make_button(Z_CLASS_TOGGLE_BUTTON, content);
+	const zrn_element_t* const e = make_button(Z_CLASS_TOGGLE_BUTTON, content);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -457,7 +457,7 @@ void Ztoggle_button_set_state(const Zid id, const ZToggleState state) {
 }
 
 void Ztoggle_button_set_is_checked(Zid id, int is_checked) { Ztoggle_button_set_state(id, is_checked ? Z_CHECKED : Z_UNCHECKED); }
-ZToggleState Ztoggle_button_get_state(Zid id) { zrn_toggle_button_t* t = get_toggle(id); return t ? t->state : Z_UNCHECKED; }
+ZToggleState Ztoggle_button_get_state(Zid id) { const zrn_toggle_button_t* t = get_toggle(id); return t ? t->state : Z_UNCHECKED; }
 int Ztoggle_button_get_is_checked(Zid id) { return Ztoggle_button_get_state(id) == Z_CHECKED; }
 
 void Ztoggle_button_set_is_three_state(const Zid id, const int three_state) {
@@ -478,7 +478,7 @@ static constexpr float RADIO_MARK = 12.5f;
 
 /* The box is in the chrome; for a CheckBox the border thickness (it is the border of the box) is taken back out of the insets. */
 static ZThickness box_chrome(zrn_element_t* const e) {
-	zrn_control_t* const c = ZST_AS(zrn_control_t, e);
+	const zrn_control_t* const c = ZST_AS(zrn_control_t, e);
 	const ZThickness b = c->border_thickness;
 	return Zthickness(BOX - b.left, ZST_81_TOUCH_LARGE_OVERHANG - b.top, -b.right, ZST_81_TOUCH_LARGE_OVERHANG - b.bottom);
 }
@@ -519,28 +519,28 @@ static void radio_init(zrn_element_t* const e) {
 static ZRect box_rect(void) { return zrn_rect(0, ZST_81_TOUCH_LARGE_OVERHANG, BOX, BOX); }
 
 static ZColor box_border(zrn_element_t* const e) {
-	zrn_toggle_button_t* const t = TOGGLE(e);
+	const zrn_toggle_button_t* const t = TOGGLE(e);
 	if (!zrn_effectively_enabled(e)) return zrn_theme_color(e, ZST_TC_BASE_LOW);
 	return zrn_ctl_border_brush(&t->base.base.base, zrn_theme_color(e, ZST_TC_FOREGROUND));
 }
 
 /* The check, the dash and the dot: the foreground of the theme, over the accent while pressed. */
 static ZColor box_mark(zrn_element_t* const e) {
-	zrn_toggle_button_t* const t = TOGGLE(e);
+	const zrn_toggle_button_t* const t = TOGGLE(e);
 	if (!zrn_effectively_enabled(e)) return zrn_theme_color(e, ZST_TC_BASE_LOW);
 	if (button_is_pressed(&t->base)) return zrn_theme_color(e, ZST_TC_TEXT_OVER_ACCENT);
 	return zrn_theme_color(e, ZST_TC_FOREGROUND);
 }
 
 static ZColor box_fill(zrn_element_t* const e) {
-	zrn_toggle_button_t* const t = TOGGLE(e);
+	const zrn_toggle_button_t* const t = TOGGLE(e);
 	if (zrn_effectively_enabled(e) && button_is_pressed(&t->base)) return zrn_theme_color(e, ZST_TC_ACCENT);
 	return zrn_ctl_background(&t->base.base.base, Zcolor_rgba(0, 0, 0, 0));
 }
 
 static void checkbox_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	zrn_toggle_button_t* const t = TOGGLE(e);
-	zrn_control_t* const c = &t->base.base.base;
+	const zrn_control_t* const c = &t->base.base.base;
 	const ZRect box = box_rect();
 	const ZColor fill = box_fill(e), mark = box_mark(e);
 	if (fill.a > 0) zrn_fill_rect(p, box, fill);
@@ -562,7 +562,7 @@ static void checkbox_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 }
 
 static void radio_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_toggle_button_t* const t = TOGGLE(e);
+	const zrn_toggle_button_t* const t = TOGGLE(e);
 	const ZRect box = box_rect();
 	const ZColor fill = box_fill(e);
 	/* the stroke of an Ellipse is inside its bounds */
@@ -572,7 +572,7 @@ static void radio_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 }
 
 static ZColor box_content_foreground(zrn_element_t* const e) {
-	zrn_toggle_button_t* t = TOGGLE(e);
+	const zrn_toggle_button_t* t = TOGGLE(e);
 	if (!zrn_effectively_enabled(e)) return zrn_theme_color(e, ZST_TC_BASE_LOW);
 	return zrn_ctl_foreground(&t->base.base.base);
 }
@@ -590,7 +590,7 @@ zrn_class_t zrn_class_radio_button = {
 };
 
 Zid Zcheck_box_create(const char* const content) {
-	zrn_element_t* const e = make_button(Z_CLASS_CHECKBOX, content);
+	const zrn_element_t* const e = make_button(Z_CLASS_CHECKBOX, content);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -630,8 +630,8 @@ static constexpr float TS_KNOB_TRAVEL = 56.5f;
 static constexpr float TS_OUTLINE = 2.5f;
 /** The animation of the knob, in ms. */
 
-static zrn_font_t ts_header_font(void) { zrn_font_t f = { Z_FONT_NORMAL, ZST_81_FONT_CONTROL_HEADER, 0 }; return f; }
-static zrn_font_t ts_content_font(void) { zrn_font_t f = { Z_FONT_NORMAL, ZST_81_FONT_EXTRA_LARGE, 0 }; return f; }
+static zrn_font_t ts_header_font(void) { const zrn_font_t f = { Z_FONT_NORMAL, ZST_81_FONT_CONTROL_HEADER, 0 }; return f; }
+static zrn_font_t ts_content_font(void) { const zrn_font_t f = { Z_FONT_NORMAL, ZST_81_FONT_EXTRA_LARGE, 0 }; return f; }
 
 static int ts_has(const char* s) { return s && *s; }
 
@@ -651,8 +651,8 @@ static void ts_geometry(const zrn_element_t* const e, ts_geometry_t* const g) {
 }
 
 static ZSize ts_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_toggle_switch_t* t = TSW(e);
-	ZThickness pad = t->base.padding;
+	const zrn_toggle_switch_t* t = TSW(e);
+	const ZThickness pad = t->base.padding;
 	ts_geometry_t g;
 	float w = 0;
 	ts_geometry(e, &g);
@@ -665,7 +665,7 @@ static ZSize ts_measure(zrn_element_t* const e, const ZSize available) {
 }
 
 static void ts_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_toggle_switch_t* const t = TSW(e);
+	const zrn_toggle_switch_t* const t = TSW(e);
 	const ZThickness pad = t->base.padding;
 	ts_geometry_t g;
 	const int enabled = zrn_effectively_enabled(e);
@@ -840,7 +840,7 @@ static void ts_init(zrn_element_t* const e) {
 }
 
 static void ts_destroy(zrn_element_t* const e) {
-	zrn_toggle_switch_t* const t = TSW(e);
+	const zrn_toggle_switch_t* const t = TSW(e);
 	free(t->header);
 	free(t->on_content);
 	free(t->off_content);
@@ -852,7 +852,7 @@ zrn_class_t zrn_class_toggle_switch = {
 };
 
 Zid Ztoggle_switch_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_TOGGLE_SWITCH);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_TOGGLE_SWITCH);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -864,7 +864,7 @@ void Ztoggle_switch_set_is_on(const Zid id, const int is_on) {
 }
 
 int Ztoggle_switch_get_is_on(const Zid id) {
-	zrn_toggle_switch_t* const t = get_ts(id);
+	const zrn_toggle_switch_t* const t = get_ts(id);
 	return t ? t->is_on : 0;
 }
 
@@ -879,7 +879,7 @@ void Ztoggle_switch_set_header(const Zid id, const char* const header) {
 }
 
 const char* Ztoggle_switch_get_header(const Zid id) {
-	zrn_toggle_switch_t* const t = get_ts(id);
+	const zrn_toggle_switch_t* const t = get_ts(id);
 	return t && t->header ? t->header : "";
 }
 
@@ -889,7 +889,7 @@ void Ztoggle_switch_set_on_content(const Zid id, const char* const content) {
 }
 
 const char* Ztoggle_switch_get_on_content(const Zid id) {
-	zrn_toggle_switch_t* const t = get_ts(id);
+	const zrn_toggle_switch_t* const t = get_ts(id);
 	return t && t->on_content ? t->on_content : "";
 }
 
@@ -899,7 +899,7 @@ void Ztoggle_switch_set_off_content(const Zid id, const char* const content) {
 }
 
 const char* Ztoggle_switch_get_off_content(const Zid id) {
-	zrn_toggle_switch_t* const t = get_ts(id);
+	const zrn_toggle_switch_t* const t = get_ts(id);
 	return t && t->off_content ? t->off_content : "";
 }
 

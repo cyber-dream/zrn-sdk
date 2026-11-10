@@ -171,7 +171,7 @@ void Zflyout_base_set_placement(const Zid id, const ZFlyoutPlacementMode placeme
 }
 
 ZFlyoutPlacementMode Zflyout_base_get_placement(const Zid id) {
-	zrn_flyout_base_t* const f = get_flyout(id);
+	const zrn_flyout_base_t* const f = get_flyout(id);
 	return f ? f->placement : Z_FLYOUT_PLACEMENT_TOP;
 }
 
@@ -182,12 +182,12 @@ void Zflyout_base_show_at(const Zid id, const Zid placement_target) {
 }
 
 void Zflyout_base_hide(const Zid id) {
-	zrn_flyout_base_t* const f = get_flyout(id);
+	const zrn_flyout_base_t* const f = get_flyout(id);
 	if (f && f->is_open && f->popup) zrn_popup_close(f->popup);
 }
 
 int Zflyout_base_get_is_open(const Zid id) {
-	zrn_flyout_base_t* const f = get_flyout(id);
+	const zrn_flyout_base_t* const f = get_flyout(id);
 	return f ? f->is_open : 0;
 }
 
@@ -237,7 +237,7 @@ zrn_class_t zrn_class_flyout = {
 };
 
 Zid Zflyout_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_FLYOUT);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_FLYOUT);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -255,7 +255,7 @@ void Zflyout_set_content(const Zid id, const Zid content) {
 
 Zid Zflyout_get_content(const Zid id) {
 	zrn_element_t* const e = zrn_get(id, Z_CLASS_FLYOUT);
-	zrn_element_t* const presenter = e ? presenter_of(FB(e)) : nullptr;
+	const zrn_element_t* const presenter = e ? presenter_of(FB(e)) : nullptr;
 	return presenter && presenter->child_count ? presenter->children[0]->id : Z_INVALID_ID;
 }
 
@@ -280,14 +280,14 @@ static void item_init(zrn_element_t* const e) {
 }
 
 static ZSize item_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_control_t* const c = ZST_AS(zrn_control_t, e);
+	const zrn_control_t* const c = ZST_AS(zrn_control_t, e);
 	const char* t = ITEM(e)->text ? ITEM(e)->text : "";
 	ZST_UNUSED(available);
 	return zrn_size(zrn_text_width(menu_font(), t, (int)strlen(t)) + zrn_thickness_h(c->padding), zrn_font_line_height(menu_font()) + zrn_thickness_v(c->padding));
 }
 
 static void item_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_control_t* const c = ZST_AS(zrn_control_t, e);
+	const zrn_control_t* const c = ZST_AS(zrn_control_t, e);
 	const char* t = ITEM(e)->text ? ITEM(e)->text : "";
 	/* MenuFlyoutItemDisabledForegroundThemeBrush is PhoneDisabled */
 	const ZColor fg = zrn_effectively_enabled(e) ? zrn_ctl_foreground(c) : zrn_theme_color(e, ZST_TC_PHONE_DISABLED);
@@ -418,7 +418,7 @@ int Ztoggle_menu_flyout_item_get_is_checked(const Zid id) {
  * ============================================================================ */
 
 static zrn_element_t* menu_stack(zrn_flyout_base_t* const f) {
-	zrn_element_t* const presenter = presenter_of(f);
+	const zrn_element_t* const presenter = presenter_of(f);
 	return presenter && presenter->child_count ? presenter->children[0] : nullptr;
 }
 
@@ -440,7 +440,7 @@ zrn_class_t zrn_class_menu_flyout = {
 };
 
 Zid Zmenu_flyout_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_MENU_FLYOUT);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_MENU_FLYOUT);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -460,13 +460,13 @@ int Zmenu_flyout_add_item(const Zid id, const Zid item) {
 
 int Zmenu_flyout_get_item_count(const Zid id) {
 	zrn_element_t* const e = zrn_get(id, Z_CLASS_MENU_FLYOUT);
-	zrn_element_t* const stack = e ? menu_stack(FB(e)) : nullptr;
+	const zrn_element_t* const stack = e ? menu_stack(FB(e)) : nullptr;
 	return stack ? stack->child_count : 0;
 }
 
 Zid Zmenu_flyout_get_item(const Zid id, const int index) {
 	zrn_element_t* const e = zrn_get(id, Z_CLASS_MENU_FLYOUT);
-	zrn_element_t* const stack = e ? menu_stack(FB(e)) : nullptr;
+	const zrn_element_t* const stack = e ? menu_stack(FB(e)) : nullptr;
 	return stack && index >= 0 && index < stack->child_count ? stack->children[index]->id : Z_INVALID_ID;
 }
 
@@ -599,7 +599,7 @@ zrn_class_t zrn_class_content_dialog = {
 };
 
 Zid Zcontent_dialog_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_CONTENT_DIALOG);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_CONTENT_DIALOG);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -614,7 +614,7 @@ void Zcontent_dialog_set_title(const Zid id, const char* const title) {
 }
 
 const char* Zcontent_dialog_get_title(const Zid id) {
-	zrn_content_dialog_t* const d = get_dialog(id);
+	const zrn_content_dialog_t* const d = get_dialog(id);
 	return d && d->title ? Ztext_block_get_text(d->title->id) : "";
 }
 
@@ -635,12 +635,12 @@ void Zcontent_dialog_set_primary_button_text(Zid id, const char* text) { dialog_
 void Zcontent_dialog_set_secondary_button_text(Zid id, const char* text) { dialog_set_button_text(id, 0, text); }
 
 const char* Zcontent_dialog_get_primary_button_text(const Zid id) {
-	zrn_content_dialog_t* const d = get_dialog(id);
+	const zrn_content_dialog_t* const d = get_dialog(id);
 	return d && d->primary_text ? d->primary_text : "";
 }
 
 const char* Zcontent_dialog_get_secondary_button_text(const Zid id) {
-	zrn_content_dialog_t* const d = get_dialog(id);
+	const zrn_content_dialog_t* const d = get_dialog(id);
 	return d && d->secondary_text ? d->secondary_text : "";
 }
 
@@ -659,12 +659,12 @@ void Zcontent_dialog_set_is_secondary_button_enabled(const Zid id, const int ena
 }
 
 int Zcontent_dialog_get_is_primary_button_enabled(const Zid id) {
-	zrn_content_dialog_t* const d = get_dialog(id);
+	const zrn_content_dialog_t* const d = get_dialog(id);
 	return d ? d->primary_enabled : 0;
 }
 
 int Zcontent_dialog_get_is_secondary_button_enabled(const Zid id) {
-	zrn_content_dialog_t* const d = get_dialog(id);
+	const zrn_content_dialog_t* const d = get_dialog(id);
 	return d ? d->secondary_enabled : 0;
 }
 

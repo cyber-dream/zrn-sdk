@@ -52,7 +52,7 @@ void zrn_set_string(char** dest, const char* const s) {
 	*dest = copy;
 }
 
-ZColor Zcolor_rgba(float r, float g, float b, float a) { ZColor c = { r, g, b, a }; return c; }
+ZColor Zcolor_rgba(float r, float g, float b, float a) { const ZColor c = { r, g, b, a }; return c; }
 
 ZColor Zcolor_argb(const uint32_t argb) {
 	ZColor c;
@@ -63,8 +63,8 @@ ZColor Zcolor_argb(const uint32_t argb) {
 	return c;
 }
 
-ZThickness Zthickness(float l, float t, float r, float b) { ZThickness th = { l, t, r, b }; return th; }
-ZThickness Zthickness_uniform(float v) { ZThickness th = { v, v, v, v }; return th; }
+ZThickness Zthickness(float l, float t, float r, float b) { const ZThickness th = { l, t, r, b }; return th; }
+ZThickness Zthickness_uniform(float v) { const ZThickness th = { v, v, v, v }; return th; }
 
 const char* Zget_version(void) { return "0.1.0"; }
 
@@ -125,7 +125,7 @@ void zrn_handle_free(const Zid id) {
 }
 
 void* zrn_handle_get(const Zid id, const int is_root) {
-	uint32_t index = (id & ZST_INDEX_MASK) - 1;
+	const uint32_t index = (id & ZST_INDEX_MASK) - 1;
 	if ((id & ZST_INDEX_MASK) == 0 || index >= g_slot_count) return nullptr;
 	if (g_slots[index].ptr == nullptr || g_slots[index].generation != (id >> ZST_INDEX_BITS)) return nullptr;
 	if (g_slots[index].is_root != (uint8_t)is_root) return nullptr;
@@ -177,7 +177,7 @@ const zrn_class_t* zrn_class_of(const ZClass id) {
 		&zrn_class_time_picker, &zrn_class_picker_flyout_base, &zrn_class_date_picker_flyout, &zrn_class_time_picker_flyout,
 		&zrn_class_rich_text_block
 	};
-	unsigned index = (unsigned)id - (unsigned)Z_CLASS_ELEMENT;
+	const unsigned index = (unsigned)id - (unsigned)Z_CLASS_ELEMENT;
 	if (index >= sizeof table / sizeof table[0]) return nullptr;
 	return table[index];
 }
@@ -694,7 +694,7 @@ void Zshutdown(void) {
  * ============================================================================ */
 
 Zid Zelement_create(const ZClass element_class) {
-	zrn_element_t* const e = zrn_create(element_class);
+	const zrn_element_t* const e = zrn_create(element_class);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -706,17 +706,17 @@ void Zelement_destroy(const Zid id) {
 int Zelement_is_valid(Zid id) { return zrn_lookup(id) != nullptr; }
 
 ZClass Zelement_get_class(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
+	const zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
 	return e ? e->cls->id : (ZClass)0;
 }
 
 int Zelement_is_a(const Zid id, const ZClass cls) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
+	const zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
 	return e ? zrn_is_a(e, cls) : false;
 }
 
 const char* Zelement_get_class_name(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
+	const zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
 	return e ? e->cls->name : "";
 }
 
@@ -726,7 +726,7 @@ void Zelement_set_name(const Zid id, const char* const name) {
 }
 
 const char* Zelement_get_name(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
+	const zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
 	return e && e->name ? e->name : "";
 }
 
@@ -753,17 +753,17 @@ void Zelement_set_tag(const Zid id, void* const tag) {
 }
 
 void* Zelement_get_tag(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
+	const zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
 	return e ? e->tag : nullptr;
 }
 
 Zid Zelement_get_parent(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
+	const zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
 	return e && e->parent ? e->parent->id : Z_INVALID_ID;
 }
 
 int Zelement_get_child_count(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
+	const zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
 	return e ? e->child_count : 0;
 }
 
@@ -774,17 +774,17 @@ Zid Zelement_get_child(const Zid id, const int index) {
 }
 
 Zid Zelement_get_root(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
+	const zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
 	return e && e->root ? e->root->id : Z_INVALID_ID;
 }
 
 ZPoint Zelement_to_root(const Zid id, const ZPoint p) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
+	const zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
 	return e ? zrn_to_root(e, p) : p;
 }
 
 ZPoint Zelement_from_root(const Zid id, const ZPoint p) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
+	const zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
 	return e ? zrn_from_root(e, p) : p;
 }
 
@@ -823,13 +823,13 @@ SETTER(Zelement_set_visibility, ZVisibility, visibility, 1)
 SETTER(Zelement_set_opacity, float, opacity, 0)
 SETTER(Zelement_set_clip_to_bounds, int, clip_to_bounds, 0)
 
-float Zelement_get_width(Zid id) { zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->width : 0; }
-float Zelement_get_height(Zid id) { zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->height : 0; }
-ZThickness Zelement_get_margin(Zid id) { zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->margin : zrn_thickness_zero(); }
-ZHorizontalAlignment Zelement_get_horizontal_alignment(Zid id) { zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->halign : Z_HALIGN_STRETCH; }
-ZVerticalAlignment Zelement_get_vertical_alignment(Zid id) { zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->valign : Z_VALIGN_STRETCH; }
-ZVisibility Zelement_get_visibility(Zid id) { zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->visibility : Z_COLLAPSED; }
-float Zelement_get_opacity(Zid id) { zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->opacity : 0; }
+float Zelement_get_width(Zid id) { const zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->width : 0; }
+float Zelement_get_height(Zid id) { const zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->height : 0; }
+ZThickness Zelement_get_margin(Zid id) { const zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->margin : zrn_thickness_zero(); }
+ZHorizontalAlignment Zelement_get_horizontal_alignment(Zid id) { const zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->halign : Z_HALIGN_STRETCH; }
+ZVerticalAlignment Zelement_get_vertical_alignment(Zid id) { const zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->valign : Z_VALIGN_STRETCH; }
+ZVisibility Zelement_get_visibility(Zid id) { const zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->visibility : Z_COLLAPSED; }
+float Zelement_get_opacity(Zid id) { const zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->opacity : 0; }
 
 void Zelement_set_min_size(const Zid id, const float w, const float h) {
 	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
@@ -847,10 +847,10 @@ void Zelement_set_max_size(const Zid id, const float w, const float h) {
 	zrn_changed_layout(e);
 }
 
-float Zelement_get_actual_width(Zid id) { zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->rect.width : 0; }
-float Zelement_get_actual_height(Zid id) { zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->rect.height : 0; }
-ZSize Zelement_get_desired_size(Zid id) { zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->desired : zrn_size(0, 0); }
-ZRect Zelement_get_bounds(Zid id) { zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->rect : zrn_rect(0, 0, 0, 0); }
+float Zelement_get_actual_width(Zid id) { const zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->rect.width : 0; }
+float Zelement_get_actual_height(Zid id) { const zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->rect.height : 0; }
+ZSize Zelement_get_desired_size(Zid id) { const zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->desired : zrn_size(0, 0); }
+ZRect Zelement_get_bounds(Zid id) { const zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->rect : zrn_rect(0, 0, 0, 0); }
 
 void Zelement_set_enabled(const Zid id, const int enabled) {
 	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
@@ -860,8 +860,8 @@ void Zelement_set_enabled(const Zid id, const int enabled) {
 	zrn_changed_paint(e);
 }
 
-int Zelement_get_enabled(Zid id) { zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->enabled : 0; }
-int Zelement_is_effectively_enabled(Zid id) { zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? zrn_effectively_enabled(e) : 0; }
+int Zelement_get_enabled(Zid id) { const zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? e->enabled : 0; }
+int Zelement_is_effectively_enabled(Zid id) { const zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); return e ? zrn_effectively_enabled(e) : 0; }
 
 void Zelement_set_hit_test_visible(const Zid id, const int visible) {
 	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
@@ -899,6 +899,6 @@ int Zelement_focus(const Zid id) {
 }
 
 int Zelement_has_focus(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
+	const zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
 	return e && e->root && e->root->focus == e;
 }

@@ -78,7 +78,7 @@ static ZSize icon_measure(zrn_element_t* const e, const ZSize available) {
 	zrn_icon_t* i = ICON(e);
 	ZST_UNUSED(available);
 	if (e->cls == &zrn_class_font_icon) {
-		zrn_font_t font = { i->family, i->font_size, 0 };
+		const zrn_font_t font = { i->family, i->font_size, 0 };
 		const char* g = i->glyph ? i->glyph : "";
 		return zrn_size(zrn_text_width(font, g, (int)strlen(g)), zrn_font_line_height(font));
 	}
@@ -103,13 +103,13 @@ static float sx(const shape_t* h, float v) { return h->ox + v * h->s; }
 static float sy(const shape_t* h, float v) { return h->oy + v * h->s; }
 
 static void sh_line(shape_t* const h, const float x0, const float y0, const float x1, const float y1) {
-	float t = zrn_maxf(1.0f, 2.0f * h->s);
+	const float t = zrn_maxf(1.0f, 2.0f * h->s);
 	zrn_draw_line(h->p, sx(h, x0), sy(h, y0), sx(h, x1), sy(h, y1), t, h->c);
 }
 
 /* A run of lines with round joints. */
 static void sh_poly(shape_t* const h, const float* const xy, const int n, const int closed) {
-	float t = zrn_maxf(1.0f, 2.0f * h->s);
+	const float t = zrn_maxf(1.0f, 2.0f * h->s);
 	int i;
 	for (i = 0; i + 1 < n; i++) sh_line(h, xy[2 * i], xy[2 * i + 1], xy[2 * i + 2], xy[2 * i + 3]);
 	if (closed && n > 2) sh_line(h, xy[2 * n - 2], xy[2 * n - 1], xy[0], xy[1]);
@@ -143,7 +143,7 @@ static void sh_star(shape_t* const h, const int outline) {
 	float xy[20];
 	int i;
 	for (i = 0; i < 10; i++) {
-		float a = -ZST_PI * 0.5f + (float)i * ZST_PI / 5.0f, r = (i & 1) ? 4.2f : 9.0f;
+		const float a = -ZST_PI * 0.5f + (float)i * ZST_PI / 5.0f, r = (i & 1) ? 4.2f : 9.0f;
 		xy[2 * i] = 10.0f + r * cosf(a);
 		xy[2 * i + 1] = 10.5f + r * sinf(a);
 	}
@@ -153,7 +153,7 @@ static void sh_star(shape_t* const h, const int outline) {
 
 static void draw_symbol(zrn_painter_t* const p, const ZSymbol symbol, const ZRect box, const ZColor c) {
 	shape_t h;
-	float side = zrn_minf(box.width, box.height);
+	const float side = zrn_minf(box.width, box.height);
 	h.p = p;
 	h.s = side / ICON_SIZE;
 	h.ox = box.x + (box.width - side) * 0.5f;
@@ -200,7 +200,7 @@ static void draw_symbol(zrn_painter_t* const p, const ZSymbol symbol, const ZRec
 			float tip[6];
 			int i, n = 9;
 			for (i = 0; i < n; i++) {
-				float a = (-50.0f + (float)i * 35.0f) * ZST_PI / 180.0f;
+				const float a = (-50.0f + (float)i * 35.0f) * ZST_PI / 180.0f;
 				xy[2 * i] = 10.0f + 6.5f * cosf(a);
 				xy[2 * i + 1] = 10.0f + 6.5f * sinf(a);
 			}
@@ -224,7 +224,7 @@ static void draw_symbol(zrn_painter_t* const p, const ZSymbol symbol, const ZRec
 			sh_ring(&h, 10, 10, 6.0f, 2);
 			sh_ring(&h, 10, 10, 2.5f, 2);
 			for (i = 0; i < 8; i++) {
-				float a = (float)i * ZST_PI / 4.0f;
+				const float a = (float)i * ZST_PI / 4.0f;
 				sh_line(&h, 10.0f + 6.5f * cosf(a), 10.0f + 6.5f * sinf(a), 10.0f + 9.0f * cosf(a), 10.0f + 9.0f * sinf(a));
 			}
 			break;
@@ -265,9 +265,9 @@ zrn_class_t zrn_class_symbol_icon = {
 
 static void font_icon_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	zrn_icon_t* i = ICON(e);
-	zrn_font_t font = { i->family, i->font_size, 0 };
+	const zrn_font_t font = { i->family, i->font_size, 0 };
 	const char* g = i->glyph ? i->glyph : "";
-	float w = zrn_text_width(font, g, (int)strlen(g)), h = zrn_font_line_height(font);
+	const float w = zrn_text_width(font, g, (int)strlen(g)), h = zrn_font_line_height(font);
 	zrn_draw_string(p, font, g, (int)strlen(g), (e->rect.width - w) * 0.5f, (e->rect.height - h) * 0.5f, icon_color(e));
 }
 
@@ -277,7 +277,7 @@ zrn_class_t zrn_class_font_icon = {
 
 static void path_icon_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	zrn_icon_t* i = ICON(e);
-	float bw = i->path_bounds[2] - i->path_bounds[0], bh = i->path_bounds[3] - i->path_bounds[1];
+	const float bw = i->path_bounds[2] - i->path_bounds[0], bh = i->path_bounds[3] - i->path_bounds[1];
 	float s, ox, oy;
 	int run, at = 0, k;
 	if (!i->path || bw <= 0 || bh <= 0) return;
@@ -319,7 +319,7 @@ zrn_class_t zrn_class_bitmap_icon = {
 static zrn_icon_t* get_icon(Zid id, ZClass cls) { return ICON(zrn_get(id, cls)); }
 
 static Zid make_icon(const ZClass cls) {
-	zrn_element_t* e = zrn_create(cls);
+	const zrn_element_t* e = zrn_create(cls);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -332,7 +332,7 @@ void Zicon_element_set_foreground(const Zid id, const ZColor color) {
 }
 
 Zid Zsymbol_icon_create(const ZSymbol symbol) {
-	Zid id = make_icon(Z_CLASS_SYMBOL_ICON);
+	const Zid id = make_icon(Z_CLASS_SYMBOL_ICON);
 	if (id != Z_INVALID_ID) ICON(zrn_lookup(id))->symbol = symbol;
 	return id;
 }
@@ -350,7 +350,7 @@ ZSymbol Zsymbol_icon_get_symbol(const Zid id) {
 }
 
 Zid Zfont_icon_create(const char* const glyph) {
-	Zid id = make_icon(Z_CLASS_FONT_ICON);
+	const Zid id = make_icon(Z_CLASS_FONT_ICON);
 	if (id != Z_INVALID_ID) zrn_set_string(&ICON(zrn_lookup(id))->glyph, glyph ? glyph : "");
 	return id;
 }
@@ -438,7 +438,7 @@ static int path_parse(zrn_icon_t* const i, const char* const data) {
 			if (!ok) { fail = 1; break; }
 			ADD(cx, cmd == 'v' ? cy + a : a);
 		} else if (cmd == 'M' || cmd == 'm' || cmd == 'L' || cmd == 'l') {
-			int relative = cmd == 'm' || cmd == 'l';
+			const int relative = cmd == 'm' || cmd == 'l';
 			s = path_number(s, &a, &ok);
 			if (!ok) { fail = 1; break; }
 			s = path_number(s, &b, &ok);
@@ -490,7 +490,7 @@ int Zpath_icon_set_data(const Zid id, const char* const data) {
 }
 
 Zid Zpath_icon_create(const char* const data) {
-	Zid id = make_icon(Z_CLASS_PATH_ICON);
+	const Zid id = make_icon(Z_CLASS_PATH_ICON);
 	if (id != Z_INVALID_ID && data && !Zpath_icon_set_data(id, data)) {
 		Zelement_destroy(id);
 		return Z_INVALID_ID;
@@ -514,7 +514,7 @@ int Zbitmap_icon_set_uri_source(const Zid id, const char* const path) {
 }
 
 Zid Zbitmap_icon_create(const char* const path) {
-	Zid id = make_icon(Z_CLASS_BITMAP_ICON);
+	const Zid id = make_icon(Z_CLASS_BITMAP_ICON);
 	if (id != Z_INVALID_ID && path && !Zbitmap_icon_set_uri_source(id, path)) {
 		Zelement_destroy(id);
 		return Z_INVALID_ID;
@@ -533,19 +533,19 @@ static zrn_app_bar_item_t* item_of(zrn_element_t* const e) {
 }
 
 static zrn_font_t label_font(zrn_element_t* const e) {
-	zrn_font_t f = { ZST_AS(zrn_control_t, e)->font_family, ITEM_LABEL_FONT, 0 };
+	const zrn_font_t f = { ZST_AS(zrn_control_t, e)->font_family, ITEM_LABEL_FONT, 0 };
 	return f;
 }
 
 static zrn_font_t row_font(void) {
-	zrn_font_t f = { Z_FONT_SEMILIGHT, ROW_FONT, -15 };
+	const zrn_font_t f = { Z_FONT_SEMILIGHT, ROW_FONT, -15 };
 	return f;
 }
 
 static float item_top(const zrn_element_t* e) { return zrn_is_a(e, Z_CLASS_APP_BAR_TOGGLE_BUTTON) ? ITEM_TOGGLE_TOP : ITEM_TOP; }
 
 static float label_height(zrn_element_t* const e) {
-	zrn_app_bar_item_t* it = item_of(e);
+	const zrn_app_bar_item_t* it = item_of(e);
 	zrn_text_layout_t* l;
 	float h;
 	if (!it->label || !*it->label) return 0;
@@ -558,24 +558,24 @@ static float label_height(zrn_element_t* const e) {
 
 /* How tall the button is with its label shown or not. */
 static float item_height(zrn_element_t* const e, const int compact) {
-	zrn_app_bar_item_t* it = item_of(e);
+	const zrn_app_bar_item_t* it = item_of(e);
 	if (it->overflow) return zrn_font_line_height(row_font()) + 2 * ROW_PAD_V;
 	return item_top(e) + ITEM_CIRCLE + ITEM_GAP + (compact ? 0 : label_height(e) + ITEM_LABEL_BOTTOM);
 }
 
 static ZSize item_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_app_bar_item_t* it = item_of(e);
+	const zrn_app_bar_item_t* it = item_of(e);
 	if (ZST_AS(zrn_content_control_t, e)->content) zrn_measure(ZST_AS(zrn_content_control_t, e)->content, zrn_size(ITEM_CIRCLE, ITEM_CIRCLE));
 	if (it->overflow) return zrn_size(available.width < Z_INFINITE * 0.5f ? available.width : 480.0f, item_height(e, 0));
 	return zrn_size(it->is_compact ? ITEM_COMPACT_WIDTH : ITEM_FULL_WIDTH, item_height(e, it->is_compact));
 }
 
 static ZSize item_arrange(zrn_element_t* const e, const ZSize final) {
-	zrn_content_control_t* cc = ZST_AS(zrn_content_control_t, e);
+	const zrn_content_control_t* cc = ZST_AS(zrn_content_control_t, e);
 	if (cc->content && !item_of(e)->overflow) {
 		/* the icon is as big as it asks for, in the middle of the circle */
-		ZSize d = cc->content->desired;
-		float w = zrn_minf(d.width, ITEM_CIRCLE), h = zrn_minf(d.height, ITEM_CIRCLE);
+		const ZSize d = cc->content->desired;
+		const float w = zrn_minf(d.width, ITEM_CIRCLE), h = zrn_minf(d.height, ITEM_CIRCLE);
 		zrn_arrange(cc->content, zrn_rect((final.width - w) * 0.5f, item_top(e) + (ITEM_CIRCLE - h) * 0.5f, w, h));
 	} else if (cc->content) {
 		zrn_arrange(cc->content, zrn_rect(0, 0, 0, 0));
@@ -589,7 +589,7 @@ static ZThickness item_chrome(zrn_element_t* const e) {
 }
 
 static int item_pressed(zrn_element_t* const e) {
-	zrn_button_base_t* b = ZST_AS(zrn_button_base_t, e);
+	const zrn_button_base_t* b = ZST_AS(zrn_button_base_t, e);
 	return b->pressed && b->pointer_over;
 }
 
@@ -599,10 +599,10 @@ static int item_checked(zrn_element_t* const e) {
 
 /* The colors of the states of the templates: the outline, the fill of the circle, and the foreground of the icon. */
 static void item_colors(zrn_element_t* const e, ZColor* const stroke, ZColor* const fill, ZColor* const icon, ZColor* const label) {
-	ZColor fg = zrn_theme_color(e, ZST_TC_FOREGROUND), bg = zrn_theme_color(e, ZST_TC_BACKGROUND);
-	ZColor disabled = zrn_theme_color(e, ZST_TC_PHONE_DISABLED), none = Zcolor_rgba(0, 0, 0, 0);
-	int enabled = zrn_effectively_enabled(e), pressed = item_pressed(e), checked = item_checked(e);
-	ZColor own = zrn_ctl_foreground(ZST_AS(zrn_control_t, e));
+	const ZColor fg = zrn_theme_color(e, ZST_TC_FOREGROUND), bg = zrn_theme_color(e, ZST_TC_BACKGROUND);
+	const ZColor disabled = zrn_theme_color(e, ZST_TC_PHONE_DISABLED), none = Zcolor_rgba(0, 0, 0, 0);
+	const int enabled = zrn_effectively_enabled(e), pressed = item_pressed(e), checked = item_checked(e);
+	const ZColor own = zrn_ctl_foreground(ZST_AS(zrn_control_t, e));
 	*label = fg;
 	if (!enabled) {
 		*label = disabled;
@@ -627,19 +627,19 @@ static ZColor item_content_foreground(zrn_element_t* const e) {
 }
 
 static void item_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_app_bar_item_t* it = item_of(e);
+	const zrn_app_bar_item_t* it = item_of(e);
 	ZColor stroke, fill, icon, label;
 	item_colors(e, &stroke, &fill, &icon, &label);
 	if (it->overflow) {
-		zrn_font_t font = row_font();
+		const zrn_font_t font = row_font();
 		const char* t = it->label ? it->label : "";
 		if (item_pressed(e)) zrn_fill_rect(p, zrn_local_rect(e), zrn_theme_color(e, ZST_TC_BASE_LOW));
 		zrn_draw_string(p, font, t, (int)strlen(t), ROW_LEFT, ROW_PAD_V, label);
 		return;
 	}
 	{
-		float cx = e->rect.width * 0.5f, top = item_top(e);
-		ZRect circle = zrn_rect(cx - ITEM_CIRCLE * 0.5f, top, ITEM_CIRCLE, ITEM_CIRCLE);
+		const float cx = e->rect.width * 0.5f, top = item_top(e);
+		const ZRect circle = zrn_rect(cx - ITEM_CIRCLE * 0.5f, top, ITEM_CIRCLE, ITEM_CIRCLE);
 		if (fill.a > 0) zrn_fill_ellipse(p, circle, fill);
 		if (stroke.a > 0) zrn_stroke_ellipse(p, circle, ITEM_OUTLINE, stroke);
 		if (!it->is_compact && it->label && *it->label) {
@@ -770,7 +770,7 @@ zrn_class_t zrn_class_app_bar_separator = {
 };
 
 Zid Zapp_bar_separator_create(void) {
-	zrn_element_t* e = zrn_create(Z_CLASS_APP_BAR_SEPARATOR);
+	const zrn_element_t* e = zrn_create(Z_CLASS_APP_BAR_SEPARATOR);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -801,7 +801,7 @@ void zrn_app_bar_set_on_top(zrn_element_t* const bar, const int on_top) {
 
 /* Closed and Minimal: only the three dots show. */
 static int bar_hides_commands(zrn_element_t* const e) {
-	zrn_app_bar_t* b = BAR(e);
+	const zrn_app_bar_t* b = BAR(e);
 	return b->closed_mode == Z_APP_BAR_CLOSED_MINIMAL && !b->is_open && b->open_t <= 0;
 }
 
@@ -820,14 +820,14 @@ static float bar_width(zrn_element_t* const e, const ZSize available) {
 
 /* The height now: between the closed one and the open one while it opens or closes. */
 static float bar_height(zrn_element_t* const e, const float width) {
-	float closed = zrn_app_bar_closed_height(e), open = zrn_maxf(closed, bar_open_height(e, width));
+	const float closed = zrn_app_bar_closed_height(e), open = zrn_maxf(closed, bar_open_height(e, width));
 	return closed + (open - closed) * zrn_ease(Z_EASE_OUT, BAR(e)->open_t);
 }
 
 float zrn_app_bar_height(zrn_element_t* bar, float width) { return bar_height(bar, width); }
 
 static ZSize app_bar_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_content_control_t* cc = ZST_AS(zrn_content_control_t, e);
+	const zrn_content_control_t* cc = ZST_AS(zrn_content_control_t, e);
 	float w = bar_width(e, available), h;
 	if (cc->content) zrn_measure(cc->content, zrn_size(zrn_maxf(0, w - ELLIPSIS_WIDTH), Z_INFINITE));
 	h = bar_height(e, w);
@@ -835,13 +835,13 @@ static ZSize app_bar_measure(zrn_element_t* const e, const ZSize available) {
 }
 
 static float app_bar_open_height(zrn_element_t* const e, const float width) {
-	zrn_content_control_t* cc = ZST_AS(zrn_content_control_t, e);
+	const zrn_content_control_t* cc = ZST_AS(zrn_content_control_t, e);
 	ZST_UNUSED(width);
 	return cc->content ? cc->content->desired.height + 2 * BAR_BORDER : 0;
 }
 
 static ZSize app_bar_arrange(zrn_element_t* const e, const ZSize final) {
-	zrn_content_control_t* cc = ZST_AS(zrn_content_control_t, e);
+	const zrn_content_control_t* cc = ZST_AS(zrn_content_control_t, e);
 	if (cc->content) {
 		if (bar_hides_commands(e)) zrn_arrange(cc->content, zrn_rect(0, final.height + 1, zrn_maxf(0, final.width - ELLIPSIS_WIDTH), cc->content->desired.height));
 		else zrn_arrange(cc->content, zrn_rect(0, BAR_BORDER, zrn_maxf(0, final.width - ELLIPSIS_WIDTH), zrn_maxf(0, final.height - 2 * BAR_BORDER)));
@@ -864,11 +864,11 @@ static float ellipsis_y(zrn_element_t* const e, const float row_top) {
 static float bar_row_top(zrn_element_t* e);
 
 static void bar_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	ZRect r = zrn_local_rect(e);
+	const ZRect r = zrn_local_rect(e);
 	zrn_control_t* c = ZST_AS(zrn_control_t, e);
-	ZColor border = zrn_ctl_border_brush(c, zrn_theme_color(e, ZST_TC_BACKGROUND));
-	ZColor fg = zrn_ctl_foreground(c);
-	float cx = e->rect.width - ELLIPSIS_WIDTH * 0.5f, cy = ellipsis_y(e, bar_row_top(e));
+	const ZColor border = zrn_ctl_border_brush(c, zrn_theme_color(e, ZST_TC_BACKGROUND));
+	const ZColor fg = zrn_ctl_foreground(c);
+	const float cx = e->rect.width - ELLIPSIS_WIDTH * 0.5f, cy = ellipsis_y(e, bar_row_top(e));
 	int i;
 	zrn_fill_rect(p, r, bar_background(e));
 	/* AppBarBorderThemeBrush, 1.5 px, on the edge toward the content */
@@ -878,7 +878,7 @@ static void bar_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 }
 
 static int bar_hit_ellipsis(zrn_element_t* const e, const float x, const float y) {
-	ZRect r = ellipsis_rect(e);
+	const ZRect r = ellipsis_rect(e);
 	return x >= r.x && y >= r.y && x < r.x + r.width && y < r.y + r.height;
 }
 
@@ -892,7 +892,7 @@ static int bar_input(zrn_element_t* const e, zrn_input_t* const in) {
 			/* the bar is a surface: a press on it does not reach the page under it */
 			return 1;
 		case ZST_IN_POINTER_UP: {
-			int was = *pressed;
+			const int was = *pressed;
 			*pressed = 0;
 			if (e->root) zrn_release_capture(e->root, e);
 			if (was && bar_hit_ellipsis(e, in->x, in->y)) Zapp_bar_set_is_open(e->id, !BAR(e)->is_open);
@@ -923,7 +923,7 @@ static void bar_sync_compact(zrn_element_t* e);
 
 static void bar_tick(zrn_element_t* const e, const float dt) {
 	zrn_app_bar_t* b = BAR(e);
-	float goal = b->is_open ? 1.0f : 0.0f;
+	const float goal = b->is_open ? 1.0f : 0.0f;
 	if (b->open_t == goal) { e->wants_tick = 0; return; }
 	if (goal > b->open_t) b->open_t = zrn_minf(goal, b->open_t + dt / BAR_OPEN_MS);
 	else b->open_t = zrn_maxf(goal, b->open_t - dt / BAR_OPEN_MS);
@@ -949,7 +949,7 @@ zrn_class_t zrn_class_app_bar = {
 };
 
 Zid Zapp_bar_create(void) {
-	zrn_element_t* e = zrn_create(Z_CLASS_APP_BAR);
+	const zrn_element_t* e = zrn_create(Z_CLASS_APP_BAR);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -981,7 +981,7 @@ void Zapp_bar_set_is_open(Zid id, int is_open) {
 }
 
 int Zapp_bar_get_is_open(const Zid id) {
-	zrn_app_bar_t* b = get_bar(id);
+	const zrn_app_bar_t* b = get_bar(id);
 	return b ? b->is_open : 0;
 }
 
@@ -1161,7 +1161,7 @@ zrn_class_t zrn_class_command_bar = {
 };
 
 Zid Zcommand_bar_create(void) {
-	zrn_element_t* e = zrn_create(Z_CLASS_COMMAND_BAR);
+	const zrn_element_t* e = zrn_create(Z_CLASS_COMMAND_BAR);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -1190,7 +1190,7 @@ static int add_command(const Zid bar, const Zid command, const int secondary) {
 	count = secondary ? &c->secondary_count : &c->primary_count;
 	cap = secondary ? &c->secondary_cap : &c->primary_cap;
 	if (*count == *cap) {
-		int ncap = *cap ? *cap * 2 : 4;
+		const int ncap = *cap ? *cap * 2 : 4;
 		zrn_element_t** more = (zrn_element_t**)realloc(*list, (size_t)ncap * sizeof *more);
 		if (!more) {
 			zrn_error(Z_ERROR_OUT_OF_MEMORY, "out of memory");
@@ -1212,31 +1212,31 @@ int Zcommand_bar_add_primary_command(Zid bar, Zid command) { return add_command(
 int Zcommand_bar_add_secondary_command(Zid bar, Zid command) { return add_command(bar, command, 1); }
 
 int Zcommand_bar_get_primary_command_count(const Zid bar) {
-	zrn_command_bar_t* c = get_command_bar(bar);
+	const zrn_command_bar_t* c = get_command_bar(bar);
 	return c ? c->primary_count : 0;
 }
 
 int Zcommand_bar_get_secondary_command_count(const Zid bar) {
-	zrn_command_bar_t* c = get_command_bar(bar);
+	const zrn_command_bar_t* c = get_command_bar(bar);
 	return c ? c->secondary_count : 0;
 }
 
 Zid Zcommand_bar_get_primary_command(const Zid bar, const int index) {
-	zrn_command_bar_t* c = get_command_bar(bar);
+	const zrn_command_bar_t* c = get_command_bar(bar);
 	return c && index >= 0 && index < c->primary_count ? c->primary[index]->id : Z_INVALID_ID;
 }
 
 Zid Zcommand_bar_get_secondary_command(const Zid bar, const int index) {
-	zrn_command_bar_t* c = get_command_bar(bar);
+	const zrn_command_bar_t* c = get_command_bar(bar);
 	return c && index >= 0 && index < c->secondary_count ? c->secondary[index]->id : Z_INVALID_ID;
 }
 
 void Zcommand_bar_clear_primary_commands(const Zid bar) {
-	zrn_command_bar_t* c = get_command_bar(bar);
+	const zrn_command_bar_t* c = get_command_bar(bar);
 	while (c && c->primary_count > 0) zrn_destroy(c->primary[c->primary_count - 1]);
 }
 
 void Zcommand_bar_clear_secondary_commands(const Zid bar) {
-	zrn_command_bar_t* c = get_command_bar(bar);
+	const zrn_command_bar_t* c = get_command_bar(bar);
 	while (c && c->secondary_count > 0) zrn_destroy(c->secondary[c->secondary_count - 1]);
 }

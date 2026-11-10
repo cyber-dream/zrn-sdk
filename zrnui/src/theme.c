@@ -93,7 +93,7 @@ static int ini_color(const char* s, uint32_t* out) {
 	if (*s == '#') s++;
 	while (s[digits]) {
 		const char c = s[digits];
-		int d = c >= '0' && c <= '9' ? c - '0' : c >= 'a' && c <= 'f' ? c - 'a' + 10 : c >= 'A' && c <= 'F' ? c - 'A' + 10 : -1;
+		const int d = c >= '0' && c <= '9' ? c - '0' : c >= 'a' && c <= 'f' ? c - 'a' + 10 : c >= 'A' && c <= 'F' ? c - 'A' + 10 : -1;
 		if (d < 0) return 0;
 		v = v * 16 + (uint32_t)d;
 		digits++;

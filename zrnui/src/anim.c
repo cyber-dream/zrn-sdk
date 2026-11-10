@@ -42,7 +42,7 @@ static float ease_emphasized(const float t) {
 float zrn_ease(ZEasing easing, float t) {
 	t = zrn_clampf(t, 0, 1);
 	switch (easing) {
-	case Z_EASE_OUT: { float u = 1 - t; return 1 - u * u * u; }
+	case Z_EASE_OUT: { const float u = 1 - t; return 1 - u * u * u; }
 	case Z_EASE_IN: return t * t * t;
 	case Z_EASE_EMPHASIZED: return ease_emphasized(t);
 	default: return t;
@@ -184,7 +184,7 @@ static void property_set(zrn_element_t* const e, const ZAnimatedProperty p, cons
 
 float Zelement_get_property(const Zid id, const ZAnimatedProperty property) {
 	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
-	float* const slot = e ? property_slot(e, property) : nullptr;
+	const float* const slot = e ? property_slot(e, property) : nullptr;
 	return slot ? *slot : 0.0f;
 }
 
@@ -324,7 +324,7 @@ void Zroot_set_animations(const Zid root, const ZAnimations mode) {
 }
 
 ZAnimations Zroot_get_animations(const Zid root) {
-	zrn_root_t* const r = zrn_root_lookup(root);
+	const zrn_root_t* const r = zrn_root_lookup(root);
 	return r ? r->animations : Z_ANIMATIONS_AUTO;
 }
 

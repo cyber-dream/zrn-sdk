@@ -33,7 +33,7 @@ static zrn_font_t tbx_font(const zrn_text_box_t* const b) {
 
 static uint32_t bullet_char(const zrn_text_box_t* b);
 
-static zrn_font_t tbx_header_font(void) { zrn_font_t f = { Z_FONT_NORMAL, ZST_81_FONT_CONTROL_HEADER, 0 }; return f; }
+static zrn_font_t tbx_header_font(void) { const zrn_font_t f = { Z_FONT_NORMAL, ZST_81_FONT_CONTROL_HEADER, 0 }; return f; }
 
 /* The header takes a row of its own above the box. */
 static float tbx_header_height(const zrn_text_box_t* const b) {
@@ -253,7 +253,7 @@ static void tbx_move(zrn_text_box_t* b, int index, int extend) {
 
 /* Zeeps the caret in view by moving the scroll offsets. */
 static void tbx_ensure_visible(zrn_text_box_t* const b) {
-	zrn_element_t* const e = &b->base.base;
+	const zrn_element_t* const e = &b->base.base;
 	const ZRect area = tbx_content(e);
 	int length, heap, line;
 	float x;
@@ -307,7 +307,7 @@ static int word_right(const zrn_text_box_t* b, int index) {
 }
 
 static void tbx_vertical_move(zrn_text_box_t* const b, const int dir, const int extend) {
-	zrn_element_t* e = &b->base.base;
+	const zrn_element_t* e = &b->base.base;
 	const ZRect area = tbx_content(e);
 	int length, heap, line;
 	float x;
@@ -409,7 +409,7 @@ static int tbx_key(zrn_element_t* const e, zrn_input_t* const in) {
 }
 
 static int tbx_index_from_point(zrn_text_box_t* const b, const float x, const float y) {
-	zrn_element_t* e = &b->base.base;
+	const zrn_element_t* e = &b->base.base;
 	const ZRect area = tbx_content(e);
 	int length, heap, index = 0;
 	const char* disp = tbx_display(b, &length, &heap);
@@ -482,7 +482,7 @@ static void tbx_tick(zrn_element_t* const e, const float dt) {
  * ============================================================================ */
 
 static ZSize tbx_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_text_box_t* const b = TB(e);
+	const zrn_text_box_t* const b = TB(e);
 	const ZThickness in = tbx_insets(e);
 	const float header = tbx_header_height(b);
 	const float inner_w = available.width >= Z_INFINITE * 0.5f ? 0 : zrn_maxf(0, available.width - zrn_thickness_h(in));
@@ -627,7 +627,7 @@ Zid Ztext_box_create(const char* const text) {
 }
 
 Zid Zpassword_box_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_PASSWORD_BOX);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_PASSWORD_BOX);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -639,7 +639,7 @@ void Ztext_box_set_text(const Zid id, const char* const text) {
 }
 
 const char* Ztext_box_get_text(const Zid id) {
-	zrn_text_box_t* const b = get_tb(id);
+	const zrn_text_box_t* const b = get_tb(id);
 	return b && b->text ? b->text : "";
 }
 
@@ -682,12 +682,12 @@ void Ztext_box_select(Zid id, int start, int length) {
 }
 
 void Ztext_box_select_all(const Zid id) {
-	zrn_text_box_t* const b = get_tb(id);
+	const zrn_text_box_t* const b = get_tb(id);
 	if (b) Ztext_box_select(id, 0, b->length_bytes);
 }
 
-int Ztext_box_get_selection_start(Zid id) { zrn_text_box_t* b = get_tb(id); return b ? sel_min(b) : 0; }
-int Ztext_box_get_selection_length(Zid id) { zrn_text_box_t* b = get_tb(id); return b ? sel_max(b) - sel_min(b) : 0; }
+int Ztext_box_get_selection_start(Zid id) { const zrn_text_box_t* b = get_tb(id); return b ? sel_min(b) : 0; }
+int Ztext_box_get_selection_length(Zid id) { const zrn_text_box_t* b = get_tb(id); return b ? sel_max(b) - sel_min(b) : 0; }
 
 void Ztext_box_set_placeholder_text(const Zid id, const char* const placeholder_text) {
 	zrn_text_box_t* const b = get_tb(id);
@@ -697,7 +697,7 @@ void Ztext_box_set_placeholder_text(const Zid id, const char* const placeholder_
 }
 
 const char* Ztext_box_get_placeholder_text(const Zid id) {
-	zrn_text_box_t* const b = get_tb(id);
+	const zrn_text_box_t* const b = get_tb(id);
 	return b && b->placeholder ? b->placeholder : "";
 }
 
@@ -709,12 +709,12 @@ void Ztext_box_set_header(const Zid id, const char* const header) {
 }
 
 const char* Ztext_box_get_header(const Zid id) {
-	zrn_text_box_t* const b = get_tb(id);
+	const zrn_text_box_t* const b = get_tb(id);
 	return b && b->header ? b->header : "";
 }
 
-int Ztext_box_get_is_read_only(Zid id) { zrn_text_box_t* b = get_tb(id); return b ? b->read_only : 0; }
-int Ztext_box_get_max_length(Zid id) { zrn_text_box_t* b = get_tb(id); return b ? b->max_length : 0; }
+int Ztext_box_get_is_read_only(Zid id) { const zrn_text_box_t* b = get_tb(id); return b ? b->read_only : 0; }
+int Ztext_box_get_max_length(Zid id) { const zrn_text_box_t* b = get_tb(id); return b ? b->max_length : 0; }
 
 void Zpassword_box_set_password(const Zid id, const char* const password) {
 	zrn_element_t* const e = zrn_get(id, Z_CLASS_PASSWORD_BOX);

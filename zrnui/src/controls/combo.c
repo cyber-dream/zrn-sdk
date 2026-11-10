@@ -22,7 +22,7 @@ static constexpr float COMBO_HEADER_OVERLAP = 4.5f;
 static constexpr float COMBO_OVERHANG = 9.5f;
 static constexpr float HEADER_FONT = 16.0f;
 
-static zrn_font_t header_font(void) { zrn_font_t f = { Z_FONT_NORMAL, HEADER_FONT, 0 }; return f; }
+static zrn_font_t header_font(void) { const zrn_font_t f = { Z_FONT_NORMAL, HEADER_FONT, 0 }; return f; }
 
 /* The popups: a Border of the highlighted look around a ScrollViewer or a ListView. */
 static zrn_element_t* make_drop_down(zrn_element_t* const owner, zrn_element_t* const content, const ZColor background, const ZColor border_brush) {
@@ -75,7 +75,7 @@ static const char* combo_text(const zrn_combo_box_t* const c) {
 }
 
 static ZSize combo_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_combo_box_t* const c = CB(e);
+	const zrn_combo_box_t* const c = CB(e);
 	const zrn_font_t font = { c->base.base.font_family, c->base.base.font_size, 0 };
 	float w = c->placeholder ? zrn_text_width(font, c->placeholder, (int)strlen(c->placeholder)) : 0;
 	int i, n = zrn_ic_count(&c->base);
@@ -88,7 +88,7 @@ static ZSize combo_measure(zrn_element_t* const e, const ZSize available) {
 }
 
 static ZSize combo_arrange(zrn_element_t* const e, const ZSize final) {
-	zrn_combo_box_t* const c = CB(e);
+	const zrn_combo_box_t* const c = CB(e);
 	/* the list is laid out by the root, but it is as wide as the box */
 	if (c->popup && c->popup->child_count && c->popup->children[0]->width != final.width) {
 		c->popup->children[0]->width = final.width;
@@ -99,7 +99,7 @@ static ZSize combo_arrange(zrn_element_t* const e, const ZSize final) {
 
 static void combo_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	zrn_combo_box_t* const c = CB(e);
-	zrn_control_t* const ctl = &c->base.base;
+	const zrn_control_t* const ctl = &c->base.base;
 	const zrn_font_t font = { ctl->font_family, ctl->font_size, 0 };
 	const ZRect box = combo_box_rect(e);
 	ZColor fg = zrn_ctl_color(ctl, ZST_C_FOREGROUND, ctl->foreground, zrn_theme_color(e, ZST_TC_FOREGROUND));
@@ -266,7 +266,7 @@ zrn_class_t zrn_class_combo_box = {
 };
 
 Zid Zcombo_box_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_COMBO_BOX);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_COMBO_BOX);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -278,7 +278,7 @@ void Zcombo_box_set_is_drop_down_open(const Zid id, const int is_open) {
 }
 
 int Zcombo_box_get_is_drop_down_open(const Zid id) {
-	zrn_combo_box_t* const c = get_combo(id);
+	const zrn_combo_box_t* const c = get_combo(id);
 	return c ? c->is_open : 0;
 }
 
@@ -293,7 +293,7 @@ void Zcombo_box_set_max_drop_down_height(const Zid id, const float height) {
 }
 
 float Zcombo_box_get_max_drop_down_height(const Zid id) {
-	zrn_combo_box_t* const c = get_combo(id);
+	const zrn_combo_box_t* const c = get_combo(id);
 	return c ? c->max_drop_down_height : Z_INFINITE;
 }
 
@@ -305,7 +305,7 @@ void Zcombo_box_set_header(const Zid id, const char* const header) {
 }
 
 const char* Zcombo_box_get_header(const Zid id) {
-	zrn_combo_box_t* const c = get_combo(id);
+	const zrn_combo_box_t* const c = get_combo(id);
 	return c && c->header ? c->header : "";
 }
 
@@ -317,7 +317,7 @@ void Zcombo_box_set_placeholder_text(const Zid id, const char* const placeholder
 }
 
 const char* Zcombo_box_get_placeholder_text(const Zid id) {
-	zrn_combo_box_t* const c = get_combo(id);
+	const zrn_combo_box_t* const c = get_combo(id);
 	return c && c->placeholder ? c->placeholder : "";
 }
 
@@ -342,7 +342,7 @@ static void asb_set_highlight(zrn_auto_suggest_box_t* const a, const int index) 
 
 /* @return false when a handler destroyed the box. */
 static int asb_set_open(zrn_auto_suggest_box_t* a, int open) {
-	zrn_element_t* const e = &a->base.base.base;
+	const zrn_element_t* const e = &a->base.base.base;
 	const Zid id = e->id;
 	open = open != 0;
 	if (a->is_open == open || !a->popup) return 1;
@@ -372,7 +372,7 @@ static void asb_popup_closed(const Zid popup, void* const user) {
 
 /* A suggestion was chosen: SuggestionChosen, the text, TextChanged with the reason, QuerySubmitted. */
 static void asb_choose(zrn_auto_suggest_box_t* const a, const int index) {
-	zrn_element_t* const e = &a->base.base.base;
+	const zrn_element_t* const e = &a->base.base.base;
 	const Zid id = e->id;
 	zrn_element_t* const item = zrn_ic_item(&a->base, index);
 	char* text;
@@ -465,14 +465,14 @@ static int asb_key(zrn_text_box_t* const b, zrn_input_t* const in) {
 }
 
 static ZSize asb_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_auto_suggest_box_t* const a = ASB(e);
+	const zrn_auto_suggest_box_t* const a = ASB(e);
 	if (!a->text_box) return zrn_size(0, 0);
 	zrn_measure(a->text_box, available);
 	return a->text_box->desired;
 }
 
 static ZSize asb_arrange(zrn_element_t* const e, const ZSize final) {
-	zrn_auto_suggest_box_t* const a = ASB(e);
+	const zrn_auto_suggest_box_t* const a = ASB(e);
 	if (a->text_box) zrn_arrange(a->text_box, zrn_rect(0, 0, final.width, final.height));
 	if (a->popup && a->popup->child_count && a->popup->children[0]->width != final.width) {
 		a->popup->children[0]->width = final.width;
@@ -482,7 +482,7 @@ static ZSize asb_arrange(zrn_element_t* const e, const ZSize final) {
 }
 
 static int asb_input(zrn_element_t* const e, zrn_input_t* const in) {
-	zrn_auto_suggest_box_t* const a = ASB(e);
+	const zrn_auto_suggest_box_t* const a = ASB(e);
 	/* the box itself takes the keyboard for its text box */
 	if (in->type == ZST_IN_FOCUS_IN && a->text_box && e->root) zrn_set_focus(e->root, a->text_box);
 	return 0;
@@ -548,7 +548,7 @@ zrn_class_t zrn_class_auto_suggest_box = {
 };
 
 Zid Zauto_suggest_box_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_AUTO_SUGGEST_BOX);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_AUTO_SUGGEST_BOX);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -566,32 +566,32 @@ void Zauto_suggest_box_set_items(const Zid id, const char* const* items, const i
 }
 
 void Zauto_suggest_box_set_text(const Zid id, const char* const text) {
-	zrn_auto_suggest_box_t* const a = get_asb(id);
+	const zrn_auto_suggest_box_t* const a = get_asb(id);
 	if (a && a->text_box) Ztext_box_set_text(a->text_box->id, text);
 }
 
 const char* Zauto_suggest_box_get_text(const Zid id) {
-	zrn_auto_suggest_box_t* const a = get_asb(id);
+	const zrn_auto_suggest_box_t* const a = get_asb(id);
 	return a && a->text_box ? Ztext_box_get_text(a->text_box->id) : "";
 }
 
 void Zauto_suggest_box_set_placeholder_text(const Zid id, const char* const placeholder_text) {
-	zrn_auto_suggest_box_t* const a = get_asb(id);
+	const zrn_auto_suggest_box_t* const a = get_asb(id);
 	if (a && a->text_box) Ztext_box_set_placeholder_text(a->text_box->id, placeholder_text);
 }
 
 const char* Zauto_suggest_box_get_placeholder_text(const Zid id) {
-	zrn_auto_suggest_box_t* const a = get_asb(id);
+	const zrn_auto_suggest_box_t* const a = get_asb(id);
 	return a && a->text_box ? Ztext_box_get_placeholder_text(a->text_box->id) : "";
 }
 
 void Zauto_suggest_box_set_header(const Zid id, const char* const header) {
-	zrn_auto_suggest_box_t* const a = get_asb(id);
+	const zrn_auto_suggest_box_t* const a = get_asb(id);
 	if (a && a->text_box) Ztext_box_set_header(a->text_box->id, header);
 }
 
 const char* Zauto_suggest_box_get_header(const Zid id) {
-	zrn_auto_suggest_box_t* const a = get_asb(id);
+	const zrn_auto_suggest_box_t* const a = get_asb(id);
 	return a && a->text_box ? Ztext_box_get_header(a->text_box->id) : "";
 }
 
@@ -601,7 +601,7 @@ void Zauto_suggest_box_set_is_suggestion_list_open(const Zid id, const int is_op
 }
 
 int Zauto_suggest_box_get_is_suggestion_list_open(const Zid id) {
-	zrn_auto_suggest_box_t* const a = get_asb(id);
+	const zrn_auto_suggest_box_t* const a = get_asb(id);
 	return a ? a->is_open : 0;
 }
 

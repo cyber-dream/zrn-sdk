@@ -93,7 +93,7 @@ void zrn_set_focus(zrn_root_t* r, zrn_element_t* e) {
 	r->focus = e;
 	r->paint_dirty = 1;
 	{
-		Zid new_id = e ? e->id : Z_INVALID_ID, old_id = old ? old->id : Z_INVALID_ID;
+		const Zid new_id = e ? e->id : Z_INVALID_ID, old_id = old ? old->id : Z_INVALID_ID;
 		if (old) {
 			in.type = ZST_IN_FOCUS_OUT;
 			if (old->cls->input) old->cls->input(old, &in);
@@ -128,12 +128,12 @@ void zrn_release_capture(zrn_root_t* const r, zrn_element_t* const e) {
 }
 
 Zid Zroot_get_focus(const Zid root) {
-	zrn_root_t* const r = get_root(root);
+	const zrn_root_t* const r = get_root(root);
 	return r && r->focus ? r->focus->id : Z_INVALID_ID;
 }
 
 Zid Zroot_get_pointer_over(const Zid root) {
-	zrn_root_t* const r = get_root(root);
+	const zrn_root_t* const r = get_root(root);
 	return r && r->hover ? r->hover->id : Z_INVALID_ID;
 }
 
@@ -253,7 +253,7 @@ void Zroot_set_visual(const Zid root, const Zid visual) {
 }
 
 Zid Zroot_get_visual(const Zid root) {
-	zrn_root_t* const r = get_root(root);
+	const zrn_root_t* const r = get_root(root);
 	return r && r->visual ? r->visual->id : Z_INVALID_ID;
 }
 
@@ -352,7 +352,7 @@ static void layout_popups(zrn_root_t* const r) {
 	int i;
 	const float lw = (float)r->width / r->ui, lh = (float)r->height / r->ui;
 	for (i = 0; i < r->popup_count; i++) {
-		zrn_popup_t* const popup = ZST_AS(zrn_popup_t, r->popups[i]);
+		const zrn_popup_t* const popup = ZST_AS(zrn_popup_t, r->popups[i]);
 		zrn_element_t* const child = popup->base.child_count ? popup->base.children[0] : nullptr;
 		ZPoint origin, pos;
 		float width;
@@ -364,7 +364,7 @@ static void layout_popups(zrn_root_t* const r) {
 		pos.x = popup->h_offset;
 		pos.y = popup->v_offset;
 		if (popup->target != Z_INVALID_ID) {
-			zrn_element_t* const target = zrn_lookup(popup->target);
+			const zrn_element_t* const target = zrn_lookup(popup->target);
 			if (target) {
 				const ZPoint t = zrn_to_root(target, (ZPoint){ 0, 0 });
 				switch (popup->placement) {
@@ -572,7 +572,7 @@ void Zroot_set_renderer(const Zid root, const ZRenderer renderer) {
 }
 
 ZRenderer Zroot_get_renderer(const Zid root) {
-	zrn_root_t* const r = get_root(root);
+	const zrn_root_t* const r = get_root(root);
 	return r ? r->renderer : Z_RENDERER_AUTO;
 }
 
@@ -614,7 +614,7 @@ static float zrn_animation_speed(void) {
 	static float v = 1.0f;
 	if (!cached) {
 		const char* e = getenv("ZRNUI_ANIMATION_SPEED");
-		if (e && *e) { float f = strtof(e, nullptr); if (f > 0) v = f; }
+		if (e && *e) { const float f = strtof(e, nullptr); if (f > 0) v = f; }
 		cached = 1;
 	}
 	return v;

@@ -49,7 +49,7 @@ static inline ZRect zrn_rect(const float x, const float y, const float w, const 
  const ZRect r = { .x = x, .y = y, .width = w, .height = h }; return r; }
 static inline ZColor zrn_color(uint32_t argb) { return Zcolor_argb(argb); }
 static inline ZColor zrn_color_alpha(ZColor c, float a) { c.a *= a; return c; }
-static inline ZThickness zrn_thickness_zero(void) { ZThickness t = { 0, 0, 0, 0 }; return t; }
+static inline ZThickness zrn_thickness_zero(void) { const ZThickness t = { 0, 0, 0, 0 }; return t; }
 static inline float zrn_thickness_h(ZThickness t) { return t.left + t.right; }
 static inline float zrn_thickness_v(ZThickness t) { return t.top + t.bottom; }
 

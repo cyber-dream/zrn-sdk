@@ -51,9 +51,9 @@ void Zrange_base_set_value(const Zid id, const double value) {
 	if (r) range_assign(r, value);
 }
 
-double Zrange_base_get_value(Zid id) { zrn_range_base_t* r = get_range(id); return r ? r->value : 0; }
-double Zrange_base_get_minimum(Zid id) { zrn_range_base_t* r = get_range(id); return r ? r->minimum : 0; }
-double Zrange_base_get_maximum(Zid id) { zrn_range_base_t* r = get_range(id); return r ? r->maximum : 0; }
+double Zrange_base_get_value(Zid id) { const zrn_range_base_t* r = get_range(id); return r ? r->value : 0; }
+double Zrange_base_get_minimum(Zid id) { const zrn_range_base_t* r = get_range(id); return r ? r->minimum : 0; }
+double Zrange_base_get_maximum(Zid id) { const zrn_range_base_t* r = get_range(id); return r ? r->maximum : 0; }
 
 void Zrange_base_set_range(Zid id, double minimum, double maximum) {
 	zrn_range_base_t* const r = get_range(id);
@@ -129,7 +129,7 @@ static constexpr float SL_VERTICAL_W = 36.0f;
 static constexpr float SL_VERTICAL_SIDE = 13.5f;
 static constexpr float SL_VERTICAL_THUMB = 9.0f;
 
-static zrn_font_t slider_header_font(void) { zrn_font_t f = { Z_FONT_NORMAL, ZST_81_FONT_CONTROL_HEADER, 0 }; return f; }
+static zrn_font_t slider_header_font(void) { const zrn_font_t f = { Z_FONT_NORMAL, ZST_81_FONT_CONTROL_HEADER, 0 }; return f; }
 
 static float slider_header_height(const zrn_slider_t* const s) {
 	return s->header && *s->header ? zrn_font_line_height(slider_header_font()) : 0;
@@ -139,7 +139,7 @@ static ZSize slider_measure(zrn_element_t* const e, const ZSize available) {
 	zrn_slider_t* const s = SLIDER(e);
 	const ZThickness pad = s->base.base.padding;
 	float along = s->orientation == Z_HORIZONTAL ? available.width : available.height;
-	float header = slider_header_height(s);
+	const float header = slider_header_height(s);
 	if (along >= Z_INFINITE * 0.5f) along = 200.0f + (s->orientation == Z_HORIZONTAL ? zrn_thickness_h(pad) : zrn_thickness_v(pad) + header);
 	if (s->orientation == Z_HORIZONTAL) return zrn_size(along, zrn_thickness_v(pad) + header + SL_BAND_ABOVE + SL_TRACK + SL_BAND_BELOW);
 	return zrn_size(zrn_thickness_h(pad) + SL_VERTICAL_W, along);
@@ -194,7 +194,7 @@ static void slider_paint_ticks(zrn_element_t* const e, zrn_painter_t* const p, c
 
 static void slider_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	zrn_slider_t* const s = SLIDER(e);
-	zrn_control_t* const c = &s->base.base;
+	const zrn_control_t* const c = &s->base.base;
 	ZRect track, thumb, fill;
 	const int enabled = zrn_effectively_enabled(e);
 	const ZColor track_color = zrn_ctl_background(c, zrn_theme_color(e, ZST_TC_SLIDER_TRACK));
@@ -265,7 +265,7 @@ static int slider_input(zrn_element_t* const e, zrn_input_t* const in) {
 		case ZST_IN_KEY_DOWN: {
 			zrn_range_base_t* const r = &s->base;
 			const int horizontal = s->orientation == Z_HORIZONTAL;
-			int forward = horizontal ? Z_KEY_RIGHT : Z_KEY_UP, back = horizontal ? Z_KEY_LEFT : Z_KEY_DOWN;
+			const int forward = horizontal ? Z_KEY_RIGHT : Z_KEY_UP, back = horizontal ? Z_KEY_LEFT : Z_KEY_DOWN;
 			if (in->key == forward) slider_step(s, r->small_change);
 			else if (in->key == Z_KEY_PAGE_UP) slider_step(s, r->large_change);
 			else if (in->key == back) slider_step(s, -r->small_change);
@@ -322,7 +322,7 @@ void Zslider_set_header(const Zid id, const char* const header) {
 }
 
 const char* Zslider_get_header(const Zid id) {
-	zrn_slider_t* const s = get_slider(id);
+	const zrn_slider_t* const s = get_slider(id);
 	return s && s->header ? s->header : "";
 }
 
@@ -331,7 +331,7 @@ void Zslider_set_step_frequency(const Zid id, const double step_frequency) {
 	if (s) s->step_frequency = step_frequency < 0 ? 0 : step_frequency;
 }
 
-double Zslider_get_step_frequency(Zid id) { zrn_slider_t* s = get_slider(id); return s ? s->step_frequency : 0; }
+double Zslider_get_step_frequency(Zid id) { const zrn_slider_t* s = get_slider(id); return s ? s->step_frequency : 0; }
 
 void Zslider_set_tick_frequency(const Zid id, const double tick_frequency) {
 	zrn_slider_t* const s = get_slider(id);
@@ -340,7 +340,7 @@ void Zslider_set_tick_frequency(const Zid id, const double tick_frequency) {
 	zrn_changed_paint(&s->base.base.base);
 }
 
-double Zslider_get_tick_frequency(Zid id) { zrn_slider_t* s = get_slider(id); return s ? s->tick_frequency : 0; }
+double Zslider_get_tick_frequency(Zid id) { const zrn_slider_t* s = get_slider(id); return s ? s->tick_frequency : 0; }
 
 void Zslider_set_tick_placement(const Zid id, const ZTickPlacement placement) {
 	zrn_slider_t* const s = get_slider(id);
@@ -373,7 +373,7 @@ static constexpr float PB_DOT = 3.5f;
 static constexpr float PB_CYCLE_MS = 3917.0f;
 
 static ZSize progress_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_control_t* const c = &PROGRESS(e)->base.base;
+	const zrn_control_t* const c = &PROGRESS(e)->base.base;
 	const float w = available.width >= Z_INFINITE * 0.5f ? 100.0f + zrn_thickness_h(c->padding) : available.width;
 	return zrn_size(w, PB_HEIGHT + zrn_thickness_v(c->padding));
 }
@@ -397,11 +397,11 @@ static float progress_dot_offset(const int i, const float t, const float width) 
 
 static void progress_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	zrn_progress_bar_t* const b = PROGRESS(e);
-	zrn_control_t* const c = &b->base.base;
+	const zrn_control_t* const c = &b->base.base;
 	const ZColor accent = zrn_theme_color(e, ZST_TC_ACCENT);
 	const ZColor fg = zrn_ctl_color(c, ZST_C_FOREGROUND, c->foreground, accent);
 	if (b->indeterminate) {
-		float pitch = 2 * PB_DOT, t = b->time_ms / 1000.0f, group = 4 * pitch + PB_DOT;
+		const float pitch = 2 * PB_DOT, t = b->time_ms / 1000.0f, group = 4 * pitch + PB_DOT;
 		const float container = lerp(-group, e->rect.width, b->time_ms / PB_CYCLE_MS);
 		const float y = (e->rect.height - PB_DOT) * 0.5f;
 		int i;
@@ -448,7 +448,7 @@ zrn_class_t zrn_class_progress_bar = {
 };
 
 Zid Zprogress_bar_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_PROGRESS_BAR);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_PROGRESS_BAR);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -561,7 +561,7 @@ zrn_class_t zrn_class_progress_ring = {
 };
 
 Zid Zprogress_ring_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_PROGRESS_RING);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_PROGRESS_RING);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -592,13 +592,13 @@ int Zprogress_ring_get_is_active(const Zid id) {
 #define SCROLLBAR(e) ZST_AS(zrn_scrollbar_t, e)
 
 static ZSize scrollbar_measure(zrn_element_t* const e, const ZSize available) {
-	zrn_scrollbar_t* const s = SCROLLBAR(e);
+	const zrn_scrollbar_t* const s = SCROLLBAR(e);
 	ZST_UNUSED(available);
 	return s->orientation == Z_VERTICAL ? zrn_size(5, 0) : zrn_size(0, 5);
 }
 
 static ZRect scrollbar_thumb(zrn_element_t* const e) {
-	zrn_scrollbar_t* const s = SCROLLBAR(e);
+	const zrn_scrollbar_t* const s = SCROLLBAR(e);
 	const float length = s->orientation == Z_VERTICAL ? e->rect.height : e->rect.width;
 	const double range = s->base.maximum - s->base.minimum;
 	float thumb = range + s->viewport > 0 ? (float)(s->viewport / (range + s->viewport)) * length : length;
@@ -611,7 +611,7 @@ static ZRect scrollbar_thumb(zrn_element_t* const e) {
 
 static void scrollbar_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	zrn_scrollbar_t* const s = SCROLLBAR(e);
-	zrn_control_t* const c = &s->base.base;
+	const zrn_control_t* const c = &s->base.base;
 	if (s->base.maximum <= s->base.minimum) return;
 	zrn_fill_rect(p, scrollbar_thumb(e), zrn_ctl_background(c, zrn_theme_color(e, ZST_TC_DISABLED)));
 }
@@ -631,7 +631,7 @@ static int scrollbar_input(zrn_element_t* const e, zrn_input_t* const in) {
 	switch (in->type) {
 		case ZST_IN_POINTER_DOWN: {
 			const ZRect t = scrollbar_thumb(e);
-			float start = vertical ? t.y : t.x, size = vertical ? t.height : t.width;
+			const float start = vertical ? t.y : t.x, size = vertical ? t.height : t.width;
 			if (pos >= start && pos <= start + size) {
 				s->dragging = 1;
 				s->drag_grab = pos - start;
@@ -710,7 +710,7 @@ void Zscroll_bar_on_scroll(const Zid id, const ZScrollCallback callback, void* c
 #define THUMB(e) ZST_AS(zrn_thumb_t, e)
 
 static void thumb_paint(zrn_element_t* const e, zrn_painter_t* const p) {
-	zrn_control_t* const c = &THUMB(e)->base;
+	const zrn_control_t* const c = &THUMB(e)->base;
 	ZColor fill = zrn_ctl_background(c, zrn_theme_color(e, ZST_TC_FOREGROUND));
 	if (THUMB(e)->dragging) fill = zrn_theme_color(e, ZST_TC_ACCENT);
 	zrn_fill_rect(p, zrn_local_rect(e), fill);
@@ -766,7 +766,7 @@ zrn_class_t zrn_class_thumb = {
 };
 
 Zid Zthumb_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_THUMB);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_THUMB);
 	return e ? e->id : Z_INVALID_ID;
 }
 

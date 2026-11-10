@@ -29,7 +29,7 @@ static void page_bar_room(zrn_page_t* const p, float* const top, float* const bo
 
 static ZSize page_measure(zrn_element_t* const e, const ZSize available) {
 	zrn_page_t* const p = PAGE(e);
-	zrn_content_control_t* const cc = &p->base;
+	const zrn_content_control_t* const cc = &p->base;
 	float top, bottom;
 	ZSize content = { 0, 0 };
 	page_bar_room(p, &top, &bottom);
@@ -65,7 +65,7 @@ zrn_class_t zrn_class_page = {
 };
 
 Zid Zpage_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_PAGE);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_PAGE);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -121,7 +121,7 @@ Zid Zpage_get_bottom_app_bar(const Zid id) {
 }
 
 Zid Zpage_get_frame(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_PAGE);
+	const zrn_element_t* const e = zrn_get(id, Z_CLASS_PAGE);
 	return e && e->parent && zrn_is_a(e->parent, Z_CLASS_FRAME) ? e->parent->id : Z_INVALID_ID;
 }
 
@@ -194,7 +194,7 @@ zrn_class_t zrn_class_frame = {
 };
 
 Zid Zframe_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_FRAME);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_FRAME);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -333,7 +333,7 @@ static void finish(zrn_frame_t* const f, const Zid frame_id) {
 
 static void frame_tick(zrn_element_t* e, float dt) {
 	zrn_frame_t* f = FRAME(e);
-	Zid id = e->id;
+	const Zid id = e->id;
 	if (f->phase == 0) { e->wants_tick = 0; return; }
 	f->elapsed += dt;
 	if (e->root && e->root->layout_dirty) Zroot_update_layout(e->root->id);
@@ -521,28 +521,28 @@ int Zframe_go_back(Zid id) { return move(id, -1); }
 int Zframe_go_forward(Zid id) { return move(id, 1); }
 
 int Zframe_can_go_back(const Zid id) {
-	zrn_frame_t* const f = get_frame(id);
+	const zrn_frame_t* const f = get_frame(id);
 	return f && f->current > 0;
 }
 
 int Zframe_can_go_forward(const Zid id) {
-	zrn_frame_t* const f = get_frame(id);
+	const zrn_frame_t* const f = get_frame(id);
 	return f && f->current + 1 < f->count;
 }
 
 int Zframe_get_back_stack_depth(const Zid id) {
-	zrn_frame_t* const f = get_frame(id);
+	const zrn_frame_t* const f = get_frame(id);
 	return f && f->current > 0 ? f->current : 0;
 }
 
 Zid Zframe_get_page(const Zid id) {
-	zrn_frame_t* const f = get_frame(id);
+	const zrn_frame_t* const f = get_frame(id);
 	if (f && f->phase == 1 && f->pending != Z_INVALID_ID) return f->pending;
 	return f && f->base.content ? f->base.content->id : Z_INVALID_ID;
 }
 
 ZPageFactory Zframe_get_current_source_page_type(const Zid id) {
-	zrn_frame_t* const f = get_frame(id);
+	const zrn_frame_t* const f = get_frame(id);
 	return f && f->current >= 0 && f->current < f->count ? f->entries[f->current].factory : nullptr;
 }
 
@@ -556,6 +556,6 @@ void Zframe_set_transition(const Zid id, const ZPageTransition transition) {
 }
 
 int Zframe_is_transitioning(const Zid id) {
-	zrn_frame_t* const f = get_frame(id);
+	const zrn_frame_t* const f = get_frame(id);
 	return f && f->phase != 0;
 }

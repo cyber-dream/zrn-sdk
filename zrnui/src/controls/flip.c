@@ -123,8 +123,8 @@ static void flip_go(zrn_flip_view_t* f, int index) {
 
 /* The finger lets go: on the next page when it went a fifth of a page or flicked, else back. */
 static void flip_release(zrn_flip_view_t* const f, const float width) {
-	zrn_items_control_t* const o = &f->base;
-	float dx = (f->offset - (float)o->selected_index) * -width;
+	const zrn_items_control_t* const o = &f->base;
+	const float dx = (f->offset - (float)o->selected_index) * -width;
 	int target = o->selected_index;
 	if (dx < -width * 0.2f || f->velocity < -0.4f) target = o->selected_index + 1;
 	else if (dx > width * 0.2f || f->velocity > 0.4f) target = o->selected_index - 1;
@@ -232,7 +232,7 @@ zrn_class_t zrn_class_flip_view = {
 };
 
 Zid Zflip_view_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_FLIP_VIEW);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_FLIP_VIEW);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -280,7 +280,7 @@ static ZSize sz_measure(zrn_element_t* const e, const ZSize available) {
 }
 
 static ZSize sz_arrange(zrn_element_t* const e, const ZSize final) {
-	zrn_semantic_zoom_t* const z = SZ(e);
+	const zrn_semantic_zoom_t* const z = SZ(e);
 	if (sz_active(z)) zrn_arrange(sz_active(z), zrn_rect(0, 0, final.width, final.height));
 	return final;
 }
@@ -305,7 +305,7 @@ zrn_class_t zrn_class_semantic_zoom = {
 };
 
 Zid Zsemantic_zoom_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_SEMANTIC_ZOOM);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_SEMANTIC_ZOOM);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -337,7 +337,7 @@ void Zsemantic_zoom_set_zoomed_out_view(const Zid id, const Zid view) {
 }
 
 static void sz_change(zrn_semantic_zoom_t* z, int zoomed_in_active) {
-	zrn_element_t* const e = &z->base.base;
+	const zrn_element_t* const e = &z->base.base;
 	const Zid id = e->id;
 	const int source = z->in_active;
 	zoomed_in_active = zoomed_in_active != 0;
@@ -357,7 +357,7 @@ void Zsemantic_zoom_set_is_zoomed_in_view_active(const Zid id, const int active)
 }
 
 int Zsemantic_zoom_get_is_zoomed_in_view_active(const Zid id) {
-	zrn_semantic_zoom_t* const z = get_sz(id);
+	const zrn_semantic_zoom_t* const z = get_sz(id);
 	return z ? z->in_active : 0;
 }
 

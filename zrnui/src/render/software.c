@@ -174,7 +174,7 @@ static void sw_fill_polygon(zrn_painter_t* const p, const float* const xy, const
 	int y, y0, y1, x0 = p->clip[0], x1 = p->clip[2], width, i, s;
 	if (count < 3) return;
 	for (i = 0; i < count; i++) {
-		float py = to_dev_y(p, xy[i * 2 + 1]);
+		const float py = to_dev_y(p, xy[i * 2 + 1]);
 		if (py < miny) miny = py;
 		if (py > maxy) maxy = py;
 	}
@@ -194,12 +194,12 @@ static void sw_fill_polygon(zrn_painter_t* const p, const float* const xy, const
 			int n = 0, k, j;
 			for (i = 0; i < count && n < 62; i++) {
 				const int next = (i + 1) % count;
-				float ax = to_dev_x(p, xy[i * 2]), ay = to_dev_y(p, xy[i * 2 + 1]);
-				float bx = to_dev_x(p, xy[next * 2]), by = to_dev_y(p, xy[next * 2 + 1]);
+				const float ax = to_dev_x(p, xy[i * 2]), ay = to_dev_y(p, xy[i * 2 + 1]);
+				const float bx = to_dev_x(p, xy[next * 2]), by = to_dev_y(p, xy[next * 2 + 1]);
 				if ((ay <= sy && by > sy) || (by <= sy && ay > sy)) xs[n++] = ax + (sy - ay) / (by - ay) * (bx - ax);
 			}
 			for (k = 1; k < n; k++) {
-				float v = xs[k];
+				const float v = xs[k];
 				for (j = k - 1; j >= 0 && xs[j] > v; j--) xs[j + 1] = xs[j];
 				xs[j + 1] = v;
 			}
@@ -210,7 +210,7 @@ static void sw_fill_polygon(zrn_painter_t* const p, const float* const xy, const
 				ia = (int)floorf(a);
 				ib = (int)ceilf(b);
 				for (x = ia; x < ib; x++) {
-					float l = zrn_maxf(a, (float)x), r = zrn_minf(b, (float)x + 1.0f);
+					const float l = zrn_maxf(a, (float)x), r = zrn_minf(b, (float)x + 1.0f);
 					cover[x - x0] += (r - l) / SUB;
 				}
 			}

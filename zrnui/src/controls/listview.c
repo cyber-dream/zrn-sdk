@@ -71,12 +71,12 @@ zrn_class_t zrn_class_grid_view_item = {
 };
 
 Zid Zlist_view_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_LIST_VIEW);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_LIST_VIEW);
 	return e ? e->id : Z_INVALID_ID;
 }
 
 Zid Zgrid_view_create(void) {
-	zrn_element_t* const e = zrn_create(Z_CLASS_GRID_VIEW);
+	const zrn_element_t* const e = zrn_create(Z_CLASS_GRID_VIEW);
 	return e ? e->id : Z_INVALID_ID;
 }
 
@@ -85,7 +85,7 @@ static zrn_list_view_base_t* get_lvb(Zid id) { return LVB(zrn_get(id, Z_CLASS_LI
 void zrn_lvb_item_tapped(zrn_items_control_t* const o, const int index) {
 	const auto l = (zrn_list_view_base_t*)o;
 	const Zid id = o->base.base.id;
-	zrn_element_t* const item = zrn_ic_item(o, index);
+	const zrn_element_t* const item = zrn_ic_item(o, index);
 	if (item) o->focus_item = item->id;
 	if (o->sel_mode != ZST_SEL_NONE) {
 		zrn_ic_tap(o, index);
@@ -121,7 +121,7 @@ void Zlist_view_set_is_item_click_enabled(const Zid id, const int enabled) {
 }
 
 int Zlist_view_get_is_item_click_enabled(const Zid id) {
-	zrn_list_view_base_t* const l = get_lvb(id);
+	const zrn_list_view_base_t* const l = get_lvb(id);
 	return l ? l->item_click_enabled : 0;
 }
 
@@ -138,12 +138,12 @@ void Zlist_view_set_is_swipe_enabled(const Zid id, const int enabled) {
 }
 
 int Zlist_view_get_is_swipe_enabled(const Zid id) {
-	zrn_list_view_base_t* const l = get_lvb(id);
+	const zrn_list_view_base_t* const l = get_lvb(id);
 	return l ? l->swipe_enabled : 0;
 }
 
 int Zlist_view_get_selected_indices(const Zid id, int* const indices, const int max) {
-	zrn_list_view_base_t* const l = get_lvb(id);
+	const zrn_list_view_base_t* const l = get_lvb(id);
 	return l ? zrn_ic_selected_indices(&l->base, indices, max) : 0;
 }
 
@@ -171,7 +171,7 @@ void Zlist_view_scroll_into_view_with_alignment(const Zid id, const int index, c
 static void set_part(zrn_list_view_base_t* const l, const int footer, const char* const text, zrn_element_t* const content) {
 	Zid* const slot = footer ? &l->footer : &l->header;
 	zrn_element_t* holder = *slot != Z_INVALID_ID ? zrn_lookup(*slot) : nullptr;
-	zrn_items_control_t* const o = &l->base;
+	const zrn_items_control_t* const o = &l->base;
 	const int empty = (text == nullptr || !*text) && content == nullptr;
 	if (empty) {
 		if (holder) zrn_destroy(holder);
