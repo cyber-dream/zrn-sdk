@@ -202,8 +202,7 @@ static void item_tapped(zrn_element_t* const e) {
 	o->focus_visible = 0;
 	if (zrn_is_a(&o->base.base, Z_CLASS_COMBO_BOX)) zrn_combo_item_tapped(o, index);
 	else if (zrn_is_a(&o->base.base, Z_CLASS_LIST_VIEW_BASE)) zrn_lvb_item_tapped(o, index);
-	else if (zrn_is_a(&o->base.base, Z_CLASS_FLIP_VIEW)) return;
-	else {
+	else if (!zrn_is_a(&o->base.base, Z_CLASS_FLIP_VIEW)) {
 		o->focus_item = e->id;
 		zrn_ic_tap(o, index);
 	}
@@ -438,9 +437,10 @@ static void ic_refresh_selected_index(zrn_items_control_t* const o) {
 
 void Zitems_control_remove_at(const Zid items_control, const int index) {
 	zrn_items_control_t* const o = get_ic(items_control);
-	zrn_element_t* item;
+	if (!o) return;
+	zrn_element_t* const item = zrn_ic_item(o, index);
+	if (!item) return;
 	int was_selected, old_selected;
-	if (!o || !(item = zrn_ic_item(o, index))) return;
 	was_selected = is_selector(o) && is_container(item) && ITEM(item)->selected;
 	old_selected = o->selected_index;
 	zrn_destroy(item);

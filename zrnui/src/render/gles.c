@@ -198,7 +198,7 @@ static int open_display(zrn_gl_t* const gl, const EGLenum platform, void* const 
 }
 
 static int make_context(zrn_gl_t* const gl) {
-	const EGLint ctx_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+	constexpr EGLint ctx_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 	gl->context = eglCreateContext(gl->display, gl->config, EGL_NO_CONTEXT, ctx_attribs);
 	if (gl->context == EGL_NO_CONTEXT) {
 		zrn_error(Z_ERROR_IO, "cannot create an OpenGL ES 2 context");
@@ -333,7 +333,7 @@ void zrn_gl_forget_image(zrn_image_t* const image) {
  * ============================================================================ */
 
 static void flush(zrn_gl_t* const gl) {
-	static const GLsizei stride = FLOATS * sizeof(float);
+	static constexpr GLsizei stride = (GLsizei)(FLOATS * sizeof(float));
 	const float* v = gl->verts;
 	if (!gl->quads) return;
 	glUseProgram(gl->program);
@@ -395,7 +395,7 @@ static void quad(zrn_painter_t* p, const GLuint texture, const float x0, const f
 	gl->quads++;
 }
 
-static const float NO_RADII[4] = { 0, 0, 0, 0 };
+static constexpr float NO_RADII[4] = { 0, 0, 0, 0 };
 
 static inline float dx(const zrn_painter_t* p, const float x) { return p->tx + x * p->scale; }
 static inline float dy(const zrn_painter_t* p, const float y) { return p->ty + y * p->scale; }
@@ -552,7 +552,7 @@ static atlas_slot_t* atlas_find(zrn_gl_t* const gl, const uint8_t* const alpha, 
 
 static void gl_blit_alpha(zrn_painter_t* const p, const int x, const int y, const int w, const int h, const uint8_t* const alpha, const int stride, const ZColor c) {
 	const auto gl = (zrn_gl_t*)p->backend_data;
-	const float inv = 1.0f / (float)ATLAS_SIZE;
+	constexpr float inv = 1.0f / (float)ATLAS_SIZE;
 	if (w <= 0 || h <= 0 || stride != w) return;
 	atlas_slot_t* s = atlas_find(gl, alpha, w, h);
 	if (!s) {

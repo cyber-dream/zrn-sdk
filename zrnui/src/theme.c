@@ -71,7 +71,7 @@ static const char* const g_accent_names[] = { "Lime", "Green", "Emerald", "Teal"
 	"Violet", "Pink", "Magenta", "Crimson", "Red", "Orange", "Amber", "Yellow", "Brown", "Olive", "Steel",
 	"Mauve", "Taupe" };
 
-static const uint32_t g_accent_values[] = {
+static constexpr uint32_t g_accent_values[] = {
 	0xFFA4C400, /* Lime */    0xFF60A917, /* Green */   0xFF008A00, /* Emerald */ 0xFF00ABA9, /* Teal */
 	0xFF1BA1E2, /* Cyan */    0xFF0050EF, /* Cobalt */  0xFF6A00FF, /* Indigo */  0xFFAA00FF, /* Violet */
 	0xFFF472D0, /* Pink */    0xFFD80073, /* Magenta */ 0xFFA20025, /* Crimson */ 0xFFE51400, /* Red */

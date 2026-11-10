@@ -497,8 +497,8 @@ static constexpr float PR_DOT_MARGIN = 7.5f;
 static constexpr float PR_CYCLE_MS = 4305.0f;
 
 static float progress_ring_angle(const float u) {
-	static const float times[7] = { 0, 0.433f, 1.2f, 1.617f, 2.017f, 2.783f, 3.217f };
-	static const float angles[7] = { -110, 10, 93, 205, 357, 439, 585 };
+	static constexpr float times[7] = { 0, 0.433f, 1.2f, 1.617f, 2.017f, 2.783f, 3.217f };
+	static constexpr float angles[7] = { -110, 10, 93, 205, 357, 439, 585 };
 	/* the ZeySpline of the segment that ends at a keyframe; linear where the keyframe has none */
 	static const float splines[7][4] = { { 0, 0, 1, 1 }, { 0.02f, 0.33f, 0.38f, 0.77f }, { 0, 0, 1, 1 }, { 0.57f, 0.17f, 0.95f, 0.75f },
 		{ 0, 0.19f, 0.07f, 0.72f }, { 0, 0, 1, 1 }, { 0, 0, 0.95f, 0.37f } };

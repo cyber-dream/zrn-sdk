@@ -100,9 +100,10 @@ static void flyout_popup_closed(const Zid popup, void* const user_data) {
 void zrn_flyout_show_at(zrn_element_t* flyout, zrn_element_t* target) {
 	auto f = FB(flyout);
 	zrn_popup_t* popup;
-	zrn_element_t* presenter;
 	const Zid id = flyout->id, target_id = target->id;
-	if (!f->popup || !(presenter = presenter_of(f))) return;
+	if (!f->popup) return;
+	zrn_element_t* presenter = presenter_of(f);
+	if (!presenter) return;
 	zrn_root_t* r = target->root;
 	if (!r) {
 		zrn_error(Z_ERROR_INVALID_ARGUMENT, "a flyout is shown at an element that is in a tree with a root");

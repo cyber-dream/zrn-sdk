@@ -24,7 +24,7 @@ static constexpr float TILT_OUT_MS = 160.0f;
 
 /* (0.2, 0.8, 0.2, 1) as a cubic Bezier */
 static float ease_emphasized(const float t) {
-	const float x1 = 0.2f, y1 = 0.8f, x2 = 0.2f, y2 = 1.0f;
+	constexpr float x1 = 0.2f, y1 = 0.8f, x2 = 0.2f, y2 = 1.0f;
 	float s = t, u;
 	for (int i = 0; i < 8; i++) {
 		u = 1 - s;

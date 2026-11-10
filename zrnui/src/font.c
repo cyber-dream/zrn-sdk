@@ -30,7 +30,7 @@
 static constexpr int ZST_FACE_CANDIDATES = 8;
 #define ZST_NO_FONT UINT32_MAX
 
-char* g_font_dir;
+static char* g_font_dir;
 
 /* The weights of fontconfig, spelled out so that the table below does not need fontconfig. */
 enum { ZST_WEIGHT_LIGHT = 50, ZST_WEIGHT_SEMILIGHT = 55, ZST_WEIGHT_REGULAR = 80, ZST_WEIGHT_SEMIBOLD = 180, ZST_WEIGHT_BOLD = 200 };

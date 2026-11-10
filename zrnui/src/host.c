@@ -113,9 +113,7 @@ void zrn_set_capture(zrn_root_t* const r, zrn_element_t* const e) {
 	if (old == e) return;
 	r->capture = e;
 	if (old && old->cls->input) {
-		zrn_input_t in;
-		memset(&in, 0, sizeof in);
-		in.type = ZST_IN_CAPTURE_LOST;
+		zrn_input_t in = { .type = ZST_IN_CAPTURE_LOST };
 		old->cls->input(old, &in);
 	}
 }
