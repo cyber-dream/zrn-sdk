@@ -443,8 +443,8 @@ Zid Zlooping_selector_create(void) {
 
 static zrn_looping_selector_t* get_ls(const Zid id) { return LS(zrn_get(id, Z_CLASS_LOOPING_SELECTOR)); }
 
-int Zlooping_selector_add_item(const Zid id, const char* const primary_text, const char* const secondary_text) {
-	zrn_looping_selector_t* const s = get_ls(id);
+int Zlooping_selector_add_item(const Zid looping_selector, const char* const primary_text, const char* const secondary_text) {
+	zrn_looping_selector_t* const s = get_ls(looping_selector);
 	looping_item_t* it;
 	if (!s) return -1;
 	if (s->count == s->cap) {
@@ -467,8 +467,8 @@ int Zlooping_selector_add_item(const Zid id, const char* const primary_text, con
 	return s->count - 1;
 }
 
-void Zlooping_selector_clear_items(const Zid id) {
-	zrn_looping_selector_t* const s = get_ls(id);
+void Zlooping_selector_clear_items(const Zid looping_selector) {
+	zrn_looping_selector_t* const s = get_ls(looping_selector);
 	if (!s) return;
 	ls_clear(s);
 	s->selected = -1;
@@ -478,23 +478,23 @@ void Zlooping_selector_clear_items(const Zid id) {
 	zrn_changed_layout(&s->base.base);
 }
 
-int Zlooping_selector_get_item_count(const Zid id) {
-	const zrn_looping_selector_t* const s = get_ls(id);
+int Zlooping_selector_get_item_count(const Zid looping_selector) {
+	const zrn_looping_selector_t* const s = get_ls(looping_selector);
 	return s ? s->count : 0;
 }
 
-const char* Zlooping_selector_get_item_text(const Zid id, const int index) {
-	const zrn_looping_selector_t* const s = get_ls(id);
+const char* Zlooping_selector_get_item_text(const Zid looping_selector, const int index) {
+	const zrn_looping_selector_t* const s = get_ls(looping_selector);
 	return s && index >= 0 && index < s->count ? s->items[index].primary : "";
 }
 
-const char* Zlooping_selector_get_item_secondary_text(const Zid id, const int index) {
-	const zrn_looping_selector_t* const s = get_ls(id);
+const char* Zlooping_selector_get_item_secondary_text(const Zid looping_selector, const int index) {
+	const zrn_looping_selector_t* const s = get_ls(looping_selector);
 	return s && index >= 0 && index < s->count && s->items[index].secondary ? s->items[index].secondary : "";
 }
 
-void Zlooping_selector_set_selected_index(Zid id, int index) {
-	zrn_looping_selector_t* const s = get_ls(id);
+void Zlooping_selector_set_selected_index(Zid looping_selector, int index) {
+	zrn_looping_selector_t* const s = get_ls(looping_selector);
 	int changed;
 	if (!s || s->count == 0) return;
 	index = zrn_mini(zrn_maxi(index, 0), s->count - 1);
@@ -507,50 +507,50 @@ void Zlooping_selector_set_selected_index(Zid id, int index) {
 	if (changed) zrn_raise(&s->base.base, Z_EVENT_SELECTION_CHANGED);
 }
 
-int Zlooping_selector_get_selected_index(const Zid id) {
-	const zrn_looping_selector_t* const s = get_ls(id);
+int Zlooping_selector_get_selected_index(const Zid looping_selector) {
+	const zrn_looping_selector_t* const s = get_ls(looping_selector);
 	return s ? s->selected : -1;
 }
 
-void Zlooping_selector_set_should_loop(const Zid id, const int should_loop) {
-	zrn_looping_selector_t* const s = get_ls(id);
+void Zlooping_selector_set_should_loop(const Zid looping_selector, const int should_loop) {
+	zrn_looping_selector_t* const s = get_ls(looping_selector);
 	if (!s) return;
 	s->should_loop = should_loop != 0;
 	s->pos = s->selected >= 0 ? (float)s->selected : 0;
 	zrn_changed_paint(&s->base.base);
 }
 
-int Zlooping_selector_get_should_loop(const Zid id) {
-	const zrn_looping_selector_t* const s = get_ls(id);
+int Zlooping_selector_get_should_loop(const Zid looping_selector) {
+	const zrn_looping_selector_t* const s = get_ls(looping_selector);
 	return s ? s->should_loop : 0;
 }
 
-void Zlooping_selector_set_item_width(const Zid id, const float width) {
-	zrn_looping_selector_t* const s = get_ls(id);
+void Zlooping_selector_set_item_width(const Zid looping_selector, const float width) {
+	zrn_looping_selector_t* const s = get_ls(looping_selector);
 	if (!s) return;
 	s->item_width = width > 0 ? width : 0;
 	zrn_changed_layout(&s->base.base);
 }
 
-float Zlooping_selector_get_item_width(const Zid id) {
-	const zrn_looping_selector_t* const s = get_ls(id);
+float Zlooping_selector_get_item_width(const Zid looping_selector) {
+	const zrn_looping_selector_t* const s = get_ls(looping_selector);
 	return s ? item_cell_width(s) : 0;
 }
 
-void Zlooping_selector_set_item_height(const Zid id, const float height) {
-	zrn_looping_selector_t* const s = get_ls(id);
+void Zlooping_selector_set_item_height(const Zid looping_selector, const float height) {
+	zrn_looping_selector_t* const s = get_ls(looping_selector);
 	if (!s) return;
 	s->item_height = height > 0 ? height : 0;
 	zrn_changed_layout(&s->base.base);
 }
 
-float Zlooping_selector_get_item_height(const Zid id) {
-	const zrn_looping_selector_t* const s = get_ls(id);
+float Zlooping_selector_get_item_height(const Zid looping_selector) {
+	const zrn_looping_selector_t* const s = get_ls(looping_selector);
 	return s ? item_cell_height(s) : 0;
 }
 
-void Zlooping_selector_on_selection_changed(const Zid id, const ZRoutedCallback callback, void* const user_data) {
-	if (get_ls(id)) Zelement_on(id, Z_EVENT_SELECTION_CHANGED, callback, user_data);
+void Zlooping_selector_on_selection_changed(const Zid looping_selector, const ZRoutedCallback callback, void* const user_data) {
+	if (get_ls(looping_selector)) Zelement_on(looping_selector, Z_EVENT_SELECTION_CHANGED, callback, user_data);
 }
 
 
@@ -891,30 +891,30 @@ static zrn_picker_flyout_t* get_flyout(const Zid id) { return PF(zrn_get(id, Z_C
 static zrn_picker_flyout_t* get_date_flyout(const Zid id) { return PF(zrn_get(id, Z_CLASS_DATE_PICKER_FLYOUT)); }
 static zrn_picker_flyout_t* get_time_flyout(const Zid id) { return PF(zrn_get(id, Z_CLASS_TIME_PICKER_FLYOUT)); }
 
-void Zpicker_flyout_base_set_title(const Zid id, const char* const title) {
-	zrn_picker_flyout_t* const f = get_flyout(id);
+void Zpicker_flyout_base_set_title(const Zid picker_flyout, const char* const title) {
+	zrn_picker_flyout_t* const f = get_flyout(picker_flyout);
 	if (!f) return;
 	zrn_set_string(&f->title, title ? title : "");
 	flyout_set_title_text(f);
 }
 
-const char* Zpicker_flyout_base_get_title(const Zid id) {
-	const zrn_picker_flyout_t* const f = get_flyout(id);
+const char* Zpicker_flyout_base_get_title(const Zid picker_flyout) {
+	const zrn_picker_flyout_t* const f = get_flyout(picker_flyout);
 	return f && f->title ? f->title : "";
 }
 
-Zid Zpicker_flyout_base_get_selector(const Zid id, const int index) {
-	const zrn_picker_flyout_t* const f = get_flyout(id);
+Zid Zpicker_flyout_base_get_selector(const Zid picker_flyout, const int index) {
+	const zrn_picker_flyout_t* const f = get_flyout(picker_flyout);
 	return f && index >= 0 && index < 3 && f->selector[index] ? f->selector[index]->id : Z_INVALID_ID;
 }
 
-Zid Zpicker_flyout_base_get_done_button(const Zid id) {
-	const zrn_picker_flyout_t* const f = get_flyout(id);
+Zid Zpicker_flyout_base_get_done_button(const Zid picker_flyout) {
+	const zrn_picker_flyout_t* const f = get_flyout(picker_flyout);
 	return f && f->done_button ? f->done_button->id : Z_INVALID_ID;
 }
 
-Zid Zpicker_flyout_base_get_cancel_button(const Zid id) {
-	const zrn_picker_flyout_t* const f = get_flyout(id);
+Zid Zpicker_flyout_base_get_cancel_button(const Zid picker_flyout) {
+	const zrn_picker_flyout_t* const f = get_flyout(picker_flyout);
 	return f && f->cancel_button ? f->cancel_button->id : Z_INVALID_ID;
 }
 
@@ -923,21 +923,21 @@ Zid Zdate_picker_flyout_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-void Zdate_picker_flyout_set_date(const Zid id, const ZDate date) {
-	zrn_picker_flyout_t* const f = get_date_flyout(id);
+void Zdate_picker_flyout_set_date(const Zid flyout, const ZDate date) {
+	zrn_picker_flyout_t* const f = get_date_flyout(flyout);
 	if (!f) return;
 	f->date = coerce_date(date, f->min_year, f->max_year);
 	date_sync(f);
 }
 
-ZDate Zdate_picker_flyout_get_date(const Zid id) {
-	const zrn_picker_flyout_t* const f = get_date_flyout(id);
+ZDate Zdate_picker_flyout_get_date(const Zid flyout) {
+	const zrn_picker_flyout_t* const f = get_date_flyout(flyout);
 	const ZDate none = { 0, 0, 0 };
 	return f ? f->date : none;
 }
 
-void Zdate_picker_flyout_set_min_year(const Zid id, const int year) {
-	zrn_picker_flyout_t* const f = get_date_flyout(id);
+void Zdate_picker_flyout_set_min_year(const Zid flyout, const int year) {
+	zrn_picker_flyout_t* const f = get_date_flyout(flyout);
 	if (!f) return;
 	f->min_year = year;
 	if (f->max_year < year) f->max_year = year;
@@ -945,8 +945,8 @@ void Zdate_picker_flyout_set_min_year(const Zid id, const int year) {
 	date_sync(f);
 }
 
-void Zdate_picker_flyout_set_max_year(const Zid id, const int year) {
-	zrn_picker_flyout_t* const f = get_date_flyout(id);
+void Zdate_picker_flyout_set_max_year(const Zid flyout, const int year) {
+	zrn_picker_flyout_t* const f = get_date_flyout(flyout);
 	if (!f) return;
 	f->max_year = year;
 	if (f->min_year > year) f->min_year = year;
@@ -954,8 +954,8 @@ void Zdate_picker_flyout_set_max_year(const Zid id, const int year) {
 	date_sync(f);
 }
 
-int Zdate_picker_flyout_get_min_year(Zid id) { const zrn_picker_flyout_t* f = get_date_flyout(id); return f ? f->min_year : 0; }
-int Zdate_picker_flyout_get_max_year(Zid id) { const zrn_picker_flyout_t* f = get_date_flyout(id); return f ? f->max_year : 0; }
+int Zdate_picker_flyout_get_min_year(Zid flyout) { const zrn_picker_flyout_t* f = get_date_flyout(flyout); return f ? f->min_year : 0; }
+int Zdate_picker_flyout_get_max_year(Zid flyout) { const zrn_picker_flyout_t* f = get_date_flyout(flyout); return f ? f->max_year : 0; }
 
 static void date_apply_visibility(const zrn_picker_flyout_t* const f) {
 	f->selector[0]->visibility = f->month_visible ? Z_VISIBLE : Z_COLLAPSED;
@@ -965,14 +965,14 @@ static void date_apply_visibility(const zrn_picker_flyout_t* const f) {
 }
 
 void Zdate_picker_flyout_set_day_visible(Zid id, const int visible) { zrn_picker_flyout_t* f = get_date_flyout(id); if (f) { f->day_visible = visible != 0; date_apply_visibility(f); } }
-void Zdate_picker_flyout_set_month_visible(Zid id, const int visible) { zrn_picker_flyout_t* f = get_date_flyout(id); if (f) { f->month_visible = visible != 0; date_apply_visibility(f); } }
-void Zdate_picker_flyout_set_year_visible(Zid id, const int visible) { zrn_picker_flyout_t* f = get_date_flyout(id); if (f) { f->year_visible = visible != 0; date_apply_visibility(f); } }
-int Zdate_picker_flyout_get_day_visible(Zid id) { const zrn_picker_flyout_t* f = get_date_flyout(id); return f ? f->day_visible : 0; }
-int Zdate_picker_flyout_get_month_visible(Zid id) { const zrn_picker_flyout_t* f = get_date_flyout(id); return f ? f->month_visible : 0; }
-int Zdate_picker_flyout_get_year_visible(Zid id) { const zrn_picker_flyout_t* f = get_date_flyout(id); return f ? f->year_visible : 0; }
+void Zdate_picker_flyout_set_month_visible(Zid flyout, const int visible) { zrn_picker_flyout_t* f = get_date_flyout(flyout); if (f) { f->month_visible = visible != 0; date_apply_visibility(f); } }
+void Zdate_picker_flyout_set_year_visible(Zid flyout, const int visible) { zrn_picker_flyout_t* f = get_date_flyout(flyout); if (f) { f->year_visible = visible != 0; date_apply_visibility(f); } }
+int Zdate_picker_flyout_get_day_visible(Zid flyout) { const zrn_picker_flyout_t* f = get_date_flyout(flyout); return f ? f->day_visible : 0; }
+int Zdate_picker_flyout_get_month_visible(Zid flyout) { const zrn_picker_flyout_t* f = get_date_flyout(flyout); return f ? f->month_visible : 0; }
+int Zdate_picker_flyout_get_year_visible(Zid flyout) { const zrn_picker_flyout_t* f = get_date_flyout(flyout); return f ? f->year_visible : 0; }
 
-void Zdate_picker_flyout_on_date_picked(const Zid id, const ZDatePickedCallback callback, void* const user_data) {
-	zrn_picker_flyout_t* const f = get_date_flyout(id);
+void Zdate_picker_flyout_on_date_picked(const Zid flyout, const ZDatePickedCallback callback, void* const user_data) {
+	zrn_picker_flyout_t* const f = get_date_flyout(flyout);
 	if (!f) return;
 	f->date_picked = callback;
 	f->date_picked_data = user_data;
@@ -983,21 +983,21 @@ Zid Ztime_picker_flyout_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-void Ztime_picker_flyout_set_time(const Zid id, const ZTimeOfDay time_of_day) {
-	zrn_picker_flyout_t* const f = get_time_flyout(id);
+void Ztime_picker_flyout_set_time(const Zid flyout, const ZTimeOfDay time_of_day) {
+	zrn_picker_flyout_t* const f = get_time_flyout(flyout);
 	if (!f) return;
 	f->time = coerce_time(time_of_day);
 	time_sync(f);
 }
 
-ZTimeOfDay Ztime_picker_flyout_get_time(const Zid id) {
-	const zrn_picker_flyout_t* const f = get_time_flyout(id);
+ZTimeOfDay Ztime_picker_flyout_get_time(const Zid flyout) {
+	const zrn_picker_flyout_t* const f = get_time_flyout(flyout);
 	const ZTimeOfDay none = { 0, 0 };
 	return f ? f->time : none;
 }
 
-void Ztime_picker_flyout_set_minute_increment(const Zid id, const int increment) {
-	zrn_picker_flyout_t* const f = get_time_flyout(id);
+void Ztime_picker_flyout_set_minute_increment(const Zid flyout, const int increment) {
+	zrn_picker_flyout_t* const f = get_time_flyout(flyout);
 	if (!f) return;
 	f->minute_increment = zrn_mini(zrn_maxi(increment, 1), 59);
 	time_sync(f);
@@ -1005,8 +1005,8 @@ void Ztime_picker_flyout_set_minute_increment(const Zid id, const int increment)
 
 int Ztime_picker_flyout_get_minute_increment(Zid id) { const zrn_picker_flyout_t* f = get_time_flyout(id); return f ? f->minute_increment : 1; }
 
-void Ztime_picker_flyout_set_clock_identifier(const Zid id, const ZClockIdentifier clock) {
-	zrn_picker_flyout_t* const f = get_time_flyout(id);
+void Ztime_picker_flyout_set_clock_identifier(const Zid flyout, const ZClockIdentifier clock) {
+	zrn_picker_flyout_t* const f = get_time_flyout(flyout);
 	if (!f || (clock != Z_CLOCK_12_HOUR && clock != Z_CLOCK_24_HOUR)) return;
 	f->clock = clock;
 	time_sync(f);
@@ -1014,8 +1014,8 @@ void Ztime_picker_flyout_set_clock_identifier(const Zid id, const ZClockIdentifi
 
 ZClockIdentifier Ztime_picker_flyout_get_clock_identifier(Zid id) { const zrn_picker_flyout_t* f = get_time_flyout(id); return f ? f->clock : Z_CLOCK_12_HOUR; }
 
-void Ztime_picker_flyout_on_time_picked(const Zid id, const ZTimePickedCallback callback, void* const user_data) {
-	zrn_picker_flyout_t* const f = get_time_flyout(id);
+void Ztime_picker_flyout_on_time_picked(const Zid flyout, const ZTimePickedCallback callback, void* const user_data) {
+	zrn_picker_flyout_t* const f = get_time_flyout(flyout);
 	if (!f) return;
 	f->time_picked = callback;
 	f->time_picked_data = user_data;
@@ -1204,143 +1204,143 @@ Zid Ztime_picker_create(void) {
 	return e->id;
 }
 
-void Zdate_picker_set_header(const Zid id, const char* const header) {
-	zrn_picker_t* const p = get_date_picker(id);
+void Zdate_picker_set_header(const Zid date_picker, const char* const header) {
+	zrn_picker_t* const p = get_date_picker(date_picker);
 	if (!p) return;
 	zrn_set_string(&p->header, header ? header : "");
 	zrn_changed_layout(&p->base.base);
 }
 
-const char* Zdate_picker_get_header(const Zid id) {
-	const zrn_picker_t* const p = get_date_picker(id);
+const char* Zdate_picker_get_header(const Zid date_picker) {
+	const zrn_picker_t* const p = get_date_picker(date_picker);
 	return p && p->header ? p->header : "";
 }
 
-void Zdate_picker_set_date(const Zid id, const ZDate date) {
-	zrn_picker_t* const p = get_date_picker(id);
+void Zdate_picker_set_date(const Zid date_picker, const ZDate date) {
+	zrn_picker_t* const p = get_date_picker(date_picker);
 	if (p) date_picker_set(p, date, 1);
 }
 
-ZDate Zdate_picker_get_date(const Zid id) {
-	const zrn_picker_t* const p = get_date_picker(id);
+ZDate Zdate_picker_get_date(const Zid date_picker) {
+	const zrn_picker_t* const p = get_date_picker(date_picker);
 	const ZDate none = { 0, 0, 0 };
 	return p ? p->date : none;
 }
 
-void Zdate_picker_set_min_year(const Zid id, const int year) {
-	zrn_picker_t* const p = get_date_picker(id);
+void Zdate_picker_set_min_year(const Zid date_picker, const int year) {
+	zrn_picker_t* const p = get_date_picker(date_picker);
 	if (!p) return;
 	p->min_year = year;
 	if (p->max_year < year) p->max_year = year;
 	date_picker_set(p, p->date, 1);
 }
 
-void Zdate_picker_set_max_year(const Zid id, const int year) {
-	zrn_picker_t* const p = get_date_picker(id);
+void Zdate_picker_set_max_year(const Zid date_picker, const int year) {
+	zrn_picker_t* const p = get_date_picker(date_picker);
 	if (!p) return;
 	p->max_year = year;
 	if (p->min_year > year) p->min_year = year;
 	date_picker_set(p, p->date, 1);
 }
 
-int Zdate_picker_get_min_year(Zid id) { const zrn_picker_t* p = get_date_picker(id); return p ? p->min_year : 0; }
-int Zdate_picker_get_max_year(Zid id) { const zrn_picker_t* p = get_date_picker(id); return p ? p->max_year : 0; }
+int Zdate_picker_get_min_year(Zid date_picker) { const zrn_picker_t* p = get_date_picker(date_picker); return p ? p->min_year : 0; }
+int Zdate_picker_get_max_year(Zid date_picker) { const zrn_picker_t* p = get_date_picker(date_picker); return p ? p->max_year : 0; }
 
-void Zdate_picker_set_day_visible(const Zid id, const int visible) {
-	zrn_picker_t* const p = get_date_picker(id);
+void Zdate_picker_set_day_visible(const Zid date_picker, const int visible) {
+	zrn_picker_t* const p = get_date_picker(date_picker);
 	if (!p) return;
 	p->day_visible = visible != 0;
 	if (p->flyout) Zdate_picker_flyout_set_day_visible(p->flyout->id, visible);
 }
 
-void Zdate_picker_set_month_visible(const Zid id, const int visible) {
-	zrn_picker_t* const p = get_date_picker(id);
+void Zdate_picker_set_month_visible(const Zid date_picker, const int visible) {
+	zrn_picker_t* const p = get_date_picker(date_picker);
 	if (!p) return;
 	p->month_visible = visible != 0;
 	if (p->flyout) Zdate_picker_flyout_set_month_visible(p->flyout->id, visible);
 }
 
-void Zdate_picker_set_year_visible(const Zid id, const int visible) {
-	zrn_picker_t* const p = get_date_picker(id);
+void Zdate_picker_set_year_visible(const Zid date_picker, const int visible) {
+	zrn_picker_t* const p = get_date_picker(date_picker);
 	if (!p) return;
 	p->year_visible = visible != 0;
 	if (p->flyout) Zdate_picker_flyout_set_year_visible(p->flyout->id, visible);
 }
 
 int Zdate_picker_get_day_visible(Zid id) { const zrn_picker_t* p = get_date_picker(id); return p ? p->day_visible : 0; }
-int Zdate_picker_get_month_visible(Zid id) { const zrn_picker_t* p = get_date_picker(id); return p ? p->month_visible : 0; }
-int Zdate_picker_get_year_visible(Zid id) { const zrn_picker_t* p = get_date_picker(id); return p ? p->year_visible : 0; }
+int Zdate_picker_get_month_visible(Zid date_picker) { const zrn_picker_t* p = get_date_picker(date_picker); return p ? p->month_visible : 0; }
+int Zdate_picker_get_year_visible(Zid date_picker) { const zrn_picker_t* p = get_date_picker(date_picker); return p ? p->year_visible : 0; }
 
-Zid Zdate_picker_get_flyout(const Zid id) {
-	const zrn_picker_t* const p = get_date_picker(id);
+Zid Zdate_picker_get_flyout(const Zid date_picker) {
+	const zrn_picker_t* const p = get_date_picker(date_picker);
 	return p && p->flyout ? p->flyout->id : Z_INVALID_ID;
 }
 
-Zid Zdate_picker_get_flyout_button(const Zid id) {
-	const zrn_picker_t* const p = get_date_picker(id);
+Zid Zdate_picker_get_flyout_button(const Zid date_picker) {
+	const zrn_picker_t* const p = get_date_picker(date_picker);
 	return p && p->button ? p->button->id : Z_INVALID_ID;
 }
 
-void Zdate_picker_on_date_changed(const Zid id, const ZDateChangedCallback callback, void* const user_data) {
-	zrn_picker_t* const p = get_date_picker(id);
+void Zdate_picker_on_date_changed(const Zid date_picker, const ZDateChangedCallback callback, void* const user_data) {
+	zrn_picker_t* const p = get_date_picker(date_picker);
 	if (!p) return;
 	p->date_changed = callback;
 	p->date_changed_data = user_data;
 }
 
-void Ztime_picker_set_header(const Zid id, const char* const header) {
-	zrn_picker_t* const p = get_time_picker(id);
+void Ztime_picker_set_header(const Zid date_picker, const char* const header) {
+	zrn_picker_t* const p = get_time_picker(date_picker);
 	if (!p) return;
 	zrn_set_string(&p->header, header ? header : "");
 	zrn_changed_layout(&p->base.base);
 }
 
-const char* Ztime_picker_get_header(const Zid id) {
-	const zrn_picker_t* const p = get_time_picker(id);
+const char* Ztime_picker_get_header(const Zid time_picker) {
+	const zrn_picker_t* const p = get_time_picker(time_picker);
 	return p && p->header ? p->header : "";
 }
 
-void Ztime_picker_set_time(const Zid id, const ZTimeOfDay time_of_day) {
-	zrn_picker_t* const p = get_time_picker(id);
+void Ztime_picker_set_time(const Zid time_picker, const ZTimeOfDay time_of_day) {
+	zrn_picker_t* const p = get_time_picker(time_picker);
 	if (p) time_picker_set(p, time_of_day, 1);
 }
 
-ZTimeOfDay Ztime_picker_get_time(const Zid id) {
-	const zrn_picker_t* const p = get_time_picker(id);
+ZTimeOfDay Ztime_picker_get_time(const Zid time_picker) {
+	const zrn_picker_t* const p = get_time_picker(time_picker);
 	const ZTimeOfDay none = { 0, 0 };
 	return p ? p->time : none;
 }
 
-void Ztime_picker_set_minute_increment(const Zid id, const int increment) {
-	zrn_picker_t* const p = get_time_picker(id);
+void Ztime_picker_set_minute_increment(const Zid time_picker, const int increment) {
+	zrn_picker_t* const p = get_time_picker(time_picker);
 	if (!p) return;
 	p->minute_increment = zrn_mini(zrn_maxi(increment, 1), 59);
 	time_picker_set(p, p->time, 1);
 }
 
-int Ztime_picker_get_minute_increment(Zid id) { const zrn_picker_t* p = get_time_picker(id); return p ? p->minute_increment : 1; }
+int Ztime_picker_get_minute_increment(Zid time_picker) { const zrn_picker_t* p = get_time_picker(time_picker); return p ? p->minute_increment : 1; }
 
-void Ztime_picker_set_clock_identifier(const Zid id, const ZClockIdentifier clock) {
-	zrn_picker_t* const p = get_time_picker(id);
+void Ztime_picker_set_clock_identifier(const Zid time_picker, const ZClockIdentifier clock) {
+	zrn_picker_t* const p = get_time_picker(time_picker);
 	if (!p || (clock != Z_CLOCK_12_HOUR && clock != Z_CLOCK_24_HOUR)) return;
 	p->clock = clock;
 	time_picker_set(p, p->time, 1);
 }
 
-ZClockIdentifier Ztime_picker_get_clock_identifier(Zid id) { const zrn_picker_t* p = get_time_picker(id); return p ? p->clock : Z_CLOCK_12_HOUR; }
+ZClockIdentifier Ztime_picker_get_clock_identifier(Zid time_picker) { const zrn_picker_t* p = get_time_picker(time_picker); return p ? p->clock : Z_CLOCK_12_HOUR; }
 
-Zid Ztime_picker_get_flyout(const Zid id) {
-	const zrn_picker_t* const p = get_time_picker(id);
+Zid Ztime_picker_get_flyout(const Zid time_picker) {
+	const zrn_picker_t* const p = get_time_picker(time_picker);
 	return p && p->flyout ? p->flyout->id : Z_INVALID_ID;
 }
 
-Zid Ztime_picker_get_flyout_button(const Zid id) {
-	const zrn_picker_t* const p = get_time_picker(id);
+Zid Ztime_picker_get_flyout_button(const Zid time_picker) {
+	const zrn_picker_t* const p = get_time_picker(time_picker);
 	return p && p->button ? p->button->id : Z_INVALID_ID;
 }
 
-void Ztime_picker_on_time_changed(const Zid id, const ZTimeChangedCallback callback, void* const user_data) {
-	zrn_picker_t* const p = get_time_picker(id);
+void Ztime_picker_on_time_changed(const Zid time_picker, const ZTimeChangedCallback callback, void* const user_data) {
+	zrn_picker_t* const p = get_time_picker(time_picker);
 	if (!p) return;
 	p->time_changed = callback;
 	p->time_changed_data = user_data;

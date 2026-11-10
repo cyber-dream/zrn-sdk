@@ -46,17 +46,17 @@ zrn_class_t zrn_class_range_base = {
 
 static zrn_range_base_t* get_range(const Zid id) { return RANGE(zrn_get(id, Z_CLASS_RANGE_BASE)); }
 
-void Zrange_base_set_value(const Zid id, const double value) {
-	zrn_range_base_t* const r = get_range(id);
+void Zrange_base_set_value(const Zid range, const double value) {
+	zrn_range_base_t* const r = get_range(range);
 	if (r) range_assign(r, value);
 }
 
-double Zrange_base_get_value(Zid id) { const zrn_range_base_t* r = get_range(id); return r ? r->value : 0; }
-double Zrange_base_get_minimum(Zid id) { const zrn_range_base_t* r = get_range(id); return r ? r->minimum : 0; }
-double Zrange_base_get_maximum(Zid id) { const zrn_range_base_t* r = get_range(id); return r ? r->maximum : 0; }
+double Zrange_base_get_value(Zid range) { const zrn_range_base_t* r = get_range(range); return r ? r->value : 0; }
+double Zrange_base_get_minimum(Zid range) { const zrn_range_base_t* r = get_range(range); return r ? r->minimum : 0; }
+double Zrange_base_get_maximum(Zid range) { const zrn_range_base_t* r = get_range(range); return r ? r->maximum : 0; }
 
-void Zrange_base_set_range(Zid id, const double minimum, double maximum) {
-	zrn_range_base_t* const r = get_range(id);
+void Zrange_base_set_range(Zid range, const double minimum, double maximum) {
+	zrn_range_base_t* const r = get_range(range);
 	if (!r) return;
 	if (maximum < minimum) maximum = minimum;
 	r->minimum = minimum;
@@ -69,15 +69,15 @@ void Zrange_base_set_range(Zid id, const double minimum, double maximum) {
 	}
 }
 
-void Zrange_base_set_changes(const Zid id, const double small_change, const double large_change) {
-	zrn_range_base_t* const r = get_range(id);
+void Zrange_base_set_changes(const Zid range, const double small_change, const double large_change) {
+	zrn_range_base_t* const r = get_range(range);
 	if (!r) return;
 	r->small_change = small_change;
 	r->large_change = large_change;
 }
 
-void Zrange_base_on_value_changed(const Zid id, const ZValueChangedCallback callback, void* const user_data) {
-	zrn_range_base_t* const r = get_range(id);
+void Zrange_base_on_value_changed(const Zid range, const ZValueChangedCallback callback, void* const user_data) {
+	zrn_range_base_t* const r = get_range(range);
 	if (!r) return;
 	r->changed = callback;
 	r->changed_data = user_data;
@@ -316,43 +316,43 @@ void Zslider_set_orientation(const Zid id, const ZOrientation orientation) {
 	zrn_changed_layout(&s->base.base.base);
 }
 
-void Zslider_set_header(const Zid id, const char* const header) {
-	zrn_slider_t* const s = get_slider(id);
+void Zslider_set_header(const Zid slider, const char* const header) {
+	zrn_slider_t* const s = get_slider(slider);
 	if (!s) return;
 	zrn_set_string(&s->header, header && *header ? header : nullptr);
 	zrn_changed_layout(&s->base.base.base);
 }
 
-const char* Zslider_get_header(const Zid id) {
-	const zrn_slider_t* const s = get_slider(id);
+const char* Zslider_get_header(const Zid slider) {
+	const zrn_slider_t* const s = get_slider(slider);
 	return s && s->header ? s->header : "";
 }
 
-void Zslider_set_step_frequency(const Zid id, const double step_frequency) {
-	zrn_slider_t* const s = get_slider(id);
+void Zslider_set_step_frequency(const Zid slider, const double step_frequency) {
+	zrn_slider_t* const s = get_slider(slider);
 	if (s) s->step_frequency = step_frequency < 0 ? 0 : step_frequency;
 }
 
-double Zslider_get_step_frequency(Zid id) { const zrn_slider_t* s = get_slider(id); return s ? s->step_frequency : 0; }
+double Zslider_get_step_frequency(Zid slider) { const zrn_slider_t* s = get_slider(slider); return s ? s->step_frequency : 0; }
 
-void Zslider_set_tick_frequency(const Zid id, const double tick_frequency) {
-	zrn_slider_t* const s = get_slider(id);
+void Zslider_set_tick_frequency(const Zid slider, const double tick_frequency) {
+	zrn_slider_t* const s = get_slider(slider);
 	if (!s) return;
 	s->tick_frequency = tick_frequency < 0 ? 0 : tick_frequency;
 	zrn_changed_paint(&s->base.base.base);
 }
 
-double Zslider_get_tick_frequency(Zid id) { const zrn_slider_t* s = get_slider(id); return s ? s->tick_frequency : 0; }
+double Zslider_get_tick_frequency(Zid slider) { const zrn_slider_t* s = get_slider(slider); return s ? s->tick_frequency : 0; }
 
-void Zslider_set_tick_placement(const Zid id, const ZTickPlacement placement) {
-	zrn_slider_t* const s = get_slider(id);
+void Zslider_set_tick_placement(const Zid slider, const ZTickPlacement placement) {
+	zrn_slider_t* const s = get_slider(slider);
 	if (!s) return;
 	s->tick_placement = placement;
 	zrn_changed_paint(&s->base.base.base);
 }
 
-void Zslider_set_snaps_to(const Zid id, const ZSliderSnapsTo snaps_to) {
-	zrn_slider_t* const s = get_slider(id);
+void Zslider_set_snaps_to(const Zid slider, const ZSliderSnapsTo snaps_to) {
+	zrn_slider_t* const s = get_slider(slider);
 	if (s) s->snaps_to = snaps_to;
 }
 
@@ -454,8 +454,8 @@ Zid Zprogress_bar_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-void Zprogress_bar_set_is_indeterminate(const Zid id, const int is_indeterminate) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_PROGRESS_BAR);
+void Zprogress_bar_set_is_indeterminate(const Zid progress_bar, const int is_indeterminate) {
+	zrn_element_t* const e = zrn_get(progress_bar, Z_CLASS_PROGRESS_BAR);
 	if (!e) return;
 	PROGRESS(e)->indeterminate = is_indeterminate != 0;
 	PROGRESS(e)->time_ms = 0;
@@ -463,20 +463,20 @@ void Zprogress_bar_set_is_indeterminate(const Zid id, const int is_indeterminate
 	zrn_changed_paint(e);
 }
 
-int Zprogress_bar_get_is_indeterminate(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_PROGRESS_BAR);
+int Zprogress_bar_get_is_indeterminate(const Zid progress_bar) {
+	zrn_element_t* const e = zrn_get(progress_bar, Z_CLASS_PROGRESS_BAR);
 	return e ? PROGRESS(e)->indeterminate : 0;
 }
 
-void Zprogress_bar_set_show_error(const Zid id, const int show_error) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_PROGRESS_BAR);
+void Zprogress_bar_set_show_error(const Zid progress_bar, const int show_error) {
+	zrn_element_t* const e = zrn_get(progress_bar, Z_CLASS_PROGRESS_BAR);
 	if (!e) return;
 	PROGRESS(e)->show_error = show_error != 0;
 	zrn_changed_paint(e);
 }
 
-void Zprogress_bar_set_show_paused(const Zid id, const int show_paused) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_PROGRESS_BAR);
+void Zprogress_bar_set_show_paused(const Zid progress_bar, const int show_paused) {
+	zrn_element_t* const e = zrn_get(progress_bar, Z_CLASS_PROGRESS_BAR);
 	if (!e) return;
 	PROGRESS(e)->show_paused = show_paused != 0;
 	zrn_changed_paint(e);
@@ -567,8 +567,8 @@ Zid Zprogress_ring_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-void Zprogress_ring_set_is_active(Zid id, int is_active) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_PROGRESS_RING);
+void Zprogress_ring_set_is_active(Zid progress_ring, int is_active) {
+	zrn_element_t* const e = zrn_get(progress_ring, Z_CLASS_PROGRESS_RING);
 	if (!e) return;
 	is_active = is_active != 0;
 	if (RING(e)->is_active == is_active) return;
@@ -578,8 +578,8 @@ void Zprogress_ring_set_is_active(Zid id, int is_active) {
 	zrn_changed_paint(e);
 }
 
-int Zprogress_ring_get_is_active(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_PROGRESS_RING);
+int Zprogress_ring_get_is_active(const Zid progress_ring) {
+	zrn_element_t* const e = zrn_get(progress_ring, Z_CLASS_PROGRESS_RING);
 	return e ? RING(e)->is_active : 0;
 }
 
@@ -690,15 +690,15 @@ Zid Zscroll_bar_create(const ZOrientation orientation) {
 	return e->id;
 }
 
-void Zscroll_bar_set_viewport_size(const Zid id, const double viewport_size) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_SCROLLBAR);
+void Zscroll_bar_set_viewport_size(const Zid scrollbar, const double viewport_size) {
+	zrn_element_t* const e = zrn_get(scrollbar, Z_CLASS_SCROLLBAR);
 	if (!e) return;
 	SCROLLBAR(e)->viewport = viewport_size < 0 ? 0 : viewport_size;
 	zrn_changed_paint(e);
 }
 
-void Zscroll_bar_on_scroll(const Zid id, const ZScrollCallback callback, void* const user_data) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_SCROLLBAR);
+void Zscroll_bar_on_scroll(const Zid scrollbar, const ZScrollCallback callback, void* const user_data) {
+	zrn_element_t* const e = zrn_get(scrollbar, Z_CLASS_SCROLLBAR);
 	if (!e) return;
 	SCROLLBAR(e)->on_scroll = callback;
 	SCROLLBAR(e)->on_scroll_data = user_data;
@@ -772,28 +772,28 @@ Zid Zthumb_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-void Zthumb_on_drag_started(const Zid id, const ZDragCallback callback, void* const user_data) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_THUMB);
+void Zthumb_on_drag_started(const Zid thumb, const ZDragCallback callback, void* const user_data) {
+	zrn_element_t* const e = zrn_get(thumb, Z_CLASS_THUMB);
 	if (!e) return;
 	THUMB(e)->started = callback;
 	THUMB(e)->started_data = user_data;
 }
 
-void Zthumb_on_drag_delta(const Zid id, const ZDragCallback callback, void* const user_data) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_THUMB);
+void Zthumb_on_drag_delta(const Zid thumb, const ZDragCallback callback, void* const user_data) {
+	zrn_element_t* const e = zrn_get(thumb, Z_CLASS_THUMB);
 	if (!e) return;
 	THUMB(e)->delta = callback;
 	THUMB(e)->delta_data = user_data;
 }
 
-void Zthumb_on_drag_completed(const Zid id, const ZDragCallback callback, void* const user_data) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_THUMB);
+void Zthumb_on_drag_completed(const Zid thumb, const ZDragCallback callback, void* const user_data) {
+	zrn_element_t* const e = zrn_get(thumb, Z_CLASS_THUMB);
 	if (!e) return;
 	THUMB(e)->completed = callback;
 	THUMB(e)->completed_data = user_data;
 }
 
-int Zthumb_is_dragging(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_THUMB);
+int Zthumb_is_dragging(const Zid thumb) {
+	zrn_element_t* const e = zrn_get(thumb, Z_CLASS_THUMB);
 	return e ? THUMB(e)->dragging : 0;
 }

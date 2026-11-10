@@ -450,15 +450,15 @@ Zid Zpivot_item_create(const char* const header) {
 	return e->id;
 }
 
-void Zpivot_item_set_header(const Zid id, const char* const header) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_PIVOT_ITEM);
+void Zpivot_item_set_header(const Zid pivot_item, const char* const header) {
+	zrn_element_t* const e = zrn_get(pivot_item, Z_CLASS_PIVOT_ITEM);
 	if (!e) return;
 	zrn_set_string(&PITEM(e)->header, header ? header : "");
 	if (e->parent) zrn_changed_layout(e->parent);
 }
 
-const char* Zpivot_item_get_header(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_PIVOT_ITEM);
+const char* Zpivot_item_get_header(const Zid pivot_item) {
+	zrn_element_t* const e = zrn_get(pivot_item, Z_CLASS_PIVOT_ITEM);
 	return e && PITEM(e)->header ? PITEM(e)->header : "";
 }
 
@@ -474,21 +474,21 @@ Zid Zpivot_create(void) {
 
 static zrn_pivot_t* get_pivot(const Zid id) { return PIVOT(zrn_get(id, Z_CLASS_PIVOT)); }
 
-void Zpivot_set_title(const Zid id, const char* const title) {
-	zrn_pivot_t* const p = get_pivot(id);
+void Zpivot_set_title(const Zid pivot, const char* const title) {
+	zrn_pivot_t* const p = get_pivot(pivot);
 	if (!p) return;
 	zrn_set_string(&p->title, title ? title : "");
 	zrn_changed_layout(&p->base.base);
 }
 
-const char* Zpivot_get_title(const Zid id) {
-	const zrn_pivot_t* const p = get_pivot(id);
+const char* Zpivot_get_title(const Zid pivot) {
+	const zrn_pivot_t* const p = get_pivot(pivot);
 	return p && p->title ? p->title : "";
 }
 
-int Zpivot_insert_item(Zid id, int index, Zid item) {
-	zrn_pivot_t* const p = get_pivot(id);
-	zrn_element_t* const c = item != Z_INVALID_ID ? zrn_get(item, Z_CLASS_PIVOT_ITEM) : nullptr;
+int Zpivot_insert_item(Zid pivot, int index, Zid pivot_item) {
+	zrn_pivot_t* const p = get_pivot(pivot);
+	zrn_element_t* const c = pivot_item != Z_INVALID_ID ? zrn_get(pivot_item, Z_CLASS_PIVOT_ITEM) : nullptr;
 	if (!p || !c) return -1;
 	if (c->parent) {
 		zrn_error(Z_ERROR_HAS_PARENT, "the PivotItem is in a pivot already");
@@ -516,61 +516,61 @@ int Zpivot_insert_item(Zid id, int index, Zid item) {
 	return index;
 }
 
-int Zpivot_add_item(const Zid id, const Zid item) {
-	const zrn_pivot_t* const p = get_pivot(id);
-	return p ? Zpivot_insert_item(id, p->count, item) : -1;
+int Zpivot_add_item(const Zid pivot, const Zid pivot_item) {
+	const zrn_pivot_t* const p = get_pivot(pivot);
+	return p ? Zpivot_insert_item(pivot, p->count, pivot_item) : -1;
 }
 
-void Zpivot_remove_item_at(const Zid id, const int index) {
-	zrn_pivot_t* const p = get_pivot(id);
+void Zpivot_remove_item_at(const Zid pivot, const int index) {
+	zrn_pivot_t* const p = get_pivot(pivot);
 	if (!p || index < 0 || index >= p->count) return;
 	zrn_destroy(p->items[index]);
 }
 
-void Zpivot_clear_items(const Zid id) {
-	const zrn_pivot_t* const p = get_pivot(id);
+void Zpivot_clear_items(const Zid pivot) {
+	const zrn_pivot_t* const p = get_pivot(pivot);
 	while (p && p->count > 0) zrn_destroy(p->items[p->count - 1]);
 }
 
-int Zpivot_get_item_count(const Zid id) {
-	const zrn_pivot_t* const p = get_pivot(id);
+int Zpivot_get_item_count(const Zid pivot) {
+	const zrn_pivot_t* const p = get_pivot(pivot);
 	return p ? p->count : 0;
 }
 
-Zid Zpivot_get_item(const Zid id, const int index) {
-	const zrn_pivot_t* const p = get_pivot(id);
+Zid Zpivot_get_item(const Zid pivot, const int index) {
+	const zrn_pivot_t* const p = get_pivot(pivot);
 	return p && index >= 0 && index < p->count ? p->items[index]->id : Z_INVALID_ID;
 }
 
-Zid Zpivot_get_selected_item(const Zid id) {
-	const zrn_pivot_t* const p = get_pivot(id);
+Zid Zpivot_get_selected_item(const Zid pivot) {
+	const zrn_pivot_t* const p = get_pivot(pivot);
 	return p && p->count > 0 ? p->items[p->selected]->id : Z_INVALID_ID;
 }
 
-void Zpivot_set_selected_index(const Zid id, const int index) {
-	zrn_pivot_t* const p = get_pivot(id);
+void Zpivot_set_selected_index(const Zid pivot, const int index) {
+	zrn_pivot_t* const p = get_pivot(pivot);
 	if (p) pivot_select(p, index, 1);
 }
 
-int Zpivot_get_selected_index(const Zid id) {
-	const zrn_pivot_t* const p = get_pivot(id);
+int Zpivot_get_selected_index(const Zid pivot) {
+	const zrn_pivot_t* const p = get_pivot(pivot);
 	return p && p->count > 0 ? p->selected : -1;
 }
 
-void Zpivot_set_is_locked(const Zid id, const int is_locked) {
-	zrn_pivot_t* const p = get_pivot(id);
+void Zpivot_set_is_locked(const Zid pivot, const int is_locked) {
+	zrn_pivot_t* const p = get_pivot(pivot);
 	if (!p) return;
 	p->is_locked = is_locked != 0;
 	zrn_changed_arrange(&p->base.base);
 }
 
-int Zpivot_get_is_locked(const Zid id) {
-	const zrn_pivot_t* const p = get_pivot(id);
+int Zpivot_get_is_locked(const Zid pivot) {
+	const zrn_pivot_t* const p = get_pivot(pivot);
 	return p ? p->is_locked : 0;
 }
 
-ZRect Zpivot_get_header_rect(const Zid id, const int index) {
-	zrn_pivot_t* const p = get_pivot(id);
+ZRect Zpivot_get_header_rect(const Zid pivot, const int index) {
+	zrn_pivot_t* const p = get_pivot(pivot);
 	header_place_t places[MAX_PLACES];
 	int i, n;
 	const ZRect none = { 0, 0, 0, 0 };
@@ -585,19 +585,19 @@ ZRect Zpivot_get_header_rect(const Zid id, const int index) {
 	return none;
 }
 
-void Zpivot_on_selection_changed(const Zid id, const ZRoutedCallback callback, void* const user_data) {
-	if (get_pivot(id)) Zelement_on(id, Z_EVENT_SELECTION_CHANGED, callback, user_data);
+void Zpivot_on_selection_changed(const Zid pivot, const ZRoutedCallback callback, void* const user_data) {
+	if (get_pivot(pivot)) Zelement_on(pivot, Z_EVENT_SELECTION_CHANGED, callback, user_data);
 }
 
-void Zpivot_on_pivot_item_loading(const Zid id, const ZPivotItemCallback callback, void* const user_data) {
-	zrn_pivot_t* const p = get_pivot(id);
+void Zpivot_on_pivot_item_loading(const Zid pivot, const ZPivotItemCallback callback, void* const user_data) {
+	zrn_pivot_t* const p = get_pivot(pivot);
 	if (!p) return;
 	p->loading = callback;
 	p->loading_data = user_data;
 }
 
-void Zpivot_on_pivot_item_loaded(const Zid id, const ZPivotItemCallback callback, void* const user_data) {
-	zrn_pivot_t* const p = get_pivot(id);
+void Zpivot_on_pivot_item_loaded(const Zid pivot, const ZPivotItemCallback callback, void* const user_data) {
+	zrn_pivot_t* const p = get_pivot(pivot);
 	if (!p) return;
 	p->loaded = callback;
 	p->loaded_data = user_data;

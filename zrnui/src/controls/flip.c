@@ -236,13 +236,13 @@ Zid Zflip_view_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-void Zflip_view_set_use_touch_animations_for_all_navigation(const Zid id, const int use) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_FLIP_VIEW);
+void Zflip_view_set_use_touch_animations_for_all_navigation(const Zid flip_view, const int use) {
+	zrn_element_t* const e = zrn_get(flip_view, Z_CLASS_FLIP_VIEW);
 	if (e) FV(e)->touch_animations_for_all = use != 0;
 }
 
-int Zflip_view_get_use_touch_animations_for_all_navigation(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_FLIP_VIEW);
+int Zflip_view_get_use_touch_animations_for_all_navigation(const Zid flip_view) {
+	zrn_element_t* const e = zrn_get(flip_view, Z_CLASS_FLIP_VIEW);
 	return e ? FV(e)->touch_animations_for_all : 0;
 }
 
@@ -326,13 +326,13 @@ static void sz_set_view(zrn_semantic_zoom_t* const z, zrn_element_t** slot, cons
 	sz_apply(z);
 }
 
-void Zsemantic_zoom_set_zoomed_in_view(const Zid id, const Zid view) {
-	zrn_semantic_zoom_t* const z = get_sz(id);
+void Zsemantic_zoom_set_zoomed_in_view(const Zid semantic_zoom, const Zid view) {
+	zrn_semantic_zoom_t* const z = get_sz(semantic_zoom);
 	if (z) sz_set_view(z, &z->zoomed_in, view);
 }
 
-void Zsemantic_zoom_set_zoomed_out_view(const Zid id, const Zid view) {
-	zrn_semantic_zoom_t* const z = get_sz(id);
+void Zsemantic_zoom_set_zoomed_out_view(const Zid semantic_zoom, const Zid view) {
+	zrn_semantic_zoom_t* const z = get_sz(semantic_zoom);
 	if (z) sz_set_view(z, &z->zoomed_out, view);
 }
 
@@ -351,40 +351,40 @@ static void sz_change(zrn_semantic_zoom_t* z, int zoomed_in_active) {
 	if (z->completed) z->completed(id, source, z->completed_data);
 }
 
-void Zsemantic_zoom_set_is_zoomed_in_view_active(const Zid id, const int active) {
-	zrn_semantic_zoom_t* const z = get_sz(id);
+void Zsemantic_zoom_set_is_zoomed_in_view_active(const Zid semantic_zoom, const int active) {
+	zrn_semantic_zoom_t* const z = get_sz(semantic_zoom);
 	if (z) sz_change(z, active);
 }
 
-int Zsemantic_zoom_get_is_zoomed_in_view_active(const Zid id) {
-	const zrn_semantic_zoom_t* const z = get_sz(id);
+int Zsemantic_zoom_get_is_zoomed_in_view_active(const Zid semantic_zoom) {
+	const zrn_semantic_zoom_t* const z = get_sz(semantic_zoom);
 	return z ? z->in_active : 0;
 }
 
-void Zsemantic_zoom_toggle_active_view(const Zid id) {
-	zrn_semantic_zoom_t* const z = get_sz(id);
+void Zsemantic_zoom_toggle_active_view(const Zid semantic_zoom) {
+	zrn_semantic_zoom_t* const z = get_sz(semantic_zoom);
 	if (z) sz_change(z, !z->in_active);
 }
 
-void Zsemantic_zoom_set_can_change_views(const Zid id, const int can_change) {
-	zrn_semantic_zoom_t* const z = get_sz(id);
+void Zsemantic_zoom_set_can_change_views(const Zid semantic_zoom, const int can_change) {
+	zrn_semantic_zoom_t* const z = get_sz(semantic_zoom);
 	if (z) z->can_change = can_change != 0;
 }
 
-void Zsemantic_zoom_set_is_zoom_out_button_enabled(const Zid id, const int enabled) {
-	zrn_semantic_zoom_t* const z = get_sz(id);
+void Zsemantic_zoom_set_is_zoom_out_button_enabled(const Zid semantic_zoom, const int enabled) {
+	zrn_semantic_zoom_t* const z = get_sz(semantic_zoom);
 	if (z) z->button_enabled = enabled != 0;
 }
 
-void Zsemantic_zoom_on_view_change_started(const Zid id, const ZSemanticZoomCallback callback, void* const user_data) {
-	zrn_semantic_zoom_t* const z = get_sz(id);
+void Zsemantic_zoom_on_view_change_started(const Zid semantic_zoom, const ZSemanticZoomCallback callback, void* const user_data) {
+	zrn_semantic_zoom_t* const z = get_sz(semantic_zoom);
 	if (!z) return;
 	z->started = callback;
 	z->started_data = user_data;
 }
 
-void Zsemantic_zoom_on_view_change_completed(const Zid id, const ZSemanticZoomCallback callback, void* const user_data) {
-	zrn_semantic_zoom_t* const z = get_sz(id);
+void Zsemantic_zoom_on_view_change_completed(const Zid semantic_zoom, const ZSemanticZoomCallback callback, void* const user_data) {
+	zrn_semantic_zoom_t* const z = get_sz(semantic_zoom);
 	if (!z) return;
 	z->completed = callback;
 	z->completed_data = user_data;

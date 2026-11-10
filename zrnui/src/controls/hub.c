@@ -327,20 +327,20 @@ Zid Zhub_create(void) {
 
 static zrn_hub_t* get_hub(const Zid id) { return HUB(zrn_get(id, Z_CLASS_HUB)); }
 
-void Zhub_set_header(const Zid id, const char* const header) {
-	zrn_hub_t* const h = get_hub(id);
+void Zhub_set_header(const Zid hub, const char* const header) {
+	zrn_hub_t* const h = get_hub(hub);
 	if (!h) return;
 	zrn_set_string(&h->header, header ? header : "");
 	zrn_changed_layout(&h->base.base);
 }
 
-const char* Zhub_get_header(const Zid id) {
-	const zrn_hub_t* const h = get_hub(id);
+const char* Zhub_get_header(const Zid hub) {
+	const zrn_hub_t* const h = get_hub(hub);
 	return h && h->header ? h->header : "";
 }
 
-void Zhub_set_orientation(const Zid id, const ZOrientation orientation) {
-	zrn_hub_t* const h = get_hub(id);
+void Zhub_set_orientation(const Zid hub, const ZOrientation orientation) {
+	zrn_hub_t* const h = get_hub(hub);
 	if (!h || (orientation != Z_HORIZONTAL && orientation != Z_VERTICAL)) return;
 	h->orientation = orientation;
 	hub_apply_orientation(h);
@@ -351,19 +351,19 @@ void Zhub_set_orientation(const Zid id, const ZOrientation orientation) {
 	zrn_changed_layout(&h->base.base);
 }
 
-ZOrientation Zhub_get_orientation(const Zid id) {
-	const zrn_hub_t* const h = get_hub(id);
+ZOrientation Zhub_get_orientation(const Zid hub) {
+	const zrn_hub_t* const h = get_hub(hub);
 	return h ? h->orientation : Z_HORIZONTAL;
 }
 
-Zid Zhub_get_scroll_viewer(const Zid id) {
-	const zrn_hub_t* const h = get_hub(id);
+Zid Zhub_get_scroll_viewer(const Zid hub) {
+	const zrn_hub_t* const h = get_hub(hub);
 	return h && h->scroll ? h->scroll->id : Z_INVALID_ID;
 }
 
-int Zhub_insert_section(Zid id, int index, Zid section) {
-	zrn_hub_t* const h = get_hub(id);
-	zrn_element_t* const s = section != Z_INVALID_ID ? zrn_get(section, Z_CLASS_HUB_SECTION) : nullptr;
+int Zhub_insert_section(Zid hub, int index, Zid hub_section) {
+	zrn_hub_t* const h = get_hub(hub);
+	zrn_element_t* const s = hub_section != Z_INVALID_ID ? zrn_get(hub_section, Z_CLASS_HUB_SECTION) : nullptr;
 	if (!h || !s || !h->host) return -1;
 	if (s->parent) {
 		zrn_error(Z_ERROR_HAS_PARENT, "the HubSection is in a hub already");
@@ -375,36 +375,36 @@ int Zhub_insert_section(Zid id, int index, Zid section) {
 	return index;
 }
 
-int Zhub_add_section(const Zid id, const Zid section) {
-	const zrn_hub_t* const h = get_hub(id);
-	return h ? Zhub_insert_section(id, section_count(h), section) : -1;
+int Zhub_add_section(const Zid hub, const Zid hub_section) {
+	const zrn_hub_t* const h = get_hub(hub);
+	return h ? Zhub_insert_section(hub, section_count(h), hub_section) : -1;
 }
 
-void Zhub_remove_section_at(const Zid id, const int index) {
-	zrn_hub_t* const h = get_hub(id);
+void Zhub_remove_section_at(const Zid hub, const int index) {
+	zrn_hub_t* const h = get_hub(hub);
 	if (!h || index < 0 || index >= section_count(h)) return;
 	zrn_destroy(h->host->children[index]);
 	zrn_changed_layout(&h->base.base);
 }
 
-void Zhub_clear_sections(const Zid id) {
-	zrn_hub_t* const h = get_hub(id);
+void Zhub_clear_sections(const Zid hub) {
+	zrn_hub_t* const h = get_hub(hub);
 	while (h && section_count(h) > 0) zrn_destroy(h->host->children[section_count(h) - 1]);
 	if (h) zrn_changed_layout(&h->base.base);
 }
 
-int Zhub_get_section_count(const Zid id) {
-	const zrn_hub_t* const h = get_hub(id);
+int Zhub_get_section_count(const Zid hub) {
+	const zrn_hub_t* const h = get_hub(hub);
 	return h ? section_count(h) : 0;
 }
 
-Zid Zhub_get_section(const Zid id, const int index) {
-	const zrn_hub_t* const h = get_hub(id);
+Zid Zhub_get_section(const Zid hub, const int index) {
+	const zrn_hub_t* const h = get_hub(hub);
 	return h && index >= 0 && index < section_count(h) ? h->host->children[index]->id : Z_INVALID_ID;
 }
 
-void Zhub_scroll_to_section(const Zid id, const int index) {
-	zrn_hub_t* const h = get_hub(id);
+void Zhub_scroll_to_section(const Zid hub, const int index) {
+	zrn_hub_t* const h = get_hub(hub);
 	zrn_element_t* sec;
 	if (!h || index < 0 || index >= section_count(h) || !h->scroll) return;
 	/* what the last layout knows: the margin box of the section at the left edge of the view */
@@ -413,28 +413,28 @@ void Zhub_scroll_to_section(const Zid id, const int index) {
 	else Zscroll_viewer_scroll_to_horizontal_offset(h->scroll->id, sec->rect.x - sec->margin.left);
 }
 
-int Zhub_get_sections_in_view_count(const Zid id) {
-	zrn_hub_t* const h = get_hub(id);
+int Zhub_get_sections_in_view_count(const Zid hub) {
+	zrn_hub_t* const h = get_hub(hub);
 	int first, count;
 	if (!h) return 0;
 	view_range(h, &first, &count);
 	return count;
 }
 
-Zid Zhub_get_section_in_view(const Zid id, const int index) {
-	zrn_hub_t* const h = get_hub(id);
+Zid Zhub_get_section_in_view(const Zid hub, const int index) {
+	zrn_hub_t* const h = get_hub(hub);
 	int first, count;
 	if (!h) return Z_INVALID_ID;
 	view_range(h, &first, &count);
 	return index >= 0 && index < count ? h->host->children[first + index]->id : Z_INVALID_ID;
 }
 
-void Zhub_on_sections_in_view_changed(const Zid id, const ZRoutedCallback callback, void* const user_data) {
-	if (get_hub(id)) Zelement_on(id, Z_EVENT_SECTIONS_IN_VIEW_CHANGED, callback, user_data);
+void Zhub_on_sections_in_view_changed(const Zid hub, const ZRoutedCallback callback, void* const user_data) {
+	if (get_hub(hub)) Zelement_on(hub, Z_EVENT_SECTIONS_IN_VIEW_CHANGED, callback, user_data);
 }
 
-void Zhub_on_section_header_click(const Zid id, const ZHubSectionHeaderClickCallback callback, void* const user_data) {
-	zrn_hub_t* const h = get_hub(id);
+void Zhub_on_section_header_click(const Zid hub, const ZHubSectionHeaderClickCallback callback, void* const user_data) {
+	zrn_hub_t* const h = get_hub(hub);
 	if (!h) return;
 	h->header_click = callback;
 	h->header_click_data = user_data;
@@ -447,24 +447,24 @@ Zid Zhub_section_create(const char* const header) {
 	return e->id;
 }
 
-void Zhub_section_set_header(const Zid id, const char* const header) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_HUB_SECTION);
+void Zhub_section_set_header(const Zid hub_section, const char* const header) {
+	zrn_element_t* const e = zrn_get(hub_section, Z_CLASS_HUB_SECTION);
 	if (!e) return;
 	zrn_set_string(&SECTION(e)->header, header ? header : "");
 	zrn_changed_layout(e);
 }
 
-const char* Zhub_section_get_header(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_HUB_SECTION);
+const char* Zhub_section_get_header(const Zid hub_section) {
+	zrn_element_t* const e = zrn_get(hub_section, Z_CLASS_HUB_SECTION);
 	return e && SECTION(e)->header ? SECTION(e)->header : "";
 }
 
-void Zhub_section_set_is_header_interactive(const Zid id, const int interactive) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_HUB_SECTION);
-	if (e) SECTION(e)->interactive = interactive != 0;
+void Zhub_section_set_is_header_interactive(const Zid hub_section, const int is_interactive) {
+	zrn_element_t* const e = zrn_get(hub_section, Z_CLASS_HUB_SECTION);
+	if (e) SECTION(e)->interactive = is_interactive != 0;
 }
 
-int Zhub_section_get_is_header_interactive(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_HUB_SECTION);
+int Zhub_section_get_is_header_interactive(const Zid hub_section) {
+	zrn_element_t* const e = zrn_get(hub_section, Z_CLASS_HUB_SECTION);
 	return e ? SECTION(e)->interactive : 0;
 }

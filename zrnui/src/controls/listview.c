@@ -95,8 +95,8 @@ void zrn_lvb_item_tapped(zrn_items_control_t* const o, const int index) {
 	if (l->item_click_enabled && l->on_item_click) l->on_item_click(id, index, l->on_item_click_data);
 }
 
-void Zlist_view_set_selection_mode(const Zid id, const ZListViewSelectionMode mode) {
-	zrn_list_view_base_t* const l = get_lvb(id);
+void Zlist_view_set_selection_mode(const Zid list_view, const ZListViewSelectionMode mode) {
+	zrn_list_view_base_t* const l = get_lvb(list_view);
 	zrn_sel_mode_t m;
 	if (!l) return;
 	m = mode == Z_LIST_VIEW_SELECTION_NONE ? ZST_SEL_NONE : mode == Z_LIST_VIEW_SELECTION_MULTIPLE ? ZST_SEL_MULTIPLE :
@@ -104,8 +104,8 @@ void Zlist_view_set_selection_mode(const Zid id, const ZListViewSelectionMode mo
 	zrn_ic_set_sel_mode(&l->base, m);
 }
 
-ZListViewSelectionMode Zlist_view_get_selection_mode(const Zid id) {
-	zrn_list_view_base_t* const l = get_lvb(id);
+ZListViewSelectionMode Zlist_view_get_selection_mode(const Zid list_view) {
+	zrn_list_view_base_t* const l = get_lvb(list_view);
 	if (!l) return Z_LIST_VIEW_SELECTION_SINGLE;
 	switch (l->base.sel_mode) {
 		case ZST_SEL_NONE: return Z_LIST_VIEW_SELECTION_NONE;
@@ -115,50 +115,50 @@ ZListViewSelectionMode Zlist_view_get_selection_mode(const Zid id) {
 	}
 }
 
-void Zlist_view_set_is_item_click_enabled(const Zid id, const int enabled) {
-	zrn_list_view_base_t* const l = get_lvb(id);
+void Zlist_view_set_is_item_click_enabled(const Zid list_view, const int enabled) {
+	zrn_list_view_base_t* const l = get_lvb(list_view);
 	if (l) l->item_click_enabled = enabled != 0;
 }
 
-int Zlist_view_get_is_item_click_enabled(const Zid id) {
-	const zrn_list_view_base_t* const l = get_lvb(id);
+int Zlist_view_get_is_item_click_enabled(const Zid list_view) {
+	const zrn_list_view_base_t* const l = get_lvb(list_view);
 	return l ? l->item_click_enabled : 0;
 }
 
-void Zlist_view_on_item_click(const Zid id, const ZItemClickCallback callback, void* const user_data) {
-	zrn_list_view_base_t* const l = get_lvb(id);
+void Zlist_view_on_item_click(const Zid list_view, const ZItemClickCallback callback, void* const user_data) {
+	zrn_list_view_base_t* const l = get_lvb(list_view);
 	if (!l) return;
 	l->on_item_click = callback;
 	l->on_item_click_data = user_data;
 }
 
-void Zlist_view_set_is_swipe_enabled(const Zid id, const int enabled) {
-	zrn_list_view_base_t* const l = get_lvb(id);
+void Zlist_view_set_is_swipe_enabled(const Zid list_view, const int enabled) {
+	zrn_list_view_base_t* const l = get_lvb(list_view);
 	if (l) l->swipe_enabled = enabled != 0;
 }
 
-int Zlist_view_get_is_swipe_enabled(const Zid id) {
-	const zrn_list_view_base_t* const l = get_lvb(id);
+int Zlist_view_get_is_swipe_enabled(const Zid list_view) {
+	const zrn_list_view_base_t* const l = get_lvb(list_view);
 	return l ? l->swipe_enabled : 0;
 }
 
-int Zlist_view_get_selected_indices(const Zid id, int* const indices, const int max) {
-	const zrn_list_view_base_t* const l = get_lvb(id);
+int Zlist_view_get_selected_indices(const Zid list_view, int* const indices, const int max) {
+	const zrn_list_view_base_t* const l = get_lvb(list_view);
 	return l ? zrn_ic_selected_indices(&l->base, indices, max) : 0;
 }
 
-void Zlist_view_select_all(const Zid id) {
-	zrn_list_view_base_t* const l = get_lvb(id);
+void Zlist_view_select_all(const Zid list_view) {
+	zrn_list_view_base_t* const l = get_lvb(list_view);
 	if (l) zrn_ic_select_all(&l->base);
 }
 
-void Zlist_view_scroll_into_view(const Zid id, const int index) {
-	zrn_list_view_base_t* const l = get_lvb(id);
+void Zlist_view_scroll_into_view(const Zid list_view, const int index) {
+	zrn_list_view_base_t* const l = get_lvb(list_view);
 	if (l) zrn_ic_scroll_into_view(&l->base, index, Z_SCROLL_INTO_VIEW_DEFAULT);
 }
 
-void Zlist_view_scroll_into_view_with_alignment(const Zid id, const int index, const ZScrollIntoViewAlignment alignment) {
-	zrn_list_view_base_t* const l = get_lvb(id);
+void Zlist_view_scroll_into_view_with_alignment(const Zid list_view, const int index, const ZScrollIntoViewAlignment alignment) {
+	zrn_list_view_base_t* const l = get_lvb(list_view);
 	if (l) zrn_ic_scroll_into_view(&l->base, index, alignment);
 }
 
@@ -197,25 +197,25 @@ static void set_part(zrn_list_view_base_t* const l, const int footer, const char
 	else zrn_content_set(ZST_AS(zrn_content_control_t, holder), content);
 }
 
-void Zlist_view_set_header(const Zid id, const char* const header) {
-	zrn_list_view_base_t* const l = get_lvb(id);
+void Zlist_view_set_header(const Zid list_view, const char* const header) {
+	zrn_list_view_base_t* const l = get_lvb(list_view);
 	if (l) set_part(l, 0, header, nullptr);
 }
 
-void Zlist_view_set_header_content(const Zid id, const Zid header) {
-	zrn_list_view_base_t* const l = get_lvb(id);
+void Zlist_view_set_header_content(const Zid list_view, const Zid header) {
+	zrn_list_view_base_t* const l = get_lvb(list_view);
 	zrn_element_t* const c = header != Z_INVALID_ID ? zrn_get(header, Z_CLASS_ELEMENT) : nullptr;
 	if (!l || (header != Z_INVALID_ID && !c)) return;
 	set_part(l, 0, nullptr, c);
 }
 
-void Zlist_view_set_footer(const Zid id, const char* const footer) {
-	zrn_list_view_base_t* const l = get_lvb(id);
+void Zlist_view_set_footer(const Zid list_view, const char* const footer) {
+	zrn_list_view_base_t* const l = get_lvb(list_view);
 	if (l) set_part(l, 1, footer, nullptr);
 }
 
-void Zlist_view_set_footer_content(const Zid id, const Zid footer) {
-	zrn_list_view_base_t* const l = get_lvb(id);
+void Zlist_view_set_footer_content(const Zid list_view, const Zid footer) {
+	zrn_list_view_base_t* const l = get_lvb(list_view);
 	zrn_element_t* const c = footer != Z_INVALID_ID ? zrn_get(footer, Z_CLASS_ELEMENT) : nullptr;
 	if (!l || (footer != Z_INVALID_ID && !c)) return;
 	set_part(l, 1, nullptr, c);
@@ -247,8 +247,8 @@ zrn_class_t zrn_class_grid_view_header_item = {
 	.base = &zrn_class_list_view_base_header_item, .name = "GridViewHeaderItem", .id = Z_CLASS_GRID_VIEW_HEADER_ITEM, .size = sizeof(zrn_content_control_t)
 };
 
-Zid Zlist_view_add_group_header(const Zid id, const char* const title) {
-	zrn_list_view_base_t* const l = get_lvb(id);
+Zid Zlist_view_add_group_header(const Zid list_view, const char* const title) {
+	zrn_list_view_base_t* const l = get_lvb(list_view);
 	zrn_element_t* header, *text;
 	if (!l || !l->base.host) return Z_INVALID_ID;
 	header = zrn_create(zrn_is_a(&l->base.base.base, Z_CLASS_GRID_VIEW) ? Z_CLASS_GRID_VIEW_HEADER_ITEM : Z_CLASS_LIST_VIEW_HEADER_ITEM);
@@ -266,8 +266,8 @@ Zid Zlist_view_add_group_header(const Zid id, const char* const title) {
 	return header->id;
 }
 
-int Zlist_view_get_group_count(const Zid id) {
-	zrn_list_view_base_t* const l = get_lvb(id);
+int Zlist_view_get_group_count(const Zid list_view) {
+	zrn_list_view_base_t* const l = get_lvb(list_view);
 	int i, n = 0;
 	if (!l || !l->base.host) return 0;
 	for (i = 0; i < l->base.host->child_count; i++) if (zrn_is_a(l->base.host->children[i], Z_CLASS_LIST_VIEW_BASE_HEADER_ITEM)) n++;

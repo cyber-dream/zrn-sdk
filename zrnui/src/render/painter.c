@@ -84,7 +84,7 @@ void zrn_stroke_rect(zrn_painter_t* const p, const ZRect r, const ZThickness t, 
 /* ---- the painter: every drawing call goes to the backend of the painter ---- */
 
 void zrn_paint_clear(zrn_painter_t* p, ZColor c) { p->be->paint_clear(p, c); }
-void zrn_fill_rect(zrn_painter_t* p, const ZRect r, const ZColor c) { p->be->fill_rect(p, r, c); }
+void zrn_fill_rect(zrn_painter_t* p, const ZRect r, const ZColor color) { p->be->fill_rect(p, r, color); }
 void zrn_fill_rrect(zrn_painter_t* p, const ZRect r, const ZCornerRadius radius, const ZColor c) { p->be->fill_rrect(p, r, radius, c); }
 void zrn_fill_ellipse(zrn_painter_t* p, const ZRect r, const ZColor c) { p->be->fill_ellipse(p, r, c); }
 void zrn_stroke_ellipse(zrn_painter_t* p, const ZRect r, const float thickness, const ZColor c) { p->be->stroke_ellipse(p, r, thickness, c); }

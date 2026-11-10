@@ -73,23 +73,23 @@ void Zpage_set_content(Zid id, const Zid child) { Zuser_control_set_content(id, 
 
 Zid Zpage_get_content(Zid id) { return Zuser_control_get_content(id); }
 
-void* Zpage_get_parameter(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_PAGE);
+void* Zpage_get_parameter(const Zid page) {
+	zrn_element_t* const e = zrn_get(page, Z_CLASS_PAGE);
 	return e ? PAGE(e)->parameter : nullptr;
 }
 
-ZNavigationMode Zpage_get_navigation_mode(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_PAGE);
+ZNavigationMode Zpage_get_navigation_mode(const Zid page) {
+	zrn_element_t* const e = zrn_get(page, Z_CLASS_PAGE);
 	return e ? PAGE(e)->navigation_mode : Z_NAVIGATION_NEW;
 }
 
-void Zpage_set_navigation_cache_mode(const Zid id, const ZNavigationCacheMode mode) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_PAGE);
+void Zpage_set_navigation_cache_mode(const Zid page, const ZNavigationCacheMode mode) {
+	zrn_element_t* const e = zrn_get(page, Z_CLASS_PAGE);
 	if (e) PAGE(e)->cache_mode = mode;
 }
 
-ZNavigationCacheMode Zpage_get_navigation_cache_mode(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_PAGE);
+ZNavigationCacheMode Zpage_get_navigation_cache_mode(const Zid page) {
+	zrn_element_t* const e = zrn_get(page, Z_CLASS_PAGE);
 	return e ? PAGE(e)->cache_mode : Z_NAVIGATION_CACHE_DISABLED;
 }
 
@@ -110,27 +110,27 @@ static void page_set_bar(const Zid page, const Zid bar, const int top) {
 void Zpage_set_top_app_bar(const Zid page, const Zid app_bar) { page_set_bar(page, app_bar, 1); }
 void Zpage_set_bottom_app_bar(const Zid page, const Zid app_bar) { page_set_bar(page, app_bar, 0); }
 
-Zid Zpage_get_top_app_bar(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_PAGE);
+Zid Zpage_get_top_app_bar(const Zid page) {
+	zrn_element_t* const e = zrn_get(page, Z_CLASS_PAGE);
 	return e && PAGE(e)->top_bar ? PAGE(e)->top_bar->id : Z_INVALID_ID;
 }
 
-Zid Zpage_get_bottom_app_bar(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_PAGE);
+Zid Zpage_get_bottom_app_bar(const Zid page) {
+	zrn_element_t* const e = zrn_get(page, Z_CLASS_PAGE);
 	return e && PAGE(e)->bottom_bar ? PAGE(e)->bottom_bar->id : Z_INVALID_ID;
 }
 
-Zid Zpage_get_frame(const Zid id) {
-	const zrn_element_t* const e = zrn_get(id, Z_CLASS_PAGE);
+Zid Zpage_get_frame(const Zid page) {
+	const zrn_element_t* const e = zrn_get(page, Z_CLASS_PAGE);
 	return e && e->parent && zrn_is_a(e->parent, Z_CLASS_FRAME) ? e->parent->id : Z_INVALID_ID;
 }
 
-void Zpage_on_navigated_to(const Zid id, const ZRoutedCallback callback, void* const user_data) {
-	if (zrn_get(id, Z_CLASS_PAGE)) Zelement_on(id, Z_EVENT_NAVIGATED_TO, callback, user_data);
+void Zpage_on_navigated_to(const Zid page, const ZRoutedCallback callback, void* const user_data) {
+	if (zrn_get(page, Z_CLASS_PAGE)) Zelement_on(page, Z_EVENT_NAVIGATED_TO, callback, user_data);
 }
 
-void Zpage_on_navigated_from(const Zid id, const ZRoutedCallback callback, void* const user_data) {
-	if (zrn_get(id, Z_CLASS_PAGE)) Zelement_on(id, Z_EVENT_NAVIGATED_FROM, callback, user_data);
+void Zpage_on_navigated_from(const Zid page, const ZRoutedCallback callback, void* const user_data) {
+	if (zrn_get(page, Z_CLASS_PAGE)) Zelement_on(page, Z_EVENT_NAVIGATED_FROM, callback, user_data);
 }
 
 
@@ -451,8 +451,8 @@ static Zid build(const Zid frame_id, const zrn_frame_entry_t entry) {
 	return page;
 }
 
-int Zframe_navigate(const Zid id, const ZPageFactory factory, void* const parameter) {
-	zrn_frame_t* f = get_frame(id);
+int Zframe_navigate(const Zid frame, const ZPageFactory factory, void* const parameter) {
+	zrn_frame_t* f = get_frame(frame);
 	zrn_frame_entry_t entry = { factory, parameter, Z_INVALID_ID };
 	Zid page;
 	if (!f) return false;
@@ -461,12 +461,12 @@ int Zframe_navigate(const Zid id, const ZPageFactory factory, void* const parame
 		return false;
 	}
 	if (f->navigating) return false;
-	finish(f, id);
-	f = get_frame(id);
+	finish(f, frame);
+	f = get_frame(frame);
 	if (!f) return false;
 	f->navigating = 1;
-	page = build(id, entry);
-	f = get_frame(id);
+	page = build(frame, entry);
+	f = get_frame(frame);
 	if (!f) return false;
 	f->navigating = 0;
 	if (page == Z_INVALID_ID) return false;
@@ -487,7 +487,7 @@ int Zframe_navigate(const Zid id, const ZPageFactory factory, void* const parame
 	entry.cached = Z_INVALID_ID;
 	f->entries[f->current] = entry;
 	f->count = f->current + 1;
-	show(f, id, page, parameter, 1, Z_NAVIGATION_NEW);
+	show(f, frame, page, parameter, 1, Z_NAVIGATION_NEW);
 	return true;
 }
 
@@ -518,44 +518,44 @@ static int move(const Zid id, const int step) {
 }
 
 int Zframe_go_back(Zid id) { return move(id, -1); }
-int Zframe_go_forward(Zid id) { return move(id, 1); }
+int Zframe_go_forward(Zid frame) { return move(frame, 1); }
 
-int Zframe_can_go_back(const Zid id) {
-	const zrn_frame_t* const f = get_frame(id);
+int Zframe_can_go_back(const Zid frame) {
+	const zrn_frame_t* const f = get_frame(frame);
 	return f && f->current > 0;
 }
 
-int Zframe_can_go_forward(const Zid id) {
-	const zrn_frame_t* const f = get_frame(id);
+int Zframe_can_go_forward(const Zid frame) {
+	const zrn_frame_t* const f = get_frame(frame);
 	return f && f->current + 1 < f->count;
 }
 
-int Zframe_get_back_stack_depth(const Zid id) {
-	const zrn_frame_t* const f = get_frame(id);
+int Zframe_get_back_stack_depth(const Zid frame) {
+	const zrn_frame_t* const f = get_frame(frame);
 	return f && f->current > 0 ? f->current : 0;
 }
 
-Zid Zframe_get_page(const Zid id) {
-	const zrn_frame_t* const f = get_frame(id);
+Zid Zframe_get_page(const Zid frame) {
+	const zrn_frame_t* const f = get_frame(frame);
 	if (f && f->phase == 1 && f->pending != Z_INVALID_ID) return f->pending;
 	return f && f->base.content ? f->base.content->id : Z_INVALID_ID;
 }
 
-ZPageFactory Zframe_get_current_source_page_type(const Zid id) {
-	const zrn_frame_t* const f = get_frame(id);
+ZPageFactory Zframe_get_current_source_page_type(const Zid frame) {
+	const zrn_frame_t* const f = get_frame(frame);
 	return f && f->current >= 0 && f->current < f->count ? f->entries[f->current].factory : nullptr;
 }
 
-void Zframe_on_navigated(const Zid id, const ZRoutedCallback callback, void* const user_data) {
-	if (zrn_get(id, Z_CLASS_FRAME)) Zelement_on(id, Z_EVENT_NAVIGATED, callback, user_data);
+void Zframe_on_navigated(const Zid frame, const ZRoutedCallback callback, void* const user_data) {
+	if (zrn_get(frame, Z_CLASS_FRAME)) Zelement_on(frame, Z_EVENT_NAVIGATED, callback, user_data);
 }
 
-void Zframe_set_transition(const Zid id, const ZPageTransition transition) {
-	zrn_frame_t* const f = get_frame(id);
+void Zframe_set_transition(const Zid frame, const ZPageTransition transition) {
+	zrn_frame_t* const f = get_frame(frame);
 	if (f) f->transition = transition;
 }
 
-int Zframe_is_transitioning(const Zid id) {
-	const zrn_frame_t* const f = get_frame(id);
+int Zframe_is_transitioning(const Zid frame) {
+	const zrn_frame_t* const f = get_frame(frame);
 	return f && f->phase != 0;
 }

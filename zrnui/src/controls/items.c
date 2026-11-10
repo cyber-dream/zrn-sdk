@@ -418,16 +418,16 @@ zrn_element_t* zrn_ic_add(zrn_items_control_t* const o, zrn_element_t* const ite
 }
 
 /* OBSOLETE DEPRECATED TODO delete this method, add text_block like other widgets*/
-Zid Zitems_control_add_text(const Zid id, const char* const text) {
-	zrn_items_control_t* const o = get_ic(id);
+Zid Zitems_control_add_text(const Zid items_control, const char* const text) {
+	zrn_items_control_t* const o = get_ic(items_control);
 	zrn_element_t* c;
 	if (!o) return Z_INVALID_ID;
 	c = zrn_ic_add(o, nullptr, text ? text : "");
 	return c ? c->id : Z_INVALID_ID;
 }
 
-Zid Zitems_control_add(const Zid id, const Zid item) {
-	zrn_items_control_t* const o = get_ic(id);
+Zid Zitems_control_add(const Zid items_control, const Zid item) {
+	zrn_items_control_t* const o = get_ic(items_control);
 	zrn_element_t* const e = zrn_get(item, Z_CLASS_ELEMENT), *c;
 	if (!o || !e) return Z_INVALID_ID;
 	c = zrn_ic_add(o, e, nullptr);
@@ -440,8 +440,8 @@ static void ic_refresh_selected_index(zrn_items_control_t* const o) {
 	for (i = 0; i < n; i++) if (ITEM(zrn_ic_item(o, i))->selected) { o->selected_index = i; return; }
 }
 
-void Zitems_control_remove_at(const Zid id, const int index) {
-	zrn_items_control_t* const o = get_ic(id);
+void Zitems_control_remove_at(const Zid items_control, const int index) {
+	zrn_items_control_t* const o = get_ic(items_control);
 	zrn_element_t* item;
 	int was_selected, old_selected;
 	if (!o || !(item = zrn_ic_item(o, index))) return;
@@ -457,11 +457,11 @@ void Zitems_control_remove_at(const Zid id, const int index) {
 		}
 		if (was_selected && !zrn_raise(&o->base.base, Z_EVENT_SELECTION_CHANGED)) return;
 	}
-	if (zrn_lookup(id)) zrn_changed_layout(&o->base.base);
+	if (zrn_lookup(items_control)) zrn_changed_layout(&o->base.base);
 }
 
-void Zitems_control_clear(const Zid id) {
-	zrn_items_control_t* o = get_ic(id);
+void Zitems_control_clear(const Zid items_control) {
+	zrn_items_control_t* o = get_ic(items_control);
 	int had = 0, i, n;
 	if (!o || !o->host) return;
 	n = zrn_ic_count(o);
@@ -475,22 +475,22 @@ void Zitems_control_clear(const Zid id) {
 	o->group_count = 0;
 	o->focus_item = Z_INVALID_ID;
 	if (had && is_selector(o) && !zrn_raise(&o->base.base, Z_EVENT_SELECTION_CHANGED)) return;
-	if (zrn_lookup(id)) zrn_changed_layout(&o->base.base);
+	if (zrn_lookup(items_control)) zrn_changed_layout(&o->base.base);
 }
 
-int Zitems_control_get_count(const Zid id) {
-	const zrn_items_control_t* const o = get_ic(id);
+int Zitems_control_get_count(const Zid items_control) {
+	const zrn_items_control_t* const o = get_ic(items_control);
 	return o ? zrn_ic_count(o) : 0;
 }
 
-Zid Zitems_control_get_container(const Zid id, const int index) {
-	const zrn_items_control_t* const o = get_ic(id);
+Zid Zitems_control_get_container(const Zid items_control, const int index) {
+	const zrn_items_control_t* const o = get_ic(items_control);
 	const zrn_element_t* const item = o ? zrn_ic_item(o, index) : nullptr;
 	return item ? item->id : Z_INVALID_ID;
 }
 
-int Zitems_control_index_from_container(const Zid id, const Zid container) {
-	const zrn_items_control_t* const o = get_ic(id);
+int Zitems_control_index_from_container(const Zid items_control, const Zid container) {
+	const zrn_items_control_t* const o = get_ic(items_control);
 	const zrn_element_t* const c = zrn_get(container, Z_CLASS_ELEMENT);
 	return o && c ? zrn_ic_index_of(o, c) : -1;
 }
@@ -501,14 +501,14 @@ const char* zrn_container_text(zrn_element_t* const container) {
 	return "";
 }
 
-const char* Zitems_control_get_text(const Zid id, const int index) {
-	const zrn_items_control_t* const o = get_ic(id);
+const char* Zitems_control_get_text(const Zid items_control, const int index) {
+	const zrn_items_control_t* const o = get_ic(items_control);
 	zrn_element_t* const item = o ? zrn_ic_item(o, index) : nullptr;
 	return item ? zrn_container_text(item) : "";
 }
 
-Zid Zitems_control_get_scroll_viewer(const Zid id) {
-	const zrn_items_control_t* const o = get_ic(id);
+Zid Zitems_control_get_scroll_viewer(const Zid items_control) {
+	const zrn_items_control_t* const o = get_ic(items_control);
 	return o && o->scroll ? o->scroll->id : Z_INVALID_ID;
 }
 
@@ -578,8 +578,8 @@ void zrn_ic_set_host(zrn_items_control_t* const o, zrn_element_t* const panel) {
 	zrn_changed_layout(&o->base.base);
 }
 
-void Zitems_control_set_items_panel(const Zid id, const Zid panel) {
-	zrn_items_control_t* const o = get_ic(id);
+void Zitems_control_set_items_panel(const Zid items_control, const Zid panel) {
+	zrn_items_control_t* const o = get_ic(items_control);
 	zrn_element_t* const p = zrn_get(panel, Z_CLASS_PANEL);
 	if (!o || !p) return;
 	if (p->parent) {
@@ -589,8 +589,8 @@ void Zitems_control_set_items_panel(const Zid id, const Zid panel) {
 	zrn_ic_set_host(o, p);
 }
 
-Zid Zitems_control_get_items_panel(const Zid id) {
-	const zrn_items_control_t* o = get_ic(id);
+Zid Zitems_control_get_items_panel(const Zid items_control) {
+	const zrn_items_control_t* o = get_ic(items_control);
 	return o && o->host ? o->host->id : Z_INVALID_ID;
 }
 
@@ -711,24 +711,24 @@ void zrn_ic_set_sel_mode(zrn_items_control_t* const o, const zrn_sel_mode_t mode
 	zrn_invalidate_deep(e);
 }
 
-void Zselector_set_selected_index(const Zid id, const int index) {
-	zrn_items_control_t* o = get_selector(id);
+void Zselector_set_selected_index(const Zid selector, const int index) {
+	zrn_items_control_t* o = get_selector(selector);
 	if (o) zrn_ic_select(o, index);
 }
 
-int Zselector_get_selected_index(const Zid id) {
-	zrn_items_control_t* o = get_selector(id);
+int Zselector_get_selected_index(const Zid selector) {
+	zrn_items_control_t* o = get_selector(selector);
 	return o ? o->selected_index : -1;
 }
 
-Zid Zselector_get_selected_container(const Zid id) {
-	zrn_items_control_t* o = get_selector(id);
+Zid Zselector_get_selected_container(const Zid selector) {
+	zrn_items_control_t* o = get_selector(selector);
 	zrn_element_t* const item = o && o->selected_index >= 0 ? zrn_ic_item(o, o->selected_index) : nullptr;
 	return item ? item->id : Z_INVALID_ID;
 }
 
-void Zselector_item_set_is_selected(Zid id, int is_selected) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_SELECTOR_ITEM);
+void Zselector_item_set_is_selected(Zid selector_item, int is_selected) {
+	zrn_element_t* const e = zrn_get(selector_item, Z_CLASS_SELECTOR_ITEM);
 	zrn_items_control_t* o;
 	if (!e) return;
 	is_selected = is_selected != 0;
@@ -749,8 +749,8 @@ void Zselector_item_set_is_selected(Zid id, int is_selected) {
 	zrn_raise(&o->base.base, Z_EVENT_SELECTION_CHANGED);
 }
 
-int Zselector_item_get_is_selected(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_SELECTOR_ITEM);
+int Zselector_item_get_is_selected(const Zid selector_item) {
+	zrn_element_t* const e = zrn_get(selector_item, Z_CLASS_SELECTOR_ITEM);
 	return e ? ITEM(e)->selected : 0;
 }
 
@@ -861,29 +861,29 @@ Zid Zlist_box_create(void) {
 
 static zrn_items_control_t* get_list_box(const Zid id) { return IC(zrn_get(id, Z_CLASS_LIST_BOX)); }
 
-void Zlist_box_set_selection_mode(const Zid id, const ZSelectionMode mode) {
-	zrn_items_control_t* const o = get_list_box(id);
+void Zlist_box_set_selection_mode(const Zid list_box, const ZSelectionMode mode) {
+	zrn_items_control_t* const o = get_list_box(list_box);
 	if (!o) return;
 	zrn_ic_set_sel_mode(o, mode == Z_SELECTION_MULTIPLE ? ZST_SEL_MULTIPLE : mode == Z_SELECTION_EXTENDED ? ZST_SEL_EXTENDED : ZST_SEL_SINGLE);
 }
 
-ZSelectionMode Zlist_box_get_selection_mode(const Zid id) {
-	zrn_items_control_t* const o = get_list_box(id);
+ZSelectionMode Zlist_box_get_selection_mode(const Zid list_box) {
+	zrn_items_control_t* const o = get_list_box(list_box);
 	if (!o) return Z_SELECTION_SINGLE;
 	return o->sel_mode == ZST_SEL_MULTIPLE ? Z_SELECTION_MULTIPLE : o->sel_mode == ZST_SEL_EXTENDED ? Z_SELECTION_EXTENDED : Z_SELECTION_SINGLE;
 }
 
-int Zlist_box_get_selected_indices(const Zid id, int* const indices, const int max) {
-	const zrn_items_control_t* const o = get_list_box(id);
+int Zlist_box_get_selected_indices(const Zid list_box, int* const indices, const int max) {
+	const zrn_items_control_t* const o = get_list_box(list_box);
 	return o ? zrn_ic_selected_indices(o, indices, max) : 0;
 }
 
-void Zlist_box_select_all(const Zid id) {
-	zrn_items_control_t* const o = get_list_box(id);
+void Zlist_box_select_all(const Zid list_box) {
+	zrn_items_control_t* const o = get_list_box(list_box);
 	if (o) zrn_ic_select_all(o);
 }
 
-void Zlist_box_scroll_into_view(const Zid id, const int index) {
-	zrn_items_control_t* const o = get_list_box(id);
+void Zlist_box_scroll_into_view(const Zid list_box, const int index) {
+	zrn_items_control_t* const o = get_list_box(list_box);
 	if (o) zrn_ic_scroll_into_view(o, index, Z_SCROLL_INTO_VIEW_DEFAULT);
 }

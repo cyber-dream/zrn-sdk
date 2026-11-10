@@ -241,37 +241,37 @@ Zid Zscroll_viewer_create(void) {
 
 static zrn_scroll_viewer_t* get_sv(const Zid id) { return SV(zrn_get(id, Z_CLASS_SCROLL_VIEWER)); }
 
-void Zscroll_viewer_set_content(const Zid id, const Zid content) {
-	zrn_scroll_viewer_t* const s = get_sv(id);
+void Zscroll_viewer_set_content(const Zid scroll_viewer, const Zid content) {
+	zrn_scroll_viewer_t* const s = get_sv(scroll_viewer);
 	zrn_element_t* const c = content != Z_INVALID_ID ? zrn_get(content, Z_CLASS_ELEMENT) : nullptr;
 	if (!s || (content != Z_INVALID_ID && !c)) return;
 	zrn_content_set(&s->base, c);
 }
 
-void Zscroll_viewer_set_vertical_scrollbar_visibility(const Zid id, const ZScrollBarVisibility v) {
-	zrn_scroll_viewer_t* const s = get_sv(id);
+void Zscroll_viewer_set_vertical_scrollbar_visibility(const Zid scroll_viewer, const ZScrollBarVisibility visibility) {
+	zrn_scroll_viewer_t* const s = get_sv(scroll_viewer);
 	if (!s) return;
-	s->v_visibility = v;
+	s->v_visibility = visibility;
 	zrn_changed_layout(&s->base.base.base);
 }
 
-void Zscroll_viewer_set_horizontal_scrollbar_visibility(const Zid id, const ZScrollBarVisibility v) {
-	zrn_scroll_viewer_t* const s = get_sv(id);
+void Zscroll_viewer_set_horizontal_scrollbar_visibility(const Zid scroll_viewer, const ZScrollBarVisibility visibility) {
+	zrn_scroll_viewer_t* const s = get_sv(scroll_viewer);
 	if (!s) return;
-	s->h_visibility = v;
+	s->h_visibility = visibility;
 	zrn_changed_layout(&s->base.base.base);
 }
 
-void Zscroll_viewer_scroll_to_vertical_offset(const Zid id, const double offset) {
-	zrn_scroll_viewer_t* const s = get_sv(id);
+void Zscroll_viewer_scroll_to_vertical_offset(const Zid scroll_viewer, const double offset) {
+	zrn_scroll_viewer_t* const s = get_sv(scroll_viewer);
 	if (!s) return;
 	s->offset_y = offset;
 	s->velocity_y = 0;
 	sv_changed(s, 1);
 }
 
-void Zscroll_viewer_scroll_to_horizontal_offset(const Zid id, const double offset) {
-	zrn_scroll_viewer_t* const s = get_sv(id);
+void Zscroll_viewer_scroll_to_horizontal_offset(const Zid scroll_viewer, const double offset) {
+	zrn_scroll_viewer_t* const s = get_sv(scroll_viewer);
 	if (!s) return;
 	s->offset_x = offset;
 	s->velocity_x = 0;
@@ -279,14 +279,14 @@ void Zscroll_viewer_scroll_to_horizontal_offset(const Zid id, const double offse
 }
 
 double Zscroll_viewer_get_vertical_offset(Zid id) { const zrn_scroll_viewer_t* s = get_sv(id); return s ? s->offset_y : 0; }
-double Zscroll_viewer_get_horizontal_offset(Zid id) { const zrn_scroll_viewer_t* s = get_sv(id); return s ? s->offset_x : 0; }
-double Zscroll_viewer_get_extent_height(Zid id) { const zrn_scroll_viewer_t* s = get_sv(id); return s ? s->extent_h : 0; }
-double Zscroll_viewer_get_extent_width(Zid id) { const zrn_scroll_viewer_t* s = get_sv(id); return s ? s->extent_w : 0; }
-double Zscroll_viewer_get_viewport_height(Zid id) { const zrn_scroll_viewer_t* s = get_sv(id); return s ? s->viewport_h : 0; }
-double Zscroll_viewer_get_viewport_width(Zid id) { const zrn_scroll_viewer_t* s = get_sv(id); return s ? s->viewport_w : 0; }
+double Zscroll_viewer_get_horizontal_offset(Zid scroll_viewer) { const zrn_scroll_viewer_t* s = get_sv(scroll_viewer); return s ? s->offset_x : 0; }
+double Zscroll_viewer_get_extent_height(Zid scroll_viewer) { const zrn_scroll_viewer_t* s = get_sv(scroll_viewer); return s ? s->extent_h : 0; }
+double Zscroll_viewer_get_extent_width(Zid scroll_viewer) { const zrn_scroll_viewer_t* s = get_sv(scroll_viewer); return s ? s->extent_w : 0; }
+double Zscroll_viewer_get_viewport_height(Zid scroll_viewer) { const zrn_scroll_viewer_t* s = get_sv(scroll_viewer); return s ? s->viewport_h : 0; }
+double Zscroll_viewer_get_viewport_width(Zid scroll_viewer) { const zrn_scroll_viewer_t* s = get_sv(scroll_viewer); return s ? s->viewport_w : 0; }
 
-void Zscroll_viewer_on_scroll(const Zid id, const ZScrollCallback callback, void* const user_data) {
-	zrn_scroll_viewer_t* const s = get_sv(id);
+void Zscroll_viewer_on_scroll(const Zid scroll_viewer, const ZScrollCallback callback, void* const user_data) {
+	zrn_scroll_viewer_t* const s = get_sv(scroll_viewer);
 	if (!s) return;
 	s->on_scroll = callback;
 	s->on_scroll_data = user_data;

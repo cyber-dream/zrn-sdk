@@ -323,8 +323,8 @@ static Zid make_icon(const ZClass cls) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-void Zicon_element_set_foreground(const Zid id, const ZColor color) {
-	zrn_icon_t* i = get_icon(id, Z_CLASS_ICON_ELEMENT);
+void Zicon_element_set_foreground(const Zid icon, const ZColor color) {
+	zrn_icon_t* i = get_icon(icon, Z_CLASS_ICON_ELEMENT);
 	if (!i) return;
 	i->foreground = color;
 	i->has_foreground = 1;
@@ -337,15 +337,15 @@ Zid Zsymbol_icon_create(const ZSymbol symbol) {
 	return id;
 }
 
-void Zsymbol_icon_set_symbol(const Zid id, const ZSymbol symbol) {
-	zrn_icon_t* i = get_icon(id, Z_CLASS_SYMBOL_ICON);
+void Zsymbol_icon_set_symbol(const Zid symbol_icon, const ZSymbol symbol) {
+	zrn_icon_t* i = get_icon(symbol_icon, Z_CLASS_SYMBOL_ICON);
 	if (!i) return;
 	i->symbol = symbol;
 	zrn_changed_paint(&i->base);
 }
 
-ZSymbol Zsymbol_icon_get_symbol(const Zid id) {
-	zrn_icon_t* i = get_icon(id, Z_CLASS_SYMBOL_ICON);
+ZSymbol Zsymbol_icon_get_symbol(const Zid symbol_icon) {
+	zrn_icon_t* i = get_icon(symbol_icon, Z_CLASS_SYMBOL_ICON);
 	return i ? i->symbol : Z_SYMBOL_PLACEHOLDER;
 }
 
@@ -355,27 +355,27 @@ Zid Zfont_icon_create(const char* const glyph) {
 	return id;
 }
 
-void Zfont_icon_set_glyph(const Zid id, const char* const glyph) {
-	zrn_icon_t* i = get_icon(id, Z_CLASS_FONT_ICON);
+void Zfont_icon_set_glyph(const Zid font_icon, const char* const glyph) {
+	zrn_icon_t* i = get_icon(font_icon, Z_CLASS_FONT_ICON);
 	if (!i) return;
 	zrn_set_string(&i->glyph, glyph ? glyph : "");
 	zrn_changed_layout(&i->base);
 }
 
-const char* Zfont_icon_get_glyph(const Zid id) {
-	zrn_icon_t* i = get_icon(id, Z_CLASS_FONT_ICON);
+const char* Zfont_icon_get_glyph(const Zid font_icon) {
+	zrn_icon_t* i = get_icon(font_icon, Z_CLASS_FONT_ICON);
 	return i && i->glyph ? i->glyph : "";
 }
 
-void Zfont_icon_set_font_size(const Zid id, const float font_size) {
-	zrn_icon_t* i = get_icon(id, Z_CLASS_FONT_ICON);
+void Zfont_icon_set_font_size(const Zid font_icon, const float font_size) {
+	zrn_icon_t* i = get_icon(font_icon, Z_CLASS_FONT_ICON);
 	if (!i || font_size <= 0) return;
 	i->font_size = font_size;
 	zrn_changed_layout(&i->base);
 }
 
-void Zfont_icon_set_font_family(const Zid id, const ZFontFamily family) {
-	zrn_icon_t* i = get_icon(id, Z_CLASS_FONT_ICON);
+void Zfont_icon_set_font_family(const Zid font_icon, const ZFontFamily family) {
+	zrn_icon_t* i = get_icon(font_icon, Z_CLASS_FONT_ICON);
 	if (!i) return;
 	i->family = family;
 	zrn_changed_layout(&i->base);
@@ -478,8 +478,8 @@ static int path_parse(zrn_icon_t* const i, const char* const data) {
 	return true;
 }
 
-int Zpath_icon_set_data(const Zid id, const char* const data) {
-	zrn_icon_t* i = get_icon(id, Z_CLASS_PATH_ICON);
+int Zpath_icon_set_data(const Zid path_icon, const char* const data) {
+	zrn_icon_t* i = get_icon(path_icon, Z_CLASS_PATH_ICON);
 	if (!i || !data) return false;
 	if (!path_parse(i, data)) {
 		zrn_error(Z_ERROR_INVALID_ARGUMENT, "Path.Data is not M, L, H, V and Z commands: \"%s\"", data);
@@ -498,13 +498,13 @@ Zid Zpath_icon_create(const char* const data) {
 	return id;
 }
 
-int Zbitmap_icon_set_uri_source(const Zid id, const char* const path) {
-	zrn_icon_t* i = get_icon(id, Z_CLASS_BITMAP_ICON);
+int Zbitmap_icon_set_uri_source(const Zid bitmap_icon, const char* const png_path) {
+	zrn_icon_t* i = get_icon(bitmap_icon, Z_CLASS_BITMAP_ICON);
 	zrn_image_t* image;
-	if (!i || !path) return false;
-	image = zrn_image_load_png(path);
+	if (!i || !png_path) return false;
+	image = zrn_image_load_png(png_path);
 	if (!image) {
-		zrn_error(Z_ERROR_IO, "cannot read the PNG \"%s\"", path);
+		zrn_error(Z_ERROR_IO, "cannot read the PNG \"%s\"", png_path);
 		return false;
 	}
 	if (i->image) zrn_image_free(i->image);
@@ -700,8 +700,8 @@ static zrn_element_t* get_item(const Zid id) {
 	return e;
 }
 
-void Zapp_bar_button_set_label(const Zid id, const char* const label) {
-	zrn_element_t* e = get_item(id);
+void Zapp_bar_button_set_label(const Zid app_bar_button, const char* const label) {
+	zrn_element_t* e = get_item(app_bar_button);
 	if (!e) return;
 	zrn_set_string(&item_of(e)->label, label ? label : "");
 	zrn_changed_layout(e);
@@ -712,27 +712,27 @@ const char* Zapp_bar_button_get_label(const Zid id) {
 	return e && item_of(e)->label ? item_of(e)->label : "";
 }
 
-void Zapp_bar_button_set_icon(const Zid id, const Zid icon) {
-	zrn_element_t* e = get_item(id);
+void Zapp_bar_button_set_icon(const Zid app_bar_button, const Zid icon) {
+	zrn_element_t* e = get_item(app_bar_button);
 	zrn_element_t* i = icon != Z_INVALID_ID ? zrn_get(icon, Z_CLASS_ICON_ELEMENT) : nullptr;
 	if (!e || (icon != Z_INVALID_ID && !i)) return;
 	zrn_content_set(ZST_AS(zrn_content_control_t, e), i);
 }
 
-Zid Zapp_bar_button_get_icon(const Zid id) {
-	zrn_element_t* e = get_item(id);
+Zid Zapp_bar_button_get_icon(const Zid app_bar_button) {
+	zrn_element_t* e = get_item(app_bar_button);
 	return e && ZST_AS(zrn_content_control_t, e)->content ? ZST_AS(zrn_content_control_t, e)->content->id : Z_INVALID_ID;
 }
 
-void Zapp_bar_button_set_is_compact(const Zid id, const int is_compact) {
-	zrn_element_t* e = get_item(id);
+void Zapp_bar_button_set_is_compact(const Zid app_bar_button, const int is_compact) {
+	zrn_element_t* e = get_item(app_bar_button);
 	if (!e) return;
 	item_of(e)->is_compact = is_compact != 0;
 	zrn_changed_layout(e);
 }
 
-int Zapp_bar_button_get_is_compact(const Zid id) {
-	zrn_element_t* e = get_item(id);
+int Zapp_bar_button_get_is_compact(const Zid app_bar_button) {
+	zrn_element_t* e = get_item(app_bar_button);
 	return e ? item_of(e)->is_compact : 0;
 }
 
@@ -777,8 +777,8 @@ void Zapp_bar_separator_set_is_compact(const Zid id, const int is_compact) {
 	if (e) ZST_AS(zrn_app_bar_separator_t, e)->is_compact = is_compact != 0;
 }
 
-int Zapp_bar_separator_get_is_compact(const Zid id) {
-	zrn_element_t* e = zrn_get(id, Z_CLASS_APP_BAR_SEPARATOR);
+int Zapp_bar_separator_get_is_compact(const Zid separator) {
+	zrn_element_t* e = zrn_get(separator, Z_CLASS_APP_BAR_SEPARATOR);
 	return e ? ZST_AS(zrn_app_bar_separator_t, e)->is_compact : 0;
 }
 
@@ -953,8 +953,8 @@ Zid Zapp_bar_create(void) {
 
 static zrn_app_bar_t* get_bar(const Zid id) { return BAR(zrn_get(id, Z_CLASS_APP_BAR)); }
 
-void Zapp_bar_set_is_open(Zid id, int is_open) {
-	zrn_app_bar_t* b = get_bar(id);
+void Zapp_bar_set_is_open(Zid app_bar, int is_open) {
+	zrn_app_bar_t* b = get_bar(app_bar);
 	zrn_element_t* e;
 	float goal;
 	if (!b) return;
@@ -983,18 +983,18 @@ int Zapp_bar_get_is_open(const Zid id) {
 	return b ? b->is_open : 0;
 }
 
-void Zapp_bar_set_is_sticky(const Zid id, const int is_sticky) {
-	zrn_app_bar_t* b = get_bar(id);
+void Zapp_bar_set_is_sticky(const Zid app_bar, const int is_sticky) {
+	zrn_app_bar_t* b = get_bar(app_bar);
 	if (b) b->is_sticky = is_sticky != 0;
 }
 
-int Zapp_bar_get_is_sticky(const Zid id) {
-	zrn_app_bar_t* b = get_bar(id);
+int Zapp_bar_get_is_sticky(const Zid app_bar) {
+	zrn_app_bar_t* b = get_bar(app_bar);
 	return b ? b->is_sticky : 0;
 }
 
-void Zapp_bar_set_closed_display_mode(const Zid id, const ZAppBarClosedDisplayMode mode) {
-	zrn_app_bar_t* b = get_bar(id);
+void Zapp_bar_set_closed_display_mode(const Zid app_bar, const ZAppBarClosedDisplayMode mode) {
+	zrn_app_bar_t* b = get_bar(app_bar);
 	if (!b) return;
 	if (mode != Z_APP_BAR_CLOSED_COMPACT && mode != Z_APP_BAR_CLOSED_MINIMAL) {
 		zrn_error(Z_ERROR_INVALID_ARGUMENT, "unknown ClosedDisplayMode 0x%x", (unsigned)mode);
@@ -1010,12 +1010,12 @@ ZAppBarClosedDisplayMode Zapp_bar_get_closed_display_mode(const Zid id) {
 	return b ? b->closed_mode : Z_APP_BAR_CLOSED_COMPACT;
 }
 
-void Zapp_bar_on_opened(const Zid id, const ZRoutedCallback callback, void* const user_data) {
-	if (zrn_get(id, Z_CLASS_APP_BAR)) Zelement_on(id, Z_EVENT_OPENED, callback, user_data);
+void Zapp_bar_on_opened(const Zid app_bar, const ZRoutedCallback callback, void* const user_data) {
+	if (zrn_get(app_bar, Z_CLASS_APP_BAR)) Zelement_on(app_bar, Z_EVENT_OPENED, callback, user_data);
 }
 
-void Zapp_bar_on_closed(const Zid id, const ZRoutedCallback callback, void* const user_data) {
-	if (zrn_get(id, Z_CLASS_APP_BAR)) Zelement_on(id, Z_EVENT_CLOSED, callback, user_data);
+void Zapp_bar_on_closed(const Zid app_bar, const ZRoutedCallback callback, void* const user_data) {
+	if (zrn_get(app_bar, Z_CLASS_APP_BAR)) Zelement_on(app_bar, Z_EVENT_CLOSED, callback, user_data);
 }
 
 
@@ -1207,34 +1207,34 @@ static int add_command(const Zid bar, const Zid command, const int secondary) {
 }
 
 int Zcommand_bar_add_primary_command(Zid bar, const Zid command) { return add_command(bar, command, 0); }
-int Zcommand_bar_add_secondary_command(Zid bar, const Zid command) { return add_command(bar, command, 1); }
+int Zcommand_bar_add_secondary_command(Zid command_bar, const Zid command) { return add_command(command_bar, command, 1); }
 
-int Zcommand_bar_get_primary_command_count(const Zid bar) {
-	const zrn_command_bar_t* c = get_command_bar(bar);
+int Zcommand_bar_get_primary_command_count(const Zid command_bar) {
+	const zrn_command_bar_t* c = get_command_bar(command_bar);
 	return c ? c->primary_count : 0;
 }
 
-int Zcommand_bar_get_secondary_command_count(const Zid bar) {
-	const zrn_command_bar_t* c = get_command_bar(bar);
+int Zcommand_bar_get_secondary_command_count(const Zid command_bar) {
+	const zrn_command_bar_t* c = get_command_bar(command_bar);
 	return c ? c->secondary_count : 0;
 }
 
-Zid Zcommand_bar_get_primary_command(const Zid bar, const int index) {
-	const zrn_command_bar_t* c = get_command_bar(bar);
+Zid Zcommand_bar_get_primary_command(const Zid command_bar, const int index) {
+	const zrn_command_bar_t* c = get_command_bar(command_bar);
 	return c && index >= 0 && index < c->primary_count ? c->primary[index]->id : Z_INVALID_ID;
 }
 
-Zid Zcommand_bar_get_secondary_command(const Zid bar, const int index) {
-	const zrn_command_bar_t* c = get_command_bar(bar);
+Zid Zcommand_bar_get_secondary_command(const Zid command_bar, const int index) {
+	const zrn_command_bar_t* c = get_command_bar(command_bar);
 	return c && index >= 0 && index < c->secondary_count ? c->secondary[index]->id : Z_INVALID_ID;
 }
 
-void Zcommand_bar_clear_primary_commands(const Zid bar) {
-	const zrn_command_bar_t* c = get_command_bar(bar);
+void Zcommand_bar_clear_primary_commands(const Zid command_bar) {
+	const zrn_command_bar_t* c = get_command_bar(command_bar);
 	while (c && c->primary_count > 0) zrn_destroy(c->primary[c->primary_count - 1]);
 }
 
-void Zcommand_bar_clear_secondary_commands(const Zid bar) {
-	const zrn_command_bar_t* c = get_command_bar(bar);
+void Zcommand_bar_clear_secondary_commands(const Zid command_bar) {
+	const zrn_command_bar_t* c = get_command_bar(command_bar);
 	while (c && c->secondary_count > 0) zrn_destroy(c->secondary[c->secondary_count - 1]);
 }

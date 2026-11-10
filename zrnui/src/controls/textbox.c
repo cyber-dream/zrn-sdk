@@ -633,44 +633,44 @@ Zid Zpassword_box_create(void) {
 
 static zrn_text_box_t* get_tb(const Zid id) { return TB(zrn_get(id, Z_CLASS_TEXT_BOX)); }
 
-void Ztext_box_set_text(const Zid id, const char* const text) {
-	zrn_text_box_t* const b = get_tb(id);
+void Ztext_box_set_text(const Zid text_box, const char* const text) {
+	zrn_text_box_t* const b = get_tb(text_box);
 	if (b) tbx_set_text(b, text);
 }
 
-const char* Ztext_box_get_text(const Zid id) {
-	const zrn_text_box_t* const b = get_tb(id);
+const char* Ztext_box_get_text(const Zid text_box) {
+	const zrn_text_box_t* const b = get_tb(text_box);
 	return b && b->text ? b->text : "";
 }
 
-void Ztext_box_set_accepts_return(const Zid id, const int accepts_return) {
-	zrn_text_box_t* const b = get_tb(id);
+void Ztext_box_set_accepts_return(const Zid text_box, const int accepts_return) {
+	zrn_text_box_t* const b = get_tb(text_box);
 	if (!b) return;
 	b->accepts_return = accepts_return != 0;
 	zrn_changed_layout(&b->base.base);
 }
 
-void Ztext_box_set_text_wrapping(const Zid id, const ZTextWrapping wrapping) {
-	zrn_text_box_t* const b = get_tb(id);
+void Ztext_box_set_text_wrapping(const Zid text_box, const ZTextWrapping wrapping) {
+	zrn_text_box_t* const b = get_tb(text_box);
 	if (!b) return;
 	b->wrapping = wrapping;
 	zrn_changed_layout(&b->base.base);
 }
 
-void Ztext_box_set_is_read_only(const Zid id, const int is_read_only) {
-	zrn_text_box_t* const b = get_tb(id);
+void Ztext_box_set_is_read_only(const Zid text_box, const int is_read_only) {
+	zrn_text_box_t* const b = get_tb(text_box);
 	if (!b) return;
 	b->read_only = is_read_only != 0;
 	zrn_changed_paint(&b->base.base);
 }
 
-void Ztext_box_set_max_length(const Zid id, const int max_length) {
-	zrn_text_box_t* const b = get_tb(id);
+void Ztext_box_set_max_length(const Zid text_box, const int max_length) {
+	zrn_text_box_t* const b = get_tb(text_box);
 	if (b) b->max_length = max_length < 0 ? 0 : max_length;
 }
 
-void Ztext_box_select(Zid id, int start, int length) {
-	zrn_text_box_t* const b = get_tb(id);
+void Ztext_box_select(Zid text_box, int start, int length) {
+	zrn_text_box_t* const b = get_tb(text_box);
 	if (!b) return;
 	if (start < 0) start = 0;
 	if (start > b->length_bytes) start = b->length_bytes;
@@ -681,61 +681,61 @@ void Ztext_box_select(Zid id, int start, int length) {
 	zrn_changed_paint(&b->base.base);
 }
 
-void Ztext_box_select_all(const Zid id) {
-	const zrn_text_box_t* const b = get_tb(id);
-	if (b) Ztext_box_select(id, 0, b->length_bytes);
+void Ztext_box_select_all(const Zid text_box) {
+	const zrn_text_box_t* const b = get_tb(text_box);
+	if (b) Ztext_box_select(text_box, 0, b->length_bytes);
 }
 
-int Ztext_box_get_selection_start(Zid id) { const zrn_text_box_t* b = get_tb(id); return b ? sel_min(b) : 0; }
-int Ztext_box_get_selection_length(Zid id) { const zrn_text_box_t* b = get_tb(id); return b ? sel_max(b) - sel_min(b) : 0; }
+int Ztext_box_get_selection_start(Zid text_box) { const zrn_text_box_t* b = get_tb(text_box); return b ? sel_min(b) : 0; }
+int Ztext_box_get_selection_length(Zid text_box) { const zrn_text_box_t* b = get_tb(text_box); return b ? sel_max(b) - sel_min(b) : 0; }
 
-void Ztext_box_set_placeholder_text(const Zid id, const char* const placeholder_text) {
-	zrn_text_box_t* const b = get_tb(id);
+void Ztext_box_set_placeholder_text(const Zid text_box, const char* const placeholder_text) {
+	zrn_text_box_t* const b = get_tb(text_box);
 	if (!b) return;
 	zrn_set_string(&b->placeholder, placeholder_text && *placeholder_text ? placeholder_text : nullptr);
 	zrn_changed_paint(&b->base.base);
 }
 
-const char* Ztext_box_get_placeholder_text(const Zid id) {
-	const zrn_text_box_t* const b = get_tb(id);
+const char* Ztext_box_get_placeholder_text(const Zid text_box) {
+	const zrn_text_box_t* const b = get_tb(text_box);
 	return b && b->placeholder ? b->placeholder : "";
 }
 
-void Ztext_box_set_header(const Zid id, const char* const header) {
-	zrn_text_box_t* const b = get_tb(id);
+void Ztext_box_set_header(const Zid text_box, const char* const header) {
+	zrn_text_box_t* const b = get_tb(text_box);
 	if (!b) return;
 	zrn_set_string(&b->header, header && *header ? header : nullptr);
 	zrn_changed_layout(&b->base.base);
 }
 
-const char* Ztext_box_get_header(const Zid id) {
-	const zrn_text_box_t* const b = get_tb(id);
+const char* Ztext_box_get_header(const Zid text_box) {
+	const zrn_text_box_t* const b = get_tb(text_box);
 	return b && b->header ? b->header : "";
 }
 
 int Ztext_box_get_is_read_only(Zid id) { const zrn_text_box_t* b = get_tb(id); return b ? b->read_only : 0; }
-int Ztext_box_get_max_length(Zid id) { const zrn_text_box_t* b = get_tb(id); return b ? b->max_length : 0; }
+int Ztext_box_get_max_length(Zid text_box) { const zrn_text_box_t* b = get_tb(text_box); return b ? b->max_length : 0; }
 
-void Zpassword_box_set_password(const Zid id, const char* const password) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_PASSWORD_BOX);
+void Zpassword_box_set_password(const Zid text_box, const char* const password) {
+	zrn_element_t* const e = zrn_get(text_box, Z_CLASS_PASSWORD_BOX);
 	if (e) tbx_set_text(TB(e), password);
 }
 
-const char* Zpassword_box_get_password(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_PASSWORD_BOX);
+const char* Zpassword_box_get_password(const Zid password_box) {
+	zrn_element_t* const e = zrn_get(password_box, Z_CLASS_PASSWORD_BOX);
 	return e && TB(e)->text ? TB(e)->text : "";
 }
 
-void Zpassword_box_set_header(const Zid id, const char* const header) {
-	if (zrn_get(id, Z_CLASS_PASSWORD_BOX)) Ztext_box_set_header(id, header);
+void Zpassword_box_set_header(const Zid password_box, const char* const header) {
+	if (zrn_get(password_box, Z_CLASS_PASSWORD_BOX)) Ztext_box_set_header(password_box, header);
 }
 
-void Zpassword_box_set_placeholder_text(const Zid id, const char* const placeholder_text) {
-	if (zrn_get(id, Z_CLASS_PASSWORD_BOX)) Ztext_box_set_placeholder_text(id, placeholder_text);
+void Zpassword_box_set_placeholder_text(const Zid password_box, const char* const placeholder_text) {
+	if (zrn_get(password_box, Z_CLASS_PASSWORD_BOX)) Ztext_box_set_placeholder_text(password_box, placeholder_text);
 }
 
-void Zpassword_box_set_password_char(const Zid id, const uint32_t codepoint) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_PASSWORD_BOX);
+void Zpassword_box_set_password_char(const Zid password_box, const uint32_t codepoint) {
+	zrn_element_t* const e = zrn_get(password_box, Z_CLASS_PASSWORD_BOX);
 	if (!e) return;
 	TB(e)->password_char = codepoint;
 	zrn_changed_layout(e);

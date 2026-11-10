@@ -109,8 +109,8 @@ static void xf_scale(float out[16], const float s) {
 	zrn_xf_mul(out, out, r);
 }
 
-void zrn_xf_of_element(const zrn_element_t* const e, const float ox, const float oy, const float width, const float height, const float scale, float out[16]) {
-	const float cx = ox + e->proj_cx * width, cy = oy + e->proj_cy * height;
+void zrn_xf_of_element(const zrn_element_t* const e, const float origin_x, const float origin_y, const float width, const float height, const float scale, float out[16]) {
+	const float cx = origin_x + e->proj_cx * width, cy = origin_y + e->proj_cy * height;
 	zrn_xf_identity(out);
 	/* applied last to first: the centre to the origin, the rotations, the scale, back, and the slide */
 	xf_translate(out, cx + e->translate_x * scale, cy + e->translate_y * scale, 0);
@@ -124,8 +124,8 @@ void zrn_update_transformed(zrn_element_t* const e) {
 	e->transformed = e->rot_x != 0.0f || e->rot_y != 0.0f || e->render_scale != 1.0f || e->translate_x != 0.0f || e->translate_y != 0.0f;
 }
 
-void Zelement_set_projection(const Zid id, const float rotation_x, const float rotation_y, const float center_x, const float center_y) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
+void Zelement_set_projection(const Zid element, const float rotation_x, const float rotation_y, const float center_x, const float center_y) {
+	zrn_element_t* const e = zrn_get(element, Z_CLASS_ELEMENT);
 	if (!e) return;
 	e->rot_x = rotation_x;
 	e->rot_y = rotation_y;
@@ -135,16 +135,16 @@ void Zelement_set_projection(const Zid id, const float rotation_x, const float r
 	zrn_changed_paint(e);
 }
 
-void Zelement_set_render_scale(const Zid id, const float scale) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
+void Zelement_set_render_scale(const Zid element, const float scale) {
+	zrn_element_t* const e = zrn_get(element, Z_CLASS_ELEMENT);
 	if (!e) return;
 	e->render_scale = scale;
 	zrn_update_transformed(e);
 	zrn_changed_paint(e);
 }
 
-void Zelement_set_translate(const Zid id, const float x, const float y) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
+void Zelement_set_translate(const Zid element, const float x, const float y) {
+	zrn_element_t* const e = zrn_get(element, Z_CLASS_ELEMENT);
 	if (!e) return;
 	e->translate_x = x;
 	e->translate_y = y;
@@ -152,8 +152,8 @@ void Zelement_set_translate(const Zid id, const float x, const float y) {
 	zrn_changed_paint(e);
 }
 
-void Zelement_set_tilt(const Zid id, const int enabled) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
+void Zelement_set_tilt(const Zid element, const int enabled) {
+	zrn_element_t* const e = zrn_get(element, Z_CLASS_ELEMENT);
 	if (e) e->tilt = enabled != 0;
 }
 
@@ -182,8 +182,8 @@ static void property_set(zrn_element_t* const e, const ZAnimatedProperty p, cons
 	zrn_changed_paint(e);
 }
 
-float Zelement_get_property(const Zid id, const ZAnimatedProperty property) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
+float Zelement_get_property(const Zid element, const ZAnimatedProperty property) {
+	zrn_element_t* const e = zrn_get(element, Z_CLASS_ELEMENT);
 	const float* const slot = e ? property_slot(e, property) : nullptr;
 	return slot ? *slot : 0.0f;
 }
@@ -195,8 +195,8 @@ int zrn_animations_enabled(const zrn_root_t* const r) {
 	return r->renderer == Z_RENDERER_GPU || r->gpu_window;
 }
 
-void Zelement_animate(const Zid id, const ZAnimatedProperty property, const float to, const float duration_ms, const ZEasing easing, const float delay_ms) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
+void Zelement_animate(const Zid element, const ZAnimatedProperty property, const float to, const float duration_ms, const ZEasing easing, const float delay_ms) {
+	zrn_element_t* const e = zrn_get(element, Z_CLASS_ELEMENT);
 	float* slot;
 	if (!e || property < 0 || property >= Z_PROP_LAST_) return;
 	slot = property_slot(e, property);
@@ -222,8 +222,8 @@ void Zelement_animate(const Zid id, const ZAnimatedProperty property, const floa
 	zrn_changed_paint(e);
 }
 
-int Zelement_is_animating(const Zid id) {
-	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
+int Zelement_is_animating(const Zid element) {
+	zrn_element_t* const e = zrn_get(element, Z_CLASS_ELEMENT);
 	int i;
 	if (!e || !e->tweens) return false;
 	for (i = 0; i < Z_PROP_LAST_; i++) if (e->tweens->p[i].active) return true;

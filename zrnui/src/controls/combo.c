@@ -272,18 +272,18 @@ Zid Zcombo_box_create(void) {
 
 static zrn_combo_box_t* get_combo(const Zid id) { return CB(zrn_get(id, Z_CLASS_COMBO_BOX)); }
 
-void Zcombo_box_set_is_drop_down_open(const Zid id, const int is_open) {
-	zrn_combo_box_t* const c = get_combo(id);
+void Zcombo_box_set_is_drop_down_open(const Zid combo_box, const int is_open) {
+	zrn_combo_box_t* const c = get_combo(combo_box);
 	if (c) combo_set_open(c, is_open);
 }
 
-int Zcombo_box_get_is_drop_down_open(const Zid id) {
-	const zrn_combo_box_t* const c = get_combo(id);
+int Zcombo_box_get_is_drop_down_open(const Zid combo_box) {
+	const zrn_combo_box_t* const c = get_combo(combo_box);
 	return c ? c->is_open : 0;
 }
 
-void Zcombo_box_set_max_drop_down_height(const Zid id, const float height) {
-	zrn_combo_box_t* const c = get_combo(id);
+void Zcombo_box_set_max_drop_down_height(const Zid combo_box, const float height) {
+	zrn_combo_box_t* const c = get_combo(combo_box);
 	if (!c) return;
 	c->max_drop_down_height = height > 0 ? height : Z_INFINITE;
 	if (c->base.scroll) {
@@ -292,32 +292,32 @@ void Zcombo_box_set_max_drop_down_height(const Zid id, const float height) {
 	}
 }
 
-float Zcombo_box_get_max_drop_down_height(const Zid id) {
-	const zrn_combo_box_t* const c = get_combo(id);
+float Zcombo_box_get_max_drop_down_height(const Zid combo_box) {
+	const zrn_combo_box_t* const c = get_combo(combo_box);
 	return c ? c->max_drop_down_height : Z_INFINITE;
 }
 
-void Zcombo_box_set_header(const Zid id, const char* const header) {
-	zrn_combo_box_t* const c = get_combo(id);
+void Zcombo_box_set_header(const Zid combo_box, const char* const header) {
+	zrn_combo_box_t* const c = get_combo(combo_box);
 	if (!c) return;
 	zrn_set_string(&c->header, header && *header ? header : nullptr);
 	zrn_changed_layout(&c->base.base.base);
 }
 
-const char* Zcombo_box_get_header(const Zid id) {
-	const zrn_combo_box_t* const c = get_combo(id);
+const char* Zcombo_box_get_header(const Zid combo_box) {
+	const zrn_combo_box_t* const c = get_combo(combo_box);
 	return c && c->header ? c->header : "";
 }
 
-void Zcombo_box_set_placeholder_text(const Zid id, const char* const placeholder_text) {
-	zrn_combo_box_t* const c = get_combo(id);
+void Zcombo_box_set_placeholder_text(const Zid combo_box, const char* const placeholder_text) {
+	zrn_combo_box_t* const c = get_combo(combo_box);
 	if (!c) return;
 	zrn_set_string(&c->placeholder, placeholder_text && *placeholder_text ? placeholder_text : nullptr);
 	zrn_changed_layout(&c->base.base.base);
 }
 
-const char* Zcombo_box_get_placeholder_text(const Zid id) {
-	const zrn_combo_box_t* const c = get_combo(id);
+const char* Zcombo_box_get_placeholder_text(const Zid combo_box) {
+	const zrn_combo_box_t* const c = get_combo(combo_box);
 	return c && c->placeholder ? c->placeholder : "";
 }
 
@@ -554,8 +554,8 @@ Zid Zauto_suggest_box_create(void) {
 
 static zrn_auto_suggest_box_t* get_asb(const Zid id) { return ASB(zrn_get(id, Z_CLASS_AUTO_SUGGEST_BOX)); }
 
-void Zauto_suggest_box_set_items(const Zid id, const char* const* items, const int count) {
-	zrn_auto_suggest_box_t* const a = get_asb(id);
+void Zauto_suggest_box_set_items(const Zid box, const char* const* items, const int count) {
+	zrn_auto_suggest_box_t* const a = get_asb(box);
 	int i;
 	if (!a || !a->base.host) return;
 	zrn_clear_children(a->base.host);
@@ -565,48 +565,48 @@ void Zauto_suggest_box_set_items(const Zid id, const char* const* items, const i
 	asb_set_open(a, zrn_ic_count(&a->base) > 0 && asb_text_focused(a));
 }
 
-void Zauto_suggest_box_set_text(const Zid id, const char* const text) {
-	const zrn_auto_suggest_box_t* const a = get_asb(id);
+void Zauto_suggest_box_set_text(const Zid box, const char* const text) {
+	const zrn_auto_suggest_box_t* const a = get_asb(box);
 	if (a && a->text_box) Ztext_box_set_text(a->text_box->id, text);
 }
 
-const char* Zauto_suggest_box_get_text(const Zid id) {
-	const zrn_auto_suggest_box_t* const a = get_asb(id);
+const char* Zauto_suggest_box_get_text(const Zid box) {
+	const zrn_auto_suggest_box_t* const a = get_asb(box);
 	return a && a->text_box ? Ztext_box_get_text(a->text_box->id) : "";
 }
 
-void Zauto_suggest_box_set_placeholder_text(const Zid id, const char* const placeholder_text) {
-	const zrn_auto_suggest_box_t* const a = get_asb(id);
+void Zauto_suggest_box_set_placeholder_text(const Zid box, const char* const placeholder_text) {
+	const zrn_auto_suggest_box_t* const a = get_asb(box);
 	if (a && a->text_box) Ztext_box_set_placeholder_text(a->text_box->id, placeholder_text);
 }
 
-const char* Zauto_suggest_box_get_placeholder_text(const Zid id) {
-	const zrn_auto_suggest_box_t* const a = get_asb(id);
+const char* Zauto_suggest_box_get_placeholder_text(const Zid box) {
+	const zrn_auto_suggest_box_t* const a = get_asb(box);
 	return a && a->text_box ? Ztext_box_get_placeholder_text(a->text_box->id) : "";
 }
 
-void Zauto_suggest_box_set_header(const Zid id, const char* const header) {
-	const zrn_auto_suggest_box_t* const a = get_asb(id);
+void Zauto_suggest_box_set_header(const Zid box, const char* const header) {
+	const zrn_auto_suggest_box_t* const a = get_asb(box);
 	if (a && a->text_box) Ztext_box_set_header(a->text_box->id, header);
 }
 
-const char* Zauto_suggest_box_get_header(const Zid id) {
-	const zrn_auto_suggest_box_t* const a = get_asb(id);
+const char* Zauto_suggest_box_get_header(const Zid box) {
+	const zrn_auto_suggest_box_t* const a = get_asb(box);
 	return a && a->text_box ? Ztext_box_get_header(a->text_box->id) : "";
 }
 
-void Zauto_suggest_box_set_is_suggestion_list_open(const Zid id, const int is_open) {
-	zrn_auto_suggest_box_t* const a = get_asb(id);
+void Zauto_suggest_box_set_is_suggestion_list_open(const Zid box, const int is_open) {
+	zrn_auto_suggest_box_t* const a = get_asb(box);
 	if (a) asb_set_open(a, is_open && zrn_ic_count(&a->base) > 0);
 }
 
-int Zauto_suggest_box_get_is_suggestion_list_open(const Zid id) {
-	const zrn_auto_suggest_box_t* const a = get_asb(id);
+int Zauto_suggest_box_get_is_suggestion_list_open(const Zid box) {
+	const zrn_auto_suggest_box_t* const a = get_asb(box);
 	return a ? a->is_open : 0;
 }
 
-void Zauto_suggest_box_set_max_suggestion_list_height(const Zid id, const float height) {
-	zrn_auto_suggest_box_t* const a = get_asb(id);
+void Zauto_suggest_box_set_max_suggestion_list_height(const Zid box, const float height) {
+	zrn_auto_suggest_box_t* const a = get_asb(box);
 	if (!a) return;
 	a->max_suggestion_list_height = height > 0 ? height : Z_INFINITE;
 	if (a->popup && a->popup->child_count) {
@@ -615,27 +615,27 @@ void Zauto_suggest_box_set_max_suggestion_list_height(const Zid id, const float 
 	}
 }
 
-void Zauto_suggest_box_set_update_text_on_select(const Zid id, const int update) {
-	zrn_auto_suggest_box_t* const a = get_asb(id);
+void Zauto_suggest_box_set_update_text_on_select(const Zid box, const int update) {
+	zrn_auto_suggest_box_t* const a = get_asb(box);
 	if (a) a->update_text_on_select = update != 0;
 }
 
-void Zauto_suggest_box_on_text_changed(const Zid id, const ZAutoSuggestTextChangedCallback callback, void* const user_data) {
-	zrn_auto_suggest_box_t* const a = get_asb(id);
+void Zauto_suggest_box_on_text_changed(const Zid box, const ZAutoSuggestTextChangedCallback callback, void* const user_data) {
+	zrn_auto_suggest_box_t* const a = get_asb(box);
 	if (!a) return;
 	a->on_text_changed = callback;
 	a->on_text_changed_data = user_data;
 }
 
-void Zauto_suggest_box_on_suggestion_chosen(const Zid id, const ZAutoSuggestSuggestionChosenCallback callback, void* const user_data) {
-	zrn_auto_suggest_box_t* const a = get_asb(id);
+void Zauto_suggest_box_on_suggestion_chosen(const Zid box, const ZAutoSuggestSuggestionChosenCallback callback, void* const user_data) {
+	zrn_auto_suggest_box_t* const a = get_asb(box);
 	if (!a) return;
 	a->on_suggestion_chosen = callback;
 	a->on_suggestion_chosen_data = user_data;
 }
 
-void Zauto_suggest_box_on_query_submitted(const Zid id, const ZAutoSuggestQuerySubmittedCallback callback, void* const user_data) {
-	zrn_auto_suggest_box_t* const a = get_asb(id);
+void Zauto_suggest_box_on_query_submitted(const Zid box, const ZAutoSuggestQuerySubmittedCallback callback, void* const user_data) {
+	zrn_auto_suggest_box_t* const a = get_asb(box);
 	if (!a) return;
 	a->on_query_submitted = callback;
 	a->on_query_submitted_data = user_data;
