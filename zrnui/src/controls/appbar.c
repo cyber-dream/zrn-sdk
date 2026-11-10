@@ -611,9 +611,7 @@ static void item_colors(zrn_element_t* const e, ZColor* const stroke, ZColor* co
 	} else if (checked && pressed) {
 		/* AppBarToggleButtonCheckedPressed: the outline and the icon in the foreground, no fill */
 		*stroke = fg; *fill = none; *icon = fg;
-	} else if (checked) {
-		*stroke = fg; *fill = fg; *icon = bg;
-	} else if (pressed) {
+	} else if (checked || pressed) {
 		*stroke = fg; *fill = fg; *icon = bg;
 	} else {
 		*stroke = fg; *fill = none; *icon = own;

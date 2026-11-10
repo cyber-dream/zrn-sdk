@@ -277,7 +277,7 @@ uint8_t zrn_face_index(const ZFontFamily family) {
 
 FT_Face zrn_face(const uint8_t face) {
 	if (g_resolved[face] != ZST_NO_FONT) {
-		const FT_Face ft = zrn_entry_face(&g_fonts[g_resolved[face]]);
+		FT_Face const ft = zrn_entry_face(&g_fonts[g_resolved[face]]);
 		if (ft) return ft;
 	}
 	if (g_resolved[ZST_FACE_REGULAR] == ZST_NO_FONT) return nullptr;
@@ -313,9 +313,9 @@ static FT_Face zrn_find_fallback(const uint8_t face, const uint32_t cp) {
 }
 
 FT_Face zrn_face_for_char(const uint8_t face, const uint32_t cp) {
-	const FT_Face base = zrn_face(face);
+	FT_Face const base = zrn_face(face);
 	if (!base || cp <= 0x20 || FT_Get_Char_Index(base, cp) != 0) return base;
-	const FT_Face other = zrn_find_fallback(face, cp);
+	FT_Face const other = zrn_find_fallback(face, cp);
 	return other ? other : base;
 }
 

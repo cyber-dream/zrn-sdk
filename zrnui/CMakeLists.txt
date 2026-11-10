@@ -92,6 +92,8 @@ if(ZRNUI_DEBUG)
 	target_compile_definitions(zrnui PUBLIC Z_DEBUG)
 endif()
 
+# memfd_create, readlink, strtof and friends; defined here, not in the sources
+target_compile_definitions(zrnui PRIVATE _GNU_SOURCE)
 target_include_directories(zrnui PUBLIC include PRIVATE src)
 target_link_libraries(zrnui PRIVATE PkgConfig::FREETYPE PkgConfig::PNG m)
 if(WAYLAND_FOUND)

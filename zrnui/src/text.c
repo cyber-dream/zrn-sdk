@@ -124,7 +124,7 @@ static FT_Face face_of(const uint8_t face, const uint32_t cp) {
 
 int zrn_font_has_glyph(const zrn_font_t font, const uint32_t cp) {
 	const uint8_t face = zrn_face_index(font.family);
-	const FT_Face ft = face_of(face, cp);
+	FT_Face const ft = face_of(face, cp);
 	return ft && FT_Get_Char_Index(ft, cp) != 0;
 }
 
@@ -133,7 +133,7 @@ static float advance_em(const uint8_t face, const uint32_t cp) {
 	glyph_entry_t* const g = glyph_resolved(face, cp);
 	if (!g) return 0.0001f;
 	if (g->advance == 0.0f) {
-		const FT_Face ft = face_of(face, cp);
+		FT_Face const ft = face_of(face, cp);
 		if (ft) {
 			const FT_UInt index = FT_Get_Char_Index(ft, cp);
 			FT_Set_Char_Size(ft, 0, 1000 * 64, 72, 72);
@@ -145,19 +145,19 @@ static float advance_em(const uint8_t face, const uint32_t cp) {
 }
 
 float zrn_font_line_height(const zrn_font_t font) {
-	const FT_Face ft = zrn_face(zrn_face_index(font.family));
+	FT_Face const ft = zrn_face(zrn_face_index(font.family));
 	if (!ft) return font.size * 1.3f;
 	return font.size * (float)ft->height / (float)ft->units_per_EM;
 }
 
 float zrn_font_ascent(const zrn_font_t font) {
-	const FT_Face ft = zrn_face(zrn_face_index(font.family));
+	FT_Face const ft = zrn_face(zrn_face_index(font.family));
 	if (!ft) return font.size;
 	return font.size * (float)ft->ascender / (float)ft->units_per_EM;
 }
 
 static float font_content_height(const zrn_font_t font) {
-	const FT_Face ft = zrn_face(zrn_face_index(font.family));
+	FT_Face const ft = zrn_face(zrn_face_index(font.family));
 	if (!ft) return font.size * 1.2f;
 	return font.size * (float)(ft->ascender - ft->descender) / (float)ft->units_per_EM;
 }
@@ -167,7 +167,7 @@ static glyph_entry_t* glyph_bitmap(const uint8_t face, const float device_size, 
 	const int32_t key = (int32_t)((size_key << 3) | (face + 1) | 0x40000000);
 	glyph_entry_t* const g = glyph_slot(cp, key, 1);
 	if (!g->has_bitmap) {
-		const FT_Face ft = face_of(face, cp);
+		FT_Face const ft = face_of(face, cp);
 		g->has_bitmap = 1;
 		if (ft) {
 			const FT_UInt index = FT_Get_Char_Index(ft, cp);
@@ -312,8 +312,7 @@ zrn_text_layout_t* zrn_text_layout_new(const zrn_font_t font, const char* const 
 			pen += a;
 			end += used;
 		}
-		if (next == length && line_end == length) pen = zrn_text_width(font, text + start, line_end - start);
-		else pen = zrn_text_width(font, text + start, line_end - start);
+		pen = zrn_text_width(font, text + start, line_end - start);
 		line.start = start;
 		line.end = line_end;
 		line.width = pen;
@@ -354,8 +353,6 @@ void zrn_text_layout_free(zrn_text_layout_t* const l) {
 /* ============================================================================
  *  drawing
  * ============================================================================ */
-
-void zrn_blit_alpha(zrn_painter_t* p, int x, int y, int w, int h, const uint8_t* alpha, int stride, ZColor c);
 
 void zrn_draw_string(zrn_painter_t* const p, const zrn_font_t font, const char* const s, const int length, const float x, const float y, const ZColor c) {
 	const uint8_t face = zrn_face_index(font.family);

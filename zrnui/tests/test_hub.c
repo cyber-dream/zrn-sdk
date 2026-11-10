@@ -12,9 +12,8 @@ static Zid g_clicked;
 static void on_in_view(Zid sender, void* u) { (void)sender; (void)u; g_in_view++; }
 static void on_header_click(Zid hub, Zid section, void* u) { (void)hub; (void)u; g_clicks++; g_clicked = section; }
 
-static void run(Zid root, float ms) {
-	float t;
-	for (t = 0; t < ms; t += 16) Zroot_tick(root, 16);
+static void run(const Zid root, const float ms) {
+	for (int step = 0; (float)step * 16.0f < ms; step++) Zroot_tick(root, 16);
 }
 
 static void tap(Zid root, ZPoint p) {

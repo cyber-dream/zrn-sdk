@@ -317,7 +317,7 @@ static void sz_set_view(zrn_semantic_zoom_t* const z, zrn_element_t** slot, cons
 	zrn_element_t* const old = *slot;
 	if (view != Z_INVALID_ID && !v) return;
 	if (old == v) return;
-	*slot = NULL;
+	*slot = nullptr;
 	if (old) zrn_destroy(old);
 	if (v) {
 		zrn_add_child(e, v, -1);

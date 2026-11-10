@@ -743,7 +743,7 @@ float Zgrid_get_row_height(const Zid id, const int row) {
 	void name(Zid id, int value) { \
 		zrn_element_t* e = zrn_get(id, Z_CLASS_ELEMENT); \
 		if (!e) return; \
-		e->field = value < minimum ? minimum : value; \
+		e->field = (value) < (minimum) ? (minimum) : (value); \
 		if (e->parent) zrn_changed_layout(e->parent); \
 	}
 

@@ -3,7 +3,6 @@
  * A Wayland window (xdg-shell, wl_shm) for a root.
  */
 
-#define _GNU_SOURCE
 #include "internal.h"
 
 #ifdef ZRNUI_HAVE_WAYLAND
@@ -121,7 +120,7 @@ static int buffers_make(window_t* const w, const int pw, const int ph) {
 static void present_gl(window_t* const w) {
 	zrn_root_t* const r = zrn_root_lookup(w->root);
 	zrn_painter_t p;
-	const int pw = (int)(w->width * w->fscale + 0.5f), ph = (int)(w->height * w->fscale + 0.5f);
+	const int pw = (int)((float)w->width * w->fscale + 0.5f), ph = (int)((float)w->height * w->fscale + 0.5f);
 	if (!r) return;
 	if (pw != w->gl_w || ph != w->gl_h) {
 		/* the buffer of a new size is blank: draw everything again */
@@ -140,7 +139,7 @@ static void present(window_t* const w) {
 	if (w->gl) { present_gl(w); return; }
 	buffer_t* b = nullptr;
 	int i, x, y;
-	const int pw = (int)(w->width * w->fscale + 0.5f), ph = (int)(w->height * w->fscale + 0.5f);
+	const int pw = (int)((float)w->width * w->fscale + 0.5f), ph = (int)((float)w->height * w->fscale + 0.5f);
 	if (pw != w->buf_w || ph != w->buf_h) {
 		if (!buffers_make(w, pw, ph)) return;
 		w->buffers[0].busy = w->buffers[1].busy = 0;
@@ -197,7 +196,7 @@ static float scale_of_env(const char* const env) {
 
 static void preferred_scale(void* const d, struct wp_fractional_scale_v1* s, const uint32_t scale) {
 	const auto w = (window_t*)d;
-	const float f = scale / 120.0f; /* in 1/120 of a scale of 1: 180 is 1.5 */
+	const float f = (float)scale / 120.0f; /* in 1/120 of a scale of 1: 180 is 1.5 */
 	(void)s;
 	w->preferred_scale = scale;
 	/* the compositor owns the scale of a mobile shell; the environment only overrides it */
@@ -458,7 +457,8 @@ int Zwindow_run(const Zid root, const char* const title) {
 	w.width = r->width > 0 ? r->width : 480;
 	w.height = r->height > 0 ? r->height : 800;
 	if (r->width <= 0) Zroot_set_size(root, w.width, w.height);
-	w.scale = scale_env && atoi(scale_env) > 0 ? atoi(scale_env) : 1;
+	const long env_integer_scale = scale_env ? strtol(scale_env, nullptr, 10) : 0;
+	w.scale = env_integer_scale > 0 ? (int)env_integer_scale : 1;
 	w.touch_id = -1;
 	w.env_scale = scale_of_env(scale_env);
 	/* only the numbers now; the surface is not created yet, apply_scale runs on it after */

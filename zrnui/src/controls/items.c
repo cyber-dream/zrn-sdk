@@ -618,8 +618,7 @@ void zrn_ic_scroll_into_view(zrn_items_control_t* const o, const int index, cons
 		offset = Zscroll_viewer_get_vertical_offset(o->scroll->id);
 		view = Zscroll_viewer_get_viewport_height(o->scroll->id);
 	}
-	if (alignment == Z_SCROLL_INTO_VIEW_LEADING) offset = start;
-	else if (start < offset) offset = start;
+	if (alignment == Z_SCROLL_INTO_VIEW_LEADING || start < offset) offset = start;
 	else if (end > offset + view) offset = end - view;
 	else return;
 	if (sideways) Zscroll_viewer_scroll_to_horizontal_offset(o->scroll->id, offset);

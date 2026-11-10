@@ -744,9 +744,9 @@ zrn_element_t** zrn_ordered(zrn_element_t* e, int* count, int* heap);
 void zrn_ordered_free(zrn_element_t** list, int heap);
 /** Looks an element up and checks its class; reports and returns NULL on failure. */
 zrn_element_t* zrn_get(Zid id, ZClass cls);
-zrn_element_t* zrn_create(ZClass cls);
+zrn_element_t* zrn_create(ZClass id);
 void zrn_destroy(zrn_element_t* e);
-int zrn_is_a(const zrn_element_t* e, ZClass cls);
+int zrn_is_a(const zrn_element_t* e, ZClass id);
 void zrn_add_child(zrn_element_t* parent, zrn_element_t* child, int index);
 void zrn_remove_child(zrn_element_t* parent, zrn_element_t* child);
 void zrn_clear_children(zrn_element_t* parent);
@@ -756,7 +756,7 @@ int zrn_child_index(const zrn_element_t* parent, const zrn_element_t* child);
 
 /* layout */
 void zrn_measure(zrn_element_t* e, ZSize available);
-void zrn_arrange(zrn_element_t* e, ZRect final_rect);
+void zrn_arrange(zrn_element_t* e, ZRect slot);
 ZSize zrn_measure_children_max(zrn_element_t* e, ZSize available);
 void zrn_changed_layout(zrn_element_t* e);
 void zrn_changed_paint(zrn_element_t* e);

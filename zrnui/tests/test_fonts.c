@@ -7,7 +7,7 @@
 #include "../src/font.h"
 
 static void test_faces_known_at_start(void) {
-	for (uint8_t face = 0; face < ZST_FACE_COUNT; face++) CHECK(zrn_face(face) != nullptr);
+	for (uint32_t face = 0; face < ZST_FACE_COUNT; face++) CHECK(zrn_face((uint8_t)face) != nullptr);
 }
 
 static void test_family_to_face(void) {
@@ -19,24 +19,24 @@ static void test_family_to_face(void) {
 }
 
 static void test_latin_uses_the_face_itself(void) {
-	const FT_Face regular = zrn_face(ZST_FACE_REGULAR);
+	FT_Face const regular = zrn_face(ZST_FACE_REGULAR);
 	CHECK(zrn_face_for_char(ZST_FACE_REGULAR, 'A') == regular);
 	CHECK(zrn_face_for_char(ZST_FACE_REGULAR, ' ') == regular);
 }
 
 static void test_stand_in_for_a_missing_glyph(void) {
-	const FT_Face regular = zrn_face(ZST_FACE_REGULAR);
+	FT_Face const regular = zrn_face(ZST_FACE_REGULAR);
 	/* a code point nobody has gets the face itself: its missing-glyph box */
 	CHECK(zrn_face_for_char(ZST_FACE_REGULAR, 0x10FFFD) == regular);
 	/* Cyrillic: when the face lacks it, the stand-in is a font that has it (none installed: the face itself) */
-	const FT_Face cyrillic = zrn_face_for_char(ZST_FACE_REGULAR, 0x0416);
+	FT_Face const cyrillic = zrn_face_for_char(ZST_FACE_REGULAR, 0x0416);
 	CHECK(cyrillic != nullptr);
 	if (FT_Get_Char_Index(regular, 0x0416) == 0 && cyrillic != regular) CHECK(FT_Get_Char_Index(cyrillic, 0x0416) != 0);
 }
 
 static void test_repeatable_without_search(void) {
-	const FT_Face first = zrn_face_for_char(ZST_FACE_BOLD, 0x0416);
-	const FT_Face second = zrn_face_for_char(ZST_FACE_BOLD, 0x0416);
+	FT_Face const first = zrn_face_for_char(ZST_FACE_BOLD, 0x0416);
+	FT_Face const second = zrn_face_for_char(ZST_FACE_BOLD, 0x0416);
 	CHECK(first == second);
 }
 

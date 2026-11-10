@@ -60,9 +60,8 @@ static Zid setup(Zid* root, ZAnimations anim) {
 	return g_pivot;
 }
 
-static void run(Zid root, float ms) {
-	float t;
-	for (t = 0; t < ms; t += 16) Zroot_tick(root, 16);
+static void run(const Zid root, const float ms) {
+	for (int step = 0; (float)step * 16.0f < ms; step++) Zroot_tick(root, 16);
 }
 
 static ZPoint center(Zid e) {

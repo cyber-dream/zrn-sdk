@@ -1,3 +1,3 @@
 #pragma once
 
-Zid main_page(const Zid frame, void* parameter);
+Zid main_page(Zid frame, void* parameter);

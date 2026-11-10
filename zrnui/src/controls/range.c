@@ -169,12 +169,14 @@ static void slider_geometry(zrn_element_t* const e, ZRect* const track, ZRect* c
 
 static void slider_paint_ticks(zrn_element_t* const e, zrn_painter_t* const p, const ZRect track) {
 	const auto s = SLIDER(e);
-	double range = s->base.maximum - s->base.minimum, v;
+	const double range = s->base.maximum - s->base.minimum;
 	const ZColor outside = zrn_theme_color(e, ZST_TC_BASE_MEDIUM_MID);
 	const ZColor inline_color = zrn_theme_color(e, ZST_TC_BACKGROUND);
 	int count = 0;
 	if (s->tick_frequency <= 0 || range <= 0 || s->tick_placement == Z_TICK_NONE) return;
-	for (v = s->base.minimum; v <= s->base.maximum + 1e-9 && count < 1000; v += s->tick_frequency, count++) {
+	for (count = 0; count < 1000; count++) {
+		const double v = s->base.minimum + (double)count * s->tick_frequency;
+		if (v > s->base.maximum + 1e-9) break;
 		const float f = (float)((v - s->base.minimum) / range);
 		const int top = s->tick_placement == Z_TICK_TOP_LEFT || s->tick_placement == Z_TICK_OUTSIDE;
 		const int bottom = s->tick_placement == Z_TICK_BOTTOM_RIGHT || s->tick_placement == Z_TICK_OUTSIDE;

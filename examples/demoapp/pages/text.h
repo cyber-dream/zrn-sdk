@@ -3,4 +3,4 @@
 
 #include <zrnui.h>
 
-Zid text_page(const Zid frame, void* parameter);
+Zid text_page(Zid frame, void* parameter);

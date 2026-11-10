@@ -700,8 +700,6 @@ static int is_inside(const zrn_element_t* e, const zrn_element_t* ancestor) {
 	return 0;
 }
 
-void zrn_popup_close(zrn_element_t* popup);
-
 /* A press outside the open popups closes the ones that do not stay open. Returns 1 when the press was on the owner of a closed popup. */
 static int close_outside(const zrn_root_t* const r, const zrn_element_t* const target) {
 	int i, swallow = 0;

@@ -26,9 +26,8 @@ static void tap(Zid root, ZPoint p) {
 static void type(Zid root, const char* text) { Zroot_inject_text(root, text); }
 static void key(Zid root, ZKey k, int mods) { Zroot_inject_key(root, k, mods, 1); Zroot_inject_key(root, k, mods, 0); }
 
-static void run(Zid root, float ms) {
-	float t;
-	for (t = 0; t < ms; t += 16) Zroot_tick(root, 16);
+static void run(const Zid root, const float ms) {
+	for (int step = 0; (float)step * 16.0f < ms; step++) Zroot_tick(root, 16);
 }
 
 static Zid make_root(Zid visual, ZAnimations animations) {

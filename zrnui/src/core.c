@@ -400,7 +400,7 @@ void zrn_clear_children(zrn_element_t* const parent) {
 void zrn_set_only_child(zrn_element_t* const parent, zrn_element_t** slot, zrn_element_t* const child) {
 	zrn_element_t* const old = *slot;
 	if (old == child) return;
-	*slot = NULL;
+	*slot = nullptr;
 	if (old) zrn_destroy(old);
 	if (child) {
 		zrn_add_child(parent, child, -1);

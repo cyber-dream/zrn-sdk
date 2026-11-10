@@ -16,9 +16,8 @@ static void on_date(Zid sender, ZDate o, ZDate n, void* u) { (void)sender; (void
 static void on_time(Zid sender, ZTimeOfDay o, ZTimeOfDay n, void* u) { (void)sender; (void)u; g_time_events++; g_old_time = o; g_new_time = n; }
 static void on_date_picked(Zid sender, ZDate o, ZDate n, void* u) { (void)sender; (void)u; g_picked++; g_old_date = o; g_new_date = n; }
 
-static void run(Zid root, float ms) {
-	float t;
-	for (t = 0; t < ms; t += 16) Zroot_tick(root, 16);
+static void run(const Zid root, const float ms) {
+	for (int step = 0; (float)step * 16.0f < ms; step++) Zroot_tick(root, 16);
 }
 
 static ZPoint center(Zid e) {

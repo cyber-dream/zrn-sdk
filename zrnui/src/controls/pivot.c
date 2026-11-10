@@ -114,7 +114,7 @@ static float strip_shift(const zrn_pivot_t* const p, const float offset) {
 		int k;
 		for (k = 0; k < i; k++) c += header_slot(p, k);
 	}
-	return c + f * header_slot(p, i) + (float)((a - i) / n) * strip_length(p);
+	return c + f * header_slot(p, i) + (float)(a - i) / (float)n * strip_length(p);
 }
 
 static float title_height(const zrn_pivot_t* const p) {

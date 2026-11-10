@@ -9,8 +9,8 @@
 static void quiet_errors(ZError e, const char* m, void* u) { (void)e; (void)m; (void)u; }
 
 static int same_color(ZColor c, uint32_t argb) {
-	return fabs(c.a * 255 - (argb >> 24)) < 0.51 && fabs(c.r * 255 - ((argb >> 16) & 255)) < 0.51 &&
-		fabs(c.g * 255 - ((argb >> 8) & 255)) < 0.51 && fabs(c.b * 255 - (argb & 255)) < 0.51;
+	return fabsf(c.a * 255.0f - (float)(argb >> 24)) < 0.51f && fabsf(c.r * 255.0f - (float)((argb >> 16) & 255)) < 0.51f &&
+		fabsf(c.g * 255.0f - (float)((argb >> 8) & 255)) < 0.51f && fabsf(c.b * 255.0f - (float)(argb & 255)) < 0.51f;
 }
 
 static int near_color(ZColor a, ZColor b) {
