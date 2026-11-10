@@ -60,10 +60,10 @@ static void test_button_click(void) {
 	tap(root, (ZPoint){ 3, 3 });
 	CHECK(g_clicks == 3);
 	/* disabled buttons do nothing */
-	Zelement_set_enabled(b, Z_FALSE);
+	Zelement_set_enabled(b, false);
 	tap(root, center(b));
 	CHECK(g_clicks == 3);
-	Zelement_set_enabled(b, Z_TRUE);
+	Zelement_set_enabled(b, true);
 	/* a press-mode button clicks on press */
 	Zbutton_set_click_mode(b, Z_CLICK_PRESS);
 	Zroot_inject_pointer(root, Z_POINTER_DOWN, center(b).x, center(b).y);
@@ -94,7 +94,7 @@ static void test_keyboard_click_and_focus(void) {
 	tap(root, center(b));
 	CHECK(Zroot_get_focus(root) == b);
 	/* IsTabStop false skips a control */
-	Zcontrol_set_tab_stop(a, Z_FALSE);
+	Zcontrol_set_tab_stop(a, false);
 	key(root, Z_KEY_TAB, Z_MOD_SHIFT);
 	CHECK(Zroot_get_focus(root) == b);
 	Zroot_destroy(root);
@@ -139,7 +139,7 @@ static void test_toggle_taps(void) {
 	CHECK(Ztoggle_button_get_is_checked(c) && g_changes == 1);
 	tap(root, center(c));
 	CHECK(!Ztoggle_button_get_is_checked(c));
-	Ztoggle_button_set_is_three_state(c, Z_TRUE);
+	Ztoggle_button_set_is_three_state(c, true);
 	tap(root, center(c));
 	tap(root, center(c));
 	CHECK(Ztoggle_button_get_state(c) == Z_INDETERMINATE);
@@ -221,11 +221,11 @@ static void test_text_box_typing(void) {
 	/* a newline is refused unless AcceptsReturn */
 	type(root, "\n");
 	CHECK_STR(Ztext_box_get_text(tb), "oh eXoh eX");
-	Ztext_box_set_accepts_return(tb, Z_TRUE);
+	Ztext_box_set_accepts_return(tb, true);
 	type(root, "\nz");
 	CHECK_STR(Ztext_box_get_text(tb), "oh eXoh eX\nz");
 	/* MaxLength counts characters, not bytes */
-	Ztext_box_set_accepts_return(tb, Z_FALSE);
+	Ztext_box_set_accepts_return(tb, false);
 	Ztext_box_set_text(tb, "");
 	Ztext_box_set_max_length(tb, 3);
 	type(root, "\xD0\xB0\xD0\xB1\xD0\xB2\xD0\xB3"); /* four Cyrillic letters */
@@ -234,7 +234,7 @@ static void test_text_box_typing(void) {
 	key(root, Z_KEY_BACKSPACE, 0);
 	CHECK_STR(Ztext_box_get_text(tb), "\xD0\xB0\xD0\xB1");
 	/* read only */
-	Ztext_box_set_is_read_only(tb, Z_TRUE);
+	Ztext_box_set_is_read_only(tb, true);
 	type(root, "q");
 	CHECK_STR(Ztext_box_get_text(tb), "\xD0\xB0\xD0\xB1");
 	Zroot_destroy(root);
@@ -386,7 +386,7 @@ static void test_combo_box(void) {
 	tap(root, center(cb));
 	CHECK(!Zcombo_box_get_is_drop_down_open(cb));
 	/* the drop-down was drawn: the frame differs while open */
-	Zcombo_box_set_is_drop_down_open(cb, Z_TRUE);
+	Zcombo_box_set_is_drop_down_open(cb, true);
 	CHECK(Zroot_render(root, NULL));
 	Zroot_destroy(root);
 }
@@ -493,7 +493,7 @@ static void test_handlers_that_navigate(void) {
 	Zroot_set_visual(root, stack);
 	c = Zpanel_add(stack, Zradio_button_create("1", NULL));
 	other = Zpanel_add(stack, Zradio_button_create("2", NULL));
-	Ztoggle_button_set_is_checked(c, Z_TRUE);
+	Ztoggle_button_set_is_checked(c, true);
 	Zelement_on(c, Z_EVENT_UNCHECKED, navigate, NULL);
 	Zroot_update_layout(root);
 	g_nav_count = 0;
@@ -643,7 +643,7 @@ static void test_toggle_switch_input(void) {
 	Zroot_inject_pointer(root, Z_POINTER_UP, 405, 18);
 	CHECK(!Ztoggle_switch_get_is_on(sw) && g_changes == 6);
 	/* disabled: nothing */
-	Zelement_set_enabled(sw, Z_FALSE);
+	Zelement_set_enabled(sw, false);
 	tap(root, sw_c);
 	CHECK(!Ztoggle_switch_get_is_on(sw) && g_changes == 6);
 	Zroot_destroy(root);
@@ -677,7 +677,7 @@ static void test_slider_steps_and_ticks(void) {
 	Zrange_base_set_value(s, 3.3);
 	CHECK(Zrange_base_get_value(s) == 3.3);
 	/* a disabled slider takes no touch */
-	Zelement_set_enabled(s, Z_FALSE);
+	Zelement_set_enabled(s, false);
 	Zroot_inject_pointer(root, Z_POINTER_DOWN, 400, r.y + 50);
 	CHECK(Zrange_base_get_value(s) == 3.3);
 	Zroot_destroy(root);
@@ -688,13 +688,13 @@ static void test_progress_ring_and_bar_run_on_tick(void) {
 	setup(&root, &stack);
 	ring = Zpanel_add(stack, Zprogress_ring_create());
 	pb = Zpanel_add(stack, Zprogress_bar_create());
-	Zprogress_bar_set_is_indeterminate(pb, Z_TRUE);
+	Zprogress_bar_set_is_indeterminate(pb, true);
 	Zroot_update_layout(root);
 	/* neither takes the pointer or the focus */
 	tap(root, center(ring));
 	CHECK(Zroot_get_focus(root) != ring);
 	Zroot_tick(root, 16);
-	Zprogress_ring_set_is_active(ring, Z_TRUE);
+	Zprogress_ring_set_is_active(ring, true);
 	Zroot_tick(root, 1000);
 	Zroot_tick(root, 5000);
 	CHECK(Zprogress_ring_get_is_active(ring));

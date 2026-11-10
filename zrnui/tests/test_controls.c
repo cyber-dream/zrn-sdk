@@ -110,13 +110,13 @@ static void test_toggle_states_and_events(void) {
 	Zelement_on(cb, Z_EVENT_UNCHECKED, on_event, NULL);
 	Zelement_on(cb, Z_EVENT_INDETERMINATE, on_event, NULL);
 	CHECK(!Ztoggle_button_get_is_checked(cb));
-	Ztoggle_button_set_is_checked(cb, Z_TRUE);
+	Ztoggle_button_set_is_checked(cb, true);
 	CHECK(Ztoggle_button_get_is_checked(cb) && g_count == 1);
-	Ztoggle_button_set_is_checked(cb, Z_TRUE);
+	Ztoggle_button_set_is_checked(cb, true);
 	CHECK(g_count == 1); /* no change, no event */
 	Ztoggle_button_set_state(cb, Z_INDETERMINATE);
 	CHECK(Ztoggle_button_get_state(cb) == Z_INDETERMINATE && g_count == 2);
-	Ztoggle_button_set_is_checked(cb, Z_FALSE);
+	Ztoggle_button_set_is_checked(cb, false);
 	CHECK(g_count == 3);
 	Zelement_destroy(cb);
 }
@@ -130,15 +130,15 @@ static void test_radio_groups(void) {
 	Zpanel_add(top, p);
 	Zpanel_add(top, q);
 	Zroot_set_visual(root, top);
-	Ztoggle_button_set_is_checked(a, Z_TRUE);
-	Ztoggle_button_set_is_checked(c, Z_TRUE);
+	Ztoggle_button_set_is_checked(a, true);
+	Ztoggle_button_set_is_checked(c, true);
 	/* with no GroupName the parent is the group */
 	CHECK(Ztoggle_button_get_is_checked(a) && Ztoggle_button_get_is_checked(c));
-	Ztoggle_button_set_is_checked(b, Z_TRUE);
+	Ztoggle_button_set_is_checked(b, true);
 	CHECK(!Ztoggle_button_get_is_checked(a) && Ztoggle_button_get_is_checked(b) && Ztoggle_button_get_is_checked(c));
 	/* a named group reaches across parents */
-	Ztoggle_button_set_is_checked(g1, Z_TRUE);
-	Ztoggle_button_set_is_checked(g2, Z_TRUE);
+	Ztoggle_button_set_is_checked(g1, true);
+	Ztoggle_button_set_is_checked(g2, true);
 	CHECK(!Ztoggle_button_get_is_checked(g1) && Ztoggle_button_get_is_checked(g2));
 	/* and does not touch the unnamed ones */
 	CHECK(Ztoggle_button_get_is_checked(b));
@@ -205,12 +205,12 @@ static void test_multiple_selection(void) {
 	a = Zitems_control_add_text(lb, "a");
 	Zitems_control_add_text(lb, "b");
 	c = Zitems_control_add_text(lb, "c");
-	Zselector_item_set_is_selected(a, Z_TRUE);
-	Zselector_item_set_is_selected(c, Z_TRUE);
+	Zselector_item_set_is_selected(a, true);
+	Zselector_item_set_is_selected(c, true);
 	CHECK(Zselector_item_get_is_selected(a) && !Zselector_item_get_is_selected(Zitems_control_get_container(lb, 1)) && Zselector_item_get_is_selected(c));
 	CHECK(Zlist_box_get_selected_indices(lb, indices, 4) == 2 && indices[0] == 0 && indices[1] == 2);
 	CHECK(Zselector_get_selected_index(lb) == 0);
-	Zselector_item_set_is_selected(a, Z_FALSE);
+	Zselector_item_set_is_selected(a, false);
 	CHECK(!Zselector_item_get_is_selected(a) && Zselector_item_get_is_selected(c));
 	CHECK(Zselector_get_selected_index(lb) == 2);
 	Zlist_box_select_all(lb);
@@ -273,7 +273,7 @@ static void test_new_classes(void) {
 	CHECK(Zelement_is_a(ring, Z_CLASS_CONTROL) && !Zelement_is_a(ring, Z_CLASS_RANGE_BASE));
 	CHECK_STR(Zelement_get_class_name(sw), "ToggleSwitch");
 	CHECK_STR(Zelement_get_class_name(ring), "ProgressRing");
-	Ztoggle_switch_set_is_on(ring, Z_TRUE); /* not a ToggleSwitch */
+	Ztoggle_switch_set_is_on(ring, true); /* not a ToggleSwitch */
 	CHECK(Zget_error() == Z_ERROR_WRONG_CLASS);
 	Zelement_destroy(sw);
 	Zelement_destroy(ring);
@@ -288,11 +288,11 @@ static void test_toggle_switch_api(void) {
 	CHECK_STR(Ztoggle_switch_get_on_content(sw), "On");
 	CHECK_STR(Ztoggle_switch_get_off_content(sw), "Off");
 	Ztoggle_switch_on_toggled(sw, on_event, NULL);
-	Ztoggle_switch_set_is_on(sw, Z_TRUE);
+	Ztoggle_switch_set_is_on(sw, true);
 	CHECK(Ztoggle_switch_get_is_on(sw) && g_count == 1);
-	Ztoggle_switch_set_is_on(sw, Z_TRUE);
+	Ztoggle_switch_set_is_on(sw, true);
 	CHECK(g_count == 1); /* no change, no event */
-	Ztoggle_switch_set_is_on(sw, Z_FALSE);
+	Ztoggle_switch_set_is_on(sw, false);
 	CHECK(!Ztoggle_switch_get_is_on(sw) && g_count == 2);
 	Ztoggle_switch_set_header(sw, "Wi-Fi");
 	Ztoggle_switch_set_on_content(sw, "Connected");
@@ -308,9 +308,9 @@ static void test_toggle_switch_api(void) {
 static void test_progress_ring_api(void) {
 	Zid ring = Zprogress_ring_create();
 	CHECK(!Zprogress_ring_get_is_active(ring));
-	Zprogress_ring_set_is_active(ring, Z_TRUE);
+	Zprogress_ring_set_is_active(ring, true);
 	CHECK(Zprogress_ring_get_is_active(ring));
-	Zprogress_ring_set_is_active(ring, Z_FALSE);
+	Zprogress_ring_set_is_active(ring, false);
 	CHECK(!Zprogress_ring_get_is_active(ring));
 	Zelement_destroy(ring);
 }
@@ -328,10 +328,10 @@ static void test_81_properties(void) {
 	CHECK_STR(Zslider_get_header(sl), "Volume");
 	/* progress bar */
 	CHECK(!Zprogress_bar_get_is_indeterminate(pb));
-	Zprogress_bar_set_is_indeterminate(pb, Z_TRUE);
+	Zprogress_bar_set_is_indeterminate(pb, true);
 	CHECK(Zprogress_bar_get_is_indeterminate(pb));
-	Zprogress_bar_set_show_error(pb, Z_TRUE);
-	Zprogress_bar_set_show_paused(pb, Z_TRUE);
+	Zprogress_bar_set_show_error(pb, true);
+	Zprogress_bar_set_show_paused(pb, true);
 	/* text box: the style of the 8.1 template */
 	CHECK_NEAR(Zelement_get_margin(tb).top, 9.5);
 	CHECK_NEAR(Zelement_get_margin(tb).bottom, 9.5);
@@ -343,7 +343,7 @@ static void test_81_properties(void) {
 	CHECK_STR(Ztext_box_get_header(tb), "Query");
 	Ztext_box_set_placeholder_text(tb, NULL);
 	CHECK_STR(Ztext_box_get_placeholder_text(tb), "");
-	Ztext_box_set_is_read_only(tb, Z_TRUE);
+	Ztext_box_set_is_read_only(tb, true);
 	Ztext_box_set_max_length(tb, 7);
 	CHECK(Ztext_box_get_is_read_only(tb) && Ztext_box_get_max_length(tb) == 7);
 	/* password box */

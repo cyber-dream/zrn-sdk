@@ -240,7 +240,7 @@ static void test_menu_flyout(void) {
 	CHECK(Zelement_get_class(menu) == Z_CLASS_MENU_FLYOUT && Zelement_is_a(menu, Z_CLASS_FLYOUT_BASE));
 	a = Zmenu_flyout_item_create("first");
 	b = Zmenu_flyout_item_create("second");
-	t = Ztoggle_menu_flyout_item_create("toggle", Z_FALSE);
+	t = Ztoggle_menu_flyout_item_create("toggle", false);
 	sep = Zmenu_flyout_separator_create();
 	off = Zmenu_flyout_item_create("disabled");
 	CHECK(Zmenu_flyout_add_item(menu, a) == 0);
@@ -248,7 +248,7 @@ static void test_menu_flyout(void) {
 	CHECK(Zmenu_flyout_add_item(menu, sep) == 2);
 	CHECK(Zmenu_flyout_add_item(menu, t) == 3);
 	CHECK(Zmenu_flyout_add_item(menu, off) == 4);
-	Zelement_set_enabled(off, Z_FALSE);
+	Zelement_set_enabled(off, false);
 	CHECK(Zmenu_flyout_get_item_count(menu) == 5 && Zmenu_flyout_get_item(menu, 1) == b);
 	CHECK(Zelement_is_a(t, Z_CLASS_MENU_FLYOUT_ITEM) && Zelement_is_a(a, Z_CLASS_MENU_FLYOUT_ITEM_BASE));
 	CHECK_STR(Zmenu_flyout_item_get_text(a), "first");
@@ -312,7 +312,7 @@ static void test_menu_flyout(void) {
 		CHECK_STR(g_log, "");
 	}
 	Zflyout_base_hide(menu);
-	Ztoggle_menu_flyout_item_set_is_checked(t, Z_FALSE);
+	Ztoggle_menu_flyout_item_set_is_checked(t, false);
 	Zmenu_flyout_item_set_text(a, "renamed");
 	CHECK_STR(Zmenu_flyout_item_get_text(a), "renamed");
 	Zmenu_flyout_clear_items(menu);
@@ -460,7 +460,7 @@ static void test_dialog_results(void) {
 	CHECK(Zroot_inject_key(root, Z_KEY_ESCAPE, 0, 1));
 	CHECK_STR(g_log, "closed result ");
 	/* a disabled button does not answer */
-	Zcontent_dialog_set_is_primary_button_enabled(d, Z_FALSE);
+	Zcontent_dialog_set_is_primary_button_enabled(d, false);
 	Zcontent_dialog_show(d, root, on_result, NULL);
 	Zroot_update_layout(root);
 	g_log[0] = 0;
@@ -471,7 +471,7 @@ static void test_dialog_results(void) {
 	Zcontent_dialog_hide(d);
 	CHECK(!Zcontent_dialog_get_is_primary_button_enabled(d));
 	/* the callback may be NULL */
-	Zcontent_dialog_set_is_primary_button_enabled(d, Z_TRUE);
+	Zcontent_dialog_set_is_primary_button_enabled(d, true);
 	CHECK(Zcontent_dialog_show(d, root, NULL, NULL));
 	Zcontent_dialog_hide(d);
 	Zelement_destroy(d);

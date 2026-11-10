@@ -147,7 +147,7 @@ static void test_list_view_none_and_item_click(void) {
 	CHECK(!Zlist_view_get_is_item_click_enabled(lv));
 	tap(root, center(Zitems_control_get_container(lv, 1)));
 	CHECK(g_clicks == 0 && Zselector_get_selected_index(lv) == 1 && g_changes == 1);
-	Zlist_view_set_is_item_click_enabled(lv, Z_TRUE);
+	Zlist_view_set_is_item_click_enabled(lv, true);
 	tap(root, center(Zitems_control_get_container(lv, 3)));
 	CHECK(g_clicks == 1 && g_clicked == 3 && Zselector_get_selected_index(lv) == 3);
 	/* None: the selection that was is gone, and a tap is only an ItemClick */
@@ -158,7 +158,7 @@ static void test_list_view_none_and_item_click(void) {
 	Zselector_set_selected_index(lv, 2);
 	CHECK(Zselector_get_selected_index(lv) == -1);
 	/* a disabled item does not click */
-	Zelement_set_enabled(Zitems_control_get_container(lv, 1), Z_FALSE);
+	Zelement_set_enabled(Zitems_control_get_container(lv, 1), false);
 	tap(root, center(Zitems_control_get_container(lv, 1)));
 	CHECK(g_clicks == 2);
 	/* a press that slides off the item is not a tap */
@@ -237,7 +237,7 @@ static void test_list_view_look(void) {
 	tap(root, center(Zitems_control_get_container(lv, 1)));
 	CHECK(pixel_is(root, 11, y + 28, 255, 255, 255)); /* the check mark */
 	/* a disabled item is drawn at 40%: its box is dimmer */
-	Zelement_set_enabled(Zitems_control_get_container(lv, 2), Z_FALSE);
+	Zelement_set_enabled(Zitems_control_get_container(lv, 2), false);
 	r = Zelement_get_bounds(Zitems_control_get_container(lv, 2));
 	{
 		int pr, pg, pb;
@@ -318,7 +318,7 @@ static void test_list_view_header_footer_and_scroll(void) {
 static void test_list_view_keyboard(void) {
 	Zid lv = Zlist_view_create(), root;
 	fill(lv, 5);
-	Zlist_view_set_is_item_click_enabled(lv, Z_TRUE);
+	Zlist_view_set_is_item_click_enabled(lv, true);
 	root = make_root(lv, Z_ANIMATIONS_OFF);
 	g_changes = g_clicks = 0;
 	Zelement_on(lv, Z_EVENT_SELECTION_CHANGED, on_change, NULL);
@@ -554,7 +554,7 @@ static void test_list_box_modes_and_look(void) {
 	key(root, Z_KEY_DOWN, 0);
 	CHECK(Zselector_get_selected_index(lb) == 2);
 	/* disabled: no accent, a tap does nothing */
-	Zelement_set_enabled(lb, Z_FALSE);
+	Zelement_set_enabled(lb, false);
 	tap(root, center(Zitems_control_get_container(lb, 0)));
 	CHECK(Zselector_get_selected_index(lb) == 2);
 	Zroot_destroy(root);
@@ -621,7 +621,7 @@ static void test_list_box_light_is_readable(void) {
 			Zroot_inject_pointer(root, Z_POINTER_UP, p.x, p.y);
 		}
 		/* disabled: no box, the text is PhoneBaseMediumMid on the page */
-		Zelement_set_enabled(lb, Z_FALSE);
+		Zelement_set_enabled(lb, false);
 		row_rect(Zitems_control_get_container(lb, 0), &x0, &y0, &x1, &y1);
 		CHECK(contrast_in(root, x0, y0, x1, y1) > 60);
 		Zroot_destroy(root);
@@ -689,12 +689,12 @@ static void test_combo_box_8_1(void) {
 	/* MaxDropDownHeight limits the list, which then scrolls */
 	Zcombo_box_set_max_drop_down_height(cb, 80);
 	CHECK(Zcombo_box_get_max_drop_down_height(cb) == 80);
-	Zcombo_box_set_is_drop_down_open(cb, Z_TRUE);
+	Zcombo_box_set_is_drop_down_open(cb, true);
 	Zroot_update_layout(root);
 	CHECK(Zscroll_viewer_get_viewport_height(Zitems_control_get_scroll_viewer(cb)) <= 80.5);
-	Zcombo_box_set_is_drop_down_open(cb, Z_FALSE);
+	Zcombo_box_set_is_drop_down_open(cb, false);
 	/* disabled: a tap does not open it */
-	Zelement_set_enabled(cb, Z_FALSE);
+	Zelement_set_enabled(cb, false);
 	tap(root, center(cb));
 	CHECK(!Zcombo_box_get_is_drop_down_open(cb));
 	Zroot_destroy(root);
@@ -720,10 +720,10 @@ static void test_combo_box_placement(void) {
 		CHECK(Zelement_get_bounds(Zitems_control_get_container(cb, 0)).width > 400);
 	}
 	/* a list that does not fit above the top of the screen is moved down, whole */
-	Zcombo_box_set_is_drop_down_open(cb, Z_FALSE);
+	Zcombo_box_set_is_drop_down_open(cb, false);
 	Zelement_set_height(spacer, 0);
 	Zroot_update_layout(root);
-	Zcombo_box_set_is_drop_down_open(cb, Z_TRUE);
+	Zcombo_box_set_is_drop_down_open(cb, true);
 	Zroot_update_layout(root);
 	CHECK(Zelement_to_root(Zitems_control_get_container(cb, 0), (ZPoint){ 0, 0 }).y >= 0);
 	Zroot_destroy(root);
@@ -754,8 +754,8 @@ static void test_combo_box_events(void) {
 	CHECK(g_opened == 2);
 	tap(root, (ZPoint){ 450, 780 });
 	CHECK(g_closed == 2 && g_changes == 1);
-	Zcombo_box_set_is_drop_down_open(cb, Z_TRUE);
-	Zcombo_box_set_is_drop_down_open(cb, Z_TRUE);
+	Zcombo_box_set_is_drop_down_open(cb, true);
+	Zcombo_box_set_is_drop_down_open(cb, true);
 	CHECK(g_opened == 3);
 	Zroot_destroy(root);
 }
@@ -863,7 +863,7 @@ static void test_flip_view_slide(void) {
 	CHECK(Zelement_get_bounds(Zitems_control_get_container(fv, 1)).x == 0);
 	/* UseTouchAnimationsForAllNavigation off: the program jumps */
 	CHECK(Zflip_view_get_use_touch_animations_for_all_navigation(fv));
-	Zflip_view_set_use_touch_animations_for_all_navigation(fv, Z_FALSE);
+	Zflip_view_set_use_touch_animations_for_all_navigation(fv, false);
 	Zselector_set_selected_index(fv, 2);
 	Zroot_update_layout(root);
 	CHECK(Zelement_get_bounds(Zitems_control_get_container(fv, 2)).x == 0);
@@ -1021,14 +1021,14 @@ static void test_auto_suggest_box_programmatic(void) {
 	/* suggestions given to a box that has no keyboard do not open it */
 	Zauto_suggest_box_set_items(box, FRUIT, 5);
 	CHECK(!Zauto_suggest_box_get_is_suggestion_list_open(box) && Zitems_control_get_count(box) == 5);
-	Zauto_suggest_box_set_is_suggestion_list_open(box, Z_TRUE);
+	Zauto_suggest_box_set_is_suggestion_list_open(box, true);
 	CHECK(Zauto_suggest_box_get_is_suggestion_list_open(box));
-	Zauto_suggest_box_set_is_suggestion_list_open(box, Z_FALSE);
+	Zauto_suggest_box_set_is_suggestion_list_open(box, false);
 	/* UpdateTextOnSelect off: the text stays, the events come */
-	Zauto_suggest_box_set_update_text_on_select(box, Z_FALSE);
+	Zauto_suggest_box_set_update_text_on_select(box, false);
 	CHECK(Zelement_focus(box));
 	CHECK(Zelement_get_class(Zroot_get_focus(root)) == Z_CLASS_TEXT_BOX);
-	Zauto_suggest_box_set_is_suggestion_list_open(box, Z_TRUE);
+	Zauto_suggest_box_set_is_suggestion_list_open(box, true);
 	key(root, Z_KEY_DOWN, 0);
 	key(root, Z_KEY_DOWN, 0);
 	key(root, Z_KEY_ENTER, 0);
@@ -1036,7 +1036,7 @@ static void test_auto_suggest_box_programmatic(void) {
 	CHECK_STR(Zauto_suggest_box_get_text(box), "ban");
 	/* MaxSuggestionListHeight: the list is as tall as that and scrolls */
 	Zauto_suggest_box_set_max_suggestion_list_height(box, 60);
-	Zauto_suggest_box_set_is_suggestion_list_open(box, Z_TRUE);
+	Zauto_suggest_box_set_is_suggestion_list_open(box, true);
 	Zroot_update_layout(root);
 	CHECK(Zscroll_viewer_get_viewport_height(Zitems_control_get_scroll_viewer(box)) <= 60);
 	CHECK(Zscroll_viewer_get_extent_height(Zitems_control_get_scroll_viewer(box)) > 60);
@@ -1056,7 +1056,7 @@ static void test_auto_suggest_box_programmatic(void) {
 		CHECK(Zelement_get_class(Zroot_get_focus(root)) == Z_CLASS_TEXT_BOX);
 	}
 	/* Tab leaves the text and closes the list */
-	Zroot_move_focus(root, Z_TRUE);
+	Zroot_move_focus(root, true);
 	CHECK(!Zauto_suggest_box_get_is_suggestion_list_open(box));
 	Zroot_destroy(root);
 }
@@ -1089,16 +1089,16 @@ static void test_semantic_zoom(void) {
 	/* the zoomed out view takes taps: a handler of its ItemClick goes back */
 	tap(root, center(Zitems_control_get_container(out, 1)));
 	CHECK(Zselector_get_selected_index(out) == 1);
-	Zsemantic_zoom_set_is_zoomed_in_view_active(sz, Z_TRUE);
+	Zsemantic_zoom_set_is_zoomed_in_view_active(sz, true);
 	CHECK(Zsemantic_zoom_get_is_zoomed_in_view_active(sz) && g_zoom_count == 4 && g_zoom_log[2] == 10 && g_zoom_log[3] == 20);
 	/* the same view again: no change, no events */
-	Zsemantic_zoom_set_is_zoomed_in_view_active(sz, Z_TRUE);
+	Zsemantic_zoom_set_is_zoomed_in_view_active(sz, true);
 	CHECK(g_zoom_count == 4);
 	/* CanChangeViews off keeps the view */
-	Zsemantic_zoom_set_can_change_views(sz, Z_FALSE);
+	Zsemantic_zoom_set_can_change_views(sz, false);
 	Zsemantic_zoom_toggle_active_view(sz);
 	CHECK(Zsemantic_zoom_get_is_zoomed_in_view_active(sz) && g_zoom_count == 4);
-	Zsemantic_zoom_set_is_zoom_out_button_enabled(sz, Z_FALSE);
+	Zsemantic_zoom_set_is_zoom_out_button_enabled(sz, false);
 	Zroot_destroy(root);
 }
 
@@ -1128,7 +1128,7 @@ static void test_handlers_that_destroy(void) {
 	/* ItemClick of a ListView */
 	c = Zlist_view_create();
 	fill(c, 3);
-	Zlist_view_set_is_item_click_enabled(c, Z_TRUE);
+	Zlist_view_set_is_item_click_enabled(c, true);
 	Zlist_view_on_item_click(c, destroy_on_click, NULL);
 	Zroot_set_visual(root, c);
 	Zroot_update_layout(root);
@@ -1217,7 +1217,7 @@ static void test_picture(void) {
 	Zlist_view_set_selection_mode(lv, Z_LIST_VIEW_SELECTION_MULTIPLE);
 	fill(lv, 3);
 	Zelement_set_height(lv, 150);
-	Zselector_item_set_is_selected(Zitems_control_get_container(lv, 1), Z_TRUE);
+	Zselector_item_set_is_selected(Zitems_control_get_container(lv, 1), true);
 	gv = Zpanel_add(stack, Zgrid_view_create());
 	Zlist_view_set_selection_mode(gv, Z_LIST_VIEW_SELECTION_MULTIPLE);
 	fill(gv, 5);
@@ -1225,7 +1225,7 @@ static void test_picture(void) {
 	Zitems_wrap_grid_set_item_width(grid, 80);
 	Zitems_wrap_grid_set_item_height(grid, 60);
 	Zelement_set_height(gv, 140);
-	Zselector_item_set_is_selected(Zitems_control_get_container(gv, 2), Z_TRUE);
+	Zselector_item_set_is_selected(Zitems_control_get_container(gv, 2), true);
 	Zpanel_add(stack, Zlist_box_create());
 	fill(Zelement_get_child(stack, 2), 2);
 	Zselector_set_selected_index(Zelement_get_child(stack, 2), 0);

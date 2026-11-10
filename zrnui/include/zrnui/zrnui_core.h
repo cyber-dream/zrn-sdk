@@ -20,7 +20,7 @@
  *     zrnui_controls.h)
  *   - types are ZName, callbacks are ZNameCallback, constants and enum
  *     values are Z_NAME
- *   - booleans are ints (Z_TRUE / Z_FALSE), colors are ZColor
+ *   - booleans are ints (true / false), colors are ZColor
  *   - strings are UTF-8 and always copied by the library
  *   - lengths are in logical pixels of a 480 x 800 phone screen
  *
@@ -61,8 +61,6 @@
 typedef uint32_t Zid;
 
 #define Z_INVALID_ID ((Zid)0)
-#define Z_TRUE 1
-#define Z_FALSE 0
 
 /** "Not set" for a length (Width, Height, Canvas.Left...): Double.NaN of Silverlight. */
 #define Z_AUTO (-1.0f)

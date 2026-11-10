@@ -25,7 +25,7 @@ static Zid make_list(const char* const* names, int n) {
 	}
 	/* a row of a list of settings opens something: nothing is selected, a tap is an ItemClick */
 	Zlist_view_set_selection_mode(list, Z_LIST_VIEW_SELECTION_NONE);
-	Zlist_view_set_is_item_click_enabled(list, Z_TRUE);
+	Zlist_view_set_is_item_click_enabled(list, true);
 	return list;
 }
 
@@ -347,7 +347,7 @@ static void test_locked(void) {
 	Zid root;
 	ZPoint p;
 	setup(&root, Z_ANIMATIONS_OFF);
-	Zpivot_set_is_locked(g_pivot, Z_TRUE);
+	Zpivot_set_is_locked(g_pivot, true);
 	CHECK(Zpivot_get_is_locked(g_pivot));
 	Zroot_update_layout(root);
 	/* the headers of the other items are not shown */
@@ -361,7 +361,7 @@ static void test_locked(void) {
 	/* the program may still go on */
 	Zpivot_set_selected_index(g_pivot, 1);
 	CHECK(Zpivot_get_selected_index(g_pivot) == 1 && g_changes == 1);
-	Zpivot_set_is_locked(g_pivot, Z_FALSE);
+	Zpivot_set_is_locked(g_pivot, false);
 	Zroot_update_layout(root);
 	CHECK(Zpivot_get_header_rect(g_pivot, 0).width > 0);
 	Zroot_destroy(root);

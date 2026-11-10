@@ -143,7 +143,7 @@ static void test_selector_keys_and_loop(void) {
 	key(root, Z_KEY_DOWN);
 	CHECK(Zlooping_selector_get_selected_index(sel) == 0);
 	/* without ShouldLoop it stops at the ends */
-	Zlooping_selector_set_should_loop(sel, Z_FALSE);
+	Zlooping_selector_set_should_loop(sel, false);
 	CHECK(!Zlooping_selector_get_should_loop(sel));
 	key(root, Z_KEY_UP);
 	CHECK(Zlooping_selector_get_selected_index(sel) == 0);
@@ -185,7 +185,7 @@ static void test_selector_drag_and_tap(void) {
 	/* the accent box is in the middle again after every move */
 	CHECK(pixel_is(root, (int)r.x + 8, (int)(r.y + r.height * 0.5f), 0x00, 0x50, 0xEF));
 	/* without ShouldLoop the column stays between the first and the last item */
-	Zlooping_selector_set_should_loop(sel, Z_FALSE);
+	Zlooping_selector_set_should_loop(sel, false);
 	drag_selector(root, sel, -6 * ch);
 	CHECK(Zlooping_selector_get_selected_index(sel) == 7);
 	drag_selector(root, sel, 20 * ch);
@@ -473,7 +473,7 @@ static void test_date_flyout_days_of_the_month(void) {
 static void test_date_flyout_columns(void) {
 	Zid root, day;
 	date_setup(&root, D(2026, 11, 7), Z_ANIMATIONS_OFF);
-	Zdate_picker_set_day_visible(g_dp, Z_FALSE);
+	Zdate_picker_set_day_visible(g_dp, false);
 	CHECK(!Zdate_picker_get_day_visible(g_dp));
 	open_flyout(root, g_button);
 	day = Zpicker_flyout_base_get_selector(g_flyout, 1);
@@ -482,8 +482,8 @@ static void test_date_flyout_columns(void) {
 	/* the day is kept as it was */
 	tap(root, center(Zpicker_flyout_base_get_done_button(g_flyout)));
 	CHECK(same_date(Zdate_picker_get_date(g_dp), D(2026, 11, 7)));
-	Zdate_picker_set_day_visible(g_dp, Z_TRUE);
-	Zdate_picker_set_year_visible(g_dp, Z_FALSE);
+	Zdate_picker_set_day_visible(g_dp, true);
+	Zdate_picker_set_year_visible(g_dp, false);
 	CHECK(!Zdate_picker_get_year_visible(g_dp) && Zdate_picker_get_month_visible(g_dp));
 	Zroot_destroy(root);
 }

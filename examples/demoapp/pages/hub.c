@@ -19,7 +19,7 @@ Zid page_hub(const Zid frame, void *parameter) {
     /* Section 1 */
     {
         const Zid section = Zhub_section_create("SECTION 1");
-        Zhub_section_set_is_header_interactive(section, Z_TRUE);
+        Zhub_section_set_is_header_interactive(section, true);
 
         const Zid viewer = Zscroll_viewer_create();
         const Zid stack = Zstack_panel_create(Z_VERTICAL);
@@ -40,7 +40,7 @@ Zid page_hub(const Zid frame, void *parameter) {
     /* Section 2 */
     {
         const Zid section = Zhub_section_create("SECTION 2");
-        Zhub_section_set_is_header_interactive(section, Z_TRUE);
+        Zhub_section_set_is_header_interactive(section, true);
 
         const Zid viewer = Zscroll_viewer_create();
         const Zid stack = Zstack_panel_create(Z_VERTICAL);

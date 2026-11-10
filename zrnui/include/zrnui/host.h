@@ -78,7 +78,7 @@ extern "C" {
 	 * gives (480 x 800 until the first configure), so an application does not manage it.
 	 * Dark theme, Cobalt accent as the system default of a Windows Phone 8 test device.
 	 */
-	ZRNUI_API Zid Zroot_create(int width, int height);
+	ZRNUI_API Zid Zroot_create();
 	ZRNUI_API void Zroot_destroy(Zid root);
 	ZRNUI_API int Zroot_is_valid(Zid root);
 
@@ -105,13 +105,13 @@ extern "C" {
 	 */
 	ZRNUI_API void Zroot_set_animations(Zid root, ZAnimations mode);
 	ZRNUI_API ZAnimations Zroot_get_animations(Zid root);
-	/** @return Z_TRUE when animations run now: the mode, and for AUTO the renderer, decide. */
+	/** @return true when animations run now: the mode, and for AUTO the renderer, decide. */
 	ZRNUI_API int Zroot_animations_enabled(Zid root);
 	/** @return "software" or "gles2": the renderer of the last frame. */
 	ZRNUI_API const char* Zroot_get_renderer_name(Zid root);
 	/**
 	 * @brief The Back button: when the visual of the root is a Frame that can go back, goes back.
-	 * Z_FALSE on the first page (or with no Frame): on Windows Phone Back there leaves the app, so the window quits.
+	 * false on the first page (or with no Frame): on Windows Phone Back there leaves the app, so the window quits.
 	 * Escape does this in Zroot_inject_key.
 	 */
 	ZRNUI_API int Zroot_back(Zid root);
@@ -162,7 +162,7 @@ extern "C" {
 	 * @brief Overrides a key for the root, in both themes: the override wins over the theme until Zroot_clear_resource.
 	 * A key of the theme keeps its type (an override of another type is refused); a key from Z_RES_USER_BASE up is the
 	 * application's own and takes the type of the first set (or a set after a clear). Elements bound to the key follow.
-	 * @return Z_FALSE for an invalid root, a key that is no key or the wrong type.
+	 * @return false for an invalid root, a key that is no key or the wrong type.
 	 */
 	ZRNUI_API int Zroot_set_resource_color(Zid root, ZThemeResource key, ZColor value);
 	ZRNUI_API int Zroot_set_resource_double(Zid root, ZThemeResource key, float value);
@@ -176,8 +176,8 @@ extern "C" {
 	ZRNUI_API void Zroot_update_layout(Zid root);
 
 	/**
-	 * @brief Draws the tree. @return Z_TRUE when something changed since the
-	 * last frame (and the first time): `frame` holds a new picture. Z_FALSE
+	 * @brief Draws the tree. @return true when something changed since the
+	 * last frame (and the first time): `frame` holds a new picture. false
 	 * when the last picture is still right; `frame` is filled all the same.
 	 * `frame` may be NULL.
 	 */
@@ -186,7 +186,7 @@ extern "C" {
 	/** @brief Advances time: RepeatButton repeats, caret blink, indeterminate progress, tooltip delay. */
 	ZRNUI_API void Zroot_tick(Zid root, float delta_ms);
 
-	/** @brief A pointer or a finger at a point of the root, in logical pixels. @return Z_TRUE when an element handled it. */
+	/** @brief A pointer or a finger at a point of the root, in logical pixels. @return true when an element handled it. */
 	ZRNUI_API int Zroot_inject_pointer(Zid root, ZPointerEvent event, float x, float y);
 	/** @brief The wheel at the last pointer position; positive scrolls up. */
 	ZRNUI_API int Zroot_inject_wheel(Zid root, float delta);

@@ -84,7 +84,7 @@ static void test_icon_pixels(void) {
 	f = Zpanel_add(wrap, Zapp_bar_button_create("font", Zfont_icon_create("A")));
 	p = Zpanel_add(wrap, Zapp_bar_button_create("path", Zpath_icon_create("M 0,0 L 10,0 L 10,10 L 0,10 Z")));
 	c = Zpanel_add(wrap, Zapp_bar_button_create("none", Zsymbol_icon_create(Z_SYMBOL_ACCEPT)));
-	Zelement_set_enabled(c, Z_FALSE);
+	Zelement_set_enabled(c, false);
 	Zroot_update_layout(root);
 	/* the circle of the button: 38.5 px, 12 px under the top, in the middle of 80 px */
 	r = Zelement_get_bounds(a);
@@ -172,14 +172,14 @@ static void test_app_bar_button(void) {
 	CHECK(r.height > 12 + 38.5f + 4 + 10.5f + 8 && r.height < 12 + 38.5f + 4 + 10.5f + 20);
 	/* the toggle button is a pixel higher at the top of its circle: 11 */
 	CHECK(Zelement_get_bounds(tg).height < r.height + 0.01f);
-	Zapp_bar_button_set_is_compact(b, Z_TRUE);
+	Zapp_bar_button_set_is_compact(b, true);
 	Zroot_update_layout(root);
 	r = Zelement_get_bounds(b);
 	CHECK_NEAR(r.width, 48);
 	CHECK_NEAR(r.height, 12 + 38.5 + 4);
 	CHECK(Zapp_bar_button_get_is_compact(b));
 	CHECK_NEAR(Zelement_get_bounds(sep).width, 12);
-	Zapp_bar_separator_set_is_compact(sep, Z_TRUE);
+	Zapp_bar_separator_set_is_compact(sep, true);
 	CHECK(Zapp_bar_separator_get_is_compact(sep));
 	/* a tap: Click, a toggle: IsChecked */
 	Zbutton_on_click(b, on_click, NULL);
@@ -203,7 +203,7 @@ static void test_app_bar_button(void) {
 	{
 		ZPoint c = Zelement_to_root(tg, (ZPoint){ 40, 11 + 19.25f });
 		CHECK(pixel_is(root, (int)c.x + 10, (int)c.y + 10, 255, 255, 255));
-		Ztoggle_button_set_is_checked(tg, Z_FALSE);
+		Ztoggle_button_set_is_checked(tg, false);
 		CHECK(pixel_is(root, (int)c.x + 10, (int)c.y + 10, 0, 0, 0));
 	}
 	Zroot_destroy(root);
@@ -272,7 +272,7 @@ static void test_page_bars_layout(void) {
 	/* the commands of a Minimal bar are out of sight and out of reach */
 	tap(root, (ZPoint){ 100, Zelement_to_root(bar, (ZPoint){ 0, 17 }).y });
 	CHECK(Zapp_bar_get_is_open(bar));
-	Zapp_bar_set_is_open(bar, Z_FALSE);
+	Zapp_bar_set_is_open(bar, false);
 	Zapp_bar_set_closed_display_mode(bar, Z_APP_BAR_CLOSED_COMPACT);
 	Zroot_update_layout(root);
 	/* a TopAppBar lies at the top of the page, the content under it */
@@ -305,7 +305,7 @@ static void test_page_bar_pixels(void) {
 	/* the three dots at the right edge: the middle one is in the foreground, in line with the circles */
 	CHECK(pixel_is(root, 480 - 15, y0 + (int)(1.5f + 12 + 19.25f), 255, 255, 255));
 	show(root, "command-bar-closed");
-	Zapp_bar_set_is_open(bar, Z_TRUE);
+	Zapp_bar_set_is_open(bar, true);
 	Zroot_update_layout(root);
 	show(root, "command-bar-open");
 	Zroot_set_theme(root, Z_THEME_LIGHT);
@@ -341,10 +341,10 @@ static void test_open_close(void) {
 	CHECK_NEAR(Zelement_get_bounds(bar).height, 57.5);
 	CHECK(Zapp_bar_button_get_is_compact(g_prim));
 	/* IsOpen by the program raises the events once per change */
-	Zapp_bar_set_is_open(bar, Z_TRUE);
-	Zapp_bar_set_is_open(bar, Z_TRUE);
+	Zapp_bar_set_is_open(bar, true);
+	Zapp_bar_set_is_open(bar, true);
 	CHECK(g_opened == 2);
-	Zapp_bar_set_is_open(bar, Z_FALSE);
+	Zapp_bar_set_is_open(bar, false);
 	CHECK(g_closed == 2);
 	Zroot_destroy(root);
 }
@@ -352,7 +352,7 @@ static void test_open_close(void) {
 static void test_light_dismiss_and_sticky(void) {
 	Zid frame, page, root = setup(&frame, &page), bar = g_cmd_bar;
 	/* a press outside the open bar closes it and is not given to the content under the press */
-	Zapp_bar_set_is_open(bar, Z_TRUE);
+	Zapp_bar_set_is_open(bar, true);
 	Zroot_update_layout(root);
 	tap(root, center(g_content_button));
 	CHECK(!Zapp_bar_get_is_open(bar) && g_closed == 1);
@@ -360,17 +360,17 @@ static void test_light_dismiss_and_sticky(void) {
 	tap(root, center(g_content_button));
 	CHECK(g_page_clicks == 1);
 	/* a press on the bar itself does not close it */
-	Zapp_bar_set_is_open(bar, Z_TRUE);
+	Zapp_bar_set_is_open(bar, true);
 	Zroot_update_layout(root);
 	tap(root, (ZPoint){ 20, Zelement_to_root(bar, (ZPoint){ 0, 8 }).y });
 	CHECK(Zapp_bar_get_is_open(bar));
 	/* a sticky bar stays open through a press outside it, and through Back */
-	Zapp_bar_set_is_sticky(bar, Z_TRUE);
+	Zapp_bar_set_is_sticky(bar, true);
 	CHECK(Zapp_bar_get_is_sticky(bar));
 	tap(root, center(g_content_button));
 	CHECK(Zapp_bar_get_is_open(bar));
 	CHECK(g_page_clicks == 2);
-	Zapp_bar_set_is_sticky(bar, Z_FALSE);
+	Zapp_bar_set_is_sticky(bar, false);
 	/* Back closes the bar before it navigates */
 	Zframe_navigate(frame, other_page, NULL);
 	Zroot_update_layout(root);
@@ -383,7 +383,7 @@ static void test_light_dismiss_and_sticky(void) {
 	Zframe_navigate(frame, page_with_bar, NULL);
 	page = Zframe_get_page(frame);
 	bar = Zpage_get_bottom_app_bar(page);
-	Zapp_bar_set_is_open(bar, Z_TRUE);
+	Zapp_bar_set_is_open(bar, true);
 	Zroot_update_layout(root);
 	CHECK(Zroot_back(root));
 	CHECK(!Zapp_bar_get_is_open(bar));
@@ -395,14 +395,14 @@ static void test_light_dismiss_and_sticky(void) {
 
 static void test_secondary_command(void) {
 	Zid frame, page, root = setup(&frame, &page), bar = g_cmd_bar;
-	Zapp_bar_set_is_open(bar, Z_TRUE);
+	Zapp_bar_set_is_open(bar, true);
 	Zroot_update_layout(root);
 	tap(root, center(g_sec));
 	/* the command ran and the menu went */
 	CHECK(g_clicks == 1);
 	CHECK(!Zapp_bar_get_is_open(bar) && g_closed == 1);
 	/* a primary one leaves the bar as it is */
-	Zapp_bar_set_is_open(bar, Z_TRUE);
+	Zapp_bar_set_is_open(bar, true);
 	Zroot_update_layout(root);
 	Zbutton_on_click(g_prim, on_click, NULL);
 	tap(root, center(g_prim));
@@ -431,11 +431,11 @@ static void test_app_bar_content(void) {
 	/* a plain AppBar is as tall as its content when it is open and has the page background (AppBarBackgroundThemeBrush) */
 	CHECK_NEAR(Zelement_get_bounds(bar).height, 57.5);
 	CHECK(pixel_is(root, 300, 20, 0, 0, 0));
-	Zapp_bar_set_is_open(bar, Z_TRUE);
+	Zapp_bar_set_is_open(bar, true);
 	Zroot_update_layout(root);
 	CHECK_NEAR(Zelement_get_bounds(bar).height, 57.5);
 	Zapp_bar_set_closed_display_mode(bar, Z_APP_BAR_CLOSED_MINIMAL);
-	Zapp_bar_set_is_open(bar, Z_FALSE);
+	Zapp_bar_set_is_open(bar, false);
 	Zroot_update_layout(root);
 	CHECK_NEAR(Zelement_get_bounds(bar).height, 35);
 	Zroot_destroy(root);
@@ -450,7 +450,7 @@ static void test_open_animation(void) {
 	root = setup(&frame, &page);
 	Zroot_set_animations(root, Z_ANIMATIONS_ON);
 	r0 = Zelement_get_bounds(g_cmd_bar);
-	Zapp_bar_set_is_open(g_cmd_bar, Z_TRUE);
+	Zapp_bar_set_is_open(g_cmd_bar, true);
 	/* IsOpen is at once, the bar takes 167 ms to get there */
 	CHECK(Zapp_bar_get_is_open(g_cmd_bar) && g_opened == 1);
 	run(root, 64);
@@ -463,7 +463,7 @@ static void test_open_animation(void) {
 	CHECK(r2.height > r1.height + 20);
 	CHECK_NEAR(r2.y + r2.height, r0.y + r0.height);
 	/* and back */
-	Zapp_bar_set_is_open(g_cmd_bar, Z_FALSE);
+	Zapp_bar_set_is_open(g_cmd_bar, false);
 	run(root, 64);
 	Zroot_update_layout(root);
 	CHECK(Zelement_get_bounds(g_cmd_bar).height < r2.height - 1 && Zelement_get_bounds(g_cmd_bar).height > r0.height);

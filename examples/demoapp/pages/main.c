@@ -88,7 +88,7 @@ Zid main_page(const Zid frame, void* parameter) {
 
         {
             const Zid list = Zlist_view_create();
-            Zlist_view_set_is_item_click_enabled(list, Z_TRUE);
+            Zlist_view_set_is_item_click_enabled(list, true);
             Zcontent_control_set_content(scroll_viewer, list);
 
             /* Text */

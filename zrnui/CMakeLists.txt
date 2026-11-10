@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(zrnui VERSION 0.1.0 DESCRIPTION "zrnui - Windows Phone 8.1 XAML controls in C" LANGUAGES C)
+project(zrnui VERSION 2.0.0 DESCRIPTION "zrnui - WP8.1 UI in C" LANGUAGES C)
 
 # ON when zrnui is the project being built, OFF when it is added with add_subdirectory
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
@@ -13,7 +13,7 @@ option(ZRNUI_BUILD_SHARED "Build zrnui as a shared library" OFF)
 option(ZRNUI_BUILD_TESTS "Build the tests" ${ZRNUI_IS_TOP_LEVEL})
 option(ZRNUI_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
 
-set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 

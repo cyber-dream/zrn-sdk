@@ -144,7 +144,7 @@ extern "C" {
 	/**
 	 * @brief {ThemeResource key} for a property of a control: Foreground, Background and BorderBrush take a color key,
 	 * Padding and BorderThickness a Thickness key, FontSize a Double key. Follows the theme, the accent and the overrides
-	 * of the root; the direct setter removes the binding. @return Z_FALSE for a Zid that is not a control or a key of another type.
+	 * of the root; the direct setter removes the binding. @return false for a Zid that is not a control or a key of another type.
 	 */
 	ZRNUI_API int Zcontrol_bind_foreground(Zid control, ZThemeResource key);
 	ZRNUI_API int Zcontrol_bind_background(Zid control, ZThemeResource key);
@@ -158,7 +158,7 @@ extern "C" {
 	ZRNUI_API void Zcontrol_set_font_family(Zid control, ZFontFamily family);
 	ZRNUI_API void Zcontrol_set_horizontal_content_alignment(Zid control, ZHorizontalAlignment alignment);
 	ZRNUI_API void Zcontrol_set_vertical_content_alignment(Zid control, ZVerticalAlignment alignment);
-	/** @brief IsTabStop: Z_FALSE keeps the control out of the Tab order. */
+	/** @brief IsTabStop: false keeps the control out of the Tab order. */
 	ZRNUI_API void Zcontrol_set_tab_stop(Zid control, int is_tab_stop);
 	ZRNUI_API void Zcontrol_set_tab_index(Zid control, int tab_index);
 
@@ -301,7 +301,7 @@ extern "C" {
 	ZRNUI_API void Zpivot_set_selected_index(Zid pivot, int index);
 	/** @return The index of the chosen item, -1 when there are no items. */
 	ZRNUI_API int Zpivot_get_selected_index(Zid pivot);
-	/** @brief IsLocked (default Z_FALSE). */
+	/** @brief IsLocked (default false). */
 	ZRNUI_API void Zpivot_set_is_locked(Zid pivot, int is_locked);
 	ZRNUI_API int Zpivot_get_is_locked(Zid pivot);
 	/** @brief Where the header of an item is now in the strip, in the coordinates of the pivot (an empty rectangle when it is out of view). */
@@ -311,17 +311,17 @@ extern "C" {
 	ZRNUI_API void Zpivot_on_pivot_item_loaded(Zid pivot, ZPivotItemCallback callback, void* user_data);
 
 	ZRNUI_API void Zframe_set_transition(Zid frame, ZPageTransition transition);
-	/** @brief Z_TRUE while a transition runs. A Navigate or GoBack in that time ends it at once. */
+	/** @brief true while a transition runs. A Navigate or GoBack in that time ends it at once. */
 	ZRNUI_API int Zframe_is_transitioning(Zid frame);
 	/**
 	 * @brief Frame.Navigate: builds the page, shows it and puts it on the history; the pages ahead of the current one are dropped.
 	 * Order: NavigatedFrom of the old page, the old page destroyed, NavigatedTo of the new one, then Navigated of the Frame.
-	 * @return Z_FALSE, nothing changed, when the factory refuses or does not return a Page, or a callback of a navigation navigates.
+	 * @return false, nothing changed, when the factory refuses or does not return a Page, or a callback of a navigation navigates.
 	 */
 	ZRNUI_API int Zframe_navigate(Zid frame, ZPageFactory factory, void* parameter);
 	ZRNUI_API int Zframe_can_go_back(Zid frame);
 	ZRNUI_API int Zframe_can_go_forward(Zid frame);
-	/** @brief Frame.GoBack / GoForward: shows the previous (next) page, built again from its entry. Z_FALSE when there is none. */
+	/** @brief Frame.GoBack / GoForward: shows the previous (next) page, built again from its entry. false when there is none. */
 	ZRNUI_API int Zframe_go_back(Zid frame);
 	ZRNUI_API int Zframe_go_forward(Zid frame);
 	/** @brief Frame.BackStackDepth: the pages behind the current one. */
@@ -573,7 +573,7 @@ extern "C" {
 	 *
 	 *    Zid list = Zlist_view_create();
 	 *    Zlist_view_set_selection_mode(list, Z_LIST_VIEW_SELECTION_NONE);
-	 *    Zlist_view_set_is_item_click_enabled(list, Z_TRUE);
+	 *    Zlist_view_set_is_item_click_enabled(list, true);
 	 *    Zlist_view_on_item_click(list, opened, NULL);
 	 *    Zitems_control_add_text(list, "Wi-Fi");
 	 *
@@ -671,12 +671,12 @@ extern "C" {
 	/** @brief ListViewBase.SelectionMode, Single by default. Changing it clears the selection that the new mode cannot hold. */
 	ZRNUI_API void Zlist_view_set_selection_mode(Zid list_view, ZListViewSelectionMode mode);
 	ZRNUI_API ZListViewSelectionMode Zlist_view_get_selection_mode(Zid list_view);
-	/** @brief IsItemClickEnabled, Z_FALSE by default. */
+	/** @brief IsItemClickEnabled, false by default. */
 	ZRNUI_API void Zlist_view_set_is_item_click_enabled(Zid list_view, int enabled);
 	ZRNUI_API int Zlist_view_get_is_item_click_enabled(Zid list_view);
 	/** @brief ItemClick: a tap on an item while IsItemClickEnabled. One handler; NULL removes it. */
 	ZRNUI_API void Zlist_view_on_item_click(Zid list_view, ZItemClickCallback callback, void* user_data);
-	/** @brief IsSwipeEnabled (default Z_TRUE): only stored, a swipe does not select. */
+	/** @brief IsSwipeEnabled (default true): only stored, a swipe does not select. */
 	ZRNUI_API void Zlist_view_set_is_swipe_enabled(Zid list_view, int enabled);
 	ZRNUI_API int Zlist_view_get_is_swipe_enabled(Zid list_view);
 	/** @brief SelectedItems: writes up to `max` indices, ascending. @return How many items are selected. */
@@ -744,7 +744,7 @@ extern "C" {
 
 	ZRNUI_API Zid Zflip_view_create(void);
 	ZRNUI_API Zid Zflip_view_item_create(const char* content);
-	/** @brief UseTouchAnimationsForAllNavigation (default Z_TRUE): Z_FALSE makes a change of SelectedIndex by the program jump instead of slide. */
+	/** @brief UseTouchAnimationsForAllNavigation (default true): false makes a change of SelectedIndex by the program jump instead of slide. */
 	ZRNUI_API void Zflip_view_set_use_touch_animations_for_all_navigation(Zid flip_view, int use);
 	ZRNUI_API int Zflip_view_get_use_touch_animations_for_all_navigation(Zid flip_view);
 
@@ -777,7 +777,7 @@ extern "C" {
 	ZRNUI_API int Zauto_suggest_box_get_is_suggestion_list_open(Zid box);
 	/** @brief MaxSuggestionListHeight in pixels, 300 by default. */
 	ZRNUI_API void Zauto_suggest_box_set_max_suggestion_list_height(Zid box, float height);
-	/** @brief UpdateTextOnSelect (default Z_TRUE): a chosen suggestion goes into the text. */
+	/** @brief UpdateTextOnSelect (default true): a chosen suggestion goes into the text. */
 	ZRNUI_API void Zauto_suggest_box_set_update_text_on_select(Zid box, int update);
 	ZRNUI_API void Zauto_suggest_box_on_text_changed(Zid box, ZAutoSuggestTextChangedCallback callback, void* user_data);
 	ZRNUI_API void Zauto_suggest_box_on_suggestion_chosen(Zid box, ZAutoSuggestSuggestionChosenCallback callback, void* user_data);
@@ -797,14 +797,14 @@ extern "C" {
 	/** @brief ZoomedInView and ZoomedOutView: any elements (a ListView, a GridView); the control takes ownership. */
 	ZRNUI_API void Zsemantic_zoom_set_zoomed_in_view(Zid semantic_zoom, Zid view);
 	ZRNUI_API void Zsemantic_zoom_set_zoomed_out_view(Zid semantic_zoom, Zid view);
-	/** @brief IsZoomedInViewActive, Z_TRUE at first. Setting it is a view change, with the events. */
+	/** @brief IsZoomedInViewActive, true at first. Setting it is a view change, with the events. */
 	ZRNUI_API void Zsemantic_zoom_set_is_zoomed_in_view_active(Zid semantic_zoom, int active);
 	ZRNUI_API int Zsemantic_zoom_get_is_zoomed_in_view_active(Zid semantic_zoom);
 	/** @brief ToggleActiveView. */
 	ZRNUI_API void Zsemantic_zoom_toggle_active_view(Zid semantic_zoom);
-	/** @brief CanChangeViews (default Z_TRUE): Z_FALSE keeps the view that shows; the button and the toggle do nothing. */
+	/** @brief CanChangeViews (default true): false keeps the view that shows; the button and the toggle do nothing. */
 	ZRNUI_API void Zsemantic_zoom_set_can_change_views(Zid semantic_zoom, int can_change);
-	/** @brief IsZoomOutButtonEnabled (default Z_TRUE): only stored, the phone template has no button. */
+	/** @brief IsZoomOutButtonEnabled (default true): only stored, the phone template has no button. */
 	ZRNUI_API void Zsemantic_zoom_set_is_zoom_out_button_enabled(Zid semantic_zoom, int enabled);
 	ZRNUI_API void Zsemantic_zoom_on_view_change_started(Zid semantic_zoom, ZSemanticZoomCallback callback, void* user_data);
 	ZRNUI_API void Zsemantic_zoom_on_view_change_completed(Zid semantic_zoom, ZSemanticZoomCallback callback, void* user_data);
@@ -865,7 +865,7 @@ extern "C" {
 	ZRNUI_API Zid Zhub_section_create(const char* header);
 	ZRNUI_API void Zhub_section_set_header(Zid hub_section, const char* header);
 	ZRNUI_API const char* Zhub_section_get_header(Zid hub_section);
-	/** @brief IsHeaderInteractive (default Z_FALSE): the header can be tapped, for SectionHeaderClick. */
+	/** @brief IsHeaderInteractive (default false): the header can be tapped, for SectionHeaderClick. */
 	ZRNUI_API void Zhub_section_set_is_header_interactive(Zid hub_section, int is_interactive);
 	ZRNUI_API int Zhub_section_get_is_header_interactive(Zid hub_section);
 
@@ -895,7 +895,7 @@ extern "C" {
 	/** @brief SelectedIndex, -1 without items. A change by the program is at once, and raises SelectionChanged. */
 	ZRNUI_API void Zlooping_selector_set_selected_index(Zid looping_selector, int index);
 	ZRNUI_API int Zlooping_selector_get_selected_index(Zid looping_selector);
-	/** @brief ShouldLoop (default Z_TRUE): the items go round. Z_FALSE stops the column at the first and the last item. */
+	/** @brief ShouldLoop (default true): the items go round. false stops the column at the first and the last item. */
 	ZRNUI_API void Zlooping_selector_set_should_loop(Zid looping_selector, int should_loop);
 	ZRNUI_API int Zlooping_selector_get_should_loop(Zid looping_selector);
 	/** @brief ItemWidth and ItemHeight: 0 (the default) is the size of the items as they come. The getters tell the size in use. */
@@ -943,7 +943,7 @@ extern "C" {
 	ZRNUI_API void Zdate_picker_set_max_year(Zid date_picker, int year);
 	ZRNUI_API int Zdate_picker_get_min_year(Zid date_picker);
 	ZRNUI_API int Zdate_picker_get_max_year(Zid date_picker);
-	/** @brief DayVisible, MonthVisible, YearVisible (default Z_TRUE): which selectors the flyout has. */
+	/** @brief DayVisible, MonthVisible, YearVisible (default true): which selectors the flyout has. */
 	ZRNUI_API void Zdate_picker_set_day_visible(Zid date_picker, int visible);
 	ZRNUI_API void Zdate_picker_set_month_visible(Zid date_picker, int visible);
 	ZRNUI_API void Zdate_picker_set_year_visible(Zid date_picker, int visible);
@@ -1042,7 +1042,7 @@ extern "C" {
 	 * @return Z_INVALID_ID when the data is not understood.
 	 */
 	ZRNUI_API Zid Zpath_icon_create(const char* data);
-	/** @return Z_FALSE, the icon unchanged, when the data is not understood. */
+	/** @return false, the icon unchanged, when the data is not understood. */
 	ZRNUI_API int Zpath_icon_set_data(Zid path_icon, const char* data);
 
 	/** @brief A BitmapIcon from a PNG file, drawn as it is (it is not tinted with the foreground). Z_INVALID_ID on failure. */
@@ -1077,7 +1077,7 @@ extern "C" {
 	/** @brief IsOpen. Opened and Closed come when it changes (not when the animation ends). */
 	ZRNUI_API void Zapp_bar_set_is_open(Zid app_bar, int is_open);
 	ZRNUI_API int Zapp_bar_get_is_open(Zid app_bar);
-	/** @brief IsSticky: Z_TRUE keeps an open bar open through a press outside it and Back. */
+	/** @brief IsSticky: true keeps an open bar open through a press outside it and Back. */
 	ZRNUI_API void Zapp_bar_set_is_sticky(Zid app_bar, int is_sticky);
 	ZRNUI_API int Zapp_bar_get_is_sticky(Zid app_bar);
 	/** @brief ClosedDisplayMode: Z_APP_BAR_CLOSED_COMPACT (the default) or Z_APP_BAR_CLOSED_MINIMAL. */
@@ -1211,7 +1211,7 @@ extern "C" {
 	ZRNUI_API void Zcontent_dialog_on_closed(Zid content_dialog, ZRoutedCallback callback, void* user_data);
 	/**
 	 * @brief ShowAsync: shows the dialog over `root`. `callback` (may be NULL) gets what closed it.
-	 * @return Z_FALSE when it already shows or `root` is not a root.
+	 * @return false when it already shows or `root` is not a root.
 	 */
 	ZRNUI_API int Zcontent_dialog_show(Zid content_dialog, Zid root, ZContentDialogResultCallback callback, void* user_data);
 	/** @brief Hide: closes the dialog with the result None. */

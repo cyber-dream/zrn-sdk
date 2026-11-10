@@ -17,9 +17,9 @@ static Zid build(Zid root) {
 	Ztext_block_set_style(t, Z_TEXT_STYLE_PHONE_TITLE2);
 	row = Zpanel_add(stack, Zstack_panel_create(Z_HORIZONTAL));
 	Zpanel_add(row, Zbutton_create("button"));
-	Zelement_set_enabled(Zpanel_add(row, Zbutton_create("disabled")), Z_FALSE);
-	Ztoggle_button_set_is_checked(Zpanel_add(stack, Zcheck_box_create("checked")), Z_TRUE);
-	Ztoggle_button_set_is_checked(Zpanel_add(stack, Zradio_button_create("radio", "g")), Z_TRUE);
+	Zelement_set_enabled(Zpanel_add(row, Zbutton_create("disabled")), false);
+	Ztoggle_button_set_is_checked(Zpanel_add(stack, Zcheck_box_create("checked")), true);
+	Ztoggle_button_set_is_checked(Zpanel_add(stack, Zradio_button_create("radio", "g")), true);
 	sl = Zpanel_add(stack, Zslider_create(Z_HORIZONTAL));
 	Zrange_base_set_value(sl, 4);
 	pb = Zpanel_add(stack, Zprogress_bar_create());

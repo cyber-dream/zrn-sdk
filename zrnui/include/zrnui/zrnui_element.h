@@ -105,7 +105,7 @@ extern "C" {
 
 	/** @return The most derived class of the element, 0 for an invalid handle. */
 	ZRNUI_API ZClass Zelement_get_class(Zid element);
-	/** @return Z_TRUE when the element is of `element_class` or derives from it (a CheckBox is a ToggleButton, a ButtonBase, a ContentControl, a Control...). */
+	/** @return true when the element is of `element_class` or derives from it (a CheckBox is a ToggleButton, a ButtonBase, a ContentControl, a Control...). */
 	ZRNUI_API int Zelement_is_a(Zid element, ZClass element_class);
 	ZRNUI_API const char* Zelement_get_class_name(Zid element);
 
@@ -149,7 +149,7 @@ extern "C" {
 	ZRNUI_API float Zelement_get_height(Zid element);
 
 	/** @brief MinWidth / MinHeight (default 0), MaxWidth / MaxHeight (default Z_INFINITE). */
-	ZRNUI_API void Zelement_set_min_size(Zid element, float min_width, float min_height);
+	ZRNUI_API void Zelement_set_min_size(Zid p_element, float p_min_width, float p_min_height);
 	ZRNUI_API void Zelement_set_max_size(Zid element, float max_width, float max_height);
 
 	ZRNUI_API void Zelement_set_margin(Zid element, ZThickness margin);
@@ -157,7 +157,7 @@ extern "C" {
 	/**
 	 * @brief {ThemeResource key} for the Margin: a Thickness key (Z_RES_PIVOT_ITEM_MARGIN...). The margin follows the key
 	 * (the theme, the accent, an override of the root) until Zelement_set_margin sets another one.
-	 * @return Z_FALSE for an element that is not one or a key that is not a Thickness.
+	 * @return false for an element that is not one or a key that is not a Thickness.
 	 */
 	ZRNUI_API int Zelement_bind_margin(Zid element, ZThemeResource key);
 
@@ -202,7 +202,7 @@ extern "C" {
 	 * in a root, the property takes `to` at once.
 	 */
 	ZRNUI_API void Zelement_animate(Zid element, ZAnimatedProperty property, float to, float duration_ms, ZEasing easing, float delay_ms);
-	/** @brief Z_TRUE while an animation of the element is running. */
+	/** @brief true while an animation of the element is running. */
 	ZRNUI_API int Zelement_is_animating(Zid element);
 	/** @brief The easing curve itself: t in [0, 1] to [0, 1]. */
 	ZRNUI_API float Zeasing(ZEasing easing, float t);
@@ -214,10 +214,10 @@ extern "C" {
 	ZRNUI_API void Zelement_set_enabled(Zid element, int enabled);
 	/** @return IsEnabled as set on the element itself. */
 	ZRNUI_API int Zelement_get_enabled(Zid element);
-	/** @return Z_TRUE when neither the element nor an ancestor is disabled. */
+	/** @return true when neither the element nor an ancestor is disabled. */
 	ZRNUI_API int Zelement_is_effectively_enabled(Zid element);
 
-	/** @brief IsHitTestVisible. Z_FALSE lets pointer events fall through the element and its children. */
+	/** @brief IsHitTestVisible. false lets pointer events fall through the element and its children. */
 	ZRNUI_API void Zelement_set_hit_test_visible(Zid element, int visible);
 
 	/** @brief UIElement.Clip to the bounds: children are cut where the element ends. */
@@ -234,7 +234,7 @@ extern "C" {
 	ZRNUI_API void Zelement_measure(Zid element, ZSize available);
 	ZRNUI_API void Zelement_arrange(Zid element, ZRect final_rect);
 
-	/** @brief Gives the keyboard focus to the element (Control.Focus). A control that keeps its text in a part of its own (AutoSuggestBox) hands the focus to it. @return Z_FALSE when it cannot take it. */
+	/** @brief Gives the keyboard focus to the element (Control.Focus). A control that keeps its text in a part of its own (AutoSuggestBox) hands the focus to it. @return false when it cannot take it. */
 	ZRNUI_API int Zelement_focus(Zid element);
 	ZRNUI_API int Zelement_has_focus(Zid element);
 
@@ -428,7 +428,7 @@ extern "C" {
 	 * Z_RES_PHONE_FOREGROUND_BRUSH), the font size (a Double key), the character spacing (an Int key such as
 	 * Z_RES_PIVOT_HEADER_ITEM_CHARACTER_SPACING). The property follows the key when the theme, the accent or an
 	 * override of the root changes; its direct setter (and Ztext_block_set_style) removes the binding.
-	 * @return Z_FALSE for a Zid that is not a TextBlock or a key of another type.
+	 * @return false for a Zid that is not a TextBlock or a key of another type.
 	 */
 	ZRNUI_API int Ztext_block_bind_foreground(Zid text_block, ZThemeResource key);
 	ZRNUI_API int Ztext_block_bind_font_size(Zid text_block, ZThemeResource key);
@@ -436,7 +436,7 @@ extern "C" {
 	/**
 	 * @brief Applies a text style: font, size, foreground, line height, character spacing, wrapping and
 	 * margin of the style (the 8.1 ones carry no margin, the Z_TEXT_STYLE_PHONE_* ones 12 on each side).
-	 * A value set after the style wins. @return Z_FALSE for Z_TEXT_STYLE_NONE or a value out of range.
+	 * A value set after the style wins. @return false for Z_TEXT_STYLE_NONE or a value out of range.
 	 */
 	ZRNUI_API int Ztext_block_set_style(Zid text_block, ZTextStyle style);
 
@@ -475,7 +475,7 @@ extern "C" {
 	ZRNUI_API void Zrich_text_block_set_character_spacing(Zid rich_text_block, int spacing);
 	ZRNUI_API void Zrich_text_block_set_padding(Zid rich_text_block, ZThickness padding);
 	ZRNUI_API ZThickness Zrich_text_block_get_padding(Zid rich_text_block);
-	/** @brief Z_TEXT_STYLE_BASE (16 px, line 21.5) or Z_TEXT_STYLE_BODY (18 px, line 24). @return Z_FALSE for another style. */
+	/** @brief Z_TEXT_STYLE_BASE (16 px, line 21.5) or Z_TEXT_STYLE_BODY (18 px, line 24). @return false for another style. */
 	ZRNUI_API int Zrich_text_block_set_style(Zid rich_text_block, ZTextStyle style);
 
 
@@ -484,7 +484,7 @@ extern "C" {
 	 * ============================================================================ */
 
 	ZRNUI_API Zid Zimage_create(void);
-	/** @brief Image.Source from a PNG file. @return Z_FALSE on failure (the image stays as it was). */
+	/** @brief Image.Source from a PNG file. @return false on failure (the image stays as it was). */
 	ZRNUI_API int Zimage_set_source_file(Zid image, const char* path);
 	/** @brief Image.Source from pixels: width * height RGBA bytes, copied. */
 	ZRNUI_API int Zimage_set_source_rgba(Zid image, int width, int height, const uint8_t* rgba);
@@ -510,7 +510,7 @@ extern "C" {
 	/** @brief IsOpen. A popup opens only once it is in a tree that belongs to a root. */
 	ZRNUI_API void Zpopup_set_open(Zid popup, int open);
 	ZRNUI_API int Zpopup_is_open(Zid popup);
-	/** @brief StaysOpen: Z_FALSE (the default of ComboBox) closes the popup on a click outside. */
+	/** @brief StaysOpen: false (the default of ComboBox) closes the popup on a click outside. */
 	ZRNUI_API void Zpopup_set_stays_open(Zid popup, int stays_open);
 
 #ifdef __cplusplus

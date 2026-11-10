@@ -109,7 +109,7 @@ static void test_classes(void) {
 	CHECK_STR(Zhub_get_header(hub), "H");
 	CHECK_STR(Zhub_section_get_header(sec), "s");
 	CHECK(!Zhub_section_get_is_header_interactive(sec));
-	Zhub_section_set_is_header_interactive(sec, Z_TRUE);
+	Zhub_section_set_is_header_interactive(sec, true);
 	CHECK(Zhub_section_get_is_header_interactive(sec));
 	CHECK(Zhub_get_section_count(hub) == 0 && Zhub_get_section(hub, 0) == Z_INVALID_ID);
 	CHECK(Zhub_add_section(hub, sec) == 0);
@@ -242,7 +242,7 @@ static void test_header_click(void) {
 	p.y -= 43;
 	tap(root, p);
 	CHECK(g_clicks == 0);
-	Zhub_section_set_is_header_interactive(g_sec[0], Z_TRUE);
+	Zhub_section_set_is_header_interactive(g_sec[0], true);
 	tap(root, p);
 	CHECK(g_clicks == 1 && g_clicked == g_sec[0]);
 	/* beside the text of the header and below it is not the header */

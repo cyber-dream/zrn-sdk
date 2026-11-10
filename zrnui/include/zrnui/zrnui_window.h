@@ -11,7 +11,7 @@
 #ifndef ZRNUI_WINDOW_H
 #define ZRNUI_WINDOW_H
 
-#include "zrnui_host.h"
+#include "host.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,7 +24,7 @@ extern "C" {
 	 * resizes the root. Integer scale: $ZRNUI_SCALE (default 1).
 	 * Zroot_tick is called every ~16 ms: animations, caret, repeat buttons.
 	 * @param title Window title, also the app id.
-	 * @return Z_TRUE after a normal close, Z_FALSE when no window could be opened (see Zget_error).
+	 * @return true after a normal close, false when no window could be opened (see Zget_error).
 	 */
 	ZRNUI_API int Zwindow_run(Zid root, const char* title);
 

@@ -32,13 +32,13 @@ static void build_controls(Zid root) {
 	add_text(stack, "Subtle text style", Z_TEXT_STYLE_PHONE_SUBTLE);
 	row = Zpanel_add(stack, Zstack_panel_create(Z_HORIZONTAL));
 	Zpanel_add(row, Zbutton_create("button"));
-	Zelement_set_enabled(Zpanel_add(row, Zbutton_create("disabled")), Z_FALSE);
+	Zelement_set_enabled(Zpanel_add(row, Zbutton_create("disabled")), false);
 	Zpanel_add(stack, Zhyperlink_button_create("hyperlink"));
 	Zpanel_add(stack, Zcheck_box_create("check box"));
-	Ztoggle_button_set_is_checked(Zpanel_add(stack, Zcheck_box_create("checked")), Z_TRUE);
+	Ztoggle_button_set_is_checked(Zpanel_add(stack, Zcheck_box_create("checked")), true);
 	Ztoggle_button_set_state(Zpanel_add(stack, Zcheck_box_create("indeterminate")), Z_INDETERMINATE);
 	Zpanel_add(stack, Zradio_button_create("radio one", "g"));
-	Ztoggle_button_set_is_checked(Zpanel_add(stack, Zradio_button_create("radio two", "g")), Z_TRUE);
+	Ztoggle_button_set_is_checked(Zpanel_add(stack, Zradio_button_create("radio two", "g")), true);
 	sl = Zpanel_add(stack, Zslider_create(Z_HORIZONTAL));
 	Zrange_base_set_value(sl, 40);
 	Zslider_set_header(sl, "Volume");
@@ -47,10 +47,10 @@ static void build_controls(Zid root) {
 	Zrange_base_set_value(pb, 60);
 	sw = Zpanel_add(stack, Ztoggle_switch_create());
 	Ztoggle_switch_set_header(sw, "Wi-Fi");
-	Ztoggle_switch_set_is_on(Zpanel_add(stack, Ztoggle_switch_create()), Z_TRUE);
-	Zelement_set_enabled(Zpanel_add(stack, Ztoggle_switch_create()), Z_FALSE);
-	Zprogress_ring_set_is_active(Zpanel_add(stack, Zprogress_ring_create()), Z_TRUE);
-	Ztoggle_button_set_is_checked(Zpanel_add(stack, Ztoggle_button_create("toggle")), Z_TRUE);
+	Ztoggle_switch_set_is_on(Zpanel_add(stack, Ztoggle_switch_create()), true);
+	Zelement_set_enabled(Zpanel_add(stack, Ztoggle_switch_create()), false);
+	Zprogress_ring_set_is_active(Zpanel_add(stack, Zprogress_ring_create()), true);
+	Ztoggle_button_set_is_checked(Zpanel_add(stack, Ztoggle_button_create("toggle")), true);
 	tb = Zpanel_add(stack, Ztext_box_create("text box"));
 	Ztext_box_set_header(tb, "Name");
 	Zpassword_box_set_placeholder_text(Zpanel_add(stack, Zpassword_box_create()), "password");
@@ -116,10 +116,10 @@ static void test_states(void) {
 	Zelement_set_horizontal_alignment(b, Z_HALIGN_LEFT);
 	tb = Zpanel_add(stack, Ztext_box_create("focused with a selection"));
 	pb = Zpanel_add(stack, Zprogress_bar_create());
-	Zprogress_bar_set_is_indeterminate(pb, Z_TRUE);
+	Zprogress_bar_set_is_indeterminate(pb, true);
 	sl = Zpanel_add(stack, Zslider_create(Z_HORIZONTAL));
 	Zrange_base_set_value(sl, 7);
-	Zelement_set_enabled(Zpanel_add(stack, Zcheck_box_create("disabled check box")), Z_FALSE);
+	Zelement_set_enabled(Zpanel_add(stack, Zcheck_box_create("disabled check box")), false);
 	ac = Zpanel_add(stack, Zauto_suggest_box_create());
 	Zauto_suggest_box_set_placeholder_text(ac, "search");
 	cb = Zpanel_add(stack, Zcombo_box_create());
@@ -134,7 +134,7 @@ static void test_states(void) {
 	Zroot_inject_text(root, "ap");
 	Zauto_suggest_box_set_items(ac, words, 2);
 	Zelement_focus(tb);
-	Zcombo_box_set_is_drop_down_open(cb, Z_TRUE);
+	Zcombo_box_set_is_drop_down_open(cb, true);
 	show(root, "states");
 	Zroot_destroy(root);
 }
@@ -233,16 +233,16 @@ static void test_toggle_switch_pixels(void) {
 	CHECK(near_rgb(root, 413, 18, 255, 255, 255, 0)); /* the knob: the foreground, white in Dark */
 	CHECK(near_rgb(root, 440, 18, 0, 0, 0, 0));       /* nothing behind it */
 	CHECK(near_rgb(root, 440, 5, 255, 255, 255, 0));  /* the 2.5 px outline, inset 4.5 */
-	Ztoggle_switch_set_is_on(sw, Z_TRUE);
+	Ztoggle_switch_set_is_on(sw, true);
 	CHECK(near_rgb(root, 470, 18, 255, 255, 255, 0)); /* the knob is at the right end now */
 	CHECK(near_rgb(root, 430, 18, 0x00, 0x50, 0xEF, 0)); /* the curtain is the accent (Cobalt) */
 	CHECK(near_rgb(root, 413, 18, 0x00, 0x50, 0xEF, 0));
 	/* disabled: the curtain and the knob are PhoneBaseMediumMid solid (666666) */
-	Zelement_set_enabled(sw, Z_FALSE);
+	Zelement_set_enabled(sw, false);
 	CHECK(near_rgb(root, 430, 18, 0x66, 0x66, 0x66, 0));
 	CHECK(near_rgb(root, 470, 18, 0x66, 0x66, 0x66, 0));
 	/* Light: the knob is the foreground, dark on the white page (PhoneForeground of the 8.1 Light dictionary: #FF000000) */
-	Zelement_set_enabled(sw, Z_TRUE);
+	Zelement_set_enabled(sw, true);
 	Zroot_set_theme(root, Z_THEME_LIGHT);
 	CHECK(near_rgb(root, 470, 18, 0x00, 0x00, 0x00, 0x08));
 	CHECK(near_rgb(root, 100, 18, 255, 255, 255, 0));
@@ -259,7 +259,7 @@ static void test_progress_ring_pixels(void) {
 	Zroot_update_layout(root);
 	/* inactive: nothing is drawn, not even the overlay */
 	CHECK(near_rgb(root, 5, 5, 255, 0, 0, 0));
-	Zprogress_ring_set_is_active(ring, Z_TRUE);
+	Zprogress_ring_set_is_active(ring, true);
 	/* active: the Background of the theme (black) at 0.8 over the control, 0.2 of the red is left */
 	CHECK(near_rgb(root, 5, 5, 51, 0, 0, 2));
 	CHECK(near_rgb(root, 5, 100, 255, 0, 0, 0)); /* below the 57.5 px of the control */
@@ -296,7 +296,7 @@ static void test_progress_ring_pixels(void) {
 		CHECK(changed);
 	}
 	/* stopped: the overlay goes with the dots */
-	Zprogress_ring_set_is_active(ring, Z_FALSE);
+	Zprogress_ring_set_is_active(ring, false);
 	CHECK(near_rgb(root, 5, 5, 255, 0, 0, 0));
 	Zroot_destroy(root);
 }
@@ -308,11 +308,11 @@ static void test_slider_and_progress_bar_pixels(void) {
 	Zrange_base_set_value(sl, 50);
 	dis = Zpanel_add(stack, Zslider_create(Z_HORIZONTAL));
 	Zrange_base_set_value(dis, 50);
-	Zelement_set_enabled(dis, Z_FALSE);
+	Zelement_set_enabled(dis, false);
 	pb = Zpanel_add(stack, Zprogress_bar_create());
 	Zrange_base_set_value(pb, 50);
 	ind = Zpanel_add(stack, Zprogress_bar_create());
-	Zprogress_bar_set_is_indeterminate(ind, Z_TRUE);
+	Zprogress_bar_set_is_indeterminate(ind, true);
 	Zelement_set_vertical_alignment(sl, Z_VALIGN_TOP);
 	Zroot_update_layout(root);
 	/* the 9 px track is 17.5 px under the top of the 57 px band; the thumb (9.5 x 19) is at 13 */
@@ -332,9 +332,9 @@ static void test_slider_and_progress_bar_pixels(void) {
 	Zroot_tick(root, 1500);
 	CHECK(lit_pixels(root, 0, 117, 480, 121) > 0);
 	/* paused halves the indicator, an error takes it away */
-	Zprogress_bar_set_show_paused(pb, Z_TRUE);
+	Zprogress_bar_set_show_paused(pb, true);
 	CHECK(near_rgb(root, 100, 114 + 1, 0x00, 0x28 + 6, 0x77 + 19, 12));
-	Zprogress_bar_set_show_error(pb, Z_TRUE);
+	Zprogress_bar_set_show_error(pb, true);
 	CHECK(near_rgb(root, 100, 114 + 1, 0x00, 13, 38, 2));
 	Zroot_destroy(root);
 }
@@ -351,7 +351,7 @@ static void test_toggle_and_check_pixels(void) {
 	CHECK(near_rgb(root, 12, 2, 0, 0, 0, 0)); /* nothing in the overhang */
 	/* the check mark is drawn once checked; pressed, the box is the accent */
 	CHECK(near_rgb(root, 11, 34, 0, 0, 0, 0));
-	Ztoggle_button_set_is_checked(cb, Z_TRUE);
+	Ztoggle_button_set_is_checked(cb, true);
 	CHECK(near_rgb(root, 11, 34, 255, 255, 255, 0));
 	Zroot_inject_pointer(root, Z_POINTER_DOWN, 60, 28);
 	CHECK(near_rgb(root, 8, 16 + 4, 0x00, 0x50, 0xEF, 0));
@@ -361,7 +361,7 @@ static void test_toggle_and_check_pixels(void) {
 		ZRect r = Zelement_get_bounds(tg);
 		int x = (int)r.x + 50, y = (int)(r.y + r.height * 0.5f) - 14;
 		CHECK(near_rgb(root, x, y, 0, 0, 0, 0));
-		Ztoggle_button_set_is_checked(tg, Z_TRUE);
+		Ztoggle_button_set_is_checked(tg, true);
 		CHECK(near_rgb(root, x, y, 0x00, 0x50, 0xEF, 0));
 	}
 	Zroot_destroy(root);
@@ -406,7 +406,7 @@ static void test_text_box_pixels(void) {
 	}
 	CHECK(lit < 20); /* only the caret */
 	/* disabled: no fill, the border is PhoneBaseLow (73FFFFFF over black: 115) */
-	Zelement_set_enabled(other, Z_FALSE);
+	Zelement_set_enabled(other, false);
 	Zelement_focus(tb);
 	{
 		ZRect r = Zelement_get_bounds(other);
@@ -415,7 +415,7 @@ static void test_text_box_pixels(void) {
 	}
 	/* Light: BFBFBF at 0.8 */
 	Zroot_set_theme(root, Z_THEME_LIGHT);
-	Zelement_set_enabled(other, Z_TRUE);
+	Zelement_set_enabled(other, true);
 	{
 		ZRect r = Zelement_get_bounds(other);
 		/* 0.8 * BF over white */
