@@ -52,7 +52,7 @@ void zrn_set_string(char** dest, const char* const s) {
 	*dest = copy;
 }
 
-ZColor Zcolor_rgba(float r, float g, float b, float a) { const ZColor c = { r, g, b, a }; return c; }
+ZColor Zcolor_rgba(const float r, const float g, const float b, const float a) { const ZColor c = { r, g, b, a }; return c; }
 
 ZColor Zcolor_argb(const uint32_t argb) {
 	ZColor c;
@@ -132,7 +132,7 @@ void* zrn_handle_get(const Zid id, const int is_root) {
 	return g_slots[index].ptr;
 }
 
-zrn_element_t* zrn_lookup(Zid id) { return (zrn_element_t*)zrn_handle_get(id, 0); }
+zrn_element_t* zrn_lookup(const Zid id) { return (zrn_element_t*)zrn_handle_get(id, 0); }
 
 zrn_element_t* zrn_get(const Zid id, const ZClass cls) {
 	zrn_element_t* const e = zrn_lookup(id);
@@ -468,7 +468,7 @@ void zrn_changed_paint(zrn_element_t* const e) {
 	if (e->root) e->root->paint_dirty = 1;
 }
 
-static float clamp_size(float v, float lo, float hi) {
+static float clamp_size(float v, const float lo, const float hi) {
 	if (v > hi) v = hi;
 	if (v < lo) v = lo;
 	return v;
@@ -609,7 +609,7 @@ int zrn_raise(zrn_element_t* const e, const ZEvent ev) {
 	return zrn_lookup(id) != nullptr;
 }
 
-int zrn_chain(const zrn_element_t* e, Zid* ids, int max) {
+int zrn_chain(const zrn_element_t* e, Zid* ids, const int max) {
 	int n = 0;
 	for (; e && n < max; e = e->parent) ids[n++] = e->id;
 	return n;

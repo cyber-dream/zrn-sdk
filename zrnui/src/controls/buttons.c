@@ -31,7 +31,7 @@ static void button_click(zrn_element_t* const e) {
 	if (zrn_is_a(e, Z_CLASS_APP_BAR_BUTTON)) zrn_app_bar_item_clicked(e);
 }
 
-static int inside(const zrn_element_t* e, float x, float y) { return x >= 0 && y >= 0 && x < e->rect.width && y < e->rect.height; }
+static int inside(const zrn_element_t* e, const float x, const float y) { return x >= 0 && y >= 0 && x < e->rect.width && y < e->rect.height; }
 
 /* IsPressed of the template: the button is held and the pointer is on it. */
 static int button_is_pressed(const zrn_button_base_t* b) { return b->pressed && b->pointer_over; }
@@ -224,9 +224,9 @@ Zid Zrepeat_button_create(const char* const content) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-static zrn_button_base_t* get_button(Zid id) { return BUTTON(zrn_get(id, Z_CLASS_BUTTON_BASE)); }
+static zrn_button_base_t* get_button(const Zid id) { return BUTTON(zrn_get(id, Z_CLASS_BUTTON_BASE)); }
 
-void Zbutton_on_click(Zid id, ZRoutedCallback callback, void* user_data) { Zelement_on(id, Z_EVENT_CLICK, callback, user_data); }
+void Zbutton_on_click(Zid id, const ZRoutedCallback callback, void* user_data) { Zelement_on(id, Z_EVENT_CLICK, callback, user_data); }
 
 void Zbutton_set_click_mode(const Zid id, const ZClickMode mode) {
 	zrn_button_base_t* const b = get_button(id);
@@ -449,14 +449,14 @@ Zid Ztoggle_button_create(const char* const content) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-static zrn_toggle_button_t* get_toggle(Zid id) { return TOGGLE(zrn_get(id, Z_CLASS_TOGGLE_BUTTON)); }
+static zrn_toggle_button_t* get_toggle(const Zid id) { return TOGGLE(zrn_get(id, Z_CLASS_TOGGLE_BUTTON)); }
 
 void Ztoggle_button_set_state(const Zid id, const ZToggleState state) {
 	zrn_toggle_button_t* const t = get_toggle(id);
 	if (t) toggle_set_state(&t->base.base.base.base, state);
 }
 
-void Ztoggle_button_set_is_checked(Zid id, int is_checked) { Ztoggle_button_set_state(id, is_checked ? Z_CHECKED : Z_UNCHECKED); }
+void Ztoggle_button_set_is_checked(Zid id, const int is_checked) { Ztoggle_button_set_state(id, is_checked ? Z_CHECKED : Z_UNCHECKED); }
 ZToggleState Ztoggle_button_get_state(Zid id) { const zrn_toggle_button_t* t = get_toggle(id); return t ? t->state : Z_UNCHECKED; }
 int Ztoggle_button_get_is_checked(Zid id) { return Ztoggle_button_get_state(id) == Z_CHECKED; }
 
@@ -856,7 +856,7 @@ Zid Ztoggle_switch_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-static zrn_toggle_switch_t* get_ts(Zid id) { return TSW(zrn_get(id, Z_CLASS_TOGGLE_SWITCH)); }
+static zrn_toggle_switch_t* get_ts(const Zid id) { return TSW(zrn_get(id, Z_CLASS_TOGGLE_SWITCH)); }
 
 void Ztoggle_switch_set_is_on(const Zid id, const int is_on) {
 	zrn_toggle_switch_t* const t = get_ts(id);
@@ -903,4 +903,4 @@ const char* Ztoggle_switch_get_off_content(const Zid id) {
 	return t && t->off_content ? t->off_content : "";
 }
 
-void Ztoggle_switch_on_toggled(Zid id, ZRoutedCallback callback, void* user_data) { Zelement_on(id, Z_EVENT_TOGGLED, callback, user_data); }
+void Ztoggle_switch_on_toggled(Zid id, const ZRoutedCallback callback, void* user_data) { Zelement_on(id, Z_EVENT_TOGGLED, callback, user_data); }

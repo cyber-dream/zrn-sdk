@@ -239,7 +239,7 @@ Zid Zscroll_viewer_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-static zrn_scroll_viewer_t* get_sv(Zid id) { return SV(zrn_get(id, Z_CLASS_SCROLL_VIEWER)); }
+static zrn_scroll_viewer_t* get_sv(const Zid id) { return SV(zrn_get(id, Z_CLASS_SCROLL_VIEWER)); }
 
 void Zscroll_viewer_set_content(const Zid id, const Zid content) {
 	zrn_scroll_viewer_t* const s = get_sv(id);

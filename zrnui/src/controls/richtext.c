@@ -91,7 +91,7 @@ Zid Zrich_text_block_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-static zrn_rich_text_block_t* get_rtb(Zid id) { return RTB(zrn_get(id, Z_CLASS_RICH_TEXT_BLOCK)); }
+static zrn_rich_text_block_t* get_rtb(const Zid id) { return RTB(zrn_get(id, Z_CLASS_RICH_TEXT_BLOCK)); }
 
 int Zrich_text_block_add_paragraph(const Zid id, const char* const text) {
 	zrn_rich_text_block_t* const r = get_rtb(id);

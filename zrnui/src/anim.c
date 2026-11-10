@@ -39,7 +39,7 @@ static float ease_emphasized(const float t) {
 	return 3 * u * u * s * y1 + 3 * u * s * s * y2 + s * s * s;
 }
 
-float zrn_ease(ZEasing easing, float t) {
+float zrn_ease(const ZEasing easing, float t) {
 	t = zrn_clampf(t, 0, 1);
 	switch (easing) {
 	case Z_EASE_OUT: { const float u = 1 - t; return 1 - u * u * u; }
@@ -328,4 +328,4 @@ ZAnimations Zroot_get_animations(const Zid root) {
 	return r ? r->animations : Z_ANIMATIONS_AUTO;
 }
 
-int Zroot_animations_enabled(Zid root) { return zrn_animations_enabled(zrn_root_lookup(root)); }
+int Zroot_animations_enabled(const Zid root) { return zrn_animations_enabled(zrn_root_lookup(root)); }

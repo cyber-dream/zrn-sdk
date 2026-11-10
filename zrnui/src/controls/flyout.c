@@ -158,7 +158,7 @@ void zrn_flyout_show_at(zrn_element_t* e, zrn_element_t* target) {
 	zrn_raise(e, Z_EVENT_OPENED);
 }
 
-static zrn_flyout_base_t* get_flyout(Zid id) { return FB(zrn_get(id, Z_CLASS_FLYOUT_BASE)); }
+static zrn_flyout_base_t* get_flyout(const Zid id) { return FB(zrn_get(id, Z_CLASS_FLYOUT_BASE)); }
 
 void Zflyout_base_set_placement(const Zid id, const ZFlyoutPlacementMode placement) {
 	zrn_flyout_base_t* const f = get_flyout(id);
@@ -603,7 +603,7 @@ Zid Zcontent_dialog_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-static zrn_content_dialog_t* get_dialog(Zid id) { return DIALOG(zrn_get(id, Z_CLASS_CONTENT_DIALOG)); }
+static zrn_content_dialog_t* get_dialog(const Zid id) { return DIALOG(zrn_get(id, Z_CLASS_CONTENT_DIALOG)); }
 
 void Zcontent_dialog_set_title(const Zid id, const char* const title) {
 	zrn_content_dialog_t* const d = get_dialog(id);

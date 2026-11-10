@@ -18,7 +18,7 @@ static void panel_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	if (panel->has_background) zrn_fill_rect(p, zrn_local_rect(e), panel->background);
 }
 
-static ZSize panel_measure(zrn_element_t* e, ZSize available) { return zrn_measure_children_max(e, available); }
+static ZSize panel_measure(zrn_element_t* e, const ZSize available) { return zrn_measure_children_max(e, available); }
 
 static ZSize panel_arrange(zrn_element_t* const e, const ZSize final) {
 	int i;
@@ -31,9 +31,9 @@ zrn_class_t zrn_class_panel = {
 	.measure = panel_measure, .arrange = panel_arrange, .paint = panel_paint, .hit_self = panel_hit_self
 };
 
-static zrn_element_t* get_panel(Zid id) { return zrn_get(id, Z_CLASS_PANEL); }
+static zrn_element_t* get_panel(const Zid id) { return zrn_get(id, Z_CLASS_PANEL); }
 
-Zid Zpanel_add(Zid panel, Zid child) { return Zpanel_insert(panel, -1, child); }
+Zid Zpanel_add(const Zid panel, const Zid child) { return Zpanel_insert(panel, -1, child); }
 
 Zid Zpanel_insert(const Zid panel, const int index, const Zid child) {
 	zrn_element_t* const p = get_panel(panel);
@@ -398,7 +398,7 @@ Zid Zitems_wrap_grid_create(const ZOrientation orientation) {
 	return e->id;
 }
 
-static zrn_items_wrap_grid_t* get_wg(Zid id) { return WG(zrn_get(id, Z_CLASS_ITEMS_WRAP_GRID)); }
+static zrn_items_wrap_grid_t* get_wg(const Zid id) { return WG(zrn_get(id, Z_CLASS_ITEMS_WRAP_GRID)); }
 
 void Zitems_wrap_grid_set_orientation(const Zid id, const ZOrientation orientation) {
 	zrn_items_wrap_grid_t* const g = get_wg(id);
@@ -511,7 +511,7 @@ static void grid_learn(zrn_grid_def_t* const defs, const int first, const int la
 	if (target >= 0 && need > have) defs[target].size += need - have;
 }
 
-static void grid_resolve_star(zrn_grid_def_t* defs, int count, float available, const float* content) {
+static void grid_resolve_star(zrn_grid_def_t* defs, int count, const float available, const float* content) {
 	float fixed = 0, weights = 0, remaining;
 	int i, pass;
 	char frozen[256];

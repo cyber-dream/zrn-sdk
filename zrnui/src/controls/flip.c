@@ -17,7 +17,7 @@ static constexpr float FLIP_MARGIN = 2.5f;
 static constexpr float SLIDE_MS = 300.0f;
 static constexpr float DRAG_START = 12.0f;
 
-static float clampf(float v, float lo, float hi) { return v < lo ? lo : v > hi ? hi : v; }
+static float clampf(const float v, const float lo, const float hi) { return v < lo ? lo : v > hi ? hi : v; }
 
 static ZRect flip_viewport(const zrn_element_t* const e) {
 	return zrn_rect(FLIP_MARGIN, FLIP_MARGIN, zrn_maxf(0, e->rect.width - 2 * FLIP_MARGIN), zrn_maxf(0, e->rect.height - 2 * FLIP_MARGIN));
@@ -309,7 +309,7 @@ Zid Zsemantic_zoom_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-static zrn_semantic_zoom_t* get_sz(Zid id) { return SZ(zrn_get(id, Z_CLASS_SEMANTIC_ZOOM)); }
+static zrn_semantic_zoom_t* get_sz(const Zid id) { return SZ(zrn_get(id, Z_CLASS_SEMANTIC_ZOOM)); }
 
 static void sz_set_view(zrn_semantic_zoom_t* const z, zrn_element_t** slot, const Zid view) {
 	zrn_element_t* const e = &z->base.base;

@@ -35,8 +35,8 @@ static inline void blend(uint8_t* const d, const ZColor c, const float cov, cons
 	d[3] = 255;
 }
 
-static inline float to_dev_x(const zrn_painter_t* p, float x) { return p->tx + x * p->scale; }
-static inline float to_dev_y(const zrn_painter_t* p, float y) { return p->ty + y * p->scale; }
+static inline float to_dev_x(const zrn_painter_t* p, const float x) { return p->tx + x * p->scale; }
+static inline float to_dev_y(const zrn_painter_t* p, const float y) { return p->ty + y * p->scale; }
 
 
 /* Fills a device rectangle with fractional edges: partial pixels get partial coverage. */

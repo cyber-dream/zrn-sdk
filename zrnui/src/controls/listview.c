@@ -80,7 +80,7 @@ Zid Zgrid_view_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-static zrn_list_view_base_t* get_lvb(Zid id) { return LVB(zrn_get(id, Z_CLASS_LIST_VIEW_BASE)); }
+static zrn_list_view_base_t* get_lvb(const Zid id) { return LVB(zrn_get(id, Z_CLASS_LIST_VIEW_BASE)); }
 
 void zrn_lvb_item_tapped(zrn_items_control_t* const o, const int index) {
 	const auto l = (zrn_list_view_base_t*)o;

@@ -101,7 +101,7 @@ Zid Ztext_block_create(const char* const text) {
 	return e->id;
 }
 
-static zrn_text_block_t* get_tb(Zid id) { return ZST_AS(zrn_text_block_t, zrn_get(id, Z_CLASS_TEXT_BLOCK)); }
+static zrn_text_block_t* get_tb(const Zid id) { return ZST_AS(zrn_text_block_t, zrn_get(id, Z_CLASS_TEXT_BLOCK)); }
 
 void Ztext_block_set_text(const Zid id, const char* const text) {
 	zrn_text_block_t* const t = get_tb(id);
@@ -301,8 +301,8 @@ ZSize Zimage_get_natural_size(const Zid id) {
  * ============================================================================ */
 
 static int popup_hit_self(zrn_element_t* e) { ZST_UNUSED(e); return 0; }
-static ZSize popup_measure(zrn_element_t* e, ZSize a) { ZST_UNUSED(e); ZST_UNUSED(a); return zrn_size(0, 0); }
-static ZSize popup_arrange(zrn_element_t* e, ZSize f) { ZST_UNUSED(e); return f; }
+static ZSize popup_measure(zrn_element_t* e, const ZSize a) { ZST_UNUSED(e); ZST_UNUSED(a); return zrn_size(0, 0); }
+static ZSize popup_arrange(zrn_element_t* e, const ZSize f) { ZST_UNUSED(e); return f; }
 
 static void popup_init(zrn_element_t* const e) {
 	zrn_popup_t* const p = ZST_AS(zrn_popup_t, e);
@@ -385,7 +385,7 @@ void Zpopup_set_stays_open(const Zid id, const int stays_open) {
  *  Control
  * ============================================================================ */
 
-ZColor zrn_ctl_color(const zrn_control_t* c, unsigned flag, ZColor stored, ZColor fallback) {
+ZColor zrn_ctl_color(const zrn_control_t* c, const unsigned flag, const ZColor stored, const ZColor fallback) {
 	ZST_UNUSED(c);
 	return (c->set_flags & flag) ? stored : fallback;
 }
@@ -394,8 +394,8 @@ ZColor zrn_ctl_foreground(const zrn_control_t* const c) {
 	return zrn_ctl_color(c, ZST_C_FOREGROUND, c->foreground, zrn_theme_color(&c->base, ZST_TC_FOREGROUND));
 }
 
-ZColor zrn_ctl_background(const zrn_control_t* c, ZColor fallback) { return zrn_ctl_color(c, ZST_C_BACKGROUND, c->background, fallback); }
-ZColor zrn_ctl_border_brush(const zrn_control_t* c, ZColor fallback) { return zrn_ctl_color(c, ZST_C_BORDER_BRUSH, c->border_brush, fallback); }
+ZColor zrn_ctl_background(const zrn_control_t* c, const ZColor fallback) { return zrn_ctl_color(c, ZST_C_BACKGROUND, c->background, fallback); }
+ZColor zrn_ctl_border_brush(const zrn_control_t* c, const ZColor fallback) { return zrn_ctl_color(c, ZST_C_BORDER_BRUSH, c->border_brush, fallback); }
 
 static void control_init(zrn_element_t* const e) {
 	zrn_control_t* const c = ZST_AS(zrn_control_t, e);
@@ -421,7 +421,7 @@ zrn_class_t zrn_class_control = {
 	.content_font_family = control_content_font_family
 };
 
-static zrn_control_t* get_control(Zid id) { return ZST_AS(zrn_control_t, zrn_get(id, Z_CLASS_CONTROL)); }
+static zrn_control_t* get_control(const Zid id) { return ZST_AS(zrn_control_t, zrn_get(id, Z_CLASS_CONTROL)); }
 
 void Zcontrol_set_foreground(const Zid id, const ZColor color) {
 	zrn_control_t* const c = get_control(id);
@@ -602,7 +602,7 @@ void zrn_content_set_text(zrn_content_control_t* const c, const char* const text
 	}
 }
 
-static zrn_content_control_t* get_cc(Zid id) { return ZST_AS(zrn_content_control_t, zrn_get(id, Z_CLASS_CONTENT_CONTROL)); }
+static zrn_content_control_t* get_cc(const Zid id) { return ZST_AS(zrn_content_control_t, zrn_get(id, Z_CLASS_CONTENT_CONTROL)); }
 
 Zid Zcontent_control_create(void) {
 	const zrn_element_t* const e = zrn_create(Z_CLASS_CONTENT_CONTROL);

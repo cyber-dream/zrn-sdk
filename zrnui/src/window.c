@@ -208,7 +208,7 @@ static const struct wp_fractional_scale_v1_listener fractional_listener = { pref
 
 /* ---- xdg-shell ---- */
 
-static void wm_ping(void* d, struct xdg_wm_base* b, uint32_t serial) { (void)d; xdg_wm_base_pong(b, serial); }
+static void wm_ping(void* d, struct xdg_wm_base* b, const uint32_t serial) { (void)d; xdg_wm_base_pong(b, serial); }
 static const struct xdg_wm_base_listener wm_base_listener = { .ping = wm_ping };
 
 static void surface_configure(void* const d, struct xdg_surface* s, const uint32_t serial) {
@@ -242,7 +242,7 @@ static void ptr_enter(void* const d, struct wl_pointer* p, const uint32_t s, str
 	(void)p; (void)s; (void)sf;
 	Zroot_inject_pointer(((window_t*)d)->root, Z_POINTER_MOVE, (float)wl_fixed_to_double(x), (float)wl_fixed_to_double(y));
 }
-static void ptr_leave(void* d, struct wl_pointer* p, uint32_t s, struct wl_surface* sf) { (void)p; (void)s; (void)sf; Zroot_inject_pointer(((window_t*)d)->root, Z_POINTER_LEAVE, 0, 0); }
+static void ptr_leave(void* d, struct wl_pointer* p, const uint32_t s, struct wl_surface* sf) { (void)p; (void)s; (void)sf; Zroot_inject_pointer(((window_t*)d)->root, Z_POINTER_LEAVE, 0, 0); }
 static void ptr_motion(void* const d, struct wl_pointer* p, const uint32_t t, const wl_fixed_t x, const wl_fixed_t y) {
 	(void)p; (void)t;
 	Zroot_inject_pointer(((window_t*)d)->root, Z_POINTER_MOVE, (float)wl_fixed_to_double(x), (float)wl_fixed_to_double(y));
@@ -263,9 +263,9 @@ static void ptr_axis(void* const d, struct wl_pointer* p, const uint32_t t, cons
 	if (axis == WL_POINTER_AXIS_VERTICAL_SCROLL) Zroot_inject_wheel(((window_t*)d)->root, (float)-wl_fixed_to_double(v) / 10.0f);
 }
 static void ptr_frame(void* d, struct wl_pointer* p) { (void)d; (void)p; }
-static void ptr_axis_source(void* d, struct wl_pointer* p, uint32_t s) { (void)d; (void)p; (void)s; }
-static void ptr_axis_stop(void* d, struct wl_pointer* p, uint32_t t, uint32_t a) { (void)d; (void)p; (void)t; (void)a; }
-static void ptr_axis_discrete(void* d, struct wl_pointer* p, uint32_t a, int32_t v) { (void)d; (void)p; (void)a; (void)v; }
+static void ptr_axis_source(void* d, struct wl_pointer* p, const uint32_t s) { (void)d; (void)p; (void)s; }
+static void ptr_axis_stop(void* d, struct wl_pointer* p, const uint32_t t, const uint32_t a) { (void)d; (void)p; (void)t; (void)a; }
+static void ptr_axis_discrete(void* d, struct wl_pointer* p, const uint32_t a, const int32_t v) { (void)d; (void)p; (void)a; (void)v; }
 static const struct wl_pointer_listener pointer_listener = {
 	.enter = ptr_enter, .leave = ptr_leave, .motion = ptr_motion_track, .button = ptr_button, .axis = ptr_axis,
 	.frame = ptr_frame, .axis_source = ptr_axis_source, .axis_stop = ptr_axis_stop, .axis_discrete = ptr_axis_discrete
@@ -304,8 +304,8 @@ static void touch_cancel(void* const d, struct wl_touch* t) {
 	if (w->touch_id >= 0) Zroot_inject_pointer(w->root, Z_POINTER_UP, -1000, -1000);
 	w->touch_id = -1;
 }
-static void touch_shape(void* d, struct wl_touch* t, int32_t i, wl_fixed_t a, wl_fixed_t b) { (void)d; (void)t; (void)i; (void)a; (void)b; }
-static void touch_orientation(void* d, struct wl_touch* t, int32_t i, wl_fixed_t o) { (void)d; (void)t; (void)i; (void)o; }
+static void touch_shape(void* d, struct wl_touch* t, const int32_t i, const wl_fixed_t a, const wl_fixed_t b) { (void)d; (void)t; (void)i; (void)a; (void)b; }
+static void touch_orientation(void* d, struct wl_touch* t, const int32_t i, const wl_fixed_t o) { (void)d; (void)t; (void)i; (void)o; }
 static const struct wl_touch_listener touch_listener = {
 	.down = touch_down, .up = touch_up, .motion = touch_motion, .frame = touch_frame, .cancel = touch_cancel,
 	.shape = touch_shape, .orientation = touch_orientation
@@ -327,8 +327,8 @@ static void kb_keymap(void* const d, struct wl_keyboard* k, const uint32_t forma
 	munmap(map, size);
 	w->xkb_state = w->keymap ? xkb_state_new(w->keymap) : nullptr;
 }
-static void kb_enter(void* d, struct wl_keyboard* k, uint32_t s, struct wl_surface* sf, struct wl_array* keys) { (void)d; (void)k; (void)s; (void)sf; (void)keys; }
-static void kb_leave(void* d, struct wl_keyboard* k, uint32_t s, struct wl_surface* sf) { (void)k; (void)s; (void)sf; ((window_t*)d)->repeat_key = 0; }
+static void kb_enter(void* d, struct wl_keyboard* k, const uint32_t s, struct wl_surface* sf, struct wl_array* keys) { (void)d; (void)k; (void)s; (void)sf; (void)keys; }
+static void kb_leave(void* d, struct wl_keyboard* k, const uint32_t s, struct wl_surface* sf) { (void)k; (void)s; (void)sf; ((window_t*)d)->repeat_key = 0; }
 
 static ZKey map_key(const xkb_keysym_t sym, const int ctrl) {
 	switch (sym) {
@@ -405,7 +405,7 @@ static void kb_modifiers(void* const d, struct wl_keyboard* k, const uint32_t se
 	(void)k; (void)serial;
 	if (w->xkb_state) xkb_state_update_mask(w->xkb_state, depressed, latched, locked, 0, 0, group);
 }
-static void kb_repeat_info(void* d, struct wl_keyboard* k, int32_t rate, int32_t delay) { (void)d; (void)k; (void)rate; (void)delay; }
+static void kb_repeat_info(void* d, struct wl_keyboard* k, const int32_t rate, const int32_t delay) { (void)d; (void)k; (void)rate; (void)delay; }
 static const struct wl_keyboard_listener keyboard_listener = {
 	.keymap = kb_keymap, .enter = kb_enter, .leave = kb_leave, .key = kb_key, .modifiers = kb_modifiers, .repeat_info = kb_repeat_info
 };
@@ -433,7 +433,7 @@ static void reg_global(void* const d, struct wl_registry* r, const uint32_t name
 		wl_seat_add_listener(w->seat, &seat_listener, w);
 	}
 }
-static void reg_remove(void* d, struct wl_registry* r, uint32_t name) { (void)d; (void)r; (void)name; }
+static void reg_remove(void* d, struct wl_registry* r, const uint32_t name) { (void)d; (void)r; (void)name; }
 static const struct wl_registry_listener registry_listener = { .global = reg_global, .global_remove = reg_remove };
 
 static double now_ms(void) {

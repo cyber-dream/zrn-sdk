@@ -221,7 +221,7 @@ static void pivot_loaded_now(zrn_pivot_t* const p) {
 }
 
 /* The strip goes to a place on the ring; the item is the chosen one from here. */
-static void pivot_go(zrn_pivot_t* p, float to, int animate) {
+static void pivot_go(zrn_pivot_t* p, const float to, const int animate) {
 	zrn_element_t* e = &p->base.base;
 	const Zid id = e->id;
 	const int n = p->count, index = wrap_index((int)floorf(to + 0.5f), n), changed = index != p->selected;
@@ -251,7 +251,7 @@ static void pivot_go(zrn_pivot_t* p, float to, int animate) {
 }
 
 /* To an item by its index: the shortest way round. */
-static void pivot_select(zrn_pivot_t* p, int index, int animate) {
+static void pivot_select(zrn_pivot_t* p, int index, const int animate) {
 	if (p->count == 0) return;
 	index = zrn_mini(zrn_maxi(index, 0), p->count - 1);
 	pivot_go(p, p->offset + wrap_distance((float)index - p->offset, p->count), animate);
@@ -472,7 +472,7 @@ Zid Zpivot_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-static zrn_pivot_t* get_pivot(Zid id) { return PIVOT(zrn_get(id, Z_CLASS_PIVOT)); }
+static zrn_pivot_t* get_pivot(const Zid id) { return PIVOT(zrn_get(id, Z_CLASS_PIVOT)); }
 
 void Zpivot_set_title(const Zid id, const char* const title) {
 	zrn_pivot_t* const p = get_pivot(id);

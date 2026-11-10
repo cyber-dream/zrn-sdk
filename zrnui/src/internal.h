@@ -47,11 +47,11 @@ static inline int zrn_maxi(const int a, const int b) { return a > b ? a : b; }
 static inline ZSize zrn_size(const float w, const float h) { const ZSize s = { .width = w, .height = h }; return s; }
 static inline ZRect zrn_rect(const float x, const float y, const float w, const float h) {
  const ZRect r = { .x = x, .y = y, .width = w, .height = h }; return r; }
-static inline ZColor zrn_color(uint32_t argb) { return Zcolor_argb(argb); }
-static inline ZColor zrn_color_alpha(ZColor c, float a) { c.a *= a; return c; }
+static inline ZColor zrn_color(const uint32_t argb) { return Zcolor_argb(argb); }
+static inline ZColor zrn_color_alpha(ZColor c, const float a) { c.a *= a; return c; }
 static inline ZThickness zrn_thickness_zero(void) { const ZThickness t = { 0, 0, 0, 0 }; return t; }
-static inline float zrn_thickness_h(ZThickness t) { return t.left + t.right; }
-static inline float zrn_thickness_v(ZThickness t) { return t.top + t.bottom; }
+static inline float zrn_thickness_h(const ZThickness t) { return t.left + t.right; }
+static inline float zrn_thickness_v(const ZThickness t) { return t.top + t.bottom; }
 
 char* zrn_strdup(const char* s);
 void zrn_theme_reset(void);

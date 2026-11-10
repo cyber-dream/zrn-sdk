@@ -188,7 +188,7 @@ static int tbx_changed(zrn_text_box_t* const b, const int from_user) {
 }
 
 /* Replaces [start, end) with `insert`. Newlines are dropped unless the box accepts them. */
-static void tbx_replace(zrn_text_box_t* b, int start, int end, const char* insert, int from_user) {
+static void tbx_replace(zrn_text_box_t* b, int start, int end, const char* insert, const int from_user) {
 	int ilen = insert ? (int)strlen(insert) : 0, i, kept = 0;
 	char* filtered = nullptr;
 	char* text;
@@ -242,7 +242,7 @@ static void tbx_delete_selection(zrn_text_box_t* const b, const int from_user) {
 	if (b->caret != b->anchor) tbx_replace(b, sel_min(b), sel_max(b), "", from_user);
 }
 
-static void tbx_move(zrn_text_box_t* b, int index, int extend) {
+static void tbx_move(zrn_text_box_t* b, int index, const int extend) {
 	if (index < 0) index = 0;
 	if (index > b->length_bytes) index = b->length_bytes;
 	b->caret = index;
@@ -631,7 +631,7 @@ Zid Zpassword_box_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-static zrn_text_box_t* get_tb(Zid id) { return TB(zrn_get(id, Z_CLASS_TEXT_BOX)); }
+static zrn_text_box_t* get_tb(const Zid id) { return TB(zrn_get(id, Z_CLASS_TEXT_BOX)); }
 
 void Ztext_box_set_text(const Zid id, const char* const text) {
 	zrn_text_box_t* const b = get_tb(id);

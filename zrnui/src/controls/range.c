@@ -44,7 +44,7 @@ zrn_class_t zrn_class_range_base = {
 	.init = range_init
 };
 
-static zrn_range_base_t* get_range(Zid id) { return RANGE(zrn_get(id, Z_CLASS_RANGE_BASE)); }
+static zrn_range_base_t* get_range(const Zid id) { return RANGE(zrn_get(id, Z_CLASS_RANGE_BASE)); }
 
 void Zrange_base_set_value(const Zid id, const double value) {
 	zrn_range_base_t* const r = get_range(id);
@@ -55,7 +55,7 @@ double Zrange_base_get_value(Zid id) { const zrn_range_base_t* r = get_range(id)
 double Zrange_base_get_minimum(Zid id) { const zrn_range_base_t* r = get_range(id); return r ? r->minimum : 0; }
 double Zrange_base_get_maximum(Zid id) { const zrn_range_base_t* r = get_range(id); return r ? r->maximum : 0; }
 
-void Zrange_base_set_range(Zid id, double minimum, double maximum) {
+void Zrange_base_set_range(Zid id, const double minimum, double maximum) {
 	zrn_range_base_t* const r = get_range(id);
 	if (!r) return;
 	if (maximum < minimum) maximum = minimum;
@@ -105,7 +105,7 @@ static float key_spline(const float x, const float x1, const float y1, const flo
 	}
 }
 
-static float lerp(float a, float b, float t) { return a + (b - a) * t; }
+static float lerp(const float a, const float b, const float t) { return a + (b - a) * t; }
 
 
 /* ============================================================================
@@ -305,7 +305,7 @@ Zid Zslider_create(const ZOrientation orientation) {
 	return e->id;
 }
 
-static zrn_slider_t* get_slider(Zid id) { return SLIDER(zrn_get(id, Z_CLASS_SLIDER)); }
+static zrn_slider_t* get_slider(const Zid id) { return SLIDER(zrn_get(id, Z_CLASS_SLIDER)); }
 
 void Zslider_set_orientation(const Zid id, const ZOrientation orientation) {
 	zrn_slider_t* const s = get_slider(id);

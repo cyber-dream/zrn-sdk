@@ -270,7 +270,7 @@ Zid Zcombo_box_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-static zrn_combo_box_t* get_combo(Zid id) { return CB(zrn_get(id, Z_CLASS_COMBO_BOX)); }
+static zrn_combo_box_t* get_combo(const Zid id) { return CB(zrn_get(id, Z_CLASS_COMBO_BOX)); }
 
 void Zcombo_box_set_is_drop_down_open(const Zid id, const int is_open) {
 	zrn_combo_box_t* const c = get_combo(id);
@@ -552,7 +552,7 @@ Zid Zauto_suggest_box_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-static zrn_auto_suggest_box_t* get_asb(Zid id) { return ASB(zrn_get(id, Z_CLASS_AUTO_SUGGEST_BOX)); }
+static zrn_auto_suggest_box_t* get_asb(const Zid id) { return ASB(zrn_get(id, Z_CLASS_AUTO_SUGGEST_BOX)); }
 
 void Zauto_suggest_box_set_items(const Zid id, const char* const* items, const int count) {
 	zrn_auto_suggest_box_t* const a = get_asb(id);

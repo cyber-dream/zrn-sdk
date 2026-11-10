@@ -377,8 +377,8 @@ zrn_class_t zrn_class_selector = {
 	.base = &zrn_class_items_control, .name = "Selector", .id = Z_CLASS_SELECTOR, .size = sizeof(zrn_items_control_t), .abstract_class = 1
 };
 
-static zrn_items_control_t* get_ic(Zid id) { return IC(zrn_get(id, Z_CLASS_ITEMS_CONTROL)); }
-static zrn_items_control_t* get_selector(Zid id) { return IC(zrn_get(id, Z_CLASS_SELECTOR)); }
+static zrn_items_control_t* get_ic(const Zid id) { return IC(zrn_get(id, Z_CLASS_ITEMS_CONTROL)); }
+static zrn_items_control_t* get_selector(const Zid id) { return IC(zrn_get(id, Z_CLASS_SELECTOR)); }
 
 Zid Zitems_control_create(void) {
 	const zrn_element_t* const e = zrn_create(Z_CLASS_ITEMS_CONTROL);
@@ -860,7 +860,7 @@ Zid Zlist_box_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-static zrn_items_control_t* get_list_box(Zid id) { return IC(zrn_get(id, Z_CLASS_LIST_BOX)); }
+static zrn_items_control_t* get_list_box(const Zid id) { return IC(zrn_get(id, Z_CLASS_LIST_BOX)); }
 
 void Zlist_box_set_selection_mode(const Zid id, const ZSelectionMode mode) {
 	zrn_items_control_t* const o = get_list_box(id);

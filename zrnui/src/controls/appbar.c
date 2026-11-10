@@ -99,8 +99,8 @@ typedef struct shape {
 	ZColor c;
 } shape_t;
 
-static float sx(const shape_t* h, float v) { return h->ox + v * h->s; }
-static float sy(const shape_t* h, float v) { return h->oy + v * h->s; }
+static float sx(const shape_t* h, const float v) { return h->ox + v * h->s; }
+static float sy(const shape_t* h, const float v) { return h->oy + v * h->s; }
 
 static void sh_line(shape_t* const h, const float x0, const float y0, const float x1, const float y1) {
 	const float t = zrn_maxf(1.0f, 2.0f * h->s);
@@ -316,7 +316,7 @@ zrn_class_t zrn_class_bitmap_icon = {
 	.base = &zrn_class_icon_element, .name = "BitmapIcon", .id = Z_CLASS_BITMAP_ICON, .size = sizeof(zrn_icon_t), .paint = bitmap_icon_paint
 };
 
-static zrn_icon_t* get_icon(Zid id, ZClass cls) { return ICON(zrn_get(id, cls)); }
+static zrn_icon_t* get_icon(const Zid id, const ZClass cls) { return ICON(zrn_get(id, cls)); }
 
 static Zid make_icon(const ZClass cls) {
 	const zrn_element_t* e = zrn_create(cls);
@@ -690,8 +690,8 @@ static Zid make_item(const ZClass cls, const char* const label, const Zid icon) 
 	return e->id;
 }
 
-Zid Zapp_bar_button_create(const char* label, Zid icon) { return make_item(Z_CLASS_APP_BAR_BUTTON, label, icon); }
-Zid Zapp_bar_toggle_button_create(const char* label, Zid icon) { return make_item(Z_CLASS_APP_BAR_TOGGLE_BUTTON, label, icon); }
+Zid Zapp_bar_button_create(const char* label, const Zid icon) { return make_item(Z_CLASS_APP_BAR_BUTTON, label, icon); }
+Zid Zapp_bar_toggle_button_create(const char* label, const Zid icon) { return make_item(Z_CLASS_APP_BAR_TOGGLE_BUTTON, label, icon); }
 
 static zrn_element_t* get_item(const Zid id) {
 	zrn_element_t* e = zrn_lookup(id);
@@ -824,7 +824,7 @@ static float bar_height(zrn_element_t* const e, const float width) {
 	return closed + (open - closed) * zrn_ease(Z_EASE_OUT, BAR(e)->open_t);
 }
 
-float zrn_app_bar_height(zrn_element_t* bar, float width) { return bar_height(bar, width); }
+float zrn_app_bar_height(zrn_element_t* bar, const float width) { return bar_height(bar, width); }
 
 static ZSize app_bar_measure(zrn_element_t* const e, const ZSize available) {
 	const zrn_content_control_t* cc = ZST_AS(zrn_content_control_t, e);
@@ -953,7 +953,7 @@ Zid Zapp_bar_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-static zrn_app_bar_t* get_bar(Zid id) { return BAR(zrn_get(id, Z_CLASS_APP_BAR)); }
+static zrn_app_bar_t* get_bar(const Zid id) { return BAR(zrn_get(id, Z_CLASS_APP_BAR)); }
 
 void Zapp_bar_set_is_open(Zid id, int is_open) {
 	zrn_app_bar_t* b = get_bar(id);
@@ -1165,7 +1165,7 @@ Zid Zcommand_bar_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-static zrn_command_bar_t* get_command_bar(Zid id) { return CBAR(zrn_get(id, Z_CLASS_COMMAND_BAR)); }
+static zrn_command_bar_t* get_command_bar(const Zid id) { return CBAR(zrn_get(id, Z_CLASS_COMMAND_BAR)); }
 
 static int is_command(const zrn_element_t* const e) {
 	return zrn_is_a(e, Z_CLASS_APP_BAR_BUTTON) || zrn_is_a(e, Z_CLASS_APP_BAR_TOGGLE_BUTTON) || zrn_is_a(e, Z_CLASS_APP_BAR_SEPARATOR);
@@ -1208,8 +1208,8 @@ static int add_command(const Zid bar, const Zid command, const int secondary) {
 	return *count - 1;
 }
 
-int Zcommand_bar_add_primary_command(Zid bar, Zid command) { return add_command(bar, command, 0); }
-int Zcommand_bar_add_secondary_command(Zid bar, Zid command) { return add_command(bar, command, 1); }
+int Zcommand_bar_add_primary_command(Zid bar, const Zid command) { return add_command(bar, command, 0); }
+int Zcommand_bar_add_secondary_command(Zid bar, const Zid command) { return add_command(bar, command, 1); }
 
 int Zcommand_bar_get_primary_command_count(const Zid bar) {
 	const zrn_command_bar_t* c = get_command_bar(bar);

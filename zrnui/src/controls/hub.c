@@ -139,7 +139,7 @@ static void section_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	zrn_draw_string(p, section_font(), s->header, (int)strlen(s->header), r.x, r.y, zrn_ctl_foreground(&s->base.base));
 }
 
-static int point_in(ZRect r, float x, float y) { return x >= r.x && x < r.x + r.width && y >= r.y && y < r.y + r.height; }
+static int point_in(const ZRect r, const float x, const float y) { return x >= r.x && x < r.x + r.width && y >= r.y && y < r.y + r.height; }
 
 /* A tap on an interactive header is SectionHeaderClick; the rest of the section does not take the pointer, the scroller does. */
 static int section_input(zrn_element_t* const e, zrn_input_t* const in) {
@@ -325,7 +325,7 @@ Zid Zhub_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-static zrn_hub_t* get_hub(Zid id) { return HUB(zrn_get(id, Z_CLASS_HUB)); }
+static zrn_hub_t* get_hub(const Zid id) { return HUB(zrn_get(id, Z_CLASS_HUB)); }
 
 void Zhub_set_header(const Zid id, const char* const header) {
 	zrn_hub_t* const h = get_hub(id);

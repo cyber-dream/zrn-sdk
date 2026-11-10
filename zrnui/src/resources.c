@@ -9,7 +9,7 @@
 #define USER_KEY(key) ((int)(key) >= (int)Z_RES_USER_BASE)
 #define BUILTIN_KEY(key) ((int)(key) >= (int)Z_RES_FIRST_ && (int)(key) < (int)Z_RES_LAST_)
 
-static zrn_root_t* get_root(Zid id) { return zrn_root_lookup(id); }
+static zrn_root_t* get_root(const Zid id) { return zrn_root_lookup(id); }
 
 static const zrn_res_def_t* def_of(const ZThemeResource key) {
 	return BUILTIN_KEY(key) ? &zrn_res_table[(int)key - (int)Z_RES_FIRST_] : nullptr;

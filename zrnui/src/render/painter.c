@@ -29,8 +29,8 @@ void zrn_painter_init(zrn_painter_t* const p, uint8_t* const pixels, const int w
 	p->clip[3] = height;
 }
 
-static inline float to_dev_x(const zrn_painter_t* p, float x) { return p->tx + x * p->scale; }
-static inline float to_dev_y(const zrn_painter_t* p, float y) { return p->ty + y * p->scale; }
+static inline float to_dev_x(const zrn_painter_t* p, const float x) { return p->tx + x * p->scale; }
+static inline float to_dev_y(const zrn_painter_t* p, const float y) { return p->ty + y * p->scale; }
 
 void zrn_clip_push(zrn_painter_t* const p, const ZRect r) {
 	static int warned = 0;
@@ -84,17 +84,17 @@ void zrn_stroke_rect(zrn_painter_t* const p, const ZRect r, const ZThickness t, 
 /* ---- the painter: every drawing call goes to the backend of the painter ---- */
 
 void zrn_paint_clear(zrn_painter_t* p, ZColor c) { p->be->paint_clear(p, c); }
-void zrn_fill_rect(zrn_painter_t* p, ZRect r, ZColor c) { p->be->fill_rect(p, r, c); }
-void zrn_fill_rrect(zrn_painter_t* p, ZRect r, ZCornerRadius radius, ZColor c) { p->be->fill_rrect(p, r, radius, c); }
-void zrn_fill_ellipse(zrn_painter_t* p, ZRect r, ZColor c) { p->be->fill_ellipse(p, r, c); }
-void zrn_stroke_ellipse(zrn_painter_t* p, ZRect r, float thickness, ZColor c) { p->be->stroke_ellipse(p, r, thickness, c); }
-void zrn_fill_polygon(zrn_painter_t* p, const float* xy, int count, ZColor c) { p->be->fill_polygon(p, xy, count, c); }
-void zrn_draw_line(zrn_painter_t* p, float x0, float y0, float x1, float y1, float thickness, ZColor c) { p->be->draw_line(p, x0, y0, x1, y1, thickness, c); }
-void zrn_blit_alpha(zrn_painter_t* p, int x, int y, int w, int h, const uint8_t* alpha, int stride, ZColor c) { p->be->blit_alpha(p, x, y, w, h, alpha, stride, c); }
-void zrn_draw_image(zrn_painter_t* p, const zrn_image_t* image, ZRect dest, ZRect source) { p->be->draw_image(p, image, dest, source); }
-void zrn_push_clip(zrn_painter_t* p, ZRect r) { p->be->push_clip(p, r); }
+void zrn_fill_rect(zrn_painter_t* p, const ZRect r, const ZColor c) { p->be->fill_rect(p, r, c); }
+void zrn_fill_rrect(zrn_painter_t* p, const ZRect r, const ZCornerRadius radius, const ZColor c) { p->be->fill_rrect(p, r, radius, c); }
+void zrn_fill_ellipse(zrn_painter_t* p, const ZRect r, const ZColor c) { p->be->fill_ellipse(p, r, c); }
+void zrn_stroke_ellipse(zrn_painter_t* p, const ZRect r, const float thickness, const ZColor c) { p->be->stroke_ellipse(p, r, thickness, c); }
+void zrn_fill_polygon(zrn_painter_t* p, const float* xy, const int count, const ZColor c) { p->be->fill_polygon(p, xy, count, c); }
+void zrn_draw_line(zrn_painter_t* p, const float x0, const float y0, const float x1, const float y1, const float thickness, const ZColor c) { p->be->draw_line(p, x0, y0, x1, y1, thickness, c); }
+void zrn_blit_alpha(zrn_painter_t* p, const int x, const int y, const int w, const int h, const uint8_t* alpha, const int stride, const ZColor c) { p->be->blit_alpha(p, x, y, w, h, alpha, stride, c); }
+void zrn_draw_image(zrn_painter_t* p, const zrn_image_t* image, const ZRect dest, const ZRect source) { p->be->draw_image(p, image, dest, source); }
+void zrn_push_clip(zrn_painter_t* p, const ZRect r) { p->be->push_clip(p, r); }
 void zrn_pop_clip(zrn_painter_t* p) { p->be->pop_clip(p); }
-int zrn_clipped_out(const zrn_painter_t* p, ZRect r) { return p->be->clipped_out(p, r); }
+int zrn_clipped_out(const zrn_painter_t* p, const ZRect r) { return p->be->clipped_out(p, r); }
 
 /* ============================================================================
  *  images and PNG

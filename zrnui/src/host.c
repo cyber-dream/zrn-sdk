@@ -235,7 +235,7 @@ void Zroot_destroy(const Zid root) {
 	Zshutdown();
 }
 
-int Zroot_is_valid(Zid root) { return zrn_root_lookup(root) != nullptr; }
+int Zroot_is_valid(const Zid root) { return zrn_root_lookup(root) != nullptr; }
 
 void Zroot_set_visual(const Zid root, const Zid visual) {
 	zrn_root_t* const r = get_root(root);
@@ -328,7 +328,7 @@ void Zroot_set_accent_color(const Zid root, const ZColor color) {
 	zrn_root_resources_changed(r);
 }
 
-void Zroot_set_accent(Zid root, ZAccent accent) { Zroot_set_accent_color(root, zrn_accent_color(accent)); }
+void Zroot_set_accent(const Zid root, const ZAccent accent) { Zroot_set_accent_color(root, zrn_accent_color(accent)); }
 
 ZColor Zroot_get_accent_color(const Zid root) {
 	zrn_root_t* const r = get_root(root);
@@ -802,7 +802,7 @@ static void preview(zrn_element_t* const target, const zrn_input_type_t type, co
 /* The target again after something that can run user code: NULL if it is gone. */
 #define RELOOK(id) ((id) != Z_INVALID_ID ? zrn_lookup(id) : nullptr)
 
-int Zroot_inject_pointer(Zid root, ZPointerEvent event, float x, float y) {
+int Zroot_inject_pointer(const Zid root, const ZPointerEvent event, float x, float y) {
 	zrn_root_t* r = get_root(root);
 	zrn_element_t* target;
 	Zid tid;

@@ -384,8 +384,8 @@ static void put(float* const out, const float x, const float y, const float lx, 
 }
 
 /* A device rectangle [x0,x1] x [y0,y1] whose local coordinates are centred on (cx, cy). */
-static void quad(zrn_painter_t* p, GLuint texture, float x0, float y0, float x1, float y1, float cx, float cy, float hx, float hy,
-		const float radii[4], float aux, float mode, ZColor c, float u0, float v0, float u1, float v1) {
+static void quad(zrn_painter_t* p, const GLuint texture, const float x0, const float y0, const float x1, const float y1, const float cx, const float cy, const float hx, const float hy,
+		const float radii[4], const float aux, const float mode, const ZColor c, const float u0, const float v0, const float u1, const float v1) {
 	float* const o = reserve(p, texture);
 	const auto gl = (zrn_gl_t*)p->backend_data;
 	const float a = p->alpha;
@@ -398,8 +398,8 @@ static void quad(zrn_painter_t* p, GLuint texture, float x0, float y0, float x1,
 
 static const float NO_RADII[4] = { 0, 0, 0, 0 };
 
-static inline float dx(const zrn_painter_t* p, float x) { return p->tx + x * p->scale; }
-static inline float dy(const zrn_painter_t* p, float y) { return p->ty + y * p->scale; }
+static inline float dx(const zrn_painter_t* p, const float x) { return p->tx + x * p->scale; }
+static inline float dy(const zrn_painter_t* p, const float y) { return p->ty + y * p->scale; }
 
 
 /* ============================================================================
@@ -441,8 +441,8 @@ static void ellipse_quad(zrn_painter_t* const p, const ZRect r, const float stro
 	quad(p, 0, x0 - 1, y0 - 1, x1 + 1, y1 + 1, (x0 + x1) * 0.5f, (y0 + y1) * 0.5f, rx, ry, NO_RADII, stroke, stroke > 0 ? MODE_RING : MODE_ELLIPSE, c, 0, 0, 0, 0);
 }
 
-static void gl_fill_ellipse(zrn_painter_t* p, ZRect r, ZColor c) { ellipse_quad(p, r, 0, c); }
-static void gl_stroke_ellipse(zrn_painter_t* p, ZRect r, float thickness, ZColor c) { ellipse_quad(p, r, thickness * p->scale, c); }
+static void gl_fill_ellipse(zrn_painter_t* p, const ZRect r, const ZColor c) { ellipse_quad(p, r, 0, c); }
+static void gl_stroke_ellipse(zrn_painter_t* p, const ZRect r, const float thickness, const ZColor c) { ellipse_quad(p, r, thickness * p->scale, c); }
 
 /* A polygon by ear clipping, in device pixels: the fill of a simple polygon, convex or not. */
 static void gl_fill_polygon(zrn_painter_t* const p, const float* const xy, const int count, const ZColor c) {

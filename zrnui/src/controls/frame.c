@@ -69,7 +69,7 @@ Zid Zpage_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-void Zpage_set_content(Zid id, Zid child) { Zuser_control_set_content(id, child); }
+void Zpage_set_content(Zid id, const Zid child) { Zuser_control_set_content(id, child); }
 
 Zid Zpage_get_content(Zid id) { return Zuser_control_get_content(id); }
 
@@ -107,8 +107,8 @@ static void page_set_bar(const Zid page, const Zid bar, const int top) {
 	}
 }
 
-void Zpage_set_top_app_bar(Zid page, Zid app_bar) { page_set_bar(page, app_bar, 1); }
-void Zpage_set_bottom_app_bar(Zid page, Zid app_bar) { page_set_bar(page, app_bar, 0); }
+void Zpage_set_top_app_bar(const Zid page, const Zid app_bar) { page_set_bar(page, app_bar, 1); }
+void Zpage_set_bottom_app_bar(const Zid page, const Zid app_bar) { page_set_bar(page, app_bar, 0); }
 
 Zid Zpage_get_top_app_bar(const Zid id) {
 	zrn_element_t* const e = zrn_get(id, Z_CLASS_PAGE);
@@ -198,7 +198,7 @@ Zid Zframe_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-static zrn_frame_t* get_frame(Zid id) { return FRAME(zrn_get(id, Z_CLASS_FRAME)); }
+static zrn_frame_t* get_frame(const Zid id) { return FRAME(zrn_get(id, Z_CLASS_FRAME)); }
 
 /* A row is what turns: a leaf of the tree, or a control that is not a container. */
 static int is_container(const zrn_element_t* const e) {
@@ -249,7 +249,7 @@ static void rows_reset(zrn_frame_t* const f) {
 	f->row_count = 0;
 }
 
-static float clamp01(float v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+static float clamp01(const float v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
 
 /* One frame of the turnstile: row `i` of `n`, `t` ms into this half. */
 static void rows_turn(zrn_frame_t* const f, zrn_element_t* const frame, const float t, const int incoming) {
@@ -331,7 +331,7 @@ static void finish(zrn_frame_t* const f, const Zid frame_id) {
 	f->elapsed = 0;
 }
 
-static void frame_tick(zrn_element_t* e, float dt) {
+static void frame_tick(zrn_element_t* e, const float dt) {
 	zrn_frame_t* f = FRAME(e);
 	const Zid id = e->id;
 	if (f->phase == 0) { e->wants_tick = 0; return; }
@@ -394,7 +394,7 @@ void zrn_root_start_intro(zrn_root_t* const r) {
 	if (f->intro_pending && f->phase == 0 && zrn_animations_enabled(r)) start_intro(f, 1);
 }
 
-static void show(zrn_frame_t* f, Zid frame_id, Zid page_id, void* parameter, int direction, ZNavigationMode mode) {
+static void show(zrn_frame_t* f, const Zid frame_id, const Zid page_id, void* parameter, const int direction, const ZNavigationMode mode) {
 	f->intro_pending = 0;
 	f->mode = mode;
 	zrn_element_t* old = f->base.content;

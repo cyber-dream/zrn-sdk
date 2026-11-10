@@ -46,9 +46,9 @@ static constexpr float MIN_SPEED = 0.0004f;
  *  the calendar
  * ============================================================================ */
 
-static int is_leap(int y) { return (y % 4 == 0 && y % 100 != 0) || y % 400 == 0; }
+static int is_leap(const int y) { return (y % 4 == 0 && y % 100 != 0) || y % 400 == 0; }
 
-static int days_in_month(int y, int m) {
+static int days_in_month(const int y, int m) {
 	static const int days[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 	if (m < 1) m = 1;
 	if (m > 12) m = 12;
@@ -56,7 +56,7 @@ static int days_in_month(int y, int m) {
 }
 
 /** 0 is Sunday. */
-static int weekday_of(int y, int m, int d) {
+static int weekday_of(int y, const int m, const int d) {
 	static const int t[12] = { 0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4 };
 	if (m < 3) y--;
 	return (y + y / 4 - y / 100 + y / 400 + t[m - 1] + d) % 7;
@@ -85,7 +85,7 @@ static const char* const MONTHS[12] = { "January", "February", "March", "April",
 static const char* const WEEKDAYS[7] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 
 /** A date in [min_year, max_year] with a day that the month has. */
-static ZDate coerce_date(ZDate d, int min_year, int max_year) {
+static ZDate coerce_date(ZDate d, const int min_year, const int max_year) {
 	if (d.year < min_year) d.year = min_year;
 	if (d.year > max_year) d.year = max_year;
 	if (d.month < 1) d.month = 1;
@@ -95,7 +95,7 @@ static ZDate coerce_date(ZDate d, int min_year, int max_year) {
 	return d;
 }
 
-static int same_date(ZDate a, ZDate b) { return a.year == b.year && a.month == b.month && a.day == b.day; }
+static int same_date(const ZDate a, const ZDate b) { return a.year == b.year && a.month == b.month && a.day == b.day; }
 
 static ZTimeOfDay coerce_time(ZTimeOfDay t) {
 	t.hour = zrn_mini(zrn_maxi(t.hour, 0), 23);
@@ -103,7 +103,7 @@ static ZTimeOfDay coerce_time(ZTimeOfDay t) {
 	return t;
 }
 
-static int same_time(ZTimeOfDay a, ZTimeOfDay b) { return a.hour == b.hour && a.minute == b.minute; }
+static int same_time(const ZTimeOfDay a, const ZTimeOfDay b) { return a.hour == b.hour && a.minute == b.minute; }
 
 
 /* ============================================================================
@@ -441,7 +441,7 @@ Zid Zlooping_selector_create(void) {
 	return e ? e->id : Z_INVALID_ID;
 }
 
-static zrn_looping_selector_t* get_ls(Zid id) { return LS(zrn_get(id, Z_CLASS_LOOPING_SELECTOR)); }
+static zrn_looping_selector_t* get_ls(const Zid id) { return LS(zrn_get(id, Z_CLASS_LOOPING_SELECTOR)); }
 
 int Zlooping_selector_add_item(const Zid id, const char* const primary_text, const char* const secondary_text) {
 	zrn_looping_selector_t* const s = get_ls(id);
@@ -604,7 +604,7 @@ static void set_handler(zrn_element_t* const e, const ZEvent ev, const ZRoutedCa
 	e->handlers[ev - Z_EVENT_CLICK].user_data = data;
 }
 
-static zrn_picker_flyout_t* flyout_of(Zid id) { return PF(zrn_lookup(id)); }
+static zrn_picker_flyout_t* flyout_of(const Zid id) { return PF(zrn_lookup(id)); }
 
 static int selector_index(zrn_element_t* sel) { return sel ? LS(sel)->selected : 0; }
 
@@ -628,8 +628,8 @@ static void flyout_set_title_text(zrn_picker_flyout_t* const f) {
 
 /* ---- the date ---- */
 
-static const char* month_text(int i, char* buf, void* data) { (void)data; snprintf(buf, 32, "%s", MONTHS[i]); return nullptr; }
-static const char* year_text(int i, char* buf, void* data) { snprintf(buf, 32, "%d", *(int*)data + i); return nullptr; }
+static const char* month_text(const int i, char* buf, void* data) { (void)data; snprintf(buf, 32, "%s", MONTHS[i]); return nullptr; }
+static const char* year_text(const int i, char* buf, void* data) { snprintf(buf, 32, "%d", *(int*)data + i); return nullptr; }
 static const char* day_text(const int i, char* const buf, void* const data) {
 	const auto d = (ZDate*)data;
 	snprintf(buf, 32, "%d", i + 1);
@@ -678,8 +678,8 @@ static const char* hour_text(const int i, char* const buf, void* const data) {
 	snprintf(buf, 32, "%d", *(int*)data == Z_CLOCK_12_HOUR ? i + 1 : i);
 	return nullptr;
 }
-static const char* minute_text(int i, char* buf, void* data) { snprintf(buf, 32, "%02d", i * *(int*)data); return nullptr; }
-static const char* period_text(int i, char* buf, void* data) { (void)data; snprintf(buf, 32, "%s", i ? "PM" : "AM"); return nullptr; }
+static const char* minute_text(const int i, char* buf, void* data) { snprintf(buf, 32, "%02d", i * *(int*)data); return nullptr; }
+static const char* period_text(const int i, char* buf, void* data) { (void)data; snprintf(buf, 32, "%s", i ? "PM" : "AM"); return nullptr; }
 
 static int hour_index(const ZTimeOfDay t, const ZClockIdentifier clock) {
 	if (clock == Z_CLOCK_24_HOUR) return t.hour;
@@ -887,9 +887,9 @@ zrn_class_t zrn_class_time_picker_flyout = {
 	.init = time_flyout_init
 };
 
-static zrn_picker_flyout_t* get_flyout(Zid id) { return PF(zrn_get(id, Z_CLASS_PICKER_FLYOUT_BASE)); }
-static zrn_picker_flyout_t* get_date_flyout(Zid id) { return PF(zrn_get(id, Z_CLASS_DATE_PICKER_FLYOUT)); }
-static zrn_picker_flyout_t* get_time_flyout(Zid id) { return PF(zrn_get(id, Z_CLASS_TIME_PICKER_FLYOUT)); }
+static zrn_picker_flyout_t* get_flyout(const Zid id) { return PF(zrn_get(id, Z_CLASS_PICKER_FLYOUT_BASE)); }
+static zrn_picker_flyout_t* get_date_flyout(const Zid id) { return PF(zrn_get(id, Z_CLASS_DATE_PICKER_FLYOUT)); }
+static zrn_picker_flyout_t* get_time_flyout(const Zid id) { return PF(zrn_get(id, Z_CLASS_TIME_PICKER_FLYOUT)); }
 
 void Zpicker_flyout_base_set_title(const Zid id, const char* const title) {
 	zrn_picker_flyout_t* const f = get_flyout(id);
@@ -964,9 +964,9 @@ static void date_apply_visibility(zrn_picker_flyout_t* const f) {
 	zrn_changed_layout(f->selectors_grid);
 }
 
-void Zdate_picker_flyout_set_day_visible(Zid id, int visible) { zrn_picker_flyout_t* f = get_date_flyout(id); if (f) { f->day_visible = visible != 0; date_apply_visibility(f); } }
-void Zdate_picker_flyout_set_month_visible(Zid id, int visible) { zrn_picker_flyout_t* f = get_date_flyout(id); if (f) { f->month_visible = visible != 0; date_apply_visibility(f); } }
-void Zdate_picker_flyout_set_year_visible(Zid id, int visible) { zrn_picker_flyout_t* f = get_date_flyout(id); if (f) { f->year_visible = visible != 0; date_apply_visibility(f); } }
+void Zdate_picker_flyout_set_day_visible(Zid id, const int visible) { zrn_picker_flyout_t* f = get_date_flyout(id); if (f) { f->day_visible = visible != 0; date_apply_visibility(f); } }
+void Zdate_picker_flyout_set_month_visible(Zid id, const int visible) { zrn_picker_flyout_t* f = get_date_flyout(id); if (f) { f->month_visible = visible != 0; date_apply_visibility(f); } }
+void Zdate_picker_flyout_set_year_visible(Zid id, const int visible) { zrn_picker_flyout_t* f = get_date_flyout(id); if (f) { f->year_visible = visible != 0; date_apply_visibility(f); } }
 int Zdate_picker_flyout_get_day_visible(Zid id) { const zrn_picker_flyout_t* f = get_date_flyout(id); return f ? f->day_visible : 0; }
 int Zdate_picker_flyout_get_month_visible(Zid id) { const zrn_picker_flyout_t* f = get_date_flyout(id); return f ? f->month_visible : 0; }
 int Zdate_picker_flyout_get_year_visible(Zid id) { const zrn_picker_flyout_t* f = get_date_flyout(id); return f ? f->year_visible : 0; }
@@ -1146,8 +1146,8 @@ zrn_class_t zrn_class_time_picker = {
 	.child_removed = picker_child_removed
 };
 
-static zrn_picker_t* get_date_picker(Zid id) { return PICKER(zrn_get(id, Z_CLASS_DATE_PICKER)); }
-static zrn_picker_t* get_time_picker(Zid id) { return PICKER(zrn_get(id, Z_CLASS_TIME_PICKER)); }
+static zrn_picker_t* get_date_picker(const Zid id) { return PICKER(zrn_get(id, Z_CLASS_DATE_PICKER)); }
+static zrn_picker_t* get_time_picker(const Zid id) { return PICKER(zrn_get(id, Z_CLASS_TIME_PICKER)); }
 
 /* The flyout of a picker and the picker agree on the value. */
 static void date_picker_set(zrn_picker_t* const p, const ZDate date, const int raise) {
