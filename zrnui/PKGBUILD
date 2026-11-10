@@ -11,7 +11,7 @@ source=()
 options=('!strip')
 
 build() {
-    cmake -S "$srcdir" -B build \
+    cmake -S "$startdir" -B build \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX=/usr \
         -DZRNUI_BUILD_SHARED=ON \
