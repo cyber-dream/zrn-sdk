@@ -26,7 +26,7 @@ static constexpr float MENU_PAD_TOP = 13.5f;
 static constexpr float MENU_PAD_BOTTOM = 26.0f;
 static constexpr float MENU_ITEM_PAD = 8.5f;
 static constexpr float MENU_FONT = 25.5f;
-static constexpr int MENU_SPACING = (-15);
+static constexpr int MENU_SPACING = -15;
 /* ContentDialog: title margin 19,33.5,19,0 (min row 19), content margin 19,16.5,19,0 (min row 35), button rows min 45 with the
  * hosts padded 19,24,9.5,9.5 and 9.5,24,19,9.5; the title is 25.5 SemiBold and the content 18.14 */
 static constexpr float DIALOG_TITLE_MIN = 19.0f;

@@ -23,7 +23,7 @@
 static constexpr float TITLE_X = 19.0f;
 static constexpr float TITLE_TOP = 38.0f;
 static constexpr float HEADER_MARGIN_LEFT = 16.0f;
-static constexpr float HEADER_MARGIN_TOP = (-6.5f);
+static constexpr float HEADER_MARGIN_TOP = -6.5f;
 static constexpr float HEADER_TEXT_X = 19.0f;
 static constexpr float ITEM_MARGIN_LEFT = 19.0f;
 static constexpr float ITEM_MARGIN_TOP = 22.5f;

@@ -164,7 +164,7 @@ static float font_content_height(const zrn_font_t font) {
 
 static glyph_entry_t* glyph_bitmap(const uint8_t face, const float device_size, const uint32_t cp) {
 	const int32_t size_key = (int32_t)(device_size * 8.0f + 0.5f);
-	const int32_t key = ((size_key << 3) | (face + 1) | 0x40000000);
+	const int32_t key = (size_key << 3) | (face + 1) | 0x40000000;
 	glyph_entry_t* const g = glyph_slot(cp, key, 1);
 	if (!g->has_bitmap) {
 		FT_Face const ft = face_of(face, cp);
@@ -380,7 +380,7 @@ void zrn_draw_text(zrn_painter_t* const p, const zrn_text_layout_t* const l, con
 		float lx = x, ly = y + (float)i * l->line_height + shift;
 		const int len = line->end - line->start;
 		const float lw = line->width;
-		const int last = (i == l->line_count - 1);
+		const int last = i == l->line_count - 1;
 		if (trim == Z_TRIM_WORD_ELLIPSIS && width > 0 && (lw > width + 0.5f || (last && l->truncated))) {
 			/* cut the line so that "..." fits */
 			static const char ellipsis[] = "\xE2\x80\xA6";

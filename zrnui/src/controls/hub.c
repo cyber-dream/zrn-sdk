@@ -22,8 +22,8 @@
 static constexpr float HUB_HEADER_X = 15.0f;
 static constexpr float HUB_HEADER_Y = 1.0f;
 static constexpr float SECTION_FONT = 19.0f;
-static constexpr int SECTION_SPACING = (-10);
-static constexpr float SECTION_HEADER_X = (-1.0f);
+static constexpr int SECTION_SPACING = -10;
+static constexpr float SECTION_HEADER_X = -1.0f;
 static constexpr float SECTION_HEADER_TOP = 5.0f;
 static constexpr float SECTION_HEADER_BOTTOM = 31.5f;
 static constexpr float SECTION_MARGIN_LEFT = 19.0f;

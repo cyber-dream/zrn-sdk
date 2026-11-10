@@ -27,10 +27,10 @@ static constexpr float ITEM_BORDER = 2.5f;
 static constexpr float ITEM_PAD = 5.0f;
 static constexpr float TEXT_X = 0.8f;
 static constexpr float PRIMARY_SIZE = 45.0f;
-static constexpr int PRIMARY_SPACING = (-24);
-static constexpr float PRIMARY_MARGIN = (-6.5f);
+static constexpr int PRIMARY_SPACING = -24;
+static constexpr float PRIMARY_MARGIN = -6.5f;
 static constexpr float SECONDARY_SIZE = 17.0f;
-static constexpr float SECONDARY_MARGIN = (-0.8f);
+static constexpr float SECONDARY_MARGIN = -0.8f;
 /** DatePickerSelectorThemeMinWidth. */
 static constexpr float SELECTOR_MIN_WIDTH = 64.0f;
 /** The Expanded transition. */
