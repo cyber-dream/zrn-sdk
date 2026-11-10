@@ -331,7 +331,7 @@ zrn_text_layout_t* zrn_text_layout_new(const zrn_font_t font, const char* const 
 		if (i >= length) {
 			/* a text that ends with a newline has an empty last line */
 			if (next == line_end + 1 && next == length && line_end < length && text[line_end] == '\n') {
-				const zrn_line_t empty = { length, length, 0 };
+				const zrn_line_t empty = { .start = length, .end = length, .width = 0 };
 				if (l->line_count < cap) l->lines[l->line_count++] = empty;
 			}
 			break;

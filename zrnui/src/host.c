@@ -351,13 +351,13 @@ static void layout_popups(const zrn_root_t* const r) {
 		zrn_measure(child, zrn_size(lw, lh));
 		width = popup->full_width ? lw : child->desired.width;
 		zrn_arrange(child, zrn_rect(0, 0, width, child->desired.height));
-		origin = zrn_to_root(&popup->base, (ZPoint){ 0, 0 });
+		origin = zrn_to_root(&popup->base, (ZPoint){ .x = 0, .y = 0 });
 		pos.x = popup->h_offset;
 		pos.y = popup->v_offset;
 		if (popup->target != Z_INVALID_ID) {
 			const zrn_element_t* const target = zrn_lookup(popup->target);
 			if (target) {
-				const ZPoint t = zrn_to_root(target, (ZPoint){ 0, 0 });
+				const ZPoint t = zrn_to_root(target, (ZPoint){ .x = 0, .y = 0 });
 				switch (popup->placement) {
 					case Z_PLACE_TOP: pos.x += t.x; pos.y += t.y - child->desired.height; break;
 					case Z_PLACE_LEFT: pos.x += t.x - width; pos.y += t.y; break;
@@ -442,7 +442,7 @@ void zrn_paint_element(zrn_element_t* const e, zrn_painter_t* const p, zrn_root_
 }
 
 static void paint_tooltip(const zrn_root_t* const r, zrn_painter_t* const p) {
-	const zrn_font_t font = { Z_FONT_NORMAL, ZST_FONT_SMALL, 0 };
+	const zrn_font_t font = { .family = Z_FONT_NORMAL, .size = ZST_FONT_SMALL, .spacing = 0 };
 	float w, h, x, y;
 	if (!r->tooltip_target || !r->tooltip_target->tooltip || r->tooltip_timer < 500.0f) return;
 	zrn_text_layout_t* l = zrn_text_layout_new(font, r->tooltip_target->tooltip, (int)strlen(r->tooltip_target->tooltip), 300.0f, 1, 0, 0);
@@ -466,7 +466,7 @@ int zrn_root_paint(zrn_root_t* const r, zrn_painter_t* const p) {
 	if (r->visual) zrn_paint_element(r->visual, p, r);
 	for (int i = 0; i < r->popup_count; i++) {
 		zrn_element_t* const popup = r->popups[i];
-		const ZPoint origin = zrn_to_root(popup, (ZPoint){ 0, 0 });
+		const ZPoint origin = zrn_to_root(popup, (ZPoint){ .x = 0, .y = 0 });
 		if (!popup->child_count) continue;
 		if (ZST_AS(zrn_popup_t, popup)->modal) {
 			/* ContentDialogDimmingThemeBrush over everything under the dialog */
@@ -652,7 +652,7 @@ int zrn_dispatch(zrn_element_t* const e, zrn_input_t* const in) {
 		if (!a) return 1;
 		if (!a->cls->input) continue;
 		if (pointer) {
-			ZPoint q = zrn_from_root(a, (ZPoint){ rx, ry });
+			ZPoint q = zrn_from_root(a, (ZPoint){ .x = rx, .y = ry });
 			local.x = q.x;
 			local.y = q.y;
 			if (!a->enabled) continue;
@@ -668,7 +668,7 @@ static zrn_element_t* pick(const zrn_root_t* const r, const float x, const float
 		zrn_element_t* const child = popup->child_count ? popup->children[0] : nullptr;
 		ZPoint origin, q;
 		if (!child) continue;
-		origin = zrn_to_root(popup, (ZPoint){ 0, 0 });
+		origin = zrn_to_root(popup, (ZPoint){ .x = 0, .y = 0 });
 		q.x = x - origin.x - child->rect.x;
 		q.y = y - origin.y - child->rect.y;
 		zrn_element_t* hit = zrn_hit_test(child, q);
@@ -771,7 +771,7 @@ static void preview(const zrn_element_t* const target, const zrn_input_type_t ty
 		if (!a) return;
 		if (!a->observes_pointer || !a->enabled || !a->cls->input) continue;
 		memset(&in, 0, sizeof in);
-		ZPoint q = zrn_from_root(a, (ZPoint){ x, y });
+		ZPoint q = zrn_from_root(a, (ZPoint){ .x = x, .y = y });
 		in.type = type;
 		in.x = q.x;
 		in.y = q.y;

@@ -271,7 +271,7 @@ static void sz_apply(zrn_semantic_zoom_t* const z) {
 
 static ZSize sz_measure(zrn_element_t* const e, const ZSize available) {
 	zrn_element_t* const view = sz_active(SZ(e));
-	ZSize s = { 0, 0 };
+	ZSize s = { .width = 0, .height = 0 };
 	if (view) {
 		zrn_measure(view, available);
 		s = view->desired;

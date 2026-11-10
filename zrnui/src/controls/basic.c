@@ -533,7 +533,7 @@ ZThickness zrn_cc_insets(zrn_element_t* const e) {
 ZSize zrn_cc_measure(zrn_element_t* const e, const ZSize available) {
 	const zrn_content_control_t* const cc = ZST_AS(zrn_content_control_t, e);
 	const ZThickness in = zrn_cc_insets(e);
-	ZSize content = { 0, 0 };
+	ZSize content = { .width = 0, .height = 0 };
 	if (cc->content) {
 		zrn_measure(cc->content, zrn_size(zrn_maxf(0, available.width - zrn_thickness_h(in)), zrn_maxf(0, available.height - zrn_thickness_v(in))));
 		content = cc->content->desired;

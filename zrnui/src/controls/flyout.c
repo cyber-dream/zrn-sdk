@@ -263,7 +263,7 @@ Zid Zflyout_get_content(const Zid flyout) {
  * ============================================================================ */
 
 static zrn_font_t menu_font(void) {
-	const zrn_font_t f = { Z_FONT_SEMILIGHT, MENU_FONT, MENU_SPACING };
+	const zrn_font_t f = { .family = Z_FONT_SEMILIGHT, .size = MENU_FONT, .spacing = MENU_SPACING };
 	return f;
 }
 

@@ -50,7 +50,7 @@ void zrn_set_string(char** dest, const char* const s) {
 	*dest = copy;
 }
 
-ZColor Zcolor_rgba(const float r, const float g, const float b, const float a) { const ZColor c = { r, g, b, a }; return c; }
+ZColor Zcolor_rgba(const float r, const float g, const float b, const float a) { const ZColor c = { .r = r, .g = g, .b = b, .a = a }; return c; }
 
 ZColor Zcolor_argb(const uint32_t argb) {
 	ZColor c;
@@ -61,8 +61,8 @@ ZColor Zcolor_argb(const uint32_t argb) {
 	return c;
 }
 
-ZThickness Zthickness(float left, float top, float right, float bottom) { const ZThickness th = { left, top, right, bottom }; return th; }
-ZThickness Zthickness_uniform(float all) { const ZThickness th = { all, all, all, all }; return th; }
+ZThickness Zthickness(float left, float top, float right, float bottom) { const ZThickness th = { .left = left, .top = top, .right = right, .bottom = bottom }; return th; }
+ZThickness Zthickness_uniform(float all) { const ZThickness th = { .left = all, .top = all, .right = all, .bottom = all }; return th; }
 
 const char* Zget_version(void) { return "0.1.0"; }
 
@@ -528,7 +528,7 @@ void zrn_arrange(zrn_element_t* const e, const ZRect final_rect) {
 }
 
 ZSize zrn_measure_children_max(zrn_element_t* const e, const ZSize available) {
-	ZSize m = { 0, 0 };
+	ZSize m = { .width = 0, .height = 0 };
 	for (int i = 0; i < e->child_count; i++) {
 		zrn_element_t* c = e->children[i];
 		zrn_measure(c, available);

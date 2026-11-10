@@ -128,7 +128,7 @@ static constexpr float SL_VERTICAL_W = 36.0f;
 static constexpr float SL_VERTICAL_SIDE = 13.5f;
 static constexpr float SL_VERTICAL_THUMB = 9.0f;
 
-static zrn_font_t slider_header_font(void) { const zrn_font_t f = { Z_FONT_NORMAL, ZST_81_FONT_CONTROL_HEADER, 0 }; return f; }
+static zrn_font_t slider_header_font(void) { const zrn_font_t f = { .family = Z_FONT_NORMAL, .size = ZST_81_FONT_CONTROL_HEADER, .spacing = 0 }; return f; }
 
 static float slider_header_height(const zrn_slider_t* const s) {
 	return s->header && *s->header ? zrn_font_line_height(slider_header_font()) : 0;
@@ -718,7 +718,7 @@ static int thumb_input(zrn_element_t* const e, zrn_input_t* const in) {
 	ZPoint root;
 	switch (in->type) {
 		case ZST_IN_POINTER_DOWN:
-			root = zrn_to_root(e, (ZPoint){ in->x, in->y });
+			root = zrn_to_root(e, (ZPoint){ .x = in->x, .y = in->y });
 			t->dragging = 1;
 			t->last_x = root.x;
 			t->last_y = root.y;
@@ -730,7 +730,7 @@ static int thumb_input(zrn_element_t* const e, zrn_input_t* const in) {
 		case ZST_IN_POINTER_MOVE: {
 			float dx, dy;
 			if (!t->dragging) return 0;
-			root = zrn_to_root(e, (ZPoint){ in->x, in->y });
+			root = zrn_to_root(e, (ZPoint){ .x = in->x, .y = in->y });
 			dx = root.x - t->last_x;
 			dy = root.y - t->last_y;
 			t->last_x = root.x;

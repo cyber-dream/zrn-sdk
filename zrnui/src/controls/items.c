@@ -311,7 +311,7 @@ static ZThickness ic_insets(const zrn_element_t* const e) {
 
 static ZSize ic_measure(zrn_element_t* const e, const ZSize available) {
 	const ZThickness in = ic_insets(e);
-	ZSize s = { 0, 0 };
+	ZSize s = { .width = 0, .height = 0 };
 	if (e->child_count) {
 		zrn_measure(e->children[0], zrn_size(zrn_maxf(0, available.width - zrn_thickness_h(in)), zrn_maxf(0, available.height - zrn_thickness_v(in))));
 		s = e->children[0]->desired;
@@ -597,8 +597,8 @@ void zrn_ic_scroll_into_view(zrn_items_control_t* const o, const int index, cons
 	Zroot_update_layout(o->base.base.root->id);
 	content = ZST_AS(zrn_content_control_t, o->scroll)->content;
 	if (!content) return;
-	at = zrn_to_root(item, (ZPoint){ 0, 0 });
-	origin = zrn_to_root(content, (ZPoint){ 0, 0 });
+	at = zrn_to_root(item, (ZPoint){ .x = 0, .y = 0 });
+	origin = zrn_to_root(content, (ZPoint){ .x = 0, .y = 0 });
 	int sideways = panel_scrolls_sideways(o->host);
 	if (sideways) {
 		start = at.x - origin.x;

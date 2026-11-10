@@ -22,7 +22,7 @@ static constexpr float COMBO_HEADER_OVERLAP = 4.5f;
 static constexpr float COMBO_OVERHANG = 9.5f;
 static constexpr float HEADER_FONT = 16.0f;
 
-static zrn_font_t header_font(void) { const zrn_font_t f = { Z_FONT_NORMAL, HEADER_FONT, 0 }; return f; }
+static zrn_font_t header_font(void) { const zrn_font_t f = { .family = Z_FONT_NORMAL, .size = HEADER_FONT, .spacing = 0 }; return f; }
 
 /* The popups: a Border of the highlighted look around a ScrollViewer or a ListView. */
 static zrn_element_t* make_drop_down(zrn_element_t* const owner, zrn_element_t* const content, const ZColor background, const ZColor border_brush) {
@@ -99,7 +99,7 @@ static ZSize combo_arrange(zrn_element_t* const e, const ZSize final) {
 static void combo_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	const auto c = CB(e);
 	const zrn_control_t* const ctl = &c->base.base;
-	const zrn_font_t font = { ctl->font_family, ctl->font_size, 0 };
+	const zrn_font_t font = { .family = ctl->font_family, .size = ctl->font_size, .spacing = 0 };
 	const ZRect box = combo_box_rect(e);
 	ZColor fg = zrn_ctl_color(ctl, ZST_C_FOREGROUND, ctl->foreground, zrn_theme_color(e, ZST_TC_FOREGROUND));
 	ZColor border = zrn_ctl_border_brush(ctl, zrn_theme_color(e, ZST_TC_FOREGROUND));

@@ -31,7 +31,7 @@ static ZSize page_measure(zrn_element_t* const e, const ZSize available) {
 	const auto p = PAGE(e);
 	const zrn_content_control_t* const cc = &p->base;
 	float top, bottom;
-	ZSize content = { 0, 0 };
+	ZSize content = { .width = 0, .height = 0 };
 	page_bar_room(p, &top, &bottom);
 	if (cc->content) {
 		zrn_measure(cc->content, zrn_size(available.width, zrn_maxf(0, available.height - top - bottom)));
@@ -251,7 +251,7 @@ static float clamp01(const float v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
 /* One frame of the turnstile: row `i` of `n`, `t` ms into this half. */
 static void rows_turn(const zrn_frame_t* const f, const zrn_element_t* const frame, const float t, const int incoming) {
 	int i, n = f->row_count;
-	const float left = zrn_to_root(frame, (ZPoint){ 0, 0 }).x;
+	const float left = zrn_to_root(frame, (ZPoint){ .x = 0, .y = 0 }).x;
 	for (i = 0; i < n; i++) {
 		zrn_element_t* const row = zrn_lookup(f->rows[i]);
 		int order = f->direction >= 0 ? i : n - 1 - i;
@@ -261,7 +261,7 @@ static void rows_turn(const zrn_frame_t* const f, const zrn_element_t* const fra
 		if (order > MAX_STAGGER_ROWS) order = MAX_STAGGER_ROWS;
 		/* a row not laid out yet has no width to turn about: it is only kept clear until the first tick lays it out */
 		if (row->rect.width > 0) {
-			origin = zrn_to_root(row, (ZPoint){ 0, 0 });
+			origin = zrn_to_root(row, (ZPoint){ .x = 0, .y = 0 });
 			row->proj_cx = (left - origin.x) / row->rect.width;
 			row->proj_cy = 0.5f;
 		}
@@ -448,7 +448,7 @@ static Zid build(const Zid frame_id, const zrn_frame_entry_t entry) {
 
 int Zframe_navigate(const Zid frame, const ZPageFactory factory, void* const parameter) {
 	zrn_frame_t* f = get_frame(frame);
-	zrn_frame_entry_t entry = { factory, parameter, Z_INVALID_ID };
+	zrn_frame_entry_t entry = { .factory = factory, .parameter = parameter, .cached = Z_INVALID_ID };
 	Zid page;
 	if (!f) return false;
 	if (!factory) {

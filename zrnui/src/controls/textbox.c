@@ -33,7 +33,7 @@ static zrn_font_t tbx_font(const zrn_text_box_t* const b) {
 
 static uint32_t bullet_char(const zrn_text_box_t* b);
 
-static zrn_font_t tbx_header_font(void) { const zrn_font_t f = { Z_FONT_NORMAL, ZST_81_FONT_CONTROL_HEADER, 0 }; return f; }
+static zrn_font_t tbx_header_font(void) { const zrn_font_t f = { .family = Z_FONT_NORMAL, .size = ZST_81_FONT_CONTROL_HEADER, .spacing = 0 }; return f; }
 
 /* The header takes a row of its own above the box. */
 static float tbx_header_height(const zrn_text_box_t* const b) {

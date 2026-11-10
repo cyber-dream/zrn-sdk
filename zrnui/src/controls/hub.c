@@ -57,14 +57,14 @@ typedef struct zrn_hub_section {
 /** HubHeaderFontSize and HubHeaderCharacterSpacing of the theme resources of the root (an override applies). */
 static zrn_font_t hub_header_font(const zrn_hub_t* const h) {
 	const zrn_root_t* r = ((const zrn_element_t*)h)->root;
-	zrn_font_t f = { Z_FONT_LIGHT, 78.0f, -22 };
+	zrn_font_t f = { .family = Z_FONT_LIGHT, .size = 78.0f, .spacing = -22 };
 	zrn_res_double(r, Z_RES_HUB_HEADER_FONT_SIZE, &f.size);
 	zrn_res_int(r, Z_RES_HUB_HEADER_CHARACTER_SPACING, &f.spacing);
 	return f;
 }
 
 static zrn_font_t section_font(void) {
-	const zrn_font_t f = { Z_FONT_SEMIBOLD, SECTION_FONT, SECTION_SPACING };
+	const zrn_font_t f = { .family = Z_FONT_SEMIBOLD, .size = SECTION_FONT, .spacing = SECTION_SPACING };
 	return f;
 }
 
@@ -106,7 +106,7 @@ static ZSize section_measure(zrn_element_t* const e, const ZSize available) {
 	const auto s = SECTION(e);
 	zrn_hub_t* const h = hub_of(e);
 	float top = section_top(e), w = available.width, text_w;
-	ZSize content = { 0, 0 };
+	ZSize content = { .width = 0, .height = 0 };
 	const char* t = s->header ? s->header : "";
 	/* never wider than the screen unless Width says so */
 	if (h && !is_vertical(h) && h->view_width > 0) w = zrn_minf(w, zrn_maxf(0, h->view_width - SECTION_MARGIN_LEFT));

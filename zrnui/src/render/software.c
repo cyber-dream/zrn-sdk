@@ -269,7 +269,7 @@ static void sw_draw_image(zrn_painter_t* const p, const zrn_image_t* const image
 			const float u = source.x + ((float)x + 0.5f - x0) / (x1 - x0) * source.width;
 			const int sx = (int)zrn_clampf(floorf(u), 0, (float)image->width - 1);
 			const uint8_t* s = image->rgba + ((size_t)sy * (size_t)image->width + (size_t)sx) * 4;
-			const ZColor c = { (float)s[0] / 255.0f, (float)s[1] / 255.0f, (float)s[2] / 255.0f, (float)s[3] / 255.0f };
+			const ZColor c = { .r = (float)s[0] / 255.0f, .g = (float)s[1] / 255.0f, .b = (float)s[2] / 255.0f, .a = (float)s[3] / 255.0f };
 			blend(row + x * 4, c, 1.0f, p->alpha);
 		}
 	}

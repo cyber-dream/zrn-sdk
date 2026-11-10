@@ -138,12 +138,12 @@ typedef struct zrn_looping_selector {
 } zrn_looping_selector_t;
 
 static zrn_font_t primary_font(const zrn_looping_selector_t* const s) {
-	const zrn_font_t f = { Z_FONT_SEMIBOLD, s->primary_size, s->primary_spacing };
+	const zrn_font_t f = { .family = Z_FONT_SEMIBOLD, .size = s->primary_size, .spacing = s->primary_spacing };
 	return f;
 }
 
 static zrn_font_t secondary_font(void) {
-	const zrn_font_t f = { Z_FONT_SEMIBOLD, SECONDARY_SIZE, 0 };
+	const zrn_font_t f = { .family = Z_FONT_SEMIBOLD, .size = SECONDARY_SIZE, .spacing = 0 };
 	return f;
 }
 
@@ -630,7 +630,7 @@ static const char* day_text(const int i, char* const buf, void* const data) {
 
 /* The days of the month the month and year selectors show now, with the chosen day kept as far as the month goes. */
 static void date_fill_days(const zrn_picker_flyout_t* const f, const int year, const int month, const int day_index) {
-	ZDate d = { year, month, 1 };
+	ZDate d = { .year = year, .month = month, .day = 1 };
 	const int n = days_in_month(year, month);
 	selector_fill(f->selector[1], n, day_text, &d);
 	Zlooping_selector_set_selected_index(f->selector[1]->id, zrn_mini(day_index, n - 1));
@@ -650,7 +650,7 @@ static void date_sync(zrn_picker_flyout_t* const f) {
 
 /* What the selectors show as a date. */
 static ZDate date_of_selectors(const zrn_picker_flyout_t* const f) {
-	const ZDate d = { f->min_year + selector_index(f->selector[2]), selector_index(f->selector[0]) + 1, selector_index(f->selector[1]) + 1 };
+	const ZDate d = { .year = f->min_year + selector_index(f->selector[2]), .month = selector_index(f->selector[0]) + 1, .day = selector_index(f->selector[1]) + 1 };
 	return coerce_date(d, f->min_year, f->max_year);
 }
 
@@ -921,7 +921,7 @@ void Zdate_picker_flyout_set_date(const Zid flyout, const ZDate date) {
 
 ZDate Zdate_picker_flyout_get_date(const Zid flyout) {
 	const zrn_picker_flyout_t* const f = get_date_flyout(flyout);
-	const ZDate none = { 0, 0, 0 };
+	const ZDate none = { .year = 0, .month = 0, .day = 0 };
 	return f ? f->date : none;
 }
 
@@ -981,7 +981,7 @@ void Ztime_picker_flyout_set_time(const Zid flyout, const ZTimeOfDay time_of_day
 
 ZTimeOfDay Ztime_picker_flyout_get_time(const Zid flyout) {
 	const zrn_picker_flyout_t* const f = get_time_flyout(flyout);
-	const ZTimeOfDay none = { 0, 0 };
+	const ZTimeOfDay none = { .hour = 0, .minute = 0 };
 	return f ? f->time : none;
 }
 
@@ -1018,7 +1018,7 @@ void Ztime_picker_flyout_on_time_picked(const Zid flyout, const ZTimePickedCallb
 
 /* HeaderContentPresenterStyle: Normal, TextStyleMediumFontSize 16, PhoneMid, margin 0,0,0,-3 */
 static zrn_font_t header_font(void) {
-	const zrn_font_t f = { Z_FONT_NORMAL, ZST_81_FONT_CONTROL_HEADER, 0 };
+	const zrn_font_t f = { .family = Z_FONT_NORMAL, .size = ZST_81_FONT_CONTROL_HEADER, .spacing = 0 };
 	return f;
 }
 
@@ -1212,7 +1212,7 @@ void Zdate_picker_set_date(const Zid date_picker, const ZDate date) {
 
 ZDate Zdate_picker_get_date(const Zid date_picker) {
 	const zrn_picker_t* const p = get_date_picker(date_picker);
-	const ZDate none = { 0, 0, 0 };
+	const ZDate none = { .year = 0, .month = 0, .day = 0 };
 	return p ? p->date : none;
 }
 
@@ -1296,7 +1296,7 @@ void Ztime_picker_set_time(const Zid time_picker, const ZTimeOfDay time_of_day) 
 
 ZTimeOfDay Ztime_picker_get_time(const Zid time_picker) {
 	const zrn_picker_t* const p = get_time_picker(time_picker);
-	const ZTimeOfDay none = { 0, 0 };
+	const ZTimeOfDay none = { .hour = 0, .minute = 0 };
 	return p ? p->time : none;
 }
 

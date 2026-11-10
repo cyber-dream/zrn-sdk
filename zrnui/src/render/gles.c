@@ -660,7 +660,7 @@ static GLuint image_texture(zrn_gl_t* const gl, const zrn_image_t* const image) 
 static void gl_draw_image(zrn_painter_t* const p, const zrn_image_t* const image, const ZRect dest, const ZRect source) {
 	const auto gl = (zrn_gl_t*)p->backend_data;
 	const float x0 = dx(p, dest.x), y0 = dy(p, dest.y), x1 = dx(p, dest.x + dest.width), y1 = dy(p, dest.y + dest.height);
-	const ZColor white = { 1, 1, 1, 1 };
+	const ZColor white = { .r = 1, .g = 1, .b = 1, .a = 1 };
 	if (!image || x1 <= x0 || y1 <= y0) return;
 	flush(gl);
 	GLuint t = image_texture(gl, image);

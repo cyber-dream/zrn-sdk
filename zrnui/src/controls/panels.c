@@ -85,7 +85,7 @@ void Zpanel_set_zindex(const Zid child, const int zindex) {
 
 static ZSize stack_measure(zrn_element_t* const e, const ZSize available) {
 	const zrn_stack_panel_t* const s = ZST_AS(zrn_stack_panel_t, e);
-	ZSize total = { 0, 0 };
+	ZSize total = { .width = 0, .height = 0 };
 	int i, vertical = s->orientation == Z_VERTICAL;
 	for (i = 0; i < e->child_count; i++) {
 		zrn_element_t* c = e->children[i];
@@ -189,7 +189,7 @@ static ZSize wrap_flow(zrn_element_t* const e, const float limit, const int plac
 	float pos = 0, line_extent = 0, offset = 0, max_pos = 0;
 	int line_start = 0;
 	for (i = 0; i <= e->child_count; i++) {
-		ZSize s = { 0, 0 };
+		ZSize s = { .width = 0, .height = 0 };
 		float along, across;
 		zrn_element_t* c = i < e->child_count ? e->children[i] : nullptr;
 		if (c) {
@@ -578,7 +578,7 @@ static ZSize grid_measure(zrn_element_t* const e, const ZSize available) {
 	grid_cell_t* cells = nullptr;
 	float col_content[256] = {}, row_content[256] = {};
 	int n = 0, i, group;
-	ZSize result = { 0, 0 };
+	ZSize result = { .width = 0, .height = 0 };
 	const int inf_w = available.width >= Z_INFINITE * 0.5f, inf_h = available.height >= Z_INFINITE * 0.5f;
 	grid_prepare(g, &cols, &rows);
 	if (e->child_count > 0) cells = (grid_cell_t*)calloc((size_t)e->child_count, sizeof *cells);
@@ -817,7 +817,7 @@ static ZThickness border_inset(const zrn_border_t* const b) {
 static ZSize border_measure(zrn_element_t* const e, const ZSize available) {
 	const zrn_border_t* const b = ZST_AS(zrn_border_t, e);
 	const ZThickness inset = border_inset(b);
-	ZSize content = { 0, 0 };
+	ZSize content = { .width = 0, .height = 0 };
 	if (e->child_count > 0) {
 		zrn_measure(e->children[0], zrn_size(zrn_maxf(0, available.width - zrn_thickness_h(inset)), zrn_maxf(0, available.height - zrn_thickness_v(inset))));
 		content = e->children[0]->desired;

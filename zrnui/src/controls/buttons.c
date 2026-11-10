@@ -628,8 +628,8 @@ static constexpr float TS_KNOB_TRAVEL = 56.5f;
 static constexpr float TS_OUTLINE = 2.5f;
 /** The animation of the knob, in ms. */
 
-static zrn_font_t ts_header_font(void) { const zrn_font_t f = { Z_FONT_NORMAL, ZST_81_FONT_CONTROL_HEADER, 0 }; return f; }
-static zrn_font_t ts_content_font(void) { const zrn_font_t f = { Z_FONT_NORMAL, ZST_81_FONT_EXTRA_LARGE, 0 }; return f; }
+static zrn_font_t ts_header_font(void) { const zrn_font_t f = { .family = Z_FONT_NORMAL, .size = ZST_81_FONT_CONTROL_HEADER, .spacing = 0 }; return f; }
+static zrn_font_t ts_content_font(void) { const zrn_font_t f = { .family = Z_FONT_NORMAL, .size = ZST_81_FONT_EXTRA_LARGE, .spacing = 0 }; return f; }
 
 static int ts_has(const char* s) { return s && *s; }
 

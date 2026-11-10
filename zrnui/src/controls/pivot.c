@@ -62,7 +62,7 @@ typedef struct zrn_pivot {
 /** PivotHeaderItemFontFamily, FontSize and CharacterSpacing of the theme resources of the root (an override applies). */
 static zrn_font_t header_font(const zrn_pivot_t* const p) {
 	const zrn_root_t* r = ((const zrn_element_t*)p)->root;
-	zrn_font_t f = { Z_FONT_SEMILIGHT, 57.0f, -25 };
+	zrn_font_t f = { .family = Z_FONT_SEMILIGHT, .size = 57.0f, .spacing = -25 };
 	zrn_res_font_family(r, Z_RES_PIVOT_HEADER_ITEM_FONT_FAMILY, &f.family);
 	zrn_res_double(r, Z_RES_PIVOT_HEADER_ITEM_FONT_SIZE, &f.size);
 	zrn_res_int(r, Z_RES_PIVOT_HEADER_ITEM_CHARACTER_SPACING, &f.spacing);
@@ -70,7 +70,7 @@ static zrn_font_t header_font(const zrn_pivot_t* const p) {
 }
 
 static zrn_font_t title_font(void) {
-	const zrn_font_t f = { Z_FONT_SEMIBOLD, TITLE_FONT, 0 };
+	const zrn_font_t f = { .family = Z_FONT_SEMIBOLD, .size = TITLE_FONT, .spacing = 0 };
 	return f;
 }
 
@@ -569,7 +569,7 @@ ZRect Zpivot_get_header_rect(const Zid pivot, const int index) {
 	zrn_pivot_t* const p = get_pivot(pivot);
 	header_place_t places[MAX_PLACES];
 	int i, n;
-	const ZRect none = { 0, 0, 0, 0 };
+	const ZRect none = { .x = 0, .y = 0, .width = 0, .height = 0 };
 	if (!p || index < 0 || index >= p->count) return none;
 	n = header_places(p, places, MAX_PLACES, p->base.base.rect.width);
 	for (i = 0; i < n; i++) {

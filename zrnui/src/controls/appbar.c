@@ -78,7 +78,7 @@ static ZSize icon_measure(zrn_element_t* const e, const ZSize available) {
 	auto i = ICON(e);
 	ZST_UNUSED(available);
 	if (e->cls == &zrn_class_font_icon) {
-		const zrn_font_t font = { i->family, i->font_size, 0 };
+		const zrn_font_t font = { .family = i->family, .size = i->font_size, .spacing = 0 };
 		const char* g = i->glyph ? i->glyph : "";
 		return zrn_size(zrn_text_width(font, g, (int)strlen(g)), zrn_font_line_height(font));
 	}
@@ -262,7 +262,7 @@ zrn_class_t zrn_class_symbol_icon = {
 
 static void font_icon_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	auto i = ICON(e);
-	const zrn_font_t font = { i->family, i->font_size, 0 };
+	const zrn_font_t font = { .family = i->family, .size = i->font_size, .spacing = 0 };
 	const char* g = i->glyph ? i->glyph : "";
 	const float w = zrn_text_width(font, g, (int)strlen(g)), h = zrn_font_line_height(font);
 	zrn_draw_string(p, font, g, (int)strlen(g), (e->rect.width - w) * 0.5f, (e->rect.height - h) * 0.5f, icon_color(e));
@@ -529,12 +529,12 @@ static zrn_app_bar_item_t* item_of(zrn_element_t* const e) {
 }
 
 static zrn_font_t label_font(zrn_element_t* const e) {
-	const zrn_font_t f = { ZST_AS(zrn_control_t, e)->font_family, ITEM_LABEL_FONT, 0 };
+	const zrn_font_t f = { .family = ZST_AS(zrn_control_t, e)->font_family, .size = ITEM_LABEL_FONT, .spacing = 0 };
 	return f;
 }
 
 static zrn_font_t row_font(void) {
-	const zrn_font_t f = { Z_FONT_SEMILIGHT, ROW_FONT, -15 };
+	const zrn_font_t f = { .family = Z_FONT_SEMILIGHT, .size = ROW_FONT, .spacing = -15 };
 	return f;
 }
 
