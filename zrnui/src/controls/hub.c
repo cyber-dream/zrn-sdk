@@ -269,7 +269,7 @@ static void hub_paint(zrn_element_t* const e, zrn_painter_t* const p) {
 	zrn_draw_string(p, hub_header_font(h), h->header, (int)strlen(h->header), x, y, zrn_ctl_foreground(&h->base));
 }
 
-static void hub_apply_orientation(zrn_hub_t* const h) {
+static void hub_apply_orientation(const zrn_hub_t* const h) {
 	if (!h->host || !h->scroll) return;
 	Zstack_panel_set_orientation(h->host->id, h->orientation);
 	if (is_vertical(h)) {

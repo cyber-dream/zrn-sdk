@@ -22,7 +22,7 @@ static void page_init(zrn_element_t* const e) {
 }
 
 /* The page makes room for its app bars: what is left is the content's, and an open bar grows over the content. */
-static void page_bar_room(zrn_page_t* const p, float* const top, float* const bottom) {
+static void page_bar_room(const zrn_page_t* const p, float* const top, float* const bottom) {
 	*top = p->top_bar && p->top_bar->visibility == Z_VISIBLE ? zrn_app_bar_closed_height(p->top_bar) : 0;
 	*bottom = p->bottom_bar && p->bottom_bar->visibility == Z_VISIBLE ? zrn_app_bar_closed_height(p->bottom_bar) : 0;
 }
@@ -158,7 +158,7 @@ static void frame_init(zrn_element_t* const e) {
 }
 
 /* The pages kept alive for the entries from `first` on go with them. */
-static void drop_cached(zrn_frame_t* const f, const int first) {
+static void drop_cached(const zrn_frame_t* const f, const int first) {
 	int i;
 	for (i = first; i < f->count; i++) {
 		zrn_element_t* const page = f->entries[i].cached != Z_INVALID_ID ? zrn_lookup(f->entries[i].cached) : nullptr;
@@ -206,7 +206,7 @@ static int is_container(const zrn_element_t* const e) {
 		zrn_is_a(e, Z_CLASS_SCROLL_VIEWER) || zrn_is_a(e, Z_CLASS_USER_CONTROL) || zrn_is_a(e, Z_CLASS_ITEMS_CONTROL);
 }
 
-static void collect_rows(zrn_frame_t* const f, zrn_element_t* const e) {
+static void collect_rows(zrn_frame_t* const f, const zrn_element_t* const e) {
 	int i;
 	if (e->visibility != Z_VISIBLE || f->row_count >= MAX_ROWS || zrn_is_a(e, Z_CLASS_APP_BAR)) return;
 	if (is_container(e) && e->child_count > 0) {
@@ -252,7 +252,7 @@ static void rows_reset(zrn_frame_t* const f) {
 static float clamp01(const float v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
 
 /* One frame of the turnstile: row `i` of `n`, `t` ms into this half. */
-static void rows_turn(zrn_frame_t* const f, zrn_element_t* const frame, const float t, const int incoming) {
+static void rows_turn(const zrn_frame_t* const f, const zrn_element_t* const frame, const float t, const int incoming) {
 	int i, n = f->row_count;
 	const float left = zrn_to_root(frame, (ZPoint){ 0, 0 }).x;
 	for (i = 0; i < n; i++) {

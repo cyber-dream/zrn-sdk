@@ -109,7 +109,7 @@ static ZSize item_measure(zrn_element_t* const e, const ZSize available) {
 	return s;
 }
 
-static int item_focused(zrn_element_t* const e, const zrn_items_control_t* const o) {
+static int item_focused(const zrn_element_t* const e, const zrn_items_control_t* const o) {
 	return o && o->focus_visible && o->focus_item == e->id && e->root && e->root->focus == &o->base.base;
 }
 
@@ -526,7 +526,7 @@ static int panel_scrolls_sideways(const zrn_element_t* const panel) {
 	return 0;
 }
 
-static void ic_sync_scroll(zrn_items_control_t* const o) {
+static void ic_sync_scroll(const zrn_items_control_t* const o) {
 	int sideways = panel_scrolls_sideways(o->host);
 	if (o->presenter) Zstack_panel_set_orientation(o->presenter->id, sideways ? Z_HORIZONTAL : Z_VERTICAL);
 	if (o->scroll && !zrn_is_a(&o->base.base, Z_CLASS_COMBO_BOX)) {

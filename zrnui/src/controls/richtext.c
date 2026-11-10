@@ -28,7 +28,7 @@ typedef struct zrn_rich_text_block {
 enum { SET_SIZE = 1, SET_FAMILY = 2, SET_FOREGROUND = 4, SET_LINE_HEIGHT = 8, SET_SPACING = 16 };
 
 /* What the block says is the look of a paragraph. */
-static void rtb_apply(const zrn_rich_text_block_t* const r, zrn_element_t* const tb) {
+static void rtb_apply(const zrn_rich_text_block_t* const r, const zrn_element_t* const tb) {
 	const Zid id = tb->id;
 	if (r->set & SET_SIZE) Ztext_block_set_font_size(id, r->font_size);
 	if (r->set & SET_FAMILY) Ztext_block_set_font_family(id, r->family);

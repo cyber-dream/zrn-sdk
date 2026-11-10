@@ -348,7 +348,7 @@ void Zroot_set_background(const Zid root, const ZColor color) {
  *  layout
  * ============================================================================ */
 
-static void layout_popups(zrn_root_t* const r) {
+static void layout_popups(const zrn_root_t* const r) {
 	int i;
 	const float lw = (float)r->width / r->ui, lh = (float)r->height / r->ui;
 	for (i = 0; i < r->popup_count; i++) {
@@ -449,7 +449,7 @@ void zrn_paint_element(zrn_element_t* const e, zrn_painter_t* const p, zrn_root_
 	p->alpha = alpha;
 }
 
-static void paint_tooltip(zrn_root_t* const r, zrn_painter_t* const p) {
+static void paint_tooltip(const zrn_root_t* const r, zrn_painter_t* const p) {
 	const zrn_font_t font = { Z_FONT_NORMAL, ZST_FONT_SMALL, 0 };
 	zrn_text_layout_t* l;
 	float w, h, x, y;
@@ -675,7 +675,7 @@ int zrn_dispatch(zrn_element_t* const e, zrn_input_t* const in) {
 	return 0;
 }
 
-static zrn_element_t* pick(zrn_root_t* const r, const float x, const float y) {
+static zrn_element_t* pick(const zrn_root_t* const r, const float x, const float y) {
 	int i;
 	for (i = r->popup_count - 1; i >= 0; i--) {
 		zrn_element_t* const popup = r->popups[i];
@@ -703,7 +703,7 @@ static int is_inside(const zrn_element_t* e, const zrn_element_t* ancestor) {
 void zrn_popup_close(zrn_element_t* popup);
 
 /* A press outside the open popups closes the ones that do not stay open. Returns 1 when the press was on the owner of a closed popup. */
-static int close_outside(zrn_root_t* const r, zrn_element_t* const target) {
+static int close_outside(const zrn_root_t* const r, const zrn_element_t* const target) {
 	int i, swallow = 0;
 	for (i = r->popup_count - 1; i >= 0; i--) {
 		zrn_popup_t* const popup = ZST_AS(zrn_popup_t, r->popups[i]);
@@ -781,7 +781,7 @@ static zrn_element_t* tooltip_owner(zrn_element_t* e) {
 }
 
 /* Lets the ancestors that observe the pointer see an event first. */
-static void preview(zrn_element_t* const target, const zrn_input_type_t type, const float x, const float y) {
+static void preview(const zrn_element_t* const target, const zrn_input_type_t type, const float x, const float y) {
 	Zid ids[64];
 	int n = zrn_chain(target, ids, 64), i;
 	for (i = 0; i < n; i++) {

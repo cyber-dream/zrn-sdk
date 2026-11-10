@@ -40,7 +40,7 @@ static inline float to_dev_y(const zrn_painter_t* p, const float y) { return p->
 
 
 /* Fills a device rectangle with fractional edges: partial pixels get partial coverage. */
-static void fill_device_rect(zrn_painter_t* const p, const float x0, const float y0, const float x1, const float y1, const ZColor c) {
+static void fill_device_rect(const zrn_painter_t* const p, const float x0, const float y0, const float x1, const float y1, const ZColor c) {
 	int ix0, iy0, ix1, iy1, x, y;
 	if (x1 <= x0 || y1 <= y0) return;
 	ix0 = (int)floorf(x0);
@@ -72,7 +72,7 @@ static void sw_fill_rect(zrn_painter_t* const p, const ZRect r, const ZColor c) 
 
 typedef float (*coverage_fn)(const void* shape, float x, float y);
 
-static void fill_shape(zrn_painter_t* const p, const float bx0, const float by0, const float bx1, const float by1, const coverage_fn fn, const void* const shape, const ZColor c) {
+static void fill_shape(const zrn_painter_t* const p, const float bx0, const float by0, const float bx1, const float by1, const coverage_fn fn, const void* const shape, const ZColor c) {
 	int x0 = (int)floorf(bx0) - 1, y0 = (int)floorf(by0) - 1, x1 = (int)ceilf(bx1) + 1, y1 = (int)ceilf(by1) + 1, x, y;
 	if (x0 < p->clip[0]) x0 = p->clip[0];
 	if (y0 < p->clip[1]) y0 = p->clip[1];

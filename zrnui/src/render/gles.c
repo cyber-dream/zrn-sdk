@@ -357,7 +357,7 @@ static void flush(zrn_gl_t* const gl) {
 }
 
 /* Gets the batch ready for a draw with this clip and texture: a change of either draws what is waiting. */
-static float* reserve(zrn_painter_t* const p, const GLuint texture) {
+static float* reserve(const zrn_painter_t* const p, const GLuint texture) {
 	const auto gl = (zrn_gl_t*)p->backend_data;
 	if (gl->quads >= MAX_QUADS || (gl->quads && gl->batch_texture != texture)) flush(gl);
 	if (gl->quads && memcmp(gl->batch_clip, p->clip, sizeof p->clip) != 0) flush(gl);

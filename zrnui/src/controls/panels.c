@@ -552,7 +552,7 @@ static void grid_resolve_star(zrn_grid_def_t* defs, int count, const float avail
 	}
 }
 
-static void grid_prepare(zrn_grid_t* const g, grid_axis_t* const cols, grid_axis_t* const rows) {
+static void grid_prepare(const zrn_grid_t* const g, grid_axis_t* const cols, grid_axis_t* const rows) {
 	int i;
 	grid_axis_get(g->columns, g->column_count, cols);
 	grid_axis_get(g->rows, g->row_count, rows);
@@ -576,7 +576,7 @@ static void grid_classify(zrn_element_t* const child, const grid_axis_t* const c
 	}
 }
 
-static void grid_clamp_auto(grid_axis_t* const axis) {
+static void grid_clamp_auto(const grid_axis_t* const axis) {
 	int i;
 	for (i = 0; i < axis->count; i++) if (axis->defs[i].unit == Z_GRID_AUTO) axis->defs[i].size = zrn_clampf(axis->defs[i].size, axis->defs[i].min, axis->defs[i].max);
 }
@@ -945,7 +945,7 @@ void Zborder_set_padding(const Zid id, const ZThickness padding) {
  *  not hit tested: a Viewbox shows, it does not interact.
  * ============================================================================ */
 
-static void viewbox_scale(zrn_viewbox_t* const v, const ZSize content, const ZSize room, float* const sx, float* const sy) {
+static void viewbox_scale(const zrn_viewbox_t* const v, const ZSize content, const ZSize room, float* const sx, float* const sy) {
 	*sx = *sy = 1.0f;
 	if (v->stretch == Z_STRETCH_NONE || content.width <= 0 || content.height <= 0) return;
 	if (room.width < Z_INFINITE * 0.5f) *sx = room.width / content.width;

@@ -324,7 +324,7 @@ static void tbx_vertical_move(zrn_text_box_t* const b, const int dir, const int 
 	tbx_display_release(disp, heap);
 }
 
-static int tbx_key(zrn_element_t* const e, zrn_input_t* const in) {
+static int tbx_key(zrn_element_t* const e, const zrn_input_t* const in) {
 	zrn_text_box_t* const b = TB(e);
 	const Zid id = e->id;
 	const int shift = (in->mods & Z_MOD_SHIFT) != 0, ctrl = (in->mods & Z_MOD_CTRL) != 0;

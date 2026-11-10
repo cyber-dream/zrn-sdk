@@ -49,7 +49,7 @@ static zrn_element_t* make_drop_down(zrn_element_t* const owner, zrn_element_t* 
 }
 
 /* The popups follow the theme of the moment they open. */
-static void style_drop_down(zrn_element_t* const popup, const ZColor background, const ZColor border_brush) {
+static void style_drop_down(const zrn_element_t* const popup, const ZColor background, const ZColor border_brush) {
 	zrn_border_t* const b = ZST_AS(zrn_border_t, popup->children[0]);
 	b->background = background;
 	b->border_brush = border_brush;

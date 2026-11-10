@@ -53,7 +53,7 @@ static void set_handler(zrn_element_t* const e, const ZEvent ev, const ZRoutedCa
 	e->handlers[ev - Z_EVENT_CLICK].user_data = data;
 }
 
-static zrn_element_t* presenter_of(zrn_flyout_base_t* const f) {
+static zrn_element_t* presenter_of(const zrn_flyout_base_t* const f) {
 	return f->popup && f->popup->child_count ? f->popup->children[0] : nullptr;
 }
 
@@ -543,7 +543,7 @@ static void dialog_child_removed(zrn_element_t* const e, zrn_element_t* const ch
 
 static int visible(const zrn_element_t* e) { return e && e->visibility == Z_VISIBLE; }
 
-static float title_height(zrn_content_dialog_t* const d) {
+static float title_height(const zrn_content_dialog_t* const d) {
 	return d->title && visible(d->title) ? d->title->desired.height : 0;
 }
 

@@ -102,7 +102,7 @@ typedef struct shape {
 static float sx(const shape_t* h, const float v) { return h->ox + v * h->s; }
 static float sy(const shape_t* h, const float v) { return h->oy + v * h->s; }
 
-static void sh_line(shape_t* const h, const float x0, const float y0, const float x1, const float y1) {
+static void sh_line(const shape_t* const h, const float x0, const float y0, const float x1, const float y1) {
 	const float t = zrn_maxf(1.0f, 2.0f * h->s);
 	zrn_draw_line(h->p, sx(h, x0), sy(h, y0), sx(h, x1), sy(h, y1), t, h->c);
 }
@@ -116,7 +116,7 @@ static void sh_poly(shape_t* const h, const float* const xy, const int n, const 
 	for (i = 0; i < n; i++) zrn_fill_ellipse(h->p, zrn_rect(sx(h, xy[2 * i]) - t * 0.5f, sy(h, xy[2 * i + 1]) - t * 0.5f, t, t), h->c);
 }
 
-static void sh_fill(shape_t* h, const float* xy, int n) {
+static void sh_fill(const shape_t* h, const float* xy, int n) {
 	float pts[48];
 	int i;
 	if (n > 24) n = 24;
@@ -127,15 +127,15 @@ static void sh_fill(shape_t* h, const float* xy, int n) {
 	zrn_fill_polygon(h->p, pts, n, h->c);
 }
 
-static void sh_rect(shape_t* const h, const float x, const float y, const float w, const float rh) {
+static void sh_rect(const shape_t* const h, const float x, const float y, const float w, const float rh) {
 	zrn_fill_rect(h->p, zrn_rect(sx(h, x), sy(h, y), w * h->s, rh * h->s), h->c);
 }
 
-static void sh_dot(shape_t* const h, const float x, const float y, const float r) {
+static void sh_dot(const shape_t* const h, const float x, const float y, const float r) {
 	zrn_fill_ellipse(h->p, zrn_rect(sx(h, x - r), sy(h, y - r), 2 * r * h->s, 2 * r * h->s), h->c);
 }
 
-static void sh_ring(shape_t* const h, const float x, const float y, const float r, const float thickness) {
+static void sh_ring(const shape_t* const h, const float x, const float y, const float r, const float thickness) {
 	zrn_stroke_ellipse(h->p, zrn_rect(sx(h, x - r), sy(h, y - r), 2 * r * h->s, 2 * r * h->s), zrn_maxf(1.0f, thickness * h->s), h->c);
 }
 
@@ -813,7 +813,7 @@ static ZColor bar_background(zrn_element_t* const e) {
 	return zrn_ctl_background(c, zrn_theme_color(e, zrn_is_a(e, Z_CLASS_COMMAND_BAR) ? ZST_TC_CHROME : ZST_TC_BACKGROUND));
 }
 
-static float bar_width(zrn_element_t* const e, const ZSize available) {
+static float bar_width(const zrn_element_t* const e, const ZSize available) {
 	ZST_UNUSED(e);
 	return available.width < Z_INFINITE * 0.5f ? available.width : 480.0f;
 }
@@ -1027,7 +1027,7 @@ void Zapp_bar_on_closed(const Zid id, const ZRoutedCallback callback, void* cons
  *  their labels and the secondary commands are a list of text rows over (or, on top, under) the row.
  * ============================================================================ */
 
-static void list_remove(zrn_element_t*** list, int* const count, zrn_element_t* const child) {
+static void list_remove(zrn_element_t*** list, int* const count, const zrn_element_t* const child) {
 	int i;
 	for (i = 0; i < *count; i++) {
 		if ((*list)[i] == child) {
@@ -1073,7 +1073,7 @@ static void bar_sync_compact(zrn_element_t* const e) {
 }
 
 /* The row of the primary commands, as tall as the tallest: closed (no labels) or open. */
-static float command_row_height(zrn_command_bar_t* const c, const int open) {
+static float command_row_height(const zrn_command_bar_t* const c, const int open) {
 	float h = BAR_ROW;
 	int i;
 	for (i = 0; i < c->primary_count; i++) {
@@ -1083,7 +1083,7 @@ static float command_row_height(zrn_command_bar_t* const c, const int open) {
 	return h;
 }
 
-static float secondary_height(zrn_command_bar_t* const c) {
+static float secondary_height(const zrn_command_bar_t* const c) {
 	float h = 0;
 	int i;
 	if (c->secondary_count == 0) return 0;

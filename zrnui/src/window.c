@@ -243,7 +243,7 @@ static void ptr_enter(void* const d, struct wl_pointer* p, const uint32_t s, str
 	Zroot_inject_pointer(((window_t*)d)->root, Z_POINTER_MOVE, (float)wl_fixed_to_double(x), (float)wl_fixed_to_double(y));
 }
 static void ptr_leave(void* d, struct wl_pointer* p, const uint32_t s, struct wl_surface* sf) { (void)p; (void)s; (void)sf; Zroot_inject_pointer(((window_t*)d)->root, Z_POINTER_LEAVE, 0, 0); }
-static void ptr_motion(void* const d, struct wl_pointer* p, const uint32_t t, const wl_fixed_t x, const wl_fixed_t y) {
+static void ptr_motion(void* const d, const struct wl_pointer* p, const uint32_t t, const wl_fixed_t x, const wl_fixed_t y) {
 	(void)p; (void)t;
 	Zroot_inject_pointer(((window_t*)d)->root, Z_POINTER_MOVE, (float)wl_fixed_to_double(x), (float)wl_fixed_to_double(y));
 }

@@ -608,7 +608,7 @@ static zrn_picker_flyout_t* flyout_of(const Zid id) { return PF(zrn_lookup(id));
 
 static int selector_index(zrn_element_t* sel) { return sel ? LS(sel)->selected : 0; }
 
-static void selector_fill(zrn_element_t* const sel, const int count, const char* (*text)(int index, char* const buf, void* data), void* const data) {
+static void selector_fill(const zrn_element_t* const sel, const int count, const char* (*text)(int index, char* const buf, void* data), void* const data) {
 	char buf[32];
 	int i;
 	Zlooping_selector_clear_items(sel->id);
@@ -618,7 +618,7 @@ static void selector_fill(zrn_element_t* const sel, const int count, const char*
 	}
 }
 
-static void flyout_set_title_text(zrn_picker_flyout_t* const f) {
+static void flyout_set_title_text(const zrn_picker_flyout_t* const f) {
 	const char* t = f->title ? f->title : "";
 	if (!f->title_block) return;
 	Ztext_block_set_text(f->title_block->id, t);
@@ -637,7 +637,7 @@ static const char* day_text(const int i, char* const buf, void* const data) {
 }
 
 /* The days of the month the month and year selectors show now, with the chosen day kept as far as the month goes. */
-static void date_fill_days(zrn_picker_flyout_t* const f, const int year, const int month, const int day_index) {
+static void date_fill_days(const zrn_picker_flyout_t* const f, const int year, const int month, const int day_index) {
 	ZDate d = { year, month, 1 };
 	const int n = days_in_month(year, month);
 	selector_fill(f->selector[1], n, day_text, &d);
@@ -774,7 +774,7 @@ static void flyout_on_show(zrn_element_t* const e) {
 /* Dismissed: what the selectors show goes back to the value. */
 static void flyout_on_hide(zrn_element_t* e) { flyout_sync(PF(e)); }
 
-static zrn_element_t* make_bar_button(const char* const label, const ZSymbol symbol, zrn_picker_flyout_t* const f) {
+static zrn_element_t* make_bar_button(const char* const label, const ZSymbol symbol, const zrn_picker_flyout_t* const f) {
 	const Zid icon = Zsymbol_icon_create(symbol), b = Zapp_bar_button_create(label, icon);
 	zrn_element_t* const e = zrn_lookup(b);
 	if (e) {
@@ -957,7 +957,7 @@ void Zdate_picker_flyout_set_max_year(const Zid id, const int year) {
 int Zdate_picker_flyout_get_min_year(Zid id) { const zrn_picker_flyout_t* f = get_date_flyout(id); return f ? f->min_year : 0; }
 int Zdate_picker_flyout_get_max_year(Zid id) { const zrn_picker_flyout_t* f = get_date_flyout(id); return f ? f->max_year : 0; }
 
-static void date_apply_visibility(zrn_picker_flyout_t* const f) {
+static void date_apply_visibility(const zrn_picker_flyout_t* const f) {
 	f->selector[0]->visibility = f->month_visible ? Z_VISIBLE : Z_COLLAPSED;
 	f->selector[1]->visibility = f->day_visible ? Z_VISIBLE : Z_COLLAPSED;
 	f->selector[2]->visibility = f->year_visible ? Z_VISIBLE : Z_COLLAPSED;
@@ -1053,7 +1053,7 @@ static void picker_text(const zrn_picker_t* const p, const int is_date, char* co
 	}
 }
 
-static void picker_refresh_button(zrn_picker_t* const p) {
+static void picker_refresh_button(const zrn_picker_t* const p) {
 	char buf[64];
 	picker_text(p, p->base.base.cls == &zrn_class_date_picker, buf, sizeof buf);
 	if (p->button) Zcontent_control_set_text(p->button->id, buf);
