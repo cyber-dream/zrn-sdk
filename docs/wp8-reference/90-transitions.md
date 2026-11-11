@@ -22,6 +22,7 @@
 - [`Microsoft.Phone.Controls.TurnstileFeatherTransitionMode`](#microsoftphonecontrolsturnstilefeathertransitionmode)
 - [`Microsoft.Phone.Controls.TurnstileTransition`](#microsoftphonecontrolsturnstiletransition)
 - [`Microsoft.Phone.Controls.TurnstileTransitionMode`](#microsoftphonecontrolsturnstiletransitionmode)
+- [Storyboard values](#storyboard-values)
 
 ## Microsoft.Phone.Controls.FeatheredTransition
 
@@ -373,3 +374,70 @@ The turnstile transition modes.
 | `ForwardOut` | The turnstile forward out transition mode. | TK |
 | `BackwardIn` | The turnstile backward in transition mode. | TK |
 | `BackwardOut` | The turnstile backward out transition mode. | TK |
+
+## Storyboard values
+
+Source: Toolkit · `Microsoft.Phone.Controls.Toolkit/Transitions/Storyboards/*.xaml`, `Microsoft.Phone.Controls.Toolkit/Effects/TurnstileFeatherEffect.cs` (microsoftarchive/WindowsPhoneToolkit, `master`)
+
+The numbers of the modes above, which the member tables do not give. Angles are the Toolkit's own (`PlaneProjection.RotationX/Y/Z`); zrnui negates every one of them, because its axes turn the other way round (`zrnui/src/anim.c`, `TDEFS`). Times are in ms, from the first keyframe. An easing is on the keyframe that ends the leg. `Exp n` is `ExponentialEase` with `Exponent` n, `In` or `Out` its `EasingMode`; `Sine out` is `SineEase`. "Opacity step" is `1` until 10 ms before the end and `0` at the end (the element stays opaque while it moves, then goes).
+
+### Slide (`RenderTransform` `TranslateTransform`; the opacity has the same time and easing as the move)
+
+| Mode | Property | From → to | Time | Easing | Opacity |
+|---|---|---|---|---|---|
+| `SlideUpFadeIn` | Y | 200 → 0 | 350 | Exp 6 out | 0 → 1 |
+| `SlideUpFadeOut` | Y | 0 → -200 | 250 | Exp 6 out | 1 → 0 |
+| `SlideDownFadeIn` | Y | -200 → 0 | 350 | Exp 6 out | 0 → 1 |
+| `SlideDownFadeOut` | Y | 0 → 200 | 250 | Exp 6 out | 1 → 0 |
+| `SlideLeftFadeIn` | X | 200 → 0 | 500 | Exp 6 out | 0 → 1 |
+| `SlideLeftFadeOut` | X | 0 → -200 | 300 | Exp 6 out | 1 → 0 |
+| `SlideRightFadeIn` | X | -200 → 0 | 500 | Exp 6 out | 0 → 1 |
+| `SlideRightFadeOut` | X | 0 → 200 | 300 | Exp 6 out | 1 → 0 |
+
+### Turnstile (`PlaneProjection`, `CenterOfRotationX` 0, `RotationY`)
+
+| Mode | From → to | Time | Easing | Opacity |
+|---|---|---|---|---|
+| `ForwardIn` | -80 → 0 | 350 | Exp 6 out | 0 → 1 in 10 |
+| `ForwardOut` | 0 → 50 | 250 | Exp 6 in | step |
+| `BackwardIn` | 50 → 0 | 350 | Exp 6 out | 0 → 1 in 10 |
+| `BackwardOut` | 0 → -80 | 250 | Exp 6 in | step |
+
+### TurnstileFeather (`TurnstileFeatherEffect`)
+
+Each element of the page that is on the screen turns by itself: `PlaneProjection` with `CenterOfRotationX` -0.2 (a fifth of its width to the left of it), `RotationY`. The n-th element (0 for the first, in `FeatheringIndex` order) starts `delay × n` ms after the transition. The elements of a `ListBox` and `LongListSelector` that are in view count one by one; a `Pivot` counts its title and its headers. Going in, an element is hidden until its own start, then appears at once; going out, it goes at the end of its turn.
+
+| Mode | Angle, from → to | Time | Delay per element | Easing |
+|---|---|---|---|---|
+| `ForwardIn` | -80 → 0 | 350 | 40 | Exp 6 out |
+| `ForwardOut` | 0 → 50 | 250 | 50 | Exp 6 in |
+| `BackwardIn` | 50 → 0 | 350 | 50 | Exp 6 out |
+| `BackwardOut` | 0 → -80 | 250 | 40 | Exp 6 in |
+
+### Swivel (`PlaneProjection`, `RotationX`, centre of rotation 0.5, 0.5)
+
+| Mode | Angle | Time | Easing | Opacity |
+|---|---|---|---|---|
+| `ForwardIn` | -45 → 0 | 350 | Exp 6 out | not touched |
+| `ForwardOut` | 0 → 90 | 250 | Exp 15 in | step |
+| `BackwardIn` | -45 → -30 at 200 (linear) → 0 at 350 | 350 | Exp 6 out (the last leg) | 0 until 200, 1 at 210 |
+| `BackwardOut` | 0 → 60 | 250 | Exp 6 in | step |
+| `FullScreenIn` | -30 → 0 | 350 | Exp 6 out | not touched |
+| `FullScreenOut` | 0 → 30 | 250 | Exp 1 in | step |
+
+### Rotate (`PlaneProjection`, `RotationZ`, centre 0.5, 0.5; 250 ms; the opacity is Sine out)
+
+| Mode | Angle | Easing | Opacity |
+|---|---|---|---|
+| `In90Clockwise` | 90 → 0 | Exp 1 out | 0 → 1 |
+| `In90Counterclockwise` | -90 → 0 | Exp 1 out | 0 → 1 |
+| `In180Clockwise` | 180 → 0 | Exp 1 out | 0 → 1 |
+| `In180Counterclockwise` | -180 → 0 | Exp 1 out | 0 → 1 |
+| `Out90Clockwise` | 0 → -90 | Exp 1 in | 1 → 0 |
+| `Out90Counterclockwise` | 0 → 90 | Exp 1 in | 1 → 0 |
+| `Out180Clockwise` | 0 → -180 | Exp 1 in | 1 → 0 |
+| `Out180Counterclockwise` | 0 → 180 | Exp 1 in | 1 → 0 |
+
+### Roll (`RollTransition`, no modes; `PlaneProjection`, centre 0.5, 0.5, `RotationZ`)
+
+0 → 45 at 300 (Exp 6 out), → 90 at 600 (linear). The opacity is not touched.
