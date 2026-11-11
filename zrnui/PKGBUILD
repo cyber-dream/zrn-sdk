@@ -22,20 +22,5 @@ build() {
 }
 
 package() {
- # 1. Сначала создаем целевую директорию для библиотек
-    install -d "$pkgdir/usr/lib"
-
-    # 2. Переносим скомпилированные файлы .so
-    find build -maxdepth 1 -name 'libzrnui.so*' -exec install -m755 {} "$pkgdir/usr/lib/" \;
-
-    # 3. Копируем инклуды с явным указанием $startdir и раскрытием маски вне кавычек
-    install -d "$pkgdir/usr/include"
-    cp -r "$startdir"/include/* "$pkgdir/usr/include/"
-
-    # 4. Копируем шрифты в правильную подпапку selawik
-    install -d "$pkgdir/usr/share/fonts/zrnui/selawik"
-    install -m644 "$startdir"/fonts/selawik/* "$pkgdir/usr/share/fonts/zrnui/selawik/"
-
-    # 5. Копируем файл конфигурации темы из вложенной папки theme
-    install -Dm644 "$startdir/theme/theme.ini" "$pkgdir/usr/share/zrnui/theme/theme.ini"
+    DESTDIR="$pkgdir" cmake --install build
 }

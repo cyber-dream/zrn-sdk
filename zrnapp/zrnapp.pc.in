@@ -1,0 +1,11 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: zrnapp
+Description: @PROJECT_DESCRIPTION@
+Version: @PROJECT_VERSION@
+Requires: zrnui
+Requires.private: @ZRNAPP_PC_REQUIRES_PRIVATE@
+Libs: -L${libdir} -lzrnapp
+Cflags: -I${includedir}

@@ -1,0 +1,24 @@
+pkgname=zrnapp
+pkgver=2.0.0
+pkgrel=1
+pkgdesc="zrnapp - the window and the app cycle of zrnui applications, on Wayland"
+arch=('x86_64' 'aarch64')
+url="https://github.com/Zerone-Laboratories/zrn-sdk"
+license=('MIT')
+depends=('zrnui' 'wayland' 'libxkbcommon' 'mesa' 'egl-wayland')
+makedepends=('cmake' 'pkgconf')
+source=()
+options=('!strip')
+
+build() {
+    cmake -S "$startdir" -B build \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DZRNAPP_BUILD_SHARED=ON \
+        -DZRNAPP_SYSTEM_ZRNUI=ON
+    cmake --build build
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install build
+}

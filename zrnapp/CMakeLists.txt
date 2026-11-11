@@ -10,6 +10,8 @@ else()
 endif()
 
 option(ZRNAPP_BUILD_SHARED "Build zrnapp as a shared library" OFF)
+# the zrnui that is installed (zrnui.pc) instead of the one in ../zrnui; a package of zrnapp turns it ON
+option(ZRNAPP_SYSTEM_ZRNUI "Link the installed zrnui (found with pkg-config) instead of building ../zrnui" OFF)
 
 set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -19,7 +21,12 @@ find_package(PkgConfig REQUIRED)
 
 # the UI core: the one that draws; zrnapp only talks to it through zrnui/platform.h
 if(NOT TARGET zrnui::zrnui)
-	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../zrnui ${CMAKE_CURRENT_BINARY_DIR}/zrnui)
+	if(ZRNAPP_SYSTEM_ZRNUI OR NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../zrnui/CMakeLists.txt)
+		pkg_check_modules(ZRNUI REQUIRED IMPORTED_TARGET GLOBAL zrnui)
+		add_library(zrnui::zrnui ALIAS PkgConfig::ZRNUI)
+	else()
+		add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../zrnui ${CMAKE_CURRENT_BINARY_DIR}/zrnui)
+	endif()
 endif()
 
 pkg_check_modules(WAYLAND IMPORTED_TARGET wayland-client xkbcommon)
@@ -60,6 +67,19 @@ if(WAYLAND_FOUND)
 	endif()
 else()
 	message(WARNING "wayland-client / xkbcommon not found: Zwindow_run will fail at run time")
+endif()
+
+# install: the library, its header and zrnapp.pc
+include(GNUInstallDirs)
+if(ZRNAPP_IS_TOP_LEVEL)
+	install(TARGETS zrnapp ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+	install(FILES include/zrnapp.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+	set(ZRNAPP_PC_REQUIRES_PRIVATE "wayland-client xkbcommon")
+	if(GLES_FOUND AND WAYLAND_EGL_FOUND)
+		string(APPEND ZRNAPP_PC_REQUIRES_PRIVATE " egl glesv2 wayland-egl")
+	endif()
+	configure_file(zrnapp.pc.in ${CMAKE_CURRENT_BINARY_DIR}/zrnapp.pc @ONLY)
+	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/zrnapp.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 endif()
 
 if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
