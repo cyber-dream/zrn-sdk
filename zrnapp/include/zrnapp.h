@@ -45,7 +45,7 @@ extern "C" {
 	 * @brief Opens a window for `root` and runs its event loop until the window
 	 * is closed, the compositor goes away, or Zwindow_quit is called.
 	 * The window is as big as the root (in logical pixels); resizing it
-	 * resizes the root. The scale is the one of the compositor ($ZRNUI_SCALE overrides it, for debugging).
+	 * resizes the root. The scale is the one of the compositor ($ZRNAPP_SCALE overrides it, for debugging).
 	 * Zroot_tick is called every ~16 ms: animations, caret, repeat buttons.
 	 * @param options NULL: the defaults of ZWindowOptions.
 	 * @return true after a normal close, false when no window could be opened (see Zget_error).

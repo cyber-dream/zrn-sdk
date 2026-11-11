@@ -2,8 +2,7 @@
  * zrnui - render/software.c
  * The software renderer: the painter on an RGBA8 buffer in memory, with
  * coverage-based anti-aliased shapes. It needs no GPU and no display, draws
- * what Zroot_render returns and what the window shows through wl_shm, and is the
- * safe mode when there is no OpenGL.
+ * what Zroot_render returns, and is the safe mode when there is no OpenGL.
  *
  * Coordinates given to the backend functions are logical and local to the
  * element being painted (painter->tx, ty is its origin in device pixels).

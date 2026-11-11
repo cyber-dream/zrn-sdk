@@ -256,7 +256,7 @@ void Zroot_set_size(const Zid root, const int width, const int height) {
 
 /** The UI scale: the size of the layout grid relative to the window (the painter draws it
  * back up); at 720 x 1280 and a scale of 1.5 the page is laid out in the 480 x 800 grid.
- * The scale belongs to the shell; this is the override of ZRNUI_SCALE, not a zoom. */
+ * The scale belongs to the shell, the platform layer passes it on; it is not a zoom. */
 void Zroot_set_scale(const Zid root, const float scale) {
 	zrn_root_t* const r = get_root(root);
 	if (!r || scale <= 0) return;
@@ -266,7 +266,7 @@ void Zroot_set_scale(const Zid root, const float scale) {
 }
 
 /** The density of the buffer against the logical size of the window: only crispness,
- * what the compositor needs to draw the window sharply; the size of the content is the job of the UI scale. */
+ * what the shell needs to show the content sharply; the size of the content is the job of the UI scale. */
 void Zroot_set_density(const Zid root, const float density) {
 	zrn_root_t* const r = get_root(root);
 	if (!r || density <= 0) return;

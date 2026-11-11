@@ -62,8 +62,8 @@ typedef struct window {
 	Zid root;
 	int scale;    /* the integer buffer scale: the ceiling of fscale while the fractional one goes through the viewport */
 	float fscale; /* the real scale: device pixels per logical pixel, fractional through the viewport */
-	float env_scale; /* ZRNUI_SCALE when set: the override that wins over the preferred_scale of the compositor, 0 otherwise */
-	/** The UI scale: the shell's preferred_scale, or ZRNUI_SCALE as the debug override; the layout grid is the window divided by it. */
+	float env_scale; /* ZRNAPP_SCALE when set: the override that wins over the preferred_scale of the compositor, 0 otherwise */
+	/** The UI scale: the shell's preferred_scale, or ZRNAPP_SCALE as the debug override; the layout grid is the window divided by it. */
 	float ui_scale;
 	int width, height; /* logical */
 	int configured, closed, pending_w, pending_h;
@@ -156,7 +156,7 @@ static void present(window_t* const w) {
  * Zroot_set_scale is what the painter multiplies by); the buffer is drawn at the integer
  * ceiling, a fractional one goes through the viewport (the buffer of the ceiling squeezed
  * into the logical size, the compositor samples it at its own factor); without a viewport
- * only the integer scale works. The scale belongs to the shell: preferred_scale, or ZRNUI_SCALE as a debug override. */
+ * only the integer scale works. The scale belongs to the shell: preferred_scale, or ZRNAPP_SCALE as a debug override. */
 static void apply_scale(window_t* const w, const float fscale) {
 	w->fscale = fscale;
 	w->scale = (int)fscale;
@@ -430,7 +430,7 @@ void Zwindow_quit(void) { if (g_window) g_window->closed = 1; }
 
 int Zwindow_run_ex(const Zid root, const ZWindowOptions* const options) {
 	window_t w;
-	const char* scale_env = getenv("ZRNUI_SCALE");
+	const char* scale_env = getenv("ZRNAPP_SCALE");
 	double last;
 	int ok;
 	int root_width = 0, root_height = 0;

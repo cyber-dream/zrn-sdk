@@ -3,7 +3,7 @@
  * platform.h : what a platform layer needs from the UI core.
  *
  * zrnui draws and lays out a tree; it does not own a window, an event loop or the OS. The platform layer does:
- * zrnapp (a Wayland window and the app cycle) or a shell that embeds zrnui. This header is the whole seam between
+ * zrnapp (a Wayland window, ../zrnapp) or a shell that embeds zrnui. This header is the whole seam between
  * them: the size, density and invalidation of a root, the report of the renderer in use, and a GPU target that draws
  * in an OpenGL ES 2 context that the platform created. Input and time go in through Zroot_inject_* and Zroot_tick
  * (host.h), pixels come out of Zroot_render (host.h) or of Zgl_target_paint.

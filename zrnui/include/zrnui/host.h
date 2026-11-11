@@ -90,8 +90,8 @@ extern "C" {
 #endif
 
 	/**
-	 * @brief Creates a root. Its size comes from the window (Zwindow_run sizes it by what the compositor
-	 * gives, 480 x 800 until the first configure); a program without a window sets it with Zroot_set_size.
+	 * @brief Creates a root. Its size comes from the platform layer (zrnapp sizes it by what the compositor
+	 * gives, 480 x 800 until the first configure), or a program sets it with Zroot_set_size.
 	 * Dark theme, Cobalt accent as the system default of a Windows Phone 8 test device.
 	 */
 	ZRNUI_API Zid Zroot_create(void);
@@ -119,10 +119,10 @@ extern "C" {
 
 	/**
 	 * @brief Which renderer draws the root. Z_RENDERER_AUTO (the default; ZConfig.renderer, $ZRNUI_RENDERER=auto|software|gpu with Zinit
-	 * sets it for a new root) lets the window use OpenGL ES 2 when it can and Zroot_render use the software
+	 * sets it for a new root) lets the platform use OpenGL ES 2 when it can and Zroot_render use the software
 	 * painter; Z_RENDERER_SOFTWARE never touches the GPU (the safe mode: no animations that need one);
-	 * Z_RENDERER_GPU draws Zroot_render frames on an off-screen OpenGL context, and Zwindow_run fails
-	 * when there is none. Choose before the first Zroot_render / Zwindow_run.
+	 * Z_RENDERER_GPU draws Zroot_render frames on an off-screen OpenGL context, and the platform layer fails
+	 * when there is none. Choose before the first Zroot_render or before the platform layer shows the root.
 	 */
 	ZRNUI_API void Zroot_set_renderer(Zid root, ZRenderer renderer);
 	ZRNUI_API ZRenderer Zroot_get_renderer(Zid root);
@@ -148,8 +148,7 @@ extern "C" {
 	 * @brief The UI scale: the layout grid is the window divided by it, the painter draws the grid
 	 * back up (at 720 x 1280 and a scale of 1.5 the page is laid out in the 480 x 800 grid and
 	 * comes out one and a half times as big). The scale belongs to the shell of a phone;
-	 * a window sets it from the preferred_scale of the compositor (ZRNUI_SCALE overrides it
-	 * only as a debug override), not from the app.
+	 * the platform layer sets it from the preferred scale of the shell, not the app.
 	 */
 	ZRNUI_API void Zroot_set_scale(Zid root, float scale);
 

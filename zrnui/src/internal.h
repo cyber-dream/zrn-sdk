@@ -385,7 +385,7 @@ typedef struct zrn_frame {
 	int navigating;
 	/** The transition (frame.c): 1 the old page turns away, 2 the new one swings in, 0 none. */
 	ZPageTransition transition;
-	/** The first page went in before it was known whether animations run (the window is made later): Zwindow_run starts its swing-in. */
+	/** The first page went in before it was known whether animations run (the platform makes its surface later): Zroot_start_intro starts its swing-in. */
 	int intro_pending;
 	int phase, direction;
 	/** The mode of the navigation in progress (the page that leaves is told it too). */
@@ -1123,7 +1123,7 @@ void zrn_gl_resize(zrn_gl_t* gl, int width, int height);
 /** Makes the context current and prepares `p` to draw on it; zrn_gl_end draws what is left and swaps. */
 void zrn_gl_begin(zrn_gl_t* gl, zrn_painter_t* p, int width, int height, float scale);
 void zrn_gl_end(zrn_gl_t* gl, int swap);
-/** Swaps the buffer of an on-screen window to the compositor; nothing on an offscreen one. */
+/** Swaps the buffer of an on-screen surface that the renderer made itself; nothing on an offscreen one or one of the platform. */
 void zrn_gl_swap(zrn_gl_t* gl);
 /** The density of the buffer against the logical size of the window, the painter draws the
  * grid of the UI scale into it. */
@@ -1210,7 +1210,7 @@ struct zrn_root {
 	int first_frame;
 	ZRenderer renderer;
 	ZAnimations animations;
-	/** true while the window of Zwindow_run draws with the OpenGL renderer. */
+	/** true while the platform presents the root with the OpenGL renderer (Zroot_report_presenter). */
 	int gpu_window;
 	/** The clock of animations, in ms: the sum of the Zroot_tick deltas. */
 	double time_ms;

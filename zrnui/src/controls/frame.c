@@ -413,7 +413,7 @@ static void show(zrn_frame_t* f, const Zid frame_id, const Zid page_id, void* pa
 		attach(f, frame_id, page_id, parameter);
 		if (!zrn_lookup(frame_id)) return;
 		/* the first page has nothing to turn away from, but it swings in: the app opens as the second half of a turn.
-		 * Before the window exists nobody knows yet whether animations run: Zwindow_run starts it then. */
+		 * Before the platform has a surface nobody knows yet whether animations run: Zroot_start_intro starts it then. */
 		f = FRAME(zrn_lookup(frame_id));
 		f->intro_pending = first && f->transition != Z_TRANSITION_NONE;
 		if (enabled) start_intro(f, direction);

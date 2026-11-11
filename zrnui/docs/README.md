@@ -18,14 +18,11 @@ Options:
 
 Dependencies: freetype2, libpng, fontconfig (optional), egl/glesv2 (optional).
 
-`zrnapp` (`../zrnapp`) needs wayland-client, xkbcommon and, for the GPU window, wayland-egl.
-
 ## Usage
 
-Include `zrnui.h` and link against `zrnui`; an application includes `zrnapp.h`, links `zrnapp::zrnapp` and
-opens its window with `Zwindow_run`. A shell that embeds zrnui does what zrnapp does through `zrnui/platform.h`
-(input and time through `Zroot_inject_*` / `Zroot_tick`, pixels through `Zroot_render` or a `ZGlTarget` in its own
-OpenGL ES 2 context). Controls are created with `Z...` factories and attached
+Include `zrnui.h` and link against `zrnui`. zrnui has no window: a program that embeds it (a shell) passes input and
+time in through `Zroot_inject_*` / `Zroot_tick` and takes pixels out through `Zroot_render` or a `ZGlTarget` in its own
+OpenGL ES 2 context (`zrnui/platform.h`). An application that is an ordinary Wayland client uses zrnapp (`../zrnapp`). Controls are created with `Z...` factories and attached
 to a parent element.
 
 ## Fonts
