@@ -273,7 +273,7 @@ void Zroot_set_scale(const Zid root, const float scale) {
 
 /** The density of the buffer against the logical size of the window: only crispness,
  * what the compositor needs to draw the window sharply; the size of the content is the job of the UI scale. */
-void zrn_root_set_density(const Zid root, const float density) {
+void Zroot_set_density(const Zid root, const float density) {
 	zrn_root_t* const r = get_root(root);
 	if (!r || density <= 0) return;
 	r->density = density;

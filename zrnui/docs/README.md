@@ -1,7 +1,8 @@
 # zrnui
 
 zrnui is a C UI library inspired by Windows Phone 8.1 XAML controls. It provides
-elements, controls, layout, input, animation, theming and a Wayland host.
+elements, controls, layout, input, animation and theming. It draws a tree and knows no window:
+the window and the app cycle are `zrnapp`, the OS integration layer built on top of it (`../zrnapp`).
 
 ## Build
 
@@ -14,14 +15,17 @@ Options:
 - `ZRNUI_BUILD_SHARED` — build as shared library (default OFF)
 - `ZRNUI_BUILD_TESTS` — build tests (default ON when top-level)
 - `ZRNUI_WITH_GL` — OpenGL ES 2 renderer
-- `ZRNUI_WITH_WAYLAND` — Wayland window (`Zwindow_run`)
 
-Dependencies: freetype2, libpng, fontconfig (optional), wayland-client, xkbcommon, egl/glesv2 (optional).
+Dependencies: freetype2, libpng, fontconfig (optional), egl/glesv2 (optional).
+
+`zrnapp` (`../zrnapp`) needs wayland-client, xkbcommon and, for the GPU window, wayland-egl.
 
 ## Usage
 
-Include `zrnui.h` and link against `zrnui`. Create a window with `Zwindow_run` or
-use the software renderer. Controls are created with `Z...` factories and attached
+Include `zrnui.h` and link against `zrnui`; an application includes `zrnapp.h`, links `zrnapp::zrnapp` and
+opens its window with `Zwindow_run`. A shell that embeds zrnui does what zrnapp does through `zrnui/platform.h`
+(input and time through `Zroot_inject_*` / `Zroot_tick`, pixels through `Zroot_render` or a `ZGlTarget` in its own
+OpenGL ES 2 context). Controls are created with `Z...` factories and attached
 to a parent element.
 
 ## Fonts

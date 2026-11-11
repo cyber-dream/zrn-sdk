@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-#include <zrnui.h>
+#include <zrnapp.h>
 #include <stdint.h>
 #include <stdio.h>
 #include "pages/main.h"

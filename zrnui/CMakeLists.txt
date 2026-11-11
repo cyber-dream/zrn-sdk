@@ -59,7 +59,7 @@ set(ZRNUI_SOURCES
 	src/controls/richtext.c
 	src/controls/appbar.c
 	src/controls/flyout.c
-	src/window.c
+	src/platform.c
 )
 
 # the OpenGL ES 2 renderer: the window and Zroot_render use it when asked or when the machine has it;
@@ -67,17 +67,6 @@ set(ZRNUI_SOURCES
 option(ZRNUI_WITH_GL "Build the OpenGL ES 2 renderer when egl and glesv2 are found" ON)
 if(ZRNUI_WITH_GL)
 	pkg_check_modules(GLES IMPORTED_TARGET egl glesv2)
-endif()
-
-# a window for a root, on Wayland; without these libraries Zwindow_run fails at run time
-option(ZRNUI_WITH_WAYLAND "Build the Wayland window (Zwindow_run) when wayland-client and xkbcommon are found" ON)
-if(ZRNUI_WITH_WAYLAND)
-	pkg_check_modules(WAYLAND IMPORTED_TARGET wayland-client xkbcommon)
-endif()
-if(WAYLAND_FOUND)
-	list(APPEND ZRNUI_SOURCES protocol/xdg-shell-protocol.c)
-	list(APPEND ZRNUI_SOURCES protocol/viewporter-protocol.c)
-	list(APPEND ZRNUI_SOURCES protocol/fractional-scale-v1-protocol.c)
 endif()
 
 if(ZRNUI_BUILD_SHARED)
@@ -96,19 +85,9 @@ endif()
 target_compile_definitions(zrnui PRIVATE _GNU_SOURCE)
 target_include_directories(zrnui PUBLIC include PRIVATE src)
 target_link_libraries(zrnui PRIVATE PkgConfig::FREETYPE PkgConfig::PNG m)
-if(WAYLAND_FOUND)
-	target_link_libraries(zrnui PRIVATE PkgConfig::WAYLAND)
-	target_compile_definitions(zrnui PRIVATE ZRNUI_HAVE_WAYLAND)
-endif()
 if(GLES_FOUND)
 	target_link_libraries(zrnui PRIVATE PkgConfig::GLES)
 	target_compile_definitions(zrnui PRIVATE ZRNUI_HAVE_GL)
-	if(WAYLAND_FOUND)
-		pkg_check_modules(WAYLAND_EGL IMPORTED_TARGET wayland-egl)
-		if(WAYLAND_EGL_FOUND)
-			target_link_libraries(zrnui PRIVATE PkgConfig::WAYLAND_EGL)
-		endif()
-	endif()
 endif()
 if(FONTCONFIG_FOUND)
 	target_link_libraries(zrnui PRIVATE PkgConfig::FONTCONFIG)

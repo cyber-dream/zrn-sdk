@@ -5,6 +5,6 @@
 #include "zrnui/zrnui_element.h"
 #include "zrnui/zrnui_controls.h"
 #include "zrnui/host.h"
-#include "zrnui/zrnui_window.h"
+#include "zrnui/platform.h"
 
 #endif

@@ -9,7 +9,7 @@
  * position, with perspective) is the way to animate: the painter draws a page
  * under a rotation without the controls knowing.
  *
- * The context is an EGL window of a Wayland surface (zrn_gl_create_window), or
+ * The context is one that the platform made and gives (zrn_gl_create_external: zrnapp, a shell), or
  * an off-screen one with a framebuffer object (zrn_gl_create_offscreen), which
  * Zroot_render uses for a screenshot and the tests use to compare with the
  * software painter. Without EGL and GLES2 at build time every function here
@@ -24,9 +24,6 @@
 #include <EGL/eglext.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
-#ifdef ZRNUI_HAVE_WAYLAND
-#include <wayland-egl.h>
-#endif
 
 static constexpr int FLOATS = 18; /* x y  lx ly  hx hy  r0 r1 r2 r3  aux mode  r g b a  u v */
 static constexpr int MAX_QUADS = 4096;
@@ -45,9 +42,10 @@ struct zrn_gl {
 	EGLSurface surface;
 	EGLConfig config;
 	int offscreen;
-#ifdef ZRNUI_HAVE_WAYLAND
-	struct wl_egl_window* wl_window;
-#endif
+	/** A context that the platform (zrnapp, a shell) made: the renderer only draws in it. `current` makes it current. */
+	int external;
+	void (*current)(void* user);
+	void* current_user;
 	GLuint program, atlas, fbo, fbo_texture;
 	/** The samples of the off-screen framebuffer (GL_EXT_multisampled_render_to_texture), 0 when it has none. */
 	GLsizei fbo_samples;
@@ -158,8 +156,8 @@ static int build_program(zrn_gl_t* const gl) {
 static constexpr GLsizei MSAA_SAMPLES = 4;
 
 /* A config with 4x MSAA; a driver without one gets a plain config, so that the GPU renderer still works (without anti-aliased edges). */
-static int choose(zrn_gl_t* const gl, const int window) {
-	const EGLint surface_type = window ? EGL_WINDOW_BIT : EGL_PBUFFER_BIT;
+static int choose(zrn_gl_t* const gl) {
+	const EGLint surface_type = EGL_PBUFFER_BIT;
 	const EGLint multisampled[] = {
 		EGL_SURFACE_TYPE, surface_type,
 		EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
@@ -272,13 +270,19 @@ static int make_context(zrn_gl_t* const gl) {
 
 static void gl_free(zrn_gl_t* gl);
 
+/* Makes the context of the renderer current: ours through EGL, the one of the platform through its callback. */
+static void make_current(zrn_gl_t* const gl) {
+	if (!gl->external) eglMakeCurrent(gl->display, gl->surface, gl->surface, gl->context);
+	else if (gl->current) gl->current(gl->current_user);
+}
+
 zrn_gl_t* zrn_gl_create_offscreen(const int width, const int height) {
 	zrn_gl_t* gl = calloc(1, sizeof *gl);
 	const EGLint pb[] = { EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE };
 	if (!gl) return nullptr;
 	gl->offscreen = 1;
 	if (!open_display(gl, EGL_PLATFORM_SURFACELESS_MESA, nullptr) && !open_display(gl, 0, nullptr)) goto fail;
-	if (!choose(gl, 0) || !make_context(gl)) goto fail;
+	if (!choose(gl) || !make_context(gl)) goto fail;
 	gl->surface = eglCreatePbufferSurface(gl->display, gl->config, pb);
 	if (gl->surface == EGL_NO_SURFACE || !eglMakeCurrent(gl->display, gl->surface, gl->surface, gl->context)) {
 		zrn_error(Z_ERROR_IO, "cannot make the OpenGL context current");
@@ -295,45 +299,24 @@ fail:
 	return nullptr;
 }
 
-zrn_gl_t* zrn_gl_create_window(void* const wl_display, void* const wl_surface, const int width, const int height) {
-#ifdef ZRNUI_HAVE_WAYLAND
-	zrn_gl_t* gl = (zrn_gl_t*)calloc(1, sizeof *gl);
+zrn_gl_t* zrn_gl_create_external(void (*const current)(void* user), void* const user) {
+	zrn_gl_t* const gl = (zrn_gl_t*)calloc(1, sizeof *gl);
 	if (!gl) return nullptr;
-	if (!open_display(gl, EGL_PLATFORM_WAYLAND_KHR, wl_display)) goto fail;
-	if (!choose(gl, 1) || !make_context(gl)) goto fail;
-	gl->wl_window = wl_egl_window_create((struct wl_surface*)wl_surface, width, height);
-	if (!gl->wl_window) goto fail;
-	gl->surface = eglCreateWindowSurface(gl->display, gl->config, (EGLNativeWindowType)gl->wl_window, nullptr);
-	if (gl->surface == EGL_NO_SURFACE || !eglMakeCurrent(gl->display, gl->surface, gl->surface, gl->context)) {
-		zrn_error(Z_ERROR_IO, "cannot make the OpenGL context current");
-		goto fail;
+	gl->external = 1;
+	gl->current = current;
+	gl->current_user = user;
+	make_current(gl);
+	if (!init_gl(gl)) {
+		gl_free(gl);
+		return nullptr;
 	}
-	eglSwapInterval(gl->display, 0);
-	if (!init_gl(gl)) goto fail;
-#ifdef Z_DEBUG
-	{
-		GLint sample_buffers = 0, samples = 0;
-		glGetIntegerv(GL_SAMPLE_BUFFERS, &sample_buffers);
-		glGetIntegerv(GL_SAMPLES, &samples);
-		Z_DEBUG_LOG("window framebuffer: %d sample buffers, %d samples\n", sample_buffers, samples);
-	}
-#endif
-	gl->width = width;
-	gl->height = height;
 	return gl;
-fail:
-	gl_free(gl);
-	return nullptr;
-#else
-	(void)wl_display; (void)wl_surface; (void)width; (void)height;
-	return nullptr;
-#endif
 }
 
 void zrn_gl_resize(zrn_gl_t* const gl, const int width, const int height) {
 	if (!gl) return;
 	if (gl->offscreen) {
-		eglMakeCurrent(gl->display, gl->surface, gl->surface, gl->context);
+		make_current(gl);
 		glBindTexture(GL_TEXTURE_2D, gl->fbo_texture);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -342,9 +325,6 @@ void zrn_gl_resize(zrn_gl_t* const gl, const int width, const int height) {
 		if (gl->fbo_samples > 0) gl->fbo_multisample(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gl->fbo_texture, 0, gl->fbo_samples);
 		else glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gl->fbo_texture, 0);
 	}
-#ifdef ZRNUI_HAVE_WAYLAND
-	else if (gl->wl_window) wl_egl_window_resize(gl->wl_window, width, height, 0, 0);
-#endif
 	gl->width = width;
 	gl->height = height;
 }
@@ -352,8 +332,8 @@ void zrn_gl_resize(zrn_gl_t* const gl, const int width, const int height) {
 static void gl_free(zrn_gl_t* const gl) {
 	int i;
 	if (!gl) return;
-	if (gl->display != EGL_NO_DISPLAY && gl->context != EGL_NO_CONTEXT) {
-		eglMakeCurrent(gl->display, gl->surface, gl->surface, gl->context);
+	if (gl->external || (gl->display != EGL_NO_DISPLAY && gl->context != EGL_NO_CONTEXT)) {
+		make_current(gl);
 		for (i = 0; i < gl->image_count; i++) {
 			const GLuint t = gl->images[i]->gl_texture;
 			glDeleteTextures(1, &t);
@@ -364,16 +344,13 @@ static void gl_free(zrn_gl_t* const gl) {
 		if (gl->atlas) glDeleteTextures(1, &gl->atlas);
 		if (gl->fbo_texture) glDeleteTextures(1, &gl->fbo_texture);
 		if (gl->fbo) glDeleteFramebuffers(1, &gl->fbo);
-		eglMakeCurrent(gl->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+		if (!gl->external) eglMakeCurrent(gl->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 	}
 	if (gl->display != EGL_NO_DISPLAY) {
 		if (gl->surface != EGL_NO_SURFACE && gl->surface) eglDestroySurface(gl->display, gl->surface);
 		if (gl->context != EGL_NO_CONTEXT && gl->context) eglDestroyContext(gl->display, gl->context);
 		display_release(gl->display);
 	}
-#ifdef ZRNUI_HAVE_WAYLAND
-	if (gl->wl_window) wl_egl_window_destroy(gl->wl_window);
-#endif
 	free(gl->verts);
 	free(gl->slots);
 	free(gl->images);
@@ -385,7 +362,7 @@ void zrn_gl_destroy(zrn_gl_t* gl) { gl_free(gl); }
 void zrn_gl_forget_image(zrn_image_t* const image) {
 	const auto gl = (zrn_gl_t*)image->gl_owner;
 	if (!gl) return;
-	eglMakeCurrent(gl->display, gl->surface, gl->surface, gl->context);
+	make_current(gl);
 	{
 		const GLuint t = image->gl_texture;
 		glDeleteTextures(1, &t);
@@ -717,7 +694,7 @@ const zrn_backend_t zrn_backend_gles = {
  * ============================================================================ */
 
 void zrn_gl_begin(zrn_gl_t* const gl, zrn_painter_t* const p, const int width, const int height, const float scale) {
-	eglMakeCurrent(gl->display, gl->surface, gl->surface, gl->context);
+	make_current(gl);
 	if (width != gl->width || height != gl->height) zrn_gl_resize(gl, width, height);
 	if (gl->offscreen) glBindFramebuffer(GL_FRAMEBUFFER, gl->fbo);
 	memset(p, 0, sizeof *p);
@@ -745,11 +722,11 @@ void zrn_gl_begin(zrn_gl_t* const gl, zrn_painter_t* const p, const int width, c
 void zrn_gl_end(zrn_gl_t* const gl, const int swap) {
 	flush(gl);
 	glDisable(GL_SCISSOR_TEST);
-	if (swap && !gl->offscreen) eglSwapBuffers(gl->display, gl->surface);
+	if (swap && !gl->offscreen && !gl->external) eglSwapBuffers(gl->display, gl->surface);
 }
 
 void zrn_gl_swap(zrn_gl_t* const gl) {
-	if (gl && !gl->offscreen) eglSwapBuffers(gl->display, gl->surface);
+	if (gl && !gl->offscreen && !gl->external) eglSwapBuffers(gl->display, gl->surface);
 }
 
 int zrn_gl_read(zrn_gl_t* const gl, uint8_t* const rgba, const int width, const int height) {
@@ -771,14 +748,13 @@ int zrn_gl_read(zrn_gl_t* const gl, uint8_t* const rgba, const int width, const 
 }
 
 int zrn_gl_available(void) { return 1; }
+int zrn_gl_width(const zrn_gl_t* const gl) { return gl->width; }
+int zrn_gl_height(const zrn_gl_t* const gl) { return gl->height; }
 
 #else /* no OpenGL ES at build time */
 
 zrn_gl_t* zrn_gl_create_offscreen(int width, int height) { (void)width; (void)height; return nullptr; }
-zrn_gl_t* zrn_gl_create_window(void* const wl_display, void* const wl_surface, const int width, const int height) {
-	(void)wl_display; (void)wl_surface; (void)width; (void)height;
-	return nullptr;
-}
+zrn_gl_t* zrn_gl_create_external(void (*const current)(void* user), void* const user) { (void)current; (void)user; return nullptr; }
 void zrn_gl_resize(zrn_gl_t* gl, int width, int height) { (void)gl; (void)width; (void)height; }
 void zrn_gl_destroy(zrn_gl_t* gl) { (void)gl; }
 void zrn_gl_begin(zrn_gl_t* gl, zrn_painter_t* p, int width, int height, float scale) { (void)gl; (void)p; (void)width; (void)height; (void)scale; }
@@ -787,5 +763,7 @@ void zrn_gl_swap(zrn_gl_t* gl) { (void)gl; }
 int zrn_gl_read(zrn_gl_t* gl, uint8_t* rgba, int width, int height) { (void)gl; (void)rgba; (void)width; (void)height; return 0; }
 void zrn_gl_forget_image(zrn_image_t* image) { (void)image; }
 int zrn_gl_available(void) { return 0; }
+int zrn_gl_width(const zrn_gl_t* gl) { (void)gl; return 0; }
+int zrn_gl_height(const zrn_gl_t* gl) { (void)gl; return 0; }
 
 #endif

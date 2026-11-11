@@ -1111,8 +1111,12 @@ int zrn_clip_out(const zrn_painter_t* p, ZRect r);
 /* render/gles.c: an OpenGL ES 2 context, in a window or off-screen */
 typedef struct zrn_gl zrn_gl_t;
 int zrn_gl_available(void);
+/** The size the renderer last drew: 0 before the first frame. */
+int zrn_gl_width(const zrn_gl_t* gl);
+int zrn_gl_height(const zrn_gl_t* gl);
 zrn_gl_t* zrn_gl_create_offscreen(int width, int height);
-zrn_gl_t* zrn_gl_create_window(void* wl_display, void* wl_surface, int width, int height);
+/** A renderer that draws in a context of the platform; `current` makes that context current (called before GL work). */
+zrn_gl_t* zrn_gl_create_external(void (*current)(void* user), void* user);
 void zrn_gl_resize(zrn_gl_t* gl, int width, int height);
 /** Makes the context current and prepares `p` to draw on it; zrn_gl_end draws what is left and swaps. */
 void zrn_gl_begin(zrn_gl_t* gl, zrn_painter_t* p, int width, int height, float scale);
@@ -1121,7 +1125,6 @@ void zrn_gl_end(zrn_gl_t* gl, int swap);
 void zrn_gl_swap(zrn_gl_t* gl);
 /** The density of the buffer against the logical size of the window, the painter draws the
  * grid of the UI scale into it. */
-void zrn_root_set_density(Zid root, float density);
 /** Off-screen only: the frame as RGBA8, rows top to bottom. */
 int zrn_gl_read(zrn_gl_t* gl, uint8_t* rgba, int width, int height);
 void zrn_gl_destroy(zrn_gl_t* gl);

@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
-#include "zrnui.h"
+#include <zrnapp.h>
 
 /* The first page: a title and a line of text. */
 static Zid main_page(const Zid frame, void* const parameter) {

@@ -1,12 +1,15 @@
 /**
- * zrnui - window.c
- * A Wayland window (xdg-shell, wl_shm) for a root.
+ * zrnapp - window.c
+ * A Wayland window (xdg-shell, wl_shm or EGL) for a root, and the event loop of the app.
  */
 
-#include "internal.h"
+#include "zrnapp.h"
 
-#ifdef ZRNUI_HAVE_WAYLAND
+#ifdef ZRNAPP_HAVE_WAYLAND
 
+#include "egl_window.h"
+
+#include <math.h>
 #include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,8 +56,7 @@ typedef struct window {
 	uint32_t preferred_scale;
 	buffer_t buffers[2];
 	/** The OpenGL ES 2 renderer when the window has one: no wl_shm buffers then. */
-	zrn_gl_t* gl;
-	int gl_w, gl_h;
+	zrnapp_gl_t* gl;
 	int buf_w, buf_h;
 	Zid root;
 	int scale;    /* the integer buffer scale: the ceiling of fscale while the fractional one goes through the viewport */
@@ -114,20 +116,8 @@ static int buffers_make(window_t* const w, const int pw, const int ph) {
 
 /* One frame on the GPU: painted only when something changed, then swapped. */
 static void present_gl(window_t* const w) {
-	zrn_root_t* const r = zrn_root_lookup(w->root);
-	zrn_painter_t p;
 	const int pw = (int)((float)w->width * w->fscale + 0.5f), ph = (int)((float)w->height * w->fscale + 0.5f);
-	if (!r) return;
-	if (pw != w->gl_w || ph != w->gl_h) {
-		/* the buffer of a new size is blank: draw everything again */
-		w->gl_w = pw;
-		w->gl_h = ph;
-		r->paint_dirty = 1;
-	}
-	zrn_gl_begin(w->gl, &p, pw, ph, r->scale);
-	(void)zrn_root_paint(r, &p);
-	zrn_gl_end(w->gl, 0);                                    /* flush it, but do not swap yet */
-	zrn_gl_swap(w->gl);
+	zrnapp_gl_present(w->gl, w->root, pw, ph);
 }
 
 static void present(window_t* const w) {
@@ -167,7 +157,6 @@ static void present(window_t* const w) {
  * into the logical size, the compositor samples it at its own factor); without a viewport
  * only the integer scale works. The scale belongs to the shell: preferred_scale, or ZRNUI_SCALE as a debug override. */
 static void apply_scale(window_t* const w, const float fscale) {
-	zrn_root_t* const r = zrn_root_lookup(w->root);
 	w->fscale = fscale;
 	w->scale = (int)fscale;
 	if ((float)w->scale < fscale) w->scale++;
@@ -180,9 +169,9 @@ static void apply_scale(window_t* const w, const float fscale) {
 	 * overrides it only as a debug override */
 	if (w->env_scale > 0) w->ui_scale = w->env_scale;
 	else w->ui_scale = 1.0f;
-	zrn_root_set_density(w->root, w->fscale);
+	Zroot_set_density(w->root, w->fscale);
 	Zroot_set_scale(w->root, w->ui_scale);
-	if (r) r->paint_dirty = 1; /* the buffers of the new size are blank */
+	Zroot_invalidate(w->root); /* the buffers of the new size are blank */
 }
 
 static float scale_of_env(const char* const env) {
@@ -217,7 +206,7 @@ static void surface_configure(void* const d, struct xdg_surface* s, const uint32
 	w->configured = 1;
 	if (w->viewport) wp_viewport_set_destination(w->viewport, w->width, w->height); /* the logical size of the resize */
 	Zroot_set_scale(w->root, w->ui_scale);
-	zrn_root_set_density(w->root, w->fscale);
+	Zroot_set_density(w->root, w->fscale);
 	present(w);
 }
 static const struct xdg_surface_listener xdg_surface_listener = { .configure = surface_configure };
@@ -443,15 +432,15 @@ int Zwindow_run(const Zid root, const char* const title) {
 	const char* scale_env = getenv("ZRNUI_SCALE");
 	double last;
 	int ok;
-	zrn_root_t* const r = zrn_root_lookup(root);
-	if (!r) { zrn_error(Z_ERROR_INVALID_ID, "invalid root handle"); return false; }
+	int root_width = 0, root_height = 0;
+	if (!Zroot_get_size(root, &root_width, &root_height)) { Zreport_error(Z_ERROR_INVALID_ID, "invalid root handle"); return false; }
 	memset(&w, 0, sizeof w);
 	w.root = root;
 	/* The size of the window is not the business of the app: on a phone it is always fullscreen,
 	 * the compositor gives it in the first configure (480 x 800 of the grid until then). */
-	w.width = r->width > 0 ? r->width : 480;
-	w.height = r->height > 0 ? r->height : 800;
-	if (r->width <= 0) Zroot_set_size(root, w.width, w.height);
+	w.width = root_width > 0 ? root_width : 480;
+	w.height = root_height > 0 ? root_height : 800;
+	if (root_width <= 0) Zroot_set_size(root, w.width, w.height);
 	const long env_integer_scale = scale_env ? strtol(scale_env, nullptr, 10) : 0;
 	w.scale = env_integer_scale > 0 ? (int)env_integer_scale : 1;
 	w.touch_id = -1;
@@ -462,13 +451,13 @@ int Zwindow_run(const Zid root, const char* const title) {
 	if ((float)w.scale < w.fscale) w.scale++;
 	w.ui_scale = w.env_scale > 0 ? w.env_scale : 1.0f;
 	w.display = wl_display_connect(nullptr);
-	if (!w.display) { zrn_error(Z_ERROR_IO, "no Wayland display (is WAYLAND_DISPLAY set?)"); return false; }
+	if (!w.display) { Zreport_error(Z_ERROR_IO, "no Wayland display (is WAYLAND_DISPLAY set?)"); return false; }
 	w.xkb = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
 	w.registry = wl_display_get_registry(w.display);
 	wl_registry_add_listener(w.registry, &registry_listener, &w);
 	wl_display_roundtrip(w.display);
 	if (!w.compositor || !w.shm || !w.wm_base) {
-		zrn_error(Z_ERROR_IO, "the compositor lacks wl_compositor, wl_shm or xdg_wm_base");
+		Zreport_error(Z_ERROR_IO, "the compositor lacks wl_compositor, wl_shm or xdg_wm_base");
 		wl_display_disconnect(w.display);
 		return false;
 	}
@@ -492,18 +481,20 @@ int Zwindow_run(const Zid root, const char* const title) {
 	wl_surface_commit(w.surface);
 	/* The GPU when asked or when it can: the software painter and wl_shm stay as the safe mode. */
 	ok = 1;
-	if (r->renderer != Z_RENDERER_SOFTWARE) {
-		w.gl = zrn_gl_create_window(w.display, w.surface, (int)(w.width * w.fscale + 0.5f), (int)(w.height * w.fscale + 0.5f));
-		if (!w.gl && r->renderer == Z_RENDERER_GPU) {
-			zrn_error(Z_ERROR_IO, "no OpenGL ES 2 window (Z_RENDERER_GPU): %s", Zget_error_message());
+	const ZRenderer renderer = Zroot_get_renderer(root);
+	if (renderer != Z_RENDERER_SOFTWARE) {
+		w.gl = zrnapp_gl_create(w.display, w.surface, (int)(w.width * w.fscale + 0.5f), (int)(w.height * w.fscale + 0.5f));
+		if (!w.gl && renderer == Z_RENDERER_GPU) {
+			char message[300];
+			snprintf(message, sizeof message, "no OpenGL ES 2 window (Z_RENDERER_GPU): %s", Zget_error_message());
+			Zreport_error(Z_ERROR_IO, message);
 			ok = 0;
 			w.closed = 1;
 		}
 	}
-	zrn_note_renderer(w.gl ? "gles2" : "software");
-	r->gpu_window = w.gl != nullptr;
+	Zroot_report_presenter(root, w.gl ? "gles2" : "software", w.gl != nullptr);
 	/* a first page that went into the Frame before this window existed swings in now */
-	zrn_root_start_intro(r);
+	Zroot_start_intro(root);
 	last = now_ms();
 	while (!w.closed) {
 		struct pollfd pfd;
@@ -518,7 +509,7 @@ int Zwindow_run(const Zid root, const char* const title) {
 			wl_display_cancel_read(w.display);
 		}
 		wl_display_dispatch_pending(w.display);
-		if (!zrn_root_lookup(root)) break;
+		if (!Zroot_get_size(root, nullptr, nullptr)) break;
 		t = now_ms();
 		dt = t - last;
 		last = t;
@@ -532,8 +523,9 @@ int Zwindow_run(const Zid root, const char* const title) {
 	}
 	g_window = nullptr;
 	buffers_free(&w);
-	if (w.gl) zrn_gl_destroy(w.gl);
-	if (zrn_root_lookup(root)) zrn_root_lookup(root)->gpu_window = 0;
+	const bool b_was_gpu = w.gl != nullptr;
+	if (w.gl) zrnapp_gl_destroy(w.gl);
+	Zroot_report_presenter(root, b_was_gpu ? "gles2" : "software", false);
 	if (w.xkb_state) xkb_state_unref(w.xkb_state);
 	if (w.keymap) xkb_keymap_unref(w.keymap);
 	xkb_context_unref(w.xkb);
@@ -548,7 +540,7 @@ int Zwindow_run(const Zid root, const char* const title) {
 
 int Zwindow_run(const Zid root, const char* const title) {
 	(void)root; (void)title;
-	zrn_error(Z_ERROR_IO, "zrnui was built without Wayland support (wayland-client and xkbcommon were not found)");
+	Zreport_error(Z_ERROR_IO, "zrnapp was built without Wayland support (wayland-client and xkbcommon were not found)");
 	return false;
 }
 
