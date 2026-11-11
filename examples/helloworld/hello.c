@@ -37,7 +37,9 @@ int main(void) {
     }
 
     // the window runs until it is closed, or Back is pressed on the first page
-    const int ok = Zwindow_run(root, "Hello World");
+    // the title is for people; the app id (what the shell matches with helloworld.desktop) is the name of the executable
+    const ZWindowOptions window = { .title = "Hello World" };
+    const int ok = Zwindow_run_ex(root, &window);
     if (!ok) fprintf(stderr, "helloworld: %s\n", Zget_error_message());
     Zroot_destroy(root);
     Zshutdown();

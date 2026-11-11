@@ -11,6 +11,7 @@ endif()
 
 option(ZRNAPP_BUILD_SHARED "Build zrnapp as a shared library" OFF)
 # the zrnui that is installed (zrnui.pc) instead of the one in ../zrnui; a package of zrnapp turns it ON
+option(ZRNAPP_BUILD_TESTS "Build the tests" ${ZRNAPP_IS_TOP_LEVEL})
 option(ZRNAPP_SYSTEM_ZRNUI "Link the installed zrnui (found with pkg-config) instead of building ../zrnui" OFF)
 
 set(CMAKE_C_STANDARD 23)
@@ -33,7 +34,7 @@ pkg_check_modules(WAYLAND IMPORTED_TARGET wayland-client xkbcommon)
 pkg_check_modules(GLES IMPORTED_TARGET egl glesv2)
 pkg_check_modules(WAYLAND_EGL IMPORTED_TARGET wayland-egl)
 
-set(ZRNAPP_SOURCES src/window.c)
+set(ZRNAPP_SOURCES src/window.c src/app_id.c)
 if(WAYLAND_FOUND)
 	list(APPEND ZRNAPP_SOURCES
 		protocol/xdg-shell-protocol.c
@@ -87,4 +88,9 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
 	if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
 		target_compile_options(zrnapp PRIVATE -Wno-old-style-declaration)
 	endif()
+endif()
+
+if(ZRNAPP_BUILD_TESTS)
+	enable_testing()
+	add_subdirectory(tests)
 endif()

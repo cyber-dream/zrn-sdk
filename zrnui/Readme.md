@@ -23,6 +23,10 @@ makepkg -s
   keyboard into `Zroot_inject_*`, the scale of the shell, EGL for the GPU window. Link `zrnapp::zrnapp` for an
   application; a shell that embeds zrnui links `zrnui::zrnui` alone.
 
+A window has a title (for people) and an app id (for the shell: it finds `<app id>.desktop`, the icon and the grouping by it).
+`Zwindow_run_ex` takes both in `ZWindowOptions`; without an app id it is the name of the executable, so a program
+installed as `notes` with `notes.desktop` needs nothing. `Zwindow_run(root, title)` sets the title only.
+
 `CMAKE_BUILD_TYPE=Debug` (or `-DZRNUI_DEBUG=ON`) defines `Z_DEBUG` on the `zrnui` target and on every target
 that links it. Debug features are compiled under `#ifdef Z_DEBUG` (`Z_DEBUG_ONLY(...)`, `Z_DEBUG_LOG(...)`
 in `zrnui_core.h`) and are not in a release binary.

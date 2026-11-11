@@ -7,6 +7,7 @@
 
 #ifdef ZRNAPP_HAVE_WAYLAND
 
+#include "app_id.h"
 #include "egl_window.h"
 
 #include <math.h>
@@ -427,7 +428,7 @@ static double now_ms(void) {
 
 void Zwindow_quit(void) { if (g_window) g_window->closed = 1; }
 
-int Zwindow_run(const Zid root, const char* const title) {
+int Zwindow_run_ex(const Zid root, const ZWindowOptions* const options) {
 	window_t w;
 	const char* scale_env = getenv("ZRNUI_SCALE");
 	double last;
@@ -476,8 +477,11 @@ int Zwindow_run(const Zid root, const char* const title) {
 	xdg_surface_add_listener(w.xdg_surface, &xdg_surface_listener, &w);
 	w.toplevel = xdg_surface_get_toplevel(w.xdg_surface);
 	xdg_toplevel_add_listener(w.toplevel, &toplevel_listener, &w);
-	xdg_toplevel_set_title(w.toplevel, title ? title : "zrnui");
-	xdg_toplevel_set_app_id(w.toplevel, title ? title : "zrnui");
+	char app_id[256];
+	zrnapp_choose_app_id(options ? options->app_id : nullptr, zrnapp_program_path(), app_id, sizeof app_id);
+	/* the title is shown to people, the app id is read by the shell: the title falls back to the app id, never the other way */
+	xdg_toplevel_set_title(w.toplevel, options && options->title && *options->title ? options->title : app_id);
+	xdg_toplevel_set_app_id(w.toplevel, app_id);
 	wl_surface_commit(w.surface);
 	/* The GPU when asked or when it can: the software painter and wl_shm stay as the safe mode. */
 	ok = 1;
@@ -538,8 +542,8 @@ int Zwindow_run(const Zid root, const char* const title) {
 
 #else
 
-int Zwindow_run(const Zid root, const char* const title) {
-	(void)root; (void)title;
+int Zwindow_run_ex(const Zid root, const ZWindowOptions* const options) {
+	(void)root; (void)options;
 	Zreport_error(Z_ERROR_IO, "zrnapp was built without Wayland support (wayland-client and xkbcommon were not found)");
 	return false;
 }
@@ -547,3 +551,9 @@ int Zwindow_run(const Zid root, const char* const title) {
 void Zwindow_quit(void) {}
 
 #endif
+
+int Zwindow_run(const Zid root, const char* const title) {
+	const ZWindowOptions options = { .title = title };
+	return Zwindow_run_ex(root, &options);
+}
+
