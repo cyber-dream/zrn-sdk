@@ -596,8 +596,9 @@ void Zframe_set_transitions(const Zid frame, const ZTransition forward_out, cons
 	const ZTransition kinds[4] = { forward_out, forward_in, backward_out, backward_in };
 	if (!f) return;
 	for (int i = 0; i < 4; i++) {
-		if (kinds[i] < Z_TRANSITION_NONE || kinds[i] >= Z_TRANSITION_LAST_ || kinds[i] == Z_TRANSITION_TURNSTILE) {
-			zrn_error(Z_ERROR_INVALID_ARGUMENT, "Zframe_set_transitions: not a transition of a page");
+		if (kinds[i] < Z_TRANSITION_NONE || kinds[i] >= Z_TRANSITION_LAST_ || kinds[i] == Z_TRANSITION_TURNSTILE ||
+			(kinds[i] >= Z_TRANSITION_FEATHER_FORWARD_IN && kinds[i] <= Z_TRANSITION_FEATHER_BACKWARD_OUT)) {
+			zrn_error(Z_ERROR_INVALID_ARGUMENT, "Zframe_set_transitions: not a transition of a page (the feathered turnstile is Zframe_set_transition)");
 			return;
 		}
 		f->nav[i] = kinds[i];

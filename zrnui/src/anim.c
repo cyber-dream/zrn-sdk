@@ -40,9 +40,19 @@ static float ease_emphasized(const float t) {
 	return 3 * u * u * s * y1 + 3 * u * s * s * y2 + s * s * s;
 }
 
+/* the ExponentialEase of Silverlight: (e^(n t) - 1) / (e^n - 1) going in, its mirror going out */
+static float ease_exp_in(const float t, const float n) { return (expf(n * t) - 1.0f) / (expf(n) - 1.0f); }
+static float ease_exp_out(const float t, const float n) { return 1.0f - ease_exp_in(1.0f - t, n); }
+
 float zrn_ease(const ZEasing easing, float t) {
 	t = zrn_clampf(t, 0, 1);
 	switch (easing) {
+	case Z_EASE_SINE_OUT: return sinf(t * ZST_PI * 0.5f);
+	case Z_EASE_EXP1_IN: return ease_exp_in(t, 1);
+	case Z_EASE_EXP1_OUT: return ease_exp_out(t, 1);
+	case Z_EASE_EXP6_IN: return ease_exp_in(t, 6);
+	case Z_EASE_EXP6_OUT: return ease_exp_out(t, 6);
+	case Z_EASE_EXP15_IN: return ease_exp_in(t, 15);
 	case Z_EASE_OUT: { const float u = 1 - t; return 1 - u * u * u; }
 	case Z_EASE_IN: return t * t * t;
 	case Z_EASE_EMPHASIZED: return ease_emphasized(t);
@@ -219,18 +229,20 @@ int zrn_animations_enabled(const zrn_root_t* const r) {
 
 static void transition_ended(zrn_element_t* e);
 
-/* Starts the tween of one property. The value it moves from is the one it has when the delay is over. */
-static void tween_start(zrn_element_t* const e, const ZAnimatedProperty property, const float to, const float duration_ms, const ZEasing easing, const float delay_ms) {
+/* Starts the tween of one property through `nleg` legs, one after another. The value it moves from is the one it has when the delay is over. */
+static void tween_start_legs(zrn_element_t* const e, const ZAnimatedProperty property, const zrn_leg_t* const legs, const int nleg, const float delay_ms) {
+	float total = 0;
+	for (int i = 0; i < nleg; i++) total += legs[i].duration;
 	if (e->tweens) e->tweens->p[property].active = 0;
-	if (!e->root || !zrn_animations_enabled(e->root) || (duration_ms <= 0 && delay_ms <= 0)) {
-		property_set(e, property, to);
+	if (!e->root || !zrn_animations_enabled(e->root) || (total <= 0 && delay_ms <= 0)) {
+		property_set(e, property, legs[nleg - 1].to);
 		return;
 	}
 	if (!e->tweens) {
 		e->tweens = (zrn_tween_t*)calloc(1, sizeof *e->tweens);
 		if (!e->tweens) {
 			/* the value still gets where it was going */
-			property_set(e, property, to);
+			property_set(e, property, legs[nleg - 1].to);
 			zrn_error(Z_ERROR_OUT_OF_MEMORY, "out of memory");
 			return;
 		}
@@ -238,12 +250,16 @@ static void tween_start(zrn_element_t* const e, const ZAnimatedProperty property
 	e->tweens->p[property].active = 1;
 	e->tweens->p[property].started = 0;
 	e->tweens->p[property].from = 0;
-	e->tweens->p[property].to = to;
-	e->tweens->p[property].start = e->root->time_ms;
-	e->tweens->p[property].duration = duration_ms;
 	e->tweens->p[property].delay = delay_ms;
-	e->tweens->p[property].easing = easing;
+	e->tweens->p[property].start = e->root->time_ms;
+	e->tweens->p[property].count = nleg;
+	for (int i = 0; i < nleg; i++) e->tweens->p[property].legs[i] = legs[i];
 	zrn_changed_paint(e);
+}
+
+static void tween_start(zrn_element_t* const e, const ZAnimatedProperty property, const float to, const float duration_ms, const ZEasing easing, const float delay_ms) {
+	const zrn_leg_t leg = { .to = to, .duration = duration_ms, .easing = easing };
+	tween_start_legs(e, property, &leg, 1, delay_ms);
 }
 
 void Zelement_animate(const Zid element, const ZAnimatedProperty property, const float to, const float duration_ms, const ZEasing easing, const float delay_ms) {
@@ -267,19 +283,32 @@ void zrn_tweens_tick(zrn_element_t* const e) {
 		zrn_tween_t* const t = e->tweens;
 		if (!t->p[i].active) continue;
 		const double u = now - t->p[i].start - (double)t->p[i].delay;
+		double total = 0, acc = 0;
+		float v0, v;
+		int leg;
 		if (u < 0) { any = 1; continue; }
 		if (!t->p[i].started) {
 			const float* const slot = property_slot(e, (ZAnimatedProperty)i);
 			t->p[i].started = 1;
 			t->p[i].from = slot ? *slot : 0.0f;
 		}
-		if (t->p[i].duration <= 0 || u >= (double)t->p[i].duration) {
+		for (leg = 0; leg < t->p[i].count; leg++) total += (double)t->p[i].legs[leg].duration;
+		if (u >= total) {
 			t->p[i].active = 0;
-			property_set(e, (ZAnimatedProperty)i, t->p[i].to);
-		} else {
-			property_set(e, (ZAnimatedProperty)i, t->p[i].from + (t->p[i].to - t->p[i].from) * zrn_ease(t->p[i].easing, (float)(u / (double)t->p[i].duration)));
-			any = 1;
+			property_set(e, (ZAnimatedProperty)i, t->p[i].legs[t->p[i].count - 1].to);
+			continue;
 		}
+		/* the leg that holds the time now, from the end of the one before */
+		v0 = t->p[i].from;
+		for (leg = 0; leg < t->p[i].count - 1 && u >= acc + (double)t->p[i].legs[leg].duration; leg++) {
+			acc += (double)t->p[i].legs[leg].duration;
+			v0 = t->p[i].legs[leg].to;
+		}
+		v = t->p[i].legs[leg].duration > 0
+			? v0 + (t->p[i].legs[leg].to - v0) * zrn_ease(t->p[i].legs[leg].easing, (float)((u - acc) / (double)t->p[i].legs[leg].duration))
+			: t->p[i].legs[leg].to;
+		property_set(e, (ZAnimatedProperty)i, v);
+		any = 1;
 	}
 	if (!any) {
 		zrn_tweens_free(e);
@@ -296,93 +325,107 @@ void zrn_tweens_free(zrn_element_t* const e) {
 /* ============================================================================
  *  transitions: the Windows Phone Toolkit's, by kind
  *
- *  Every kind is a few properties moving at once, each from a start to an end. Opacity is in
- *  fractions of what the element has (so a dimmed element fades back to its own opacity). The
- *  element shows the start at once, then the tweens run after the delay.
+ *  Every kind is a few properties moving at once, each through keyframes: the first is where it
+ *  starts, each next one is reached at its time with the easing it has (as in the XAML of the
+ *  Toolkit, where the easing is on the frame that ends the leg). Opacity is in fractions of what
+ *  the element has (so a dimmed element fades back to its own opacity). The element shows the
+ *  start at once, then the tweens run after the delay.
  *
- *  The numbers are estimates of the Toolkit's (docs/wp8-reference/90-transitions.md lists the
- *  modes and nothing else), except the feathered turnstile, which is as the Lumia does it.
+ *  The numbers are the Toolkit's: Microsoft.Phone.Controls.Toolkit/Transitions/Storyboards/ (the .xaml of each kind)
+ *  and Effects/TurnstileFeatherEffect.cs (microsoftarchive/WindowsPhoneToolkit), with every angle
+ *  negated: its RotationX, RotationY and RotationZ turn the other way round than ours (its
+ *  ForwardOut turns a page +50 about Y, which is the -50 of the turnstile of the Lumia here).
+ *  Only the Fade is not the Toolkit's.
  * ============================================================================ */
+
+typedef struct { float t, value; ZEasing easing; } tkey_t;
 
 typedef struct {
 	ZAnimatedProperty prop;
-	float from, to;
-	/** 0: the duration and easing of the kind. */
-	float duration;
-	ZEasing easing;
+	int count;
+	tkey_t key[3];
 } tseg_t;
 
 typedef struct {
-	float duration;
-	ZEasing easing;
-	/** The centre of the rotations, fractions of the size; -1: it stays as it is. */
+	/** The centre of the rotations, fractions of the size; cx < -1: it stays as it is. */
 	float cx, cy;
-	int n;
+	int count;
 	tseg_t seg[3];
+	/** Feathered kinds: the delay between one row and the next, in ms. */
+	float stagger;
 } tdef_t;
 
-static constexpr float SLIDE_DIST = 150.0f;
-static constexpr float ROW_STAGGER_MS = 28.0f;
-static constexpr int ROW_STAGGER_MAX = 7;
-static constexpr int ROW_MAX = 64;
-static constexpr float NO_PIVOT = -1e9f;
+#define L Z_EASE_LINEAR
+#define K(t, v, e) { (t), (v), (e) }
+/* one move from `a` to `b` in `ms` with easing `e` */
+#define MV(p, a, b, ms, e) { (p), 2, { K(0, a, L), K(ms, b, e) } }
+/* the opacity: there at once / held and gone at the end / the same through the time of the move */
+#define OP_ON { Z_PROP_OPACITY, 2, { K(0, 0, L), K(10, 1, L) } }
+#define OP_ON_AT_ONCE { Z_PROP_OPACITY, 2, { K(0, 0, L), K(1, 1, L) } }
+#define OP_OFF_AT_END(ms) { Z_PROP_OPACITY, 3, { K(0, 1, L), K((ms) - 10, 1, L), K(ms, 0, L) } }
+#define OP_FADE(a, b, ms, e) MV(Z_PROP_OPACITY, a, b, ms, e)
+#define NOP -2.0f, -2.0f
 
-#define OP(a, b) { Z_PROP_OPACITY, (a), (b), 0, Z_EASE_LINEAR }
-#define MOVE(prop, a, b) { (prop), (a), (b), 0, Z_EASE_LINEAR }
-#define IN_MS 350.0f, Z_EASE_OUT
-#define OUT_MS 250.0f, Z_EASE_IN
+static constexpr float SLIDE_DIST = 200.0f;
+static constexpr int ROW_MAX = 64;
 
 static const tdef_t TDEFS[Z_TRANSITION_LAST_] = {
-	[Z_TRANSITION_FADE_IN] = { 250.0f, Z_EASE_OUT, -1, -1, 1, { OP(0, 1) } },
-	[Z_TRANSITION_FADE_OUT] = { 250.0f, Z_EASE_IN, -1, -1, 1, { OP(1, 0) } },
+	/* not the Toolkit's */
+	[Z_TRANSITION_FADE_IN] = { NOP, 1, { OP_FADE(0, 1, 350, Z_EASE_EXP6_OUT) } },
+	[Z_TRANSITION_FADE_OUT] = { NOP, 1, { OP_FADE(1, 0, 250, Z_EASE_EXP6_OUT) } },
 
-	[Z_TRANSITION_SLIDE_UP_FADE_IN] = { IN_MS, -1, -1, 2, { MOVE(Z_PROP_TRANSLATE_Y, SLIDE_DIST, 0), OP(0, 1) } },
-	[Z_TRANSITION_SLIDE_UP_FADE_OUT] = { OUT_MS, -1, -1, 2, { MOVE(Z_PROP_TRANSLATE_Y, 0, -SLIDE_DIST), OP(1, 0) } },
-	[Z_TRANSITION_SLIDE_DOWN_FADE_IN] = { IN_MS, -1, -1, 2, { MOVE(Z_PROP_TRANSLATE_Y, -SLIDE_DIST, 0), OP(0, 1) } },
-	[Z_TRANSITION_SLIDE_DOWN_FADE_OUT] = { OUT_MS, -1, -1, 2, { MOVE(Z_PROP_TRANSLATE_Y, 0, SLIDE_DIST), OP(1, 0) } },
-	[Z_TRANSITION_SLIDE_LEFT_FADE_IN] = { IN_MS, -1, -1, 2, { MOVE(Z_PROP_TRANSLATE_X, SLIDE_DIST, 0), OP(0, 1) } },
-	[Z_TRANSITION_SLIDE_LEFT_FADE_OUT] = { OUT_MS, -1, -1, 2, { MOVE(Z_PROP_TRANSLATE_X, 0, -SLIDE_DIST), OP(1, 0) } },
-	[Z_TRANSITION_SLIDE_RIGHT_FADE_IN] = { IN_MS, -1, -1, 2, { MOVE(Z_PROP_TRANSLATE_X, -SLIDE_DIST, 0), OP(0, 1) } },
-	[Z_TRANSITION_SLIDE_RIGHT_FADE_OUT] = { OUT_MS, -1, -1, 2, { MOVE(Z_PROP_TRANSLATE_X, 0, SLIDE_DIST), OP(1, 0) } },
+	[Z_TRANSITION_SLIDE_UP_FADE_IN] = { NOP, 2, { MV(Z_PROP_TRANSLATE_Y, SLIDE_DIST, 0, 350, Z_EASE_EXP6_OUT), OP_FADE(0, 1, 350, Z_EASE_EXP6_OUT) } },
+	[Z_TRANSITION_SLIDE_UP_FADE_OUT] = { NOP, 2, { MV(Z_PROP_TRANSLATE_Y, 0, -SLIDE_DIST, 250, Z_EASE_EXP6_OUT), OP_FADE(1, 0, 250, Z_EASE_EXP6_OUT) } },
+	[Z_TRANSITION_SLIDE_DOWN_FADE_IN] = { NOP, 2, { MV(Z_PROP_TRANSLATE_Y, -SLIDE_DIST, 0, 350, Z_EASE_EXP6_OUT), OP_FADE(0, 1, 350, Z_EASE_EXP6_OUT) } },
+	[Z_TRANSITION_SLIDE_DOWN_FADE_OUT] = { NOP, 2, { MV(Z_PROP_TRANSLATE_Y, 0, SLIDE_DIST, 250, Z_EASE_EXP6_OUT), OP_FADE(1, 0, 250, Z_EASE_EXP6_OUT) } },
+	[Z_TRANSITION_SLIDE_LEFT_FADE_IN] = { NOP, 2, { MV(Z_PROP_TRANSLATE_X, SLIDE_DIST, 0, 500, Z_EASE_EXP6_OUT), OP_FADE(0, 1, 500, Z_EASE_EXP6_OUT) } },
+	[Z_TRANSITION_SLIDE_LEFT_FADE_OUT] = { NOP, 2, { MV(Z_PROP_TRANSLATE_X, 0, -SLIDE_DIST, 300, Z_EASE_EXP6_OUT), OP_FADE(1, 0, 300, Z_EASE_EXP6_OUT) } },
+	[Z_TRANSITION_SLIDE_RIGHT_FADE_IN] = { NOP, 2, { MV(Z_PROP_TRANSLATE_X, -SLIDE_DIST, 0, 500, Z_EASE_EXP6_OUT), OP_FADE(0, 1, 500, Z_EASE_EXP6_OUT) } },
+	[Z_TRANSITION_SLIDE_RIGHT_FADE_OUT] = { NOP, 2, { MV(Z_PROP_TRANSLATE_X, 0, SLIDE_DIST, 300, Z_EASE_EXP6_OUT), OP_FADE(1, 0, 300, Z_EASE_EXP6_OUT) } },
 
-	[Z_TRANSITION_SWIVEL_FULL_SCREEN_IN] = { IN_MS, 0.5f, 0.5f, 2, { MOVE(Z_PROP_ROTATION_X, -35, 0), OP(0, 1) } },
-	[Z_TRANSITION_SWIVEL_FULL_SCREEN_OUT] = { OUT_MS, 0.5f, 0.5f, 2, { MOVE(Z_PROP_ROTATION_X, 0, 35), OP(1, 0) } },
-	[Z_TRANSITION_SWIVEL_FORWARD_IN] = { IN_MS, 0.5f, 0.5f, 2, { MOVE(Z_PROP_ROTATION_X, -45, 0), OP(0, 1) } },
-	[Z_TRANSITION_SWIVEL_FORWARD_OUT] = { OUT_MS, 0.5f, 0.5f, 2, { MOVE(Z_PROP_ROTATION_X, 0, 45), OP(1, 0) } },
-	[Z_TRANSITION_SWIVEL_BACKWARD_IN] = { IN_MS, 0.5f, 0.5f, 2, { MOVE(Z_PROP_ROTATION_X, 45, 0), OP(0, 1) } },
-	[Z_TRANSITION_SWIVEL_BACKWARD_OUT] = { OUT_MS, 0.5f, 0.5f, 2, { MOVE(Z_PROP_ROTATION_X, 0, -45), OP(1, 0) } },
+	/* a swivel turns about the middle; the full screen and forward ones in keep the opacity */
+	[Z_TRANSITION_SWIVEL_FULL_SCREEN_IN] = { 0.5f, 0.5f, 1, { MV(Z_PROP_ROTATION_X, 30, 0, 350, Z_EASE_EXP6_OUT) } },
+	[Z_TRANSITION_SWIVEL_FULL_SCREEN_OUT] = { 0.5f, 0.5f, 2, { MV(Z_PROP_ROTATION_X, 0, -30, 250, Z_EASE_EXP1_IN), OP_OFF_AT_END(250) } },
+	[Z_TRANSITION_SWIVEL_FORWARD_IN] = { 0.5f, 0.5f, 1, { MV(Z_PROP_ROTATION_X, 45, 0, 350, Z_EASE_EXP6_OUT) } },
+	[Z_TRANSITION_SWIVEL_FORWARD_OUT] = { 0.5f, 0.5f, 2, { MV(Z_PROP_ROTATION_X, 0, -90, 250, Z_EASE_EXP15_IN), OP_OFF_AT_END(250) } },
+	[Z_TRANSITION_SWIVEL_BACKWARD_IN] = { 0.5f, 0.5f, 2, {
+		{ Z_PROP_ROTATION_X, 3, { K(0, 45, L), K(200, 30, L), K(350, 0, Z_EASE_EXP6_OUT) } },
+		{ Z_PROP_OPACITY, 3, { K(0, 0, L), K(200, 0, L), K(210, 1, L) } } } },
+	[Z_TRANSITION_SWIVEL_BACKWARD_OUT] = { 0.5f, 0.5f, 2, { MV(Z_PROP_ROTATION_X, 0, -60, 250, Z_EASE_EXP6_IN), OP_OFF_AT_END(250) } },
 
-	/* about the left edge; the angles are those of the feathered turnstile (out -50 or +50, in from 80) */
-	[Z_TRANSITION_TURNSTILE_FORWARD_IN] = { IN_MS, 0, 0.5f, 2, { MOVE(Z_PROP_ROTATION_Y, 80, 0), OP(0, 1) } },
-	[Z_TRANSITION_TURNSTILE_FORWARD_OUT] = { OUT_MS, 0, 0.5f, 2, { MOVE(Z_PROP_ROTATION_Y, 0, -50), OP(1, 0) } },
-	[Z_TRANSITION_TURNSTILE_BACKWARD_IN] = { IN_MS, 0, 0.5f, 2, { MOVE(Z_PROP_ROTATION_Y, 80, 0), OP(0, 1) } },
-	[Z_TRANSITION_TURNSTILE_BACKWARD_OUT] = { OUT_MS, 0, 0.5f, 2, { MOVE(Z_PROP_ROTATION_Y, 0, 50), OP(1, 0) } },
+	/* a turnstile turns about the left edge; it is there as soon as it starts, and gone when it has turned */
+	[Z_TRANSITION_TURNSTILE_FORWARD_IN] = { 0, 0.5f, 2, { MV(Z_PROP_ROTATION_Y, 80, 0, 350, Z_EASE_EXP6_OUT), OP_ON } },
+	[Z_TRANSITION_TURNSTILE_FORWARD_OUT] = { 0, 0.5f, 2, { MV(Z_PROP_ROTATION_Y, 0, -50, 250, Z_EASE_EXP6_IN), OP_OFF_AT_END(250) } },
+	[Z_TRANSITION_TURNSTILE_BACKWARD_IN] = { 0, 0.5f, 2, { MV(Z_PROP_ROTATION_Y, -50, 0, 350, Z_EASE_EXP6_OUT), OP_ON } },
+	[Z_TRANSITION_TURNSTILE_BACKWARD_OUT] = { 0, 0.5f, 2, { MV(Z_PROP_ROTATION_Y, 0, 80, 250, Z_EASE_EXP6_IN), OP_OFF_AT_END(250) } },
 
-	/* what one row does in the feathered turnstile: out 128 ms (the angle eased in, the opacity falling with it), in 180 ms
-	 * (the angle eased out, the opacity up in the first third) */
-	[Z_TRANSITION_FEATHER_FORWARD_IN] = { 180.0f, Z_EASE_OUT, 0, 0.5f, 2, { MOVE(Z_PROP_ROTATION_Y, 80, 0), { Z_PROP_OPACITY, 0, 1, 60.0f, Z_EASE_LINEAR } } },
-	[Z_TRANSITION_FEATHER_FORWARD_OUT] = { 128.0f, Z_EASE_IN, 0, 0.5f, 2, { MOVE(Z_PROP_ROTATION_Y, 0, -50), OP(1, 0) } },
-	[Z_TRANSITION_FEATHER_BACKWARD_IN] = { 180.0f, Z_EASE_OUT, 0, 0.5f, 2, { MOVE(Z_PROP_ROTATION_Y, 80, 0), { Z_PROP_OPACITY, 0, 1, 60.0f, Z_EASE_LINEAR } } },
-	[Z_TRANSITION_FEATHER_BACKWARD_OUT] = { 128.0f, Z_EASE_IN, 0, 0.5f, 2, { MOVE(Z_PROP_ROTATION_Y, 0, 50), OP(1, 0) } },
+	/* TurnstileFeatherEffect: every row turns about a point a fifth of its width to the left of it, the rows 40 or 50 ms apart */
+	[Z_TRANSITION_FEATHER_FORWARD_IN] = { -0.2f, 0.5f, 2, { MV(Z_PROP_ROTATION_Y, 80, 0, 350, Z_EASE_EXP6_OUT), OP_ON_AT_ONCE }, 40.0f },
+	[Z_TRANSITION_FEATHER_FORWARD_OUT] = { -0.2f, 0.5f, 2, { MV(Z_PROP_ROTATION_Y, 0, -50, 250, Z_EASE_EXP6_IN), OP_OFF_AT_END(250) }, 50.0f },
+	[Z_TRANSITION_FEATHER_BACKWARD_IN] = { -0.2f, 0.5f, 2, { MV(Z_PROP_ROTATION_Y, -50, 0, 350, Z_EASE_EXP6_OUT), OP_ON_AT_ONCE }, 50.0f },
+	[Z_TRANSITION_FEATHER_BACKWARD_OUT] = { -0.2f, 0.5f, 2, { MV(Z_PROP_ROTATION_Y, 0, 80, 250, Z_EASE_EXP6_IN), OP_OFF_AT_END(250) }, 40.0f },
 
-	[Z_TRANSITION_ROTATE_IN_90_CLOCKWISE] = { IN_MS, 0.5f, 0.5f, 2, { MOVE(Z_PROP_ROTATION_Z, -90, 0), OP(0, 1) } },
-	[Z_TRANSITION_ROTATE_IN_90_COUNTERCLOCKWISE] = { IN_MS, 0.5f, 0.5f, 2, { MOVE(Z_PROP_ROTATION_Z, 90, 0), OP(0, 1) } },
-	[Z_TRANSITION_ROTATE_IN_180_CLOCKWISE] = { IN_MS, 0.5f, 0.5f, 2, { MOVE(Z_PROP_ROTATION_Z, -180, 0), OP(0, 1) } },
-	[Z_TRANSITION_ROTATE_IN_180_COUNTERCLOCKWISE] = { IN_MS, 0.5f, 0.5f, 2, { MOVE(Z_PROP_ROTATION_Z, 180, 0), OP(0, 1) } },
-	[Z_TRANSITION_ROTATE_OUT_90_CLOCKWISE] = { OUT_MS, 0.5f, 0.5f, 2, { MOVE(Z_PROP_ROTATION_Z, 0, 90), OP(1, 0) } },
-	[Z_TRANSITION_ROTATE_OUT_90_COUNTERCLOCKWISE] = { OUT_MS, 0.5f, 0.5f, 2, { MOVE(Z_PROP_ROTATION_Z, 0, -90), OP(1, 0) } },
-	[Z_TRANSITION_ROTATE_OUT_180_CLOCKWISE] = { OUT_MS, 0.5f, 0.5f, 2, { MOVE(Z_PROP_ROTATION_Z, 0, 180), OP(1, 0) } },
-	[Z_TRANSITION_ROTATE_OUT_180_COUNTERCLOCKWISE] = { OUT_MS, 0.5f, 0.5f, 2, { MOVE(Z_PROP_ROTATION_Z, 0, -180), OP(1, 0) } },
+	[Z_TRANSITION_ROTATE_IN_90_CLOCKWISE] = { 0.5f, 0.5f, 2, { MV(Z_PROP_ROTATION_Z, -90, 0, 250, Z_EASE_EXP1_OUT), OP_FADE(0, 1, 250, Z_EASE_SINE_OUT) } },
+	[Z_TRANSITION_ROTATE_IN_90_COUNTERCLOCKWISE] = { 0.5f, 0.5f, 2, { MV(Z_PROP_ROTATION_Z, 90, 0, 250, Z_EASE_EXP1_OUT), OP_FADE(0, 1, 250, Z_EASE_SINE_OUT) } },
+	[Z_TRANSITION_ROTATE_IN_180_CLOCKWISE] = { 0.5f, 0.5f, 2, { MV(Z_PROP_ROTATION_Z, -180, 0, 250, Z_EASE_EXP1_OUT), OP_FADE(0, 1, 250, Z_EASE_SINE_OUT) } },
+	[Z_TRANSITION_ROTATE_IN_180_COUNTERCLOCKWISE] = { 0.5f, 0.5f, 2, { MV(Z_PROP_ROTATION_Z, 180, 0, 250, Z_EASE_EXP1_OUT), OP_FADE(0, 1, 250, Z_EASE_SINE_OUT) } },
+	[Z_TRANSITION_ROTATE_OUT_90_CLOCKWISE] = { 0.5f, 0.5f, 2, { MV(Z_PROP_ROTATION_Z, 0, 90, 250, Z_EASE_EXP1_IN), OP_FADE(1, 0, 250, Z_EASE_SINE_OUT) } },
+	[Z_TRANSITION_ROTATE_OUT_90_COUNTERCLOCKWISE] = { 0.5f, 0.5f, 2, { MV(Z_PROP_ROTATION_Z, 0, -90, 250, Z_EASE_EXP1_IN), OP_FADE(1, 0, 250, Z_EASE_SINE_OUT) } },
+	[Z_TRANSITION_ROTATE_OUT_180_CLOCKWISE] = { 0.5f, 0.5f, 2, { MV(Z_PROP_ROTATION_Z, 0, 180, 250, Z_EASE_EXP1_IN), OP_FADE(1, 0, 250, Z_EASE_SINE_OUT) } },
+	[Z_TRANSITION_ROTATE_OUT_180_COUNTERCLOCKWISE] = { 0.5f, 0.5f, 2, { MV(Z_PROP_ROTATION_Z, 0, -180, 250, Z_EASE_EXP1_IN), OP_FADE(1, 0, 250, Z_EASE_SINE_OUT) } },
 
-	/* it rolls like a wheel: the slide and the turn together */
-	[Z_TRANSITION_ROLL_IN] = { 450.0f, Z_EASE_OUT, 0.5f, 0.5f, 3, { MOVE(Z_PROP_TRANSLATE_X, SLIDE_DIST, 0), MOVE(Z_PROP_ROTATION_Z, 120, 0), OP(0, 1) } },
-	[Z_TRANSITION_ROLL_OUT] = { 300.0f, Z_EASE_IN, 0.5f, 0.5f, 3, { MOVE(Z_PROP_TRANSLATE_X, 0, -SLIDE_DIST), MOVE(Z_PROP_ROTATION_Z, 0, -120), OP(1, 0) } },
+	/* a quarter turn in 600 ms: the first half quick with a long settle, the second even; the opacity is not touched */
+	[Z_TRANSITION_ROLL] = { 0.5f, 0.5f, 1, { { Z_PROP_ROTATION_Z, 3, { K(0, 0, L), K(300, -45, Z_EASE_EXP6_OUT), K(600, -90, L) } } } },
 };
 
-#undef OP
-#undef MOVE
-#undef IN_MS
-#undef OUT_MS
+#undef L
+#undef K
+#undef MV
+#undef OP_ON
+#undef OP_ON_AT_ONCE
+#undef OP_OFF_AT_END
+#undef OP_FADE
+#undef NOP
 
 static int transition_is_feather(const ZTransition t) {
 	return t >= Z_TRANSITION_FEATHER_FORWARD_IN && t <= Z_TRANSITION_FEATHER_BACKWARD_OUT;
@@ -399,28 +442,32 @@ static float base_opacity(zrn_element_t* const e) {
 }
 
 /* Plays `t` on one element. Returns when its last animation ends, in ms after now; 0 when nothing runs. */
-static float transition_run(zrn_element_t* const e, const ZTransition t, const float delay_ms, const float pivot_x) {
+static float transition_run(zrn_element_t* const e, const ZTransition t, const float delay_ms) {
 	const tdef_t* const d = &TDEFS[t];
 	const float base = base_opacity(e);
 	const int animate = e->root && zrn_animations_enabled(e->root);
 	float end = 0;
-	if (d->cx >= 0.0f) {
-		e->proj_cx = pivot_x > NO_PIVOT ? pivot_x : d->cx;
+	if (d->cx >= -1.0f) {
+		e->proj_cx = d->cx;
 		e->proj_cy = d->cy;
 	}
-	for (int i = 0; i < d->n; i++) {
+	for (int i = 0; i < d->count; i++) {
 		const tseg_t* const sg = &d->seg[i];
 		const float k = sg->prop == Z_PROP_OPACITY ? base : 1.0f;
-		const float dur = sg->duration > 0 ? sg->duration : d->duration;
-		const ZEasing ease = sg->duration > 0 ? sg->easing : d->easing;
+		zrn_leg_t legs[2];
 		if (!animate) {
 			if (e->tweens) e->tweens->p[sg->prop].active = 0;
-			property_set(e, sg->prop, sg->to * k);
+			property_set(e, sg->prop, sg->key[sg->count - 1].value * k);
 			continue;
 		}
-		property_set(e, sg->prop, sg->from * k);
-		tween_start(e, sg->prop, sg->to * k, dur, ease, delay_ms);
-		if (delay_ms + dur > end) end = delay_ms + dur;
+		for (int j = 1; j < sg->count; j++) {
+			legs[j - 1].to = sg->key[j].value * k;
+			legs[j - 1].duration = sg->key[j].t - sg->key[j - 1].t;
+			legs[j - 1].easing = sg->key[j].easing;
+		}
+		property_set(e, sg->prop, sg->key[0].value * k);
+		tween_start_legs(e, sg->prop, legs, sg->count - 1, delay_ms);
+		if (delay_ms + sg->key[sg->count - 1].t > end) end = delay_ms + sg->key[sg->count - 1].t;
 	}
 	zrn_update_transformed(e);
 	return end;
@@ -437,23 +484,17 @@ static int collect_rows(const zrn_element_t* const e, Zid* const rows, int n) {
 	return n;
 }
 
+/* The rows go one after another in the order they are in, going in or out, forward or back. */
 static void transition_feather(zrn_element_t* const e, const ZTransition t, const float delay_ms) {
 	Zid rows[ROW_MAX];
-	const int forward = t == Z_TRANSITION_FEATHER_FORWARD_IN || t == Z_TRANSITION_FEATHER_FORWARD_OUT;
 	if (e->root && e->root->layout_dirty) Zroot_update_layout(e->root->id);
-	const float left = zrn_to_root(e, (ZPoint){ .x = 0, .y = 0 }).x;
 	const int n = collect_rows(e, rows, 0);
 	e->transition_rows = 1;
 	for (int i = 0; i < n; i++) {
 		zrn_element_t* const row = zrn_lookup(rows[i]);
-		int order = forward ? i : n - 1 - i;
-		float pivot = NO_PIVOT;
 		if (!row) continue;
-		if (order > ROW_STAGGER_MAX) order = ROW_STAGGER_MAX;
-		/* every row turns about the left edge of the container, not its own */
-		if (row->rect.width > 0) pivot = (left - zrn_to_root(row, (ZPoint){ .x = 0, .y = 0 }).x) / row->rect.width;
 		row->transition_active = 1;
-		if (transition_run(row, t, delay_ms + (float)order * ROW_STAGGER_MS, pivot) <= 0) transition_ended(row);
+		if (transition_run(row, t, delay_ms + (float)i * TDEFS[t].stagger) <= 0) transition_ended(row);
 	}
 }
 
@@ -463,7 +504,7 @@ static void transition_play(zrn_element_t* const e, const ZTransition t, const f
 		return;
 	}
 	e->transition_active = 1;
-	if (transition_run(e, t, delay_ms, NO_PIVOT) <= 0) transition_ended(e);
+	if (transition_run(e, t, delay_ms) <= 0) transition_ended(e);
 }
 
 /* The element has nothing more to play. The opacity it had is remembered only while a transition has it faded. */
@@ -476,10 +517,10 @@ static void transition_ended(zrn_element_t* const e) {
 
 float zrn_transition_duration(const ZTransition t) {
 	float end = 0;
-	if (!transition_valid(t)) return 0;
-	for (int i = 0; i < TDEFS[t].n; i++) {
-		const float dur = TDEFS[t].seg[i].duration > 0 ? TDEFS[t].seg[i].duration : TDEFS[t].duration;
-		if (dur > end) end = dur;
+	if (!transition_valid(t) || transition_is_feather(t)) return 0;
+	for (int i = 0; i < TDEFS[t].count; i++) {
+		const tseg_t* const sg = &TDEFS[t].seg[i];
+		if (sg->key[sg->count - 1].t > end) end = sg->key[sg->count - 1].t;
 	}
 	return end;
 }

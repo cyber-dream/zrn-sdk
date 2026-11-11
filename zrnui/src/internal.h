@@ -1250,8 +1250,15 @@ int zrn_root_paint(zrn_root_t* r, zrn_painter_t* p);
 void zrn_note_renderer(const char* name);
 
 /* ---- animation and transforms (anim.c) ---- */
+/** One leg of a tween: it ends at `to` after `duration` ms, with `easing`. */
+typedef struct zrn_leg {
+	float to, duration;
+	ZEasing easing;
+} zrn_leg_t;
+
+/** The animations of an element, one per property: after `delay` ms from `start` it runs its legs one after another, from where the property is then. */
 typedef struct zrn_tween {
-	struct { int active, started; float from, to, duration, delay; double start; ZEasing easing; } p[Z_PROP_LAST_];
+	struct { int active, started, count; float from, delay; double start; zrn_leg_t legs[3]; } p[Z_PROP_LAST_];
 } zrn_tween_t;
 int zrn_animations_enabled(const zrn_root_t* r);
 /** The window has decided on its renderer: a first page that waited swings in now, when animations run. */

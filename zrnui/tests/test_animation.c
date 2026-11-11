@@ -18,7 +18,7 @@ static Zid make_root(ZAnimations mode) {
 
 static void test_easing(void) {
 	ZEasing e;
-	for (e = Z_EASE_LINEAR; e <= Z_EASE_EMPHASIZED; e++) {
+	for (e = Z_EASE_LINEAR; e <= Z_EASE_EXP15_IN; e++) {
 		float prev = 0;
 		int i;
 		CHECK_NEAR(Zeasing(e, 0), 0);
@@ -32,6 +32,12 @@ static void test_easing(void) {
 	CHECK(Zeasing(Z_EASE_OUT, 0.5f) > 0.5f);
 	CHECK(Zeasing(Z_EASE_IN, 0.5f) < 0.5f);
 	CHECK(Zeasing(Z_EASE_EMPHASIZED, 0.3f) > 0.5f);
+	/* Silverlight's ExponentialEase and SineEase: (e^(n t) - 1) / (e^n - 1), its mirror, sin(t pi / 2) */
+	CHECK(fabsf(Zeasing(Z_EASE_EXP6_IN, 0.5f) - 0.0474f) < 1e-3f);
+	CHECK(fabsf(Zeasing(Z_EASE_EXP6_OUT, 0.5f) - 0.9526f) < 1e-3f);
+	CHECK(fabsf(Zeasing(Z_EASE_EXP15_IN, 0.5f) - 0.00055f) < 1e-3f);
+	CHECK(fabsf(Zeasing(Z_EASE_EXP1_IN, 0.5f) - 0.3775f) < 1e-3f);
+	CHECK(fabsf(Zeasing(Z_EASE_SINE_OUT, 0.5f) - 0.7071f) < 1e-3f);
 }
 
 static void test_animate(void) {
@@ -338,7 +344,7 @@ static int is_out(ZTransition t) {
 	case Z_TRANSITION_SLIDE_LEFT_FADE_OUT: case Z_TRANSITION_SLIDE_RIGHT_FADE_OUT: case Z_TRANSITION_SWIVEL_FULL_SCREEN_OUT:
 	case Z_TRANSITION_SWIVEL_FORWARD_OUT: case Z_TRANSITION_SWIVEL_BACKWARD_OUT: case Z_TRANSITION_TURNSTILE_FORWARD_OUT:
 	case Z_TRANSITION_TURNSTILE_BACKWARD_OUT: case Z_TRANSITION_ROTATE_OUT_90_CLOCKWISE: case Z_TRANSITION_ROTATE_OUT_90_COUNTERCLOCKWISE:
-	case Z_TRANSITION_ROTATE_OUT_180_CLOCKWISE: case Z_TRANSITION_ROTATE_OUT_180_COUNTERCLOCKWISE: case Z_TRANSITION_ROLL_OUT:
+	case Z_TRANSITION_ROTATE_OUT_180_CLOCKWISE: case Z_TRANSITION_ROTATE_OUT_180_COUNTERCLOCKWISE:
 		return 1;
 	default: return 0;
 	}
@@ -358,34 +364,49 @@ static void test_transition_kinds(void) {
 	Zelement_on(b, Z_EVENT_TRANSITION_COMPLETED, completed, nullptr);
 	for (ZTransition t = Z_TRANSITION_FADE_IN; t < Z_TRANSITION_LAST_; t++) {
 		if (is_feather(t)) continue;
+		float before[Z_PROP_LAST_];
 		g_completed = 0;
 		Zelement_play_transition(b, t, 100);
-		/* it shows the start at once, and keeps it while it waits: an "In" is not there yet, an "Out" is untouched */
-		if (is_out(t)) CHECK_NEAR(Zelement_get_property(b, Z_PROP_OPACITY) * 100, 50);
-		else CHECK_NEAR(Zelement_get_property(b, Z_PROP_OPACITY) * 100, 0);
 		CHECK(Zelement_is_animating(b));
+		/* it shows the start at once and keeps it while it waits */
+		for (int p = 0; p < Z_PROP_LAST_; p++) before[p] = Zelement_get_property(b, (ZAnimatedProperty)p);
 		run(root, 64);
-		if (is_out(t)) CHECK_NEAR(Zelement_get_property(b, Z_PROP_OPACITY) * 100, 50);
-		else CHECK_NEAR(Zelement_get_property(b, Z_PROP_OPACITY) * 100, 0);
+		for (int p = 0; p < Z_PROP_LAST_; p++) CHECK(Zelement_get_property(b, (ZAnimatedProperty)p) == before[p]);
 		CHECK(g_completed == 0);
 		run(root, 700);
 		CHECK(!Zelement_is_animating(b));
 		CHECK(g_completed == 1);
 		if (is_out(t)) {
+			/* an "Out" leaves it gone, until it is cleared */
 			CHECK_NEAR(Zelement_get_property(b, Z_PROP_OPACITY) * 100, 0);
-			Zelement_clear_transition(b);
+		} else if (t == Z_TRANSITION_ROLL) {
+			/* the Roll turns a quarter and does not touch the opacity */
+			CHECK_NEAR(Zelement_get_property(b, Z_PROP_ROTATION_Z), -90);
+			CHECK_NEAR(Zelement_get_property(b, Z_PROP_OPACITY) * 100, 50);
 		} else {
 			/* an "In" ends at rest, at the opacity the element had */
 			CHECK(at_rest(b));
 			CHECK_NEAR(Zelement_get_property(b, Z_PROP_OPACITY) * 100, 50);
 		}
+		Zelement_clear_transition(b);
 		CHECK(at_rest(b));
 		CHECK_NEAR(Zelement_get_property(b, Z_PROP_OPACITY) * 100, 50);
 	}
 	/* the directions: a slide left comes from the right, a clockwise rotation in turns clockwise */
 	Zelement_play_transition(b, Z_TRANSITION_SLIDE_LEFT_FADE_IN, 0);
-	CHECK(Zelement_get_property(b, Z_PROP_TRANSLATE_X) > 0);
-	run(root, 700);
+	CHECK_NEAR(Zelement_get_property(b, Z_PROP_TRANSLATE_X), 200);
+	/* 500 ms for the slides left and right, 350 for up and down */
+	g_completed = 0;
+	run(root, 480);
+	CHECK(g_completed == 0);
+	run(root, 48);
+	CHECK(g_completed == 1);
+	Zelement_play_transition(b, Z_TRANSITION_SLIDE_UP_FADE_IN, 0);
+	g_completed = 0;
+	run(root, 336);
+	CHECK(g_completed == 0);
+	run(root, 32);
+	CHECK(g_completed == 1);
 	Zelement_play_transition(b, Z_TRANSITION_ROTATE_IN_90_CLOCKWISE, 0);
 	CHECK(Zelement_get_property(b, Z_PROP_ROTATION_Z) < 0);
 	run(root, 40);
@@ -451,9 +472,9 @@ static void test_transition_feather(void) {
 	r0 = Zpanel_get_child(stack, 0);
 	r2 = Zpanel_get_child(stack, 2);
 	Zelement_play_transition(stack, Z_TRANSITION_FEATHER_FORWARD_OUT, 0);
-	run(root, 64);
+	run(root, 160);
 	CHECK(Zelement_get_property(r0, Z_PROP_ROTATION_Y) < -1);
-	/* the rows follow one another */
+	/* the rows follow one another, 50 ms apart going out */
 	CHECK(Zelement_get_property(r2, Z_PROP_ROTATION_Y) > Zelement_get_property(r0, Z_PROP_ROTATION_Y));
 	run(root, 400);
 	CHECK_NEAR(Zelement_get_property(r0, Z_PROP_OPACITY), 0);
@@ -461,9 +482,10 @@ static void test_transition_feather(void) {
 	Zelement_clear_transition(stack);
 	CHECK(at_rest(r0) && at_rest(r2));
 	CHECK_NEAR(Zelement_get_property(r0, Z_PROP_OPACITY), 1);
-	/* going in: from behind the screen */
+	/* going in: the rows wait where they start, the first one turned -50 degrees */
 	Zelement_play_transition(stack, Z_TRANSITION_FEATHER_BACKWARD_IN, 0);
-	CHECK(Zelement_get_property(r0, Z_PROP_ROTATION_Y) > 1);
+	CHECK_NEAR(Zelement_get_property(r0, Z_PROP_ROTATION_Y), -50);
+	CHECK_NEAR(Zelement_get_property(r2, Z_PROP_ROTATION_Y), -50);
 	run(root, 600);
 	CHECK(at_rest(r0) && at_rest(r2));
 	CHECK_NEAR(Zelement_get_property(r2, Z_PROP_OPACITY), 1);
@@ -490,11 +512,11 @@ static void test_frame_transitions(void) {
 	CHECK(Zelement_get_property(g_page_a, Z_PROP_OPACITY) < 1);
 	CHECK(strcmp(g_log, "fromA ") == 0);
 	/* the new page comes in when the old one has gone, from the right */
-	run(root, 220);
+	run(root, 260);
 	CHECK(strcmp(g_log, "fromA toB nav ") == 0);
 	CHECK(Zframe_is_transitioning(frame));
 	CHECK(Zelement_get_property(g_page_b, Z_PROP_TRANSLATE_X) > 0);
-	run(root, 700);
+	run(root, 600);
 	CHECK(!Zframe_is_transitioning(frame));
 	CHECK(at_rest(g_page_b));
 	CHECK_NEAR(Zelement_get_property(g_page_b, Z_PROP_OPACITY) * 100, 100);

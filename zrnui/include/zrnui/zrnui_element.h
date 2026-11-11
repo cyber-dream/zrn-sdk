@@ -70,7 +70,14 @@ typedef enum ZEasing {
 	Z_EASE_LINEAR = 0,
 	Z_EASE_OUT,          /* cubic: quick start, soft end */
 	Z_EASE_IN,           /* cubic: slow start */
-	Z_EASE_EMPHASIZED    /* (0.2, 0.8, 0.2, 1) as a cubic Bezier: a quick start and a long soft settle */
+	Z_EASE_EMPHASIZED,   /* (0.2, 0.8, 0.2, 1) as a cubic Bezier: a quick start and a long soft settle */
+	/* the curves of the Toolkit's transitions: Silverlight's SineEase and ExponentialEase with Exponent n, going in (slow start) or out (slow end) */
+	Z_EASE_SINE_OUT,
+	Z_EASE_EXP1_IN,
+	Z_EASE_EXP1_OUT,
+	Z_EASE_EXP6_IN,
+	Z_EASE_EXP6_OUT,
+	Z_EASE_EXP15_IN
 } ZEasing;
 
 /** What Zelement_animate can move. Rotations are degrees. */
@@ -92,8 +99,8 @@ typedef enum ZAnimatedProperty {
  * (Zelement_play_transition) or each time the element appears (Zelement_set_transition).
  *
  * A feathered kind is played on the rows of the element, and it is the rows that get Z_EVENT_TRANSITION_COMPLETED, one each.
- * The distances, angles, durations and easing curves of the kinds other than the feathered turnstile are estimates
- * of the Toolkit's, not measurements. Rotations and slides are drawn by the OpenGL renderer only.
+ * The distances, angles, durations and easing curves are those of the Toolkit's storyboards and of its
+ * TurnstileFeatherEffect (the Fade is not its). Rotations and slides are drawn by the OpenGL renderer only.
  */
 typedef enum ZTransition {
 	Z_TRANSITION_NONE = 0,
@@ -120,7 +127,7 @@ typedef enum ZTransition {
 	Z_TRANSITION_TURNSTILE_FORWARD_OUT,
 	Z_TRANSITION_TURNSTILE_BACKWARD_IN,
 	Z_TRANSITION_TURNSTILE_BACKWARD_OUT,
-	/** The rows of the element (its leaves, as the Frame finds them) turn one after another; the delay is the start, the step is 28 ms. */
+	/** The rows of the element (its leaves, as the Frame finds them) turn one after another, about a point a fifth of a row to the left of it; the delay is the start, the step 40 or 50 ms (the Toolkit's TurnstileFeatherEffect). */
 	Z_TRANSITION_FEATHER_FORWARD_IN,
 	Z_TRANSITION_FEATHER_FORWARD_OUT,
 	Z_TRANSITION_FEATHER_BACKWARD_IN,
@@ -133,8 +140,8 @@ typedef enum ZTransition {
 	Z_TRANSITION_ROTATE_OUT_90_COUNTERCLOCKWISE,
 	Z_TRANSITION_ROTATE_OUT_180_CLOCKWISE,
 	Z_TRANSITION_ROTATE_OUT_180_COUNTERCLOCKWISE,
-	Z_TRANSITION_ROLL_IN,
-	Z_TRANSITION_ROLL_OUT,
+	/** A quarter turn about the middle in 600 ms (the Toolkit has one Roll, not an in and an out); it leaves the element turned. */
+	Z_TRANSITION_ROLL,
 	Z_TRANSITION_LAST_
 } ZTransition;
 
