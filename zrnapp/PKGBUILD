@@ -6,7 +6,7 @@ arch=('x86_64' 'aarch64')
 url="https://github.com/Zerone-Laboratories/zrn-sdk"
 license=('MIT')
 depends=('zrnui' 'wayland' 'libxkbcommon' 'mesa' 'egl-wayland')
-makedepends=('cmake' 'pkgconf')
+makedepends=('cmake' 'pkgconf' 'wayland-protocols')
 source=()
 options=('!strip')
 

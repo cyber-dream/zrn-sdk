@@ -22,9 +22,9 @@
 #include <wayland-client.h>
 #include <xkbcommon/xkbcommon.h>
 
-#include "../protocol/xdg-shell-client-protocol.h"
-#include "../protocol/viewporter-client-protocol.h"
-#include "../protocol/fractional-scale-v1-client-protocol.h"
+#include "xdg-shell-client-protocol.h"
+#include "viewporter-client-protocol.h"
+#include "fractional-scale-v1-client-protocol.h"
 
 static float scale_of_env(const char* env);
 
