@@ -49,6 +49,7 @@ void zrn_root_attach(zrn_root_t* const r, zrn_element_t* const e) {
 	zrn_bindings_apply(e);
 	if (e->cls == &zrn_class_popup && ZST_AS(zrn_popup_t, e)->is_open) zrn_root_register_popup(r, e);
 	for (int i = 0; i < e->child_count; i++) zrn_root_attach(r, e->children[i]);
+	if (e->appear != Z_TRANSITION_NONE && e->visibility == Z_VISIBLE) zrn_transition_appear(e);
 	zrn_raise(e, Z_EVENT_LOADED);
 }
 
@@ -571,7 +572,12 @@ const char* Zroot_get_renderer_name(const Zid root) {
  * ============================================================================ */
 
 static void zrn_tick_tree(zrn_element_t* const e, const float dt) {
-	if (e->tweens) zrn_tweens_tick(e);
+	const Zid id = e->id;
+	if (e->tweens) {
+		zrn_tweens_tick(e);
+		/* Z_EVENT_TRANSITION_COMPLETED may have destroyed the element */
+		if (!zrn_lookup(id)) return;
+	}
 	if (e->wants_tick && e->cls->tick) e->cls->tick(e, dt);
 	for (int i = 0; i < e->child_count; i++) zrn_tick_tree(e->children[i], dt);
 }
@@ -598,8 +604,9 @@ static float zrn_animation_speed(void) {
 void Zroot_tick(const Zid root, const float delta_ms) {
 	zrn_root_t* const r = get_root(root);
 	if (!r) return;
-	r->time_ms += delta_ms;
 	float speed = zrn_animation_speed();
+	/* the clock of the tweens runs at the speed of the animations, as everything else that moves */
+	r->time_ms += (double)delta_ms * (double)speed;
 	/* cross-fade of the theme: the displayed theme moves from theme_from to theme_target */
 	if (r->theme_transitioning) {
 		r->theme_t += (delta_ms * speed) / 250.0f;

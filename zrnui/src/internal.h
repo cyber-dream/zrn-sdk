@@ -201,10 +201,19 @@ struct zrn_element {
 	int observes_pointer;
 
 	/* render transform (anim.c): rotation in degrees about the point (proj_cx, proj_cy) of the element, as fractions of its size */
-	float rot_x, rot_y, proj_cx, proj_cy, render_scale, translate_x, translate_y;
+	float rot_x, rot_y, rot_z, proj_cx, proj_cy, render_scale, translate_x, translate_y;
 	/** true when any of the above is not the identity. */
 	int transformed;
 	int tilt;
+	/** The ZTransition that plays when the element appears (Zelement_set_transition), after `appear_delay` ms. */
+	int appear;
+	float appear_delay;
+	/** A ZTransition is running: Z_EVENT_TRANSITION_COMPLETED comes when its last animation ends. */
+	int transition_active;
+	/** A feathered transition moved the rows below this element (Zelement_clear_transition puts them back). */
+	int transition_rows;
+	/** The opacity the element had before a transition faded it (0: none is remembered). */
+	float trans_opacity;
 	/** Animations running on this element: one slot per ZAnimatedProperty, NULL when it has none. */
 	struct zrn_tween* tweens;
 	/** Laid out and painted by its parent itself (a popup's content, a Viewbox's child), not by the generic walk; not hit tested through the tree. */
@@ -385,6 +394,12 @@ typedef struct zrn_frame {
 	int navigating;
 	/** The transition (frame.c): 1 the old page turns away, 2 the new one swings in, 0 none. */
 	ZPageTransition transition;
+	/** Zframe_set_transitions: the transitions played on the pages themselves, [forward out, forward in, backward out, backward in], instead of `transition`. */
+	int custom;
+	ZTransition nav[4];
+	/** The run in progress plays `nav` (not the feathered turnstile), and how long its out and in halves last, in ms. */
+	int run_custom;
+	float out_ms, in_ms;
 	/** The first page went in before it was known whether animations run (the platform makes its surface later): Zroot_start_intro starts its swing-in. */
 	int intro_pending;
 	int phase, direction;
@@ -1212,7 +1227,7 @@ struct zrn_root {
 	ZAnimations animations;
 	/** true while the platform presents the root with the OpenGL renderer (Zroot_report_presenter). */
 	int gpu_window;
-	/** The clock of animations, in ms: the sum of the Zroot_tick deltas. */
+	/** The clock of animations, in ms: the sum of the Zroot_tick deltas, scaled by the animation speed. */
 	double time_ms;
 	/** Tilt in progress: the pressed element, how far the finger is from its centre (-1..1), how much it leans (0..1). */
 	zrn_element_t* tilt_element;
@@ -1236,7 +1251,7 @@ void zrn_note_renderer(const char* name);
 
 /* ---- animation and transforms (anim.c) ---- */
 typedef struct zrn_tween {
-	struct { int active; float from, to, start, duration, delay; ZEasing easing; } p[Z_PROP_LAST_];
+	struct { int active, started; float from, to, duration, delay; double start; ZEasing easing; } p[Z_PROP_LAST_];
 } zrn_tween_t;
 int zrn_animations_enabled(const zrn_root_t* r);
 /** The window has decided on its renderer: a first page that waited swings in now, when animations run. */
@@ -1245,6 +1260,12 @@ float zrn_ease(ZEasing easing, float t);
 void zrn_tweens_tick(zrn_element_t* e);
 void zrn_tweens_free(zrn_element_t* e);
 void zrn_update_transformed(zrn_element_t* e);
+/** Plays the transition an element was given with Zelement_set_transition (it has appeared). */
+void zrn_transition_appear(zrn_element_t* e);
+/** How long a transition of an element takes, in ms: the delay is not in it (0 for NONE and for a kind an element cannot play). */
+float zrn_transition_duration(ZTransition t);
+/** A leaf of a page, for what turns row by row: whether `e` is a container whose children are the rows (frame.c). */
+int zrn_is_row_container(const zrn_element_t* e);
 void zrn_xf_identity(float m[16]);
 /** out = a * b: b is applied first. */
 void zrn_xf_mul(float out[16], const float a[16], const float b[16]);

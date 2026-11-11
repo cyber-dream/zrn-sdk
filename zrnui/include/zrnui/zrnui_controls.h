@@ -238,11 +238,10 @@ extern "C" {
 	 * replaced at once). The turnstile of Windows Phone: the rows of the page that leaves turn away round
 	 * the left edge one after another, a moment of nothing, then the rows of the new page swing in;
 	 * 720 ms. NavigatedFrom comes when it starts, NavigatedTo and Navigated when the new page appears.
+	 * The transition of a Frame is a ZTransition: Z_TRANSITION_NONE, or Z_TRANSITION_TURNSTILE (the default, as above);
+	 * Zframe_set_transitions plays any other kinds on the pages themselves.
 	 */
-	typedef enum ZPageTransition {
-		Z_TRANSITION_NONE = 0,
-		Z_TRANSITION_TURNSTILE
-	} ZPageTransition;
+	typedef ZTransition ZPageTransition;
 
 	ZRNUI_API Zid Zframe_create(void);
 
@@ -311,6 +310,14 @@ extern "C" {
 	ZRNUI_API void Zpivot_on_pivot_item_loaded(Zid pivot, ZPivotItemCallback callback, void* user_data);
 
 	ZRNUI_API void Zframe_set_transition(Zid frame, ZPageTransition transition);
+	/**
+	 * @brief The NavigationInTransition and NavigationOutTransition of the Toolkit, one per direction: what the page
+	 * that leaves does and what the new page does, going forward (Navigate, GoForward) and going back (GoBack).
+	 * Each is a ZTransition played on the page itself; the new page comes in when the old one has gone. Use the "Out"
+	 * kinds for the first and third and the "In" kinds for the second and fourth (the others are not refused, but
+	 * play as they are). A feathered turnstile is Zframe_set_transition's.
+	 */
+	ZRNUI_API void Zframe_set_transitions(Zid frame, ZTransition forward_out, ZTransition forward_in, ZTransition backward_out, ZTransition backward_in);
 	/** @brief true while a transition runs. A Navigate or GoBack in that time ends it at once. */
 	ZRNUI_API int Zframe_is_transitioning(Zid frame);
 	/**

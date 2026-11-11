@@ -147,6 +147,13 @@ static constexpr float GAP_AT = 330.0f;
 static constexpr int MAX_ROWS = 64;
 static constexpr int MAX_STAGGER_ROWS = 7;
 
+static int nav_on(const zrn_frame_t* const f) { return f->custom || f->transition != Z_TRANSITION_NONE; }
+
+/* The transition of a half of the navigation: direction 1 is forward. */
+static ZTransition nav_kind(const zrn_frame_t* const f, const int direction, const int incoming) {
+	return f->nav[(direction >= 0 ? 0 : 2) + (incoming ? 1 : 0)];
+}
+
 static void frame_init(zrn_element_t* const e) {
 	e->focusable = 0;
 	FRAME(e)->current = -1;
@@ -199,7 +206,7 @@ Zid Zframe_create(void) {
 static zrn_frame_t* get_frame(const Zid id) { return FRAME(zrn_get(id, Z_CLASS_FRAME)); }
 
 /* A row is what turns: a leaf of the tree, or a control that is not a container. */
-static int is_container(const zrn_element_t* const e) {
+int zrn_is_row_container(const zrn_element_t* const e) {
 	return zrn_is_a(e, Z_CLASS_PANEL) || zrn_is_a(e, Z_CLASS_BORDER) || zrn_is_a(e, Z_CLASS_VIEWBOX) ||
 		zrn_is_a(e, Z_CLASS_SCROLL_VIEWER) || zrn_is_a(e, Z_CLASS_USER_CONTROL) || zrn_is_a(e, Z_CLASS_ITEMS_CONTROL);
 }
@@ -207,7 +214,7 @@ static int is_container(const zrn_element_t* const e) {
 static void collect_rows(zrn_frame_t* const f, const zrn_element_t* const e) {
 	int i;
 	if (e->visibility != Z_VISIBLE || f->row_count >= MAX_ROWS || zrn_is_a(e, Z_CLASS_APP_BAR)) return;
-	if (is_container(e) && e->child_count > 0) {
+	if (zrn_is_row_container(e) && e->child_count > 0) {
 		for (i = 0; i < e->child_count; i++) collect_rows(f, e->children[i]);
 		return;
 	}
@@ -316,12 +323,14 @@ static void finish(zrn_frame_t* const f, const Zid frame_id) {
 	if (f->phase == 0) return;
 	if (f->phase == 1) {
 		const Zid page = f->pending;
+		if (f->run_custom && f->base.content) Zelement_clear_transition(f->base.content->id);
 		rows_reset(f);
 		f->pending = Z_INVALID_ID;
 		f->phase = 0;
 		attach(f, frame_id, page, f->pending_parameter);
 		if (!zrn_lookup(frame_id)) return;
 	} else {
+		if (f->run_custom && f->base.content) Zelement_clear_transition(f->base.content->id);
 		rows_reset(f);
 	}
 	f->phase = 0;
@@ -335,14 +344,16 @@ static void frame_tick(zrn_element_t* e, const float dt) {
 	f->elapsed += dt;
 	if (e->root && e->root->layout_dirty) Zroot_update_layout(e->root->id);
 	if (f->phase == 1) {
-		if (f->elapsed < GAP_AT) {
-			rows_turn(f, e, f->elapsed, 0);
+		const float gap = f->run_custom ? f->out_ms : GAP_AT;
+		if (f->elapsed < gap) {
+			if (!f->run_custom) rows_turn(f, e, f->elapsed, 0);
 			return;
 		}
 		/* the old page is gone, the new one comes in */
 		{
 			const Zid page = f->pending;
-			const float carry = f->elapsed - GAP_AT;
+			const float carry = f->elapsed - gap;
+			if (f->run_custom && f->base.content) Zelement_clear_transition(f->base.content->id);
 			rows_reset(f);
 			f->pending = Z_INVALID_ID;
 			f->phase = 2;
@@ -351,9 +362,22 @@ static void frame_tick(zrn_element_t* e, const float dt) {
 			f = FRAME(zrn_lookup(id));
 			e = &f->base.base.base;
 			if (e->root && e->root->layout_dirty) Zroot_update_layout(e->root->id);
-			rows_of(f, f->base.content);
 			f->elapsed = carry;
-			rows_turn(f, e, f->elapsed, 1);
+			if (f->run_custom) {
+				f->in_ms = zrn_transition_duration(nav_kind(f, f->direction, 1));
+				if (f->base.content) Zelement_play_transition(f->base.content->id, nav_kind(f, f->direction, 1), 0);
+			} else {
+				rows_of(f, f->base.content);
+				rows_turn(f, e, f->elapsed, 1);
+			}
+		}
+		return;
+	}
+	if (f->run_custom) {
+		if (f->elapsed >= f->in_ms) {
+			if (f->base.content) Zelement_clear_transition(f->base.content->id);
+			f->phase = 0;
+			e->wants_tick = 0;
 		}
 		return;
 	}
@@ -376,11 +400,17 @@ static void start_intro(zrn_frame_t* const f, const int direction) {
 	zrn_element_t* const fe = &f->base.base.base;
 	f->intro_pending = 0;
 	if (!f->base.content) return;
-	rows_of(f, f->base.content);
 	f->direction = direction;
 	f->phase = 2;
 	f->elapsed = 0;
 	fe->wants_tick = 1;
+	f->run_custom = f->custom;
+	if (f->run_custom) {
+		f->in_ms = zrn_transition_duration(nav_kind(f, direction, 1));
+		Zelement_play_transition(f->base.content->id, nav_kind(f, direction, 1), 0);
+		return;
+	}
+	rows_of(f, f->base.content);
 	rows_turn(f, fe, 0, 1);
 }
 
@@ -395,7 +425,7 @@ static void show(zrn_frame_t* f, const Zid frame_id, const Zid page_id, void* pa
 	f->mode = mode;
 	zrn_element_t* old = f->base.content;
 	zrn_element_t* const frame = &f->base.base.base;
-	const int enabled = f->transition != Z_TRANSITION_NONE && frame->root && zrn_animations_enabled(frame->root);
+	const int enabled = nav_on(f) && frame->root && zrn_animations_enabled(frame->root);
 	const int animate = enabled && old && zrn_is_a(old, Z_CLASS_PAGE);
 	f->navigating = 1;
 	if (old && zrn_is_a(old, Z_CLASS_PAGE)) {
@@ -415,12 +445,18 @@ static void show(zrn_frame_t* f, const Zid frame_id, const Zid page_id, void* pa
 		/* the first page has nothing to turn away from, but it swings in: the app opens as the second half of a turn.
 		 * Before the platform has a surface nobody knows yet whether animations run: Zroot_start_intro starts it then. */
 		f = FRAME(zrn_lookup(frame_id));
-		f->intro_pending = first && f->transition != Z_TRANSITION_NONE;
+		f->intro_pending = first && nav_on(f);
 		if (enabled) start_intro(f, direction);
 		return;
 	}
 	old = f->base.content;
-	rows_of(f, old);
+	f->run_custom = f->custom;
+	if (f->run_custom) {
+		f->out_ms = zrn_transition_duration(nav_kind(f, direction, 0));
+		Zelement_play_transition(old->id, nav_kind(f, direction, 0), 0);
+	} else {
+		rows_of(f, old);
+	}
 	old->hit_visible = 0;
 	f->pending = page_id;
 	f->pending_parameter = parameter;
@@ -429,7 +465,7 @@ static void show(zrn_frame_t* f, const Zid frame_id, const Zid page_id, void* pa
 	f->elapsed = 0;
 	f->navigating = 0;
 	frame->wants_tick = 1;
-	rows_turn(f, frame, 0, 0);
+	if (!f->run_custom) rows_turn(f, frame, 0, 0);
 }
 
 /* Builds the page of an entry; Z_INVALID_ID, and the page destroyed, when it is not a Page. */
@@ -546,7 +582,27 @@ void Zframe_on_navigated(const Zid frame, const ZRoutedCallback callback, void* 
 
 void Zframe_set_transition(const Zid frame, const ZPageTransition transition) {
 	zrn_frame_t* const f = get_frame(frame);
-	if (f) f->transition = transition;
+	if (!f) return;
+	if (transition != Z_TRANSITION_NONE && transition != Z_TRANSITION_TURNSTILE) {
+		zrn_error(Z_ERROR_INVALID_ARGUMENT, "Zframe_set_transition: NONE or TURNSTILE; Zframe_set_transitions takes the others");
+		return;
+	}
+	f->transition = transition;
+	f->custom = 0;
+}
+
+void Zframe_set_transitions(const Zid frame, const ZTransition forward_out, const ZTransition forward_in, const ZTransition backward_out, const ZTransition backward_in) {
+	zrn_frame_t* const f = get_frame(frame);
+	const ZTransition kinds[4] = { forward_out, forward_in, backward_out, backward_in };
+	if (!f) return;
+	for (int i = 0; i < 4; i++) {
+		if (kinds[i] < Z_TRANSITION_NONE || kinds[i] >= Z_TRANSITION_LAST_ || kinds[i] == Z_TRANSITION_TURNSTILE) {
+			zrn_error(Z_ERROR_INVALID_ARGUMENT, "Zframe_set_transitions: not a transition of a page");
+			return;
+		}
+		f->nav[i] = kinds[i];
+	}
+	f->custom = 1;
 }
 
 int Zframe_is_transitioning(const Zid frame) {

@@ -59,6 +59,7 @@ typedef enum ZEvent {
 	Z_EVENT_PRIMARY_BUTTON_CLICK,   /* ContentDialog */
 	Z_EVENT_SECONDARY_BUTTON_CLICK, /* ContentDialog */
 	Z_EVENT_SECTIONS_IN_VIEW_CHANGED, /* Hub: the sections in view are others now */
+	Z_EVENT_TRANSITION_COMPLETED,   /* UIElement: the ZTransition it played has ended (at once when animations are off) */
 	Z_EVENT_LAST_
 } ZEvent;
 
@@ -80,8 +81,62 @@ typedef enum ZAnimatedProperty {
 	Z_PROP_SCALE,        /* ScaleTransform about the centre of rotation */
 	Z_PROP_TRANSLATE_X,
 	Z_PROP_TRANSLATE_Y,
+	Z_PROP_ROTATION_Z,   /* in the plane of the screen, clockwise is positive */
 	Z_PROP_LAST_
 } ZAnimatedProperty;
+
+/**
+ * The transitions of Windows Phone (the Silverlight Toolkit's Microsoft.Phone.Controls transitions), by the names of
+ * their modes. "In" starts away from the place of the element and ends at rest, "Out" leaves it where it ended
+ * (turned away, faded: Zelement_clear_transition brings it back). The Raven way: a kind and a delay, played now
+ * (Zelement_play_transition) or each time the element appears (Zelement_set_transition).
+ *
+ * A feathered kind is played on the rows of the element, and it is the rows that get Z_EVENT_TRANSITION_COMPLETED, one each.
+ * The distances, angles, durations and easing curves of the kinds other than the feathered turnstile are estimates
+ * of the Toolkit's, not measurements. Rotations and slides are drawn by the OpenGL renderer only.
+ */
+typedef enum ZTransition {
+	Z_TRANSITION_NONE = 0,
+	/** Frame only: the turnstile of the Windows Phone shell, a feathered one (the rows of the page turn one after another). The default of a Frame. */
+	Z_TRANSITION_TURNSTILE,
+	Z_TRANSITION_FADE_IN,
+	Z_TRANSITION_FADE_OUT,
+	Z_TRANSITION_SLIDE_UP_FADE_IN,
+	Z_TRANSITION_SLIDE_UP_FADE_OUT,
+	Z_TRANSITION_SLIDE_DOWN_FADE_IN,
+	Z_TRANSITION_SLIDE_DOWN_FADE_OUT,
+	Z_TRANSITION_SLIDE_LEFT_FADE_IN,
+	Z_TRANSITION_SLIDE_LEFT_FADE_OUT,
+	Z_TRANSITION_SLIDE_RIGHT_FADE_IN,
+	Z_TRANSITION_SLIDE_RIGHT_FADE_OUT,
+	Z_TRANSITION_SWIVEL_FULL_SCREEN_IN,
+	Z_TRANSITION_SWIVEL_FULL_SCREEN_OUT,
+	Z_TRANSITION_SWIVEL_FORWARD_IN,
+	Z_TRANSITION_SWIVEL_FORWARD_OUT,
+	Z_TRANSITION_SWIVEL_BACKWARD_IN,
+	Z_TRANSITION_SWIVEL_BACKWARD_OUT,
+	/** The whole element turns about its left edge. */
+	Z_TRANSITION_TURNSTILE_FORWARD_IN,
+	Z_TRANSITION_TURNSTILE_FORWARD_OUT,
+	Z_TRANSITION_TURNSTILE_BACKWARD_IN,
+	Z_TRANSITION_TURNSTILE_BACKWARD_OUT,
+	/** The rows of the element (its leaves, as the Frame finds them) turn one after another; the delay is the start, the step is 28 ms. */
+	Z_TRANSITION_FEATHER_FORWARD_IN,
+	Z_TRANSITION_FEATHER_FORWARD_OUT,
+	Z_TRANSITION_FEATHER_BACKWARD_IN,
+	Z_TRANSITION_FEATHER_BACKWARD_OUT,
+	Z_TRANSITION_ROTATE_IN_90_CLOCKWISE,
+	Z_TRANSITION_ROTATE_IN_90_COUNTERCLOCKWISE,
+	Z_TRANSITION_ROTATE_IN_180_CLOCKWISE,
+	Z_TRANSITION_ROTATE_IN_180_COUNTERCLOCKWISE,
+	Z_TRANSITION_ROTATE_OUT_90_CLOCKWISE,
+	Z_TRANSITION_ROTATE_OUT_90_COUNTERCLOCKWISE,
+	Z_TRANSITION_ROTATE_OUT_180_CLOCKWISE,
+	Z_TRANSITION_ROTATE_OUT_180_COUNTERCLOCKWISE,
+	Z_TRANSITION_ROLL_IN,
+	Z_TRANSITION_ROLL_OUT,
+	Z_TRANSITION_LAST_
+} ZTransition;
 
 
 #ifdef __cplusplus
@@ -195,6 +250,8 @@ extern "C" {
 	ZRNUI_API void Zelement_set_render_scale(Zid element, float scale);
 	/** @brief A TranslateTransform in logical pixels. */
 	ZRNUI_API void Zelement_set_translate(Zid element, float x, float y);
+	/** @brief The rotation of the element in the plane of the screen, in degrees (clockwise is positive), about the centre of the projection. */
+	ZRNUI_API void Zelement_set_rotation_z(Zid element, float degrees);
 	ZRNUI_API float Zelement_get_property(Zid element, ZAnimatedProperty property);
 	/**
 	 * @brief Moves a property to `to` over `duration_ms`, after `delay_ms`, from where it is now (a new
@@ -204,6 +261,18 @@ extern "C" {
 	ZRNUI_API void Zelement_animate(Zid element, ZAnimatedProperty property, float to, float duration_ms, ZEasing easing, float delay_ms);
 	/** @brief true while an animation of the element is running. */
 	ZRNUI_API int Zelement_is_animating(Zid element);
+	/**
+	 * @brief Plays a transition on the element now, after `delay_ms`. The element shows the start of it at once, so it
+	 * does not flash while it waits. With animations off an "In" changes nothing and an "Out" ends at once; the
+	 * Z_EVENT_TRANSITION_COMPLETED of the element comes when it is over. A feathered kind moves the rows of the
+	 * element one after another, `delay_ms` being when the first starts. Z_TRANSITION_NONE stops one that is running
+	 * and leaves the element where it is.
+	 */
+	ZRNUI_API void Zelement_play_transition(Zid element, ZTransition transition, float delay_ms);
+	/** @brief The transition that plays whenever the element appears: when its Visibility becomes Visible and when it enters a tree that is in a root. NONE (the default) plays none. */
+	ZRNUI_API void Zelement_set_transition(Zid element, ZTransition transition, float delay_ms);
+	/** @brief Stops the transition of the element and puts it back as it was: no turn, no slide, the opacity it had before. */
+	ZRNUI_API void Zelement_clear_transition(Zid element);
 	/** @brief The easing curve itself: t in [0, 1] to [0, 1]. */
 	ZRNUI_API float Zeasing(ZEasing easing, float t);
 	/** @brief Tilt: while pressed the element leans toward the finger (WP's TiltEffect). On by default for list items, hyperlinks, check boxes and radio buttons; not for Button. */

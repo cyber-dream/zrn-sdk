@@ -854,7 +854,14 @@ void Zelement_set_margin(const Zid element, const ZThickness margin) {
 }
 SETTER(Zelement_set_horizontal_alignment, ZHorizontalAlignment, halign, 1)
 SETTER(Zelement_set_vertical_alignment, ZVerticalAlignment, valign, 1)
-SETTER(Zelement_set_visibility, ZVisibility, visibility, 1)
+void Zelement_set_visibility(const Zid id, const ZVisibility value) {
+	zrn_element_t* const e = zrn_get(id, Z_CLASS_ELEMENT);
+	if (!e) return;
+	const ZVisibility before = e->visibility;
+	e->visibility = value;
+	zrn_changed_layout(e);
+	if (before != Z_VISIBLE && value == Z_VISIBLE && e->appear != Z_TRANSITION_NONE) zrn_transition_appear(e);
+}
 SETTER(Zelement_set_opacity, float, opacity, 0)
 SETTER(Zelement_set_clip_to_bounds, int, clip_to_bounds, 0)
 
