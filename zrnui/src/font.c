@@ -137,7 +137,6 @@ static bool zrn_has_suffix(const char* const name, const char* const suffix) {
 
 static const char* zrn_font_dir(void) {
 	const char* dir = g_font_dir;
-	if (!dir) dir = getenv("ZRNUI_FONT_DIR");
 	if (!dir || !*dir) dir = ZRNUI_FONT_DIR;
 	return dir;
 }

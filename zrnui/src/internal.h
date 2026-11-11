@@ -54,6 +54,8 @@ static inline float zrn_thickness_h(const ZThickness t) { return t.left + t.righ
 static inline float zrn_thickness_v(const ZThickness t) { return t.top + t.bottom; }
 
 char* zrn_strdup(const char* s);
+/** What the library was started with (Zinit_ex): the environment is read only by Zconfig_from_environment. */
+const ZConfig* zrn_config(void);
 void zrn_theme_reset(void);
 void zrn_set_string(char** dest, const char* s);
 /** Reports an error through Zset_error_callback and remembers it. */

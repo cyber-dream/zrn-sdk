@@ -642,13 +642,59 @@ ZFontFamily zrn_inherited_font_family(const zrn_element_t* const e) {
 
 static int g_init_count;
 
-int Zinit(void) {
+static ZConfig g_config;
+static char* g_config_font_directory;
+static char* g_config_theme_file;
+
+const ZConfig* zrn_config(void) { return &g_config; }
+
+void Zconfig_default(ZConfig* const config) {
+	*config = (ZConfig){ .animation_speed = 1.0f };
+}
+
+void Zconfig_from_environment(ZConfig* const config) {
+	Zconfig_default(config);
+	const char* value = getenv("ZRNUI_FONT_DIR");
+	if (value && *value) config->font_directory = value;
+	value = getenv("ZRNUI_THEME");
+	if (value && *value) config->theme_file = value;
+	value = getenv("ZRNUI_RENDERER");
+	if (value && !strcmp(value, "software")) config->renderer = Z_RENDERER_SOFTWARE;
+	else if (value && !strcmp(value, "gpu")) config->renderer = Z_RENDERER_GPU;
+	value = getenv("ZRNUI_ANIMATIONS");
+	if (value && !strcmp(value, "off")) config->animations = Z_ANIMATIONS_OFF;
+	else if (value && !strcmp(value, "on")) config->animations = Z_ANIMATIONS_ON;
+	value = getenv("ZRNUI_ANIMATION_SPEED");
+	if (value && *value) {
+		const float speed = strtof(value, nullptr);
+		if (speed > 0) config->animation_speed = speed;
+	}
+}
+
+int Zinit_ex(const ZConfig* const config) {
 	if (g_init_count++ > 0) return true;
+	ZConfig c;
+	Zconfig_default(&c);
+	if (config) c = *config;
+	if (c.animation_speed <= 0) c.animation_speed = 1.0f;
+	zrn_set_string(&g_config_font_directory, c.font_directory);
+	zrn_set_string(&g_config_theme_file, c.theme_file);
+	g_config = c;
+	g_config.font_directory = g_config_font_directory;
+	g_config.theme_file = g_config_theme_file;
+	if (g_config.font_directory) Zset_font_directory(g_config.font_directory);
+	zrn_theme_reset();   /* the colors are read again with this configuration */
 	if (!zrn_text_init()) {
 		g_init_count--;
 		return false;
 	}
 	return true;
+}
+
+int Zinit(void) {
+	ZConfig c;
+	Zconfig_from_environment(&c);
+	return Zinit_ex(&c);
 }
 
 void Zshutdown(void) {
@@ -667,6 +713,10 @@ void Zshutdown(void) {
 		if (!e->parent) zrn_destroy(e);
 	}
 	zrn_text_shutdown();
+	free(g_config_font_directory);
+	free(g_config_theme_file);
+	g_config_font_directory = g_config_theme_file = nullptr;
+	g_config = (ZConfig){};
 	free(g_slots);
 	free(g_free);
 	g_slots = nullptr;

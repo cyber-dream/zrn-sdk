@@ -692,7 +692,11 @@ typedef enum ZError {
 extern "C" {
 #endif
 
-	/** @brief Starts the library (fonts). Safe to call twice; nested with Zshutdown. */
+	/**
+	 * @brief Starts the library with the environment ($ZRNUI_*, see Zconfig_from_environment): what an application
+	 * wants. A program that embeds zrnui (a shell) passes its own ZConfig to Zinit_ex and the environment is never read.
+	 * Safe to call twice; nested with Zshutdown (the configuration of the first call stays).
+	 */
 	ZRNUI_API int Zinit(void);
 
 	/** @brief Destroys every root and every element, frees the fonts. */
@@ -716,9 +720,11 @@ extern "C" {
 	 * @brief Directory of the Selawik fonts (Selawik-Regular.ttf,
 	 * Selawik-Semilight.ttf, Selawik-Semibold.ttf), the free fonts that
 	 * metric-match Segoe UI and stand in for Segoe WP. Call before Zinit.
-	 * Default: $ZRNUI_FONT_DIR, then the directory compiled in.
+	 * Default: ZConfig.font_directory (Zinit_ex; $ZRNUI_FONT_DIR with Zinit), then the directory compiled in.
 	 */
 	ZRNUI_API void Zset_font_directory(const char* path);
+
+	/* The explicit configuration of the library: ZConfig, Zinit_ex (host.h). */
 
 	ZRNUI_API ZColor Zcolor_rgba(float r, float g, float b, float a);
 	/** @brief 0xAARRGGBB, the notation of the WP8 theme files. */

@@ -6,8 +6,8 @@
  * The readable source of the values is theme.ini next to the sources: the
  * sections [dark] / [light] / [accent], one "NAME = #AARRGGBB" per color. The
  * built-in table below holds the same values and serves as the default; every
- * key of the file replaces it. The file is looked up in $ZRNUI_THEME, then
- * the path compiled in (ZRNUI_THEME_FILE). Missing keys and a missing file
+ * key of the file replaces it. The file is ZConfig.theme_file ($ZRNUI_THEME with Zinit), then
+ * the one beside the binary, then the path compiled in (ZRNUI_THEME_FILE). Missing keys and a missing file
  * change nothing.
  */
 
@@ -121,7 +121,8 @@ static void ini_assign(const char* const section, const char* const key, const u
 
 /** Applies theme.ini over the built-in tables: [dark] / [light] / [accent], "NAME = #AARRGGBB". */
 static void ini_apply(void) {
-	const char* path = getenv("ZRNUI_THEME");
+	const char* path = zrn_config()->theme_file;
+	if (path && !*path) return;   /* "": the built-in colors only */
 	char beside[512], *slash;
 	FILE* file;
 	char line[512];

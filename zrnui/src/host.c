@@ -193,14 +193,8 @@ Zid Zroot_create(void) {
 	r->ui = r->density = r->scale = 1.0f;
 	r->first_frame = 1;
 	r->layout_dirty = r->paint_dirty = 1;
-	{
-		const char* env = getenv("ZRNUI_RENDERER");
-		if (env && !strcmp(env, "software")) r->renderer = Z_RENDERER_SOFTWARE;
-		else if (env && !strcmp(env, "gpu")) r->renderer = Z_RENDERER_GPU;
-		env = getenv("ZRNUI_ANIMATIONS");
-		if (env && !strcmp(env, "off")) r->animations = Z_ANIMATIONS_OFF;
-		else if (env && !strcmp(env, "on")) r->animations = Z_ANIMATIONS_ON;
-	}
+	r->renderer = zrn_config()->renderer;
+	r->animations = zrn_config()->animations;
 	zrn_theme_init(&r->theme, Z_THEME_DARK, zrn_accent_color(Z_ACCENT_COBALT));
 	r->theme_from = r->theme_target = r->theme;
 	r->theme_transitioning = 0;
@@ -576,10 +570,10 @@ const char* Zroot_get_renderer_name(const Zid root) {
  *  time
  * ============================================================================ */
 
-static void ticZ_tree(zrn_element_t* const e, const float dt) {
+static void zrn_tick_tree(zrn_element_t* const e, const float dt) {
 	if (e->tweens) zrn_tweens_tick(e);
 	if (e->wants_tick && e->cls->tick) e->cls->tick(e, dt);
-	for (int i = 0; i < e->child_count; i++) ticZ_tree(e->children[i], dt);
+	for (int i = 0; i < e->child_count; i++) zrn_tick_tree(e->children[i], dt);
 }
 
 /* ZRNUI_ANIMATION_SPEED: a float multiplier for every animation (0.5 = half speed,
@@ -598,14 +592,8 @@ static void zrn_theme_lerp(zrn_theme_t* const out, const zrn_theme_t* const a, c
 }
 
 static float zrn_animation_speed(void) {
-	static int cached = 0;
-	static float v = 1.0f;
-	if (!cached) {
-		const char* e = getenv("ZRNUI_ANIMATION_SPEED");
-		if (e && *e) { const float f = strtof(e, nullptr); if (f > 0) v = f; }
-		cached = 1;
-	}
-	return v;
+	const float speed = zrn_config()->animation_speed;
+	return speed > 0 ? speed : 1.0f;
 }
 void Zroot_tick(const Zid root, const float delta_ms) {
 	zrn_root_t* const r = get_root(root);
@@ -625,8 +613,8 @@ void Zroot_tick(const Zid root, const float delta_ms) {
 		r->paint_dirty = 1;
 	}
 	zrn_tilt_tick(r, delta_ms * speed);
-	if (r->visual) ticZ_tree(r->visual, delta_ms * speed);
-	if (r->overlay) ticZ_tree(r->overlay, delta_ms * speed);
+	if (r->visual) zrn_tick_tree(r->visual, delta_ms * speed);
+	if (r->overlay) zrn_tick_tree(r->overlay, delta_ms * speed);
 	if (r->tooltip_target && r->tooltip_target->tooltip) {
 		const float before = r->tooltip_timer;
 		r->tooltip_timer += delta_ms;

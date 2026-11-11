@@ -22,6 +22,23 @@
 
 #include "zrnui_controls.h"
 
+/**
+ * What the library is told when it starts, instead of reading the environment itself. Zero fields mean the default.
+ * The strings are copied.
+ */
+typedef struct ZConfig {
+	/** Where the fonts are (the bundled Selawik and any Segoe). NULL: the directory compiled in. */
+	const char* font_directory;
+	/** The theme.ini that overrides the colors. NULL: beside the binary, then the one compiled in; "": none. */
+	const char* theme_file;
+	/** The renderer of a new root (Zroot_set_renderer changes it). */
+	ZRenderer renderer;
+	/** Whether the animations of a new root run (Zroot_set_animations changes it). */
+	ZAnimations animations;
+	/** The speed of every animation: 0.5 half as fast, 2 twice as fast. 1 when not above 0. */
+	float animation_speed;
+} ZConfig;
+
 
 typedef enum ZPointerEvent {
 	Z_POINTER_DOWN = 0x0500,
@@ -78,6 +95,19 @@ extern "C" {
 	 * Dark theme, Cobalt accent as the system default of a Windows Phone 8 test device.
 	 */
 	ZRNUI_API Zid Zroot_create(void);
+
+	/** @brief The defaults: every field zero. */
+	ZRNUI_API void Zconfig_default(ZConfig* config);
+
+	/**
+	 * @brief The defaults overridden by the environment: $ZRNUI_FONT_DIR, $ZRNUI_THEME, $ZRNUI_RENDERER (auto|software|gpu),
+	 * $ZRNUI_ANIMATIONS (on|off), $ZRNUI_ANIMATION_SPEED. The strings point into the environment. This is the only place
+	 * where the library reads it, and only Zinit calls it.
+	 */
+	ZRNUI_API void Zconfig_from_environment(ZConfig* config);
+
+	/** @brief Starts the library with `config` (NULL: the defaults). Same nesting rules as Zinit. */
+	ZRNUI_API int Zinit_ex(const ZConfig* config);
 	ZRNUI_API void Zroot_destroy(Zid root);
 	ZRNUI_API int Zroot_is_valid(Zid root);
 
@@ -88,7 +118,7 @@ extern "C" {
 	ZRNUI_API void Zroot_set_size(Zid root, int width, int height);
 
 	/**
-	 * @brief Which renderer draws the root. Z_RENDERER_AUTO (the default; $ZRNUI_RENDERER=auto|software|gpu
+	 * @brief Which renderer draws the root. Z_RENDERER_AUTO (the default; ZConfig.renderer, $ZRNUI_RENDERER=auto|software|gpu with Zinit
 	 * sets it for a new root) lets the window use OpenGL ES 2 when it can and Zroot_render use the software
 	 * painter; Z_RENDERER_SOFTWARE never touches the GPU (the safe mode: no animations that need one);
 	 * Z_RENDERER_GPU draws Zroot_render frames on an off-screen OpenGL context, and Zwindow_run fails
@@ -98,7 +128,7 @@ extern "C" {
 	ZRNUI_API ZRenderer Zroot_get_renderer(Zid root);
 
 	/**
-	 * @brief Whether animations run. Z_ANIMATIONS_AUTO (the default; $ZRNUI_ANIMATIONS=on|off|auto) runs them
+	 * @brief Whether animations run. Z_ANIMATIONS_AUTO (the default; ZConfig.animations, $ZRNUI_ANIMATIONS=on|off|auto with Zinit) runs them
 	 * when the frames go through the OpenGL renderer and leaves them off in the software renderer, the safe mode,
 	 * where every change is at once: the page a Frame shows, the pressed look, a dropped list.
 	 */

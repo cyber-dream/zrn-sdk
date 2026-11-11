@@ -1,5 +1,5 @@
 # one executable per file
-set(ZRNUI_TESTS test_layout test_controls test_input test_render test_navigation test_gpu test_animation test_pivot test_items test_bars test_flyouts test_hub test_pickers test_richtext test_resources test_fonts)
+set(ZRNUI_TESTS test_layout test_controls test_input test_render test_navigation test_gpu test_animation test_pivot test_items test_bars test_flyouts test_hub test_pickers test_richtext test_resources test_fonts test_config)
 
 foreach(name ${ZRNUI_TESTS})
 	add_executable(${name} ${name}.c)
